@@ -15,7 +15,7 @@ const Header = () => {
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Register', href: '/register' },
-    { name: 'Guests', href: '/guests' },
+    { name: 'Survei Kepuasan', href: '/guests' },
     { name: 'Admin', href: '/admin' },
   ];
   
@@ -25,7 +25,7 @@ const Header = () => {
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold text-blue-600">
-              Guest Book System
+              Sistem Buku Tamu
             </Link>
           </div>
           

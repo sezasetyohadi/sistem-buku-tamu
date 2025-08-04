@@ -30,15 +30,15 @@ export default function Home() {
           <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center">
             <div className="bg-green-100 p-4 rounded-full mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold mb-2">View Guest List</h2>
+            <h2 className="text-xl font-bold mb-2">Survei Kepuasan</h2>
             <p className="text-gray-600 mb-4">
-              Access the list of all visitors, check their status, and manage check-outs.
+              Berikan penilaian dan masukan Anda untuk meningkatkan kualitas layanan kami.
             </p>
             <Link href="/guests" className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 transition-colors mt-auto">
-              View Guests
+              Isi Survei
             </Link>
           </div>
         </div>
