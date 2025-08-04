@@ -70,18 +70,6 @@ Aplikasi ini menggunakan database MySQL dengan tabel-tabel berikut:
 
 Akses endpoint `/api/init` di browser untuk membuat tabel-tabel dan memasukkan data awal yang diperlukan oleh aplikasi.
 
-## Pengembangan
-
-Untuk mengembangkan aplikasi ini lebih lanjut:
-
-1. **Membuat pertanyaan survei baru**
-   - Tambahkan pertanyaan di tabel `pertanyaan_survei`
-   - Tambahkan opsi jawaban di tabel `opsi_jawaban`
-
-2. **Mengubah tampilan**
-   - Modifikasi komponen di folder `/components`
-   - Edit halaman di folder `/app`
-
 ## Teknologi yang Digunakan
 
 - Next.js 14
