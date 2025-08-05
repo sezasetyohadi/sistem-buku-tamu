@@ -68,16 +68,18 @@ export default function Guests() {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 20px;
-                font-weight: bold;
                 margin-right: 16px;
               ">
-                ${guest.nama.charAt(0).toUpperCase()}
+                <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                  <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
               </div>
               <div>
                 <h2 style="margin: 0; font-size: 24px; font-weight: bold;">${guest.nama}</h2>
                 <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">
-                  ${guest.jenis_kelamin === 'Laki-laki' ? '👨‍💼' : '👩‍💼'} ${guest.jenis_kelamin} • 📅 ${new Date(guest.tanggal_kunjungan).toLocaleDateString('id-ID', { 
+                  <span style="color: ${guest.jenis_kelamin === 'Laki-laki' ? '#3B82F6' : '#EC4899'};">
+                    ⚤ ${guest.jenis_kelamin}
+                  </span> • 📅 ${new Date(guest.tanggal_kunjungan).toLocaleDateString('id-ID', { 
                     day: 'numeric', 
                     month: 'long', 
                     year: 'numeric' 
@@ -306,11 +308,16 @@ export default function Guests() {
           {/* Header Section */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6" style={{backgroundColor: '#EBF4FF', color: '#3D5DC3'}}>
-              <span className="mr-2">👥</span>
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
               Manajemen Tamu
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-              📋 Daftar Tamu Hari Ini
+              <svg className="w-12 h-12 inline mr-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              Daftar Tamu Hari Ini
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Monitor dan kelola kunjungan tamu dengan mudah. Lihat status, lakukan check-in/check-out, dan akses detail lengkap setiap tamu.

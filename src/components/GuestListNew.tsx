@@ -179,7 +179,11 @@ export default function GuestList({
 
         {sortedGuests.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">👥</div>
+            <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">Belum ada data tamu</h3>
             <p className="text-gray-500">
               {searchTerm ? 'Tidak ada tamu yang sesuai dengan pencarian.' : 'Belum ada tamu yang terdaftar.'}
@@ -198,17 +202,34 @@ export default function GuestList({
                     {/* Header with Name and Badge */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                          {guest.nama.charAt(0).toUpperCase()}
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900 text-xl">{guest.nama}</h3>
                           <div className="flex items-center space-x-2 mt-1">
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800">
-                              {guest.jenis_kelamin === 'Laki-laki' ? '👨‍💼' : '👩‍�'} {guest.jenis_kelamin}
+                              {guest.jenis_kelamin === 'Laki-laki' ? (
+                                <svg className="w-4 h-4 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M9.5 11c1.93 0 3.5 1.57 3.5 3.5S11.43 18 9.5 18 6 16.43 6 14.5 7.57 11 9.5 11zm0-2C6.46 9 4 11.46 4 14.5S6.46 20 9.5 20s5.5-2.46 5.5-5.5-2.46-5.5-5.5-5.5zM16.5 9L19 6.5 17.5 5l-2.5 2.5V4h-2v6h6V8h-2.5z"/>
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4 mr-1 text-pink-600" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M12 4c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zm0 10c2.67 0 8 1.34 8 4v2H4v-2c0-2.66 5.33-4 8-4z"/>
+                                  <circle cx="12" cy="8" r="2"/>
+                                  <path d="M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                  <path d="M12 4L9 7h6l-3-3z"/>
+                                </svg>
+                              )}
+                              {guest.jenis_kelamin}
                             </span>
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-green-100 to-green-200 text-green-800">
-                              📅 {formatDate(guest.tanggal_kunjungan)}
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              {formatDate(guest.tanggal_kunjungan)}
                             </span>
                           </div>
                         </div>

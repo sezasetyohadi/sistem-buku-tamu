@@ -9,10 +9,50 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { name: '🏠 Beranda', href: '/' },
-    { name: '📝 Registrasi Tamu', href: '/register' },
-    { name: '� Daftar Tamu', href: '/guests' },
-    { name: '⭐ Survey Kepuasan', href: '/survey' },
+    { 
+      name: (
+        <span className="flex items-center">
+          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+          Beranda
+        </span>
+      ), 
+      href: '/' 
+    },
+    { 
+      name: (
+        <span className="flex items-center">
+          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+          </svg>
+          Registrasi Tamu
+        </span>
+      ), 
+      href: '/register' 
+    },
+    { 
+      name: (
+        <span className="flex items-center">
+          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          Daftar Tamu
+        </span>
+      ), 
+      href: '/guests' 
+    },
+    { 
+      name: (
+        <span className="flex items-center">
+          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          Survey Kepuasan
+        </span>
+      ), 
+      href: '/survey' 
+    },
   ];
 
   return (
@@ -44,15 +84,15 @@ export default function Header() {
 
           {/* Navigation */}
           <nav className="hidden lg:block">
-            <ul className="flex space-x-2">
+            <ul className="flex space-x-1">
               {navItems.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
+                    className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center ${
                       pathname === item.href
-                        ? 'bg-white/25 text-white shadow-lg backdrop-blur-sm border border-white/30'
-                        : 'text-white/90 hover:bg-white/15 hover:text-white hover:shadow-md'
+                        ? 'bg-white/20 text-white shadow-md backdrop-blur-sm border border-white/40'
+                        : 'text-white/90 hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     {item.name}
@@ -78,17 +118,17 @@ export default function Header() {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="lg:hidden py-6 border-t border-white/20 backdrop-blur-sm">
-            <div className="flex flex-col space-y-3">
+          <div className="lg:hidden py-4 border-t border-white/20 backdrop-blur-sm">
+            <div className="flex flex-col space-y-2">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`px-6 py-4 rounded-xl font-semibold transition-all duration-300 ${
+                  className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center ${
                     pathname === item.href
-                      ? 'bg-white/25 text-white shadow-lg'
-                      : 'text-white/90 hover:bg-white/15 hover:text-white'
+                      ? 'bg-white/20 text-white shadow-md'
+                      : 'text-white/90 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   {item.name}

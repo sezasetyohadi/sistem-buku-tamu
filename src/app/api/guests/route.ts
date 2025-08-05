@@ -3,10 +3,14 @@ import {
   getAllGuests, 
   createGuest 
 } from '@/backend/services/guestService';
+import { initializeTables } from '@/backend/config/db';
 import { GuestFormData } from '@/types/database-types';
 
 export async function GET() {
   try {
+    // Initialize tables if they don't exist
+    await initializeTables();
+    
     const guests = await getAllGuests();
     return NextResponse.json({ 
       success: true, 

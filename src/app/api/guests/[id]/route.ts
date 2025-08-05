@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   getGuestById, 
   updateGuest, 
-  deleteGuest, 
-  checkOutGuest 
+  deleteGuest
 } from '@/backend/services/guestService';
 
 interface Params {
@@ -109,23 +108,25 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       );
     }
     
-    // This endpoint is specifically for checking out a guest
-    const success = await checkOutGuest(id);
+    const body = await request.json();
+    
+    // Update guest with the provided data
+    const success = await updateGuest(id, body);
     
     if (!success) {
       return NextResponse.json(
-        { success: false, message: 'Guest not found or already checked out' },
+        { success: false, message: 'Guest not found or failed to update' },
         { status: 404 }
       );
     }
     
     return NextResponse.json({ 
       success: true, 
-      message: 'Guest checked out successfully',
-      data: { id, check_out: new Date() }
+      message: 'Guest updated successfully',
+      data: { id, ...body }
     });
   } catch (error: any) {
-    console.error('Error checking out guest:', error);
+    console.error('Error updating guest:', error);
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
