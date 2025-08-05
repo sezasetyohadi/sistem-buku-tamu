@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate": "tsx src/backend/migrations/runMigrations.ts",
+    "migrate:single": "tsx -r dotenv/config src/backend/migrations/runSingleMigration.ts"
   },
   "dependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -28,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
     "tailwindcss": "^4",
+    "tsx": "^4.7.1",
     "typescript": "^5"
   }
 }

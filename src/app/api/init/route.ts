@@ -1,34 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initGuestTable } from '@/backend/services/guestService';
-import { initSurveyTables } from '@/backend/services/surveyService';
-import { executeQuery } from '@/backend/config/db';
-import { SURVEY_QUERIES } from '@/backend/models/surveyModel';
+import { testConnection } from '@/backend/config/db';
+import migrationManager from '@/backend/migrations/migrationManager';
 
 export async function GET(request: NextRequest) {
   try {
-    // Initialize guest table
-    await initGuestTable();
+    // Test database connection
+    const isConnected = await testConnection();
     
-    // Initialize survey tables
-    await initSurveyTables();
-    
-    // Insert default questions if not exist
-    await executeQuery(SURVEY_QUERIES.INSERT_DEFAULT_QUESTIONS);
-    
-    // Check if there are any questions
-    const questionsResult = await executeQuery<any[]>('SELECT id FROM pertanyaan_survei');
-    
-    // If we have questions but no options, insert default options
-    if (questionsResult.length > 0) {
-      const optionsResult = await executeQuery<any[]>('SELECT COUNT(*) as count FROM opsi_jawaban');
-      if (optionsResult[0].count === 0) {
-        await executeQuery(SURVEY_QUERIES.INSERT_DEFAULT_OPTIONS);
-      }
+    if (!isConnected) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Failed to connect to database. Please check your .env configuration.' 
+      }, { status: 500 });
     }
+    
+    // Initialize migration and seed tables
+    await migrationManager.initMigrationTable();
+    
+    // Run all migrations
+    console.log('Running migrations...');
+    await migrationManager.runMigrations();
+    
+    // Run all seeds
+    console.log('Running seeds...');
+    await migrationManager.runSeeds();
     
     return NextResponse.json({
       success: true,
-      message: 'Database initialized successfully'
+      message: 'Database initialized successfully with migrations and seeds'
     });
   } catch (error: any) {
     console.error('Error initializing database:', error);
