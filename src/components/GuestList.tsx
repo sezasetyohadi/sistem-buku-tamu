@@ -1,147 +1,390 @@
-"use client";
+// Komponen untuk menampilkan daftar tamu
+// Filename: GuestList.tsx
 
-import React, { useEffect, useState } from 'react';
-import Button from '@/components/ui/Button';
-import { formatDate } from '@/lib/utils';
+'use client';
+
+import React, { useState } from 'react';
+import Card from './ui/Card';
+import PrimaryButton from './ui/PrimaryButton';
+import FormInput from './ui/FormInput';
+import Modal from './ui/Modal';
 
 interface Guest {
   id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  message: string;
-  purpose: string;
-  check_in: string;
-  check_out: string | null;
-  created_at: string;
+  nama: string;
+  email?: string;
+  alamat?: string;
+  jenis_kelamin: 'Laki-laki' | 'Perempuan';
+  pendidikan_terakhir?: string;
+  profesi?: string;
+  asal_instansi?: string;
+  keperluan?: string;
+  tanggal_kunjungan: string;
+  waktu_kunjungan?: string;
+  tanggapan?: boolean;
+  file_upload?: string;
 }
 
-export default function GuestList() {
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  
-  const fetchGuests = async () => {
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      const response = await fetch('/api/guests');
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch guests');
-      }
-      
-      setGuests(result.data || []);
-    } catch (error) {
-      console.error('Error fetching guests:', error);
-      setError(error instanceof Error ? error.message : 'An unknown error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleCheckout = async (id: number) => {
-    try {
-      const response = await fetch(`/api/guests/${id}`, {
-        method: 'PATCH',
-      });
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to check out guest');
-      }
-      
-      // Update the guest in the list
-      setGuests(prevGuests => prevGuests.map(guest => {
-        if (guest.id === id) {
-          return { ...guest, check_out: new Date().toISOString() };
-        }
-        return guest;
-      }));
-    } catch (error) {
-      console.error('Error checking out guest:', error);
-      alert(error instanceof Error ? error.message : 'Failed to check out guest');
-    }
-  };
-  
-  useEffect(() => {
-    fetchGuests();
-  }, []);
-  
-  if (isLoading) {
-    return <div className="flex justify-center my-8">Loading guests...</div>;
+interface GuestListProps {
+  guests?: Guest[];
+  isLoading?: boolean;
+  onViewDetails?: (guest: Guest) => void;
+  onCheckIn?: (guestId: string) => void;
+  onCheckOut?: (guestId: string) => void;
+}
+
+const mockGuests: Guest[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'john.doe@email.com',
+    phone: '08123456789',
+    company: 'PT Teknologi Maju',
+    purpose: 'meeting',
+    department: 'it',
+    visitDate: '2024-01-15',
+    checkInTime: '09:30',
+    status: 'checked-in',
+    notes: 'Meeting dengan tim IT'
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    email: 'jane.smith@email.com',
+    phone: '08987654321',
+    company: 'CV Digital Solutions',
+    purpose: 'interview',
+    department: 'hr',
+    visitDate: '2024-01-15',
+    status: 'waiting',
+    notes: 'Interview untuk posisi developer'
+  },
+  {
+    id: '3',
+    name: 'Robert Johnson',
+    email: 'robert.j@email.com',
+    phone: '08555123456',
+    company: 'PT Media Kreatif',
+    purpose: 'consultation',
+    department: 'marketing',
+    visitDate: '2024-01-14',
+    checkInTime: '14:00',
+    checkOutTime: '16:30',
+    status: 'checked-out',
+    notes: 'Konsultasi strategi marketing'
   }
-  
-  if (error) {
+];
+
+const purposeLabels = {
+  meeting: 'Meeting/Rapat',
+  interview: 'Interview',
+  delivery: 'Pengiriman',
+  maintenance: 'Maintenance',
+  consultation: 'Konsultasi',
+  other: 'Lainnya'
+};
+
+const departmentLabels = {
+  hr: 'Human Resources',
+  it: 'Information Technology',
+  finance: 'Finance & Accounting',
+  marketing: 'Marketing & Sales',
+  operations: 'Operations',
+  management: 'Management'
+};
+
+const statusLabels = {
+  waiting: { label: 'Menunggu', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+  'checked-in': { label: 'Check-in', color: 'bg-green-100 text-green-800', icon: '✅' },
+  'checked-out': { label: 'Check-out', color: 'bg-gray-100 text-gray-800', icon: '📤' }
+};
+
+export default function GuestList({ 
+  guests = mockGuests, 
+  isLoading = false,
+  onViewDetails,
+  onCheckIn,
+  onCheckOut
+}: GuestListProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const filteredGuests = guests.filter(guest => {
+    const matchesSearch = guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         guest.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         guest.company?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterStatus === 'all' || guest.status === filterStatus;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  const handleViewDetails = (guest: Guest) => {
+    setSelectedGuest(guest);
+    setShowModal(true);
+    onViewDetails?.(guest);
+  };
+
+  const handleCheckIn = (guestId: string) => {
+    onCheckIn?.(guestId);
+  };
+
+  const handleCheckOut = (guestId: string) => {
+    onCheckOut?.(guestId);
+  };
+
+  if (isLoading) {
     return (
-      <div className="my-8 p-4 bg-red-100 text-red-700 rounded-md">
-        <p className="font-bold">Error:</p>
-        <p>{error}</p>
-        <Button 
-          variant="secondary" 
-          onClick={fetchGuests}
-          className="mt-2"
-        >
-          Try Again
-        </Button>
-      </div>
+      <Card variant="elevated" padding="lg">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3D5DC3]"></div>
+          <span className="ml-3 text-gray-600">Memuat data tamu...</span>
+        </div>
+      </Card>
     );
   }
-  
-  if (guests.length === 0) {
-    return <div className="text-center my-8">No guests have registered yet.</div>;
-  }
-  
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Guest List</h2>
-        <Button onClick={fetchGuests} size="sm">
-          Refresh
-        </Button>
+    <div className="space-y-6">
+      {/* Filter dan Search */}
+      <Card variant="elevated" padding="md">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <FormInput
+              placeholder="Cari nama, email, atau perusahaan..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              }
+            />
+          </div>
+          
+          <div className="sm:w-48">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white"
+            >
+              <option value="all">Semua Status</option>
+              <option value="waiting">Menunggu</option>
+              <option value="checked-in">Check-in</option>
+              <option value="checked-out">Check-out</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card variant="gradient" padding="md">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-[#3D5DC3]">{guests.length}</div>
+            <div className="text-sm text-gray-600">Total Tamu</div>
+          </div>
+        </Card>
+        
+        <Card variant="gradient" padding="md">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-yellow-600">{guests.filter(g => g.status === 'waiting').length}</div>
+            <div className="text-sm text-gray-600">Menunggu</div>
+          </div>
+        </Card>
+        
+        <Card variant="gradient" padding="md">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">{guests.filter(g => g.status === 'checked-in').length}</div>
+            <div className="text-sm text-gray-600">Check-in</div>
+          </div>
+        </Card>
+        
+        <Card variant="gradient" padding="md">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-600">{guests.filter(g => g.status === 'checked-out').length}</div>
+            <div className="text-sm text-gray-600">Check-out</div>
+          </div>
+        </Card>
       </div>
-      
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="py-3 px-4 text-left">Name</th>
-              <th className="py-3 px-4 text-left">Email</th>
-              <th className="py-3 px-4 text-left">Purpose</th>
-              <th className="py-3 px-4 text-left">Check In</th>
-              <th className="py-3 px-4 text-left">Check Out</th>
-              <th className="py-3 px-4 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {guests.map((guest) => (
-              <tr key={guest.id} className="hover:bg-gray-50">
-                <td className="py-3 px-4">{guest.name}</td>
-                <td className="py-3 px-4">{guest.email}</td>
-                <td className="py-3 px-4">{guest.purpose}</td>
-                <td className="py-3 px-4">{formatDate(guest.check_in)}</td>
-                <td className="py-3 px-4">
-                  {guest.check_out ? formatDate(guest.check_out) : 'Not checked out'}
-                </td>
-                <td className="py-3 px-4">
-                  {!guest.check_out && (
-                    <Button 
-                      variant="secondary" 
+
+      {/* Guest List */}
+      <Card variant="elevated" padding="lg">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Daftar Tamu Hari Ini</h2>
+          <p className="text-gray-600">Menampilkan {filteredGuests.length} dari {guests.length} tamu</p>
+        </div>
+
+        {filteredGuests.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">👤</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada tamu ditemukan</h3>
+            <p className="text-gray-600">Coba ubah kata kunci pencarian atau filter status</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredGuests.map((guest) => (
+              <div
+                key={guest.id}
+                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-gray-900">{guest.name}</h3>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusLabels[guest.status].color}`}>
+                        {statusLabels[guest.status].icon} {statusLabels[guest.status].label}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <span className="mr-2">📧</span>
+                        {guest.email}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">📱</span>
+                        {guest.phone}
+                      </div>
+                      {guest.company && (
+                        <div className="flex items-center">
+                          <span className="mr-2">🏢</span>
+                          {guest.company}
+                        </div>
+                      )}
+                      <div className="flex items-center">
+                        <span className="mr-2">🎯</span>
+                        {purposeLabels[guest.purpose as keyof typeof purposeLabels]}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">🏛️</span>
+                        {departmentLabels[guest.department as keyof typeof departmentLabels]}
+                      </div>
+                      {guest.checkInTime && (
+                        <div className="flex items-center">
+                          <span className="mr-2">⏰</span>
+                          Check-in: {guest.checkInTime}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <PrimaryButton
+                      variant="secondary"
                       size="sm"
-                      onClick={() => handleCheckout(guest.id)}
+                      onClick={() => handleViewDetails(guest)}
                     >
-                      Check Out
-                    </Button>
-                  )}
-                </td>
-              </tr>
+                      Detail
+                    </PrimaryButton>
+                    
+                    {guest.status === 'waiting' && (
+                      <PrimaryButton
+                        variant="success"
+                        size="sm"
+                        onClick={() => handleCheckIn(guest.id)}
+                      >
+                        Check-in
+                      </PrimaryButton>
+                    )}
+                    
+                    {guest.status === 'checked-in' && (
+                      <PrimaryButton
+                        variant="warning"
+                        size="sm"
+                        onClick={() => handleCheckOut(guest.id)}
+                      >
+                        Check-out
+                      </PrimaryButton>
+                    )}
+                  </div>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Modal Detail Tamu */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Detail Tamu"
+        size="lg"
+      >
+        {selectedGuest && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                <p className="text-gray-900">{selectedGuest.name}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${statusLabels[selectedGuest.status].color}`}>
+                  {statusLabels[selectedGuest.status].icon} {statusLabels[selectedGuest.status].label}
+                </span>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                <p className="text-gray-900">{selectedGuest.email}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Telepon</label>
+                <p className="text-gray-900">{selectedGuest.phone}</p>
+              </div>
+              
+              {selectedGuest.company && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                  <p className="text-gray-900">{selectedGuest.company}</p>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Tanggal Kunjungan</label>
+                <p className="text-gray-900">{selectedGuest.visitDate}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Tujuan</label>
+                <p className="text-gray-900">{purposeLabels[selectedGuest.purpose as keyof typeof purposeLabels]}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Departemen</label>
+                <p className="text-gray-900">{departmentLabels[selectedGuest.department as keyof typeof departmentLabels]}</p>
+              </div>
+              
+              {selectedGuest.checkInTime && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Waktu Check-in</label>
+                  <p className="text-gray-900">{selectedGuest.checkInTime}</p>
+                </div>
+              )}
+              
+              {selectedGuest.checkOutTime && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Waktu Check-out</label>
+                  <p className="text-gray-900">{selectedGuest.checkOutTime}</p>
+                </div>
+              )}
+            </div>
+            
+            {selectedGuest.notes && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Catatan</label>
+                <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{selectedGuest.notes}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

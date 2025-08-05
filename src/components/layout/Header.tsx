@@ -10,9 +10,9 @@ export default function Header() {
 
   const navItems = [
     { name: '🏠 Beranda', href: '/' },
-    { name: '📝 Daftar Tamu', href: '/register' },
-    { name: '🙏 Permohonan Layanan', href: '/guests' },
-    { name: '⭐ Survei Kepuasan', href: '/survey' },
+    { name: '📝 Registrasi Tamu', href: '/register' },
+    { name: '� Daftar Tamu', href: '/guests' },
+    { name: '⭐ Survey Kepuasan', href: '/survey' },
   ];
 
   return (
@@ -27,14 +27,18 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-4 group">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-all duration-300 shadow-lg border border-white/30">
-              <span className="text-3xl">🏢</span>
+            <div className="w-14 h-16 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-all duration-300 shadow-lg border border-white/30 p-2">
+              <img 
+                src="/logo-jateng.svg" 
+                alt="Logo Jawa Tengah" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold tracking-wide bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                Sistem Layanan Tamu
+                DISNAKERTRANS
               </h1>
-              <span className="text-sm text-white/80 font-medium">Digital Guest Management System</span>
+              <span className="text-sm text-white/80 font-medium">Jawa Tengah</span>
             </div>
           </Link>
 
