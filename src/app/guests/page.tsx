@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import GuestList from '../../components/GuestList';
+import GuestListNew from '../../components/GuestListNew';
 
 export default function Guests() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +32,241 @@ export default function Guests() {
 
   const handleViewDetails = (guest: any) => {
     console.log("Viewing details for guest:", guest);
-    alert(`Detail Tamu:\nNama: ${guest.nama}\nEmail: ${guest.email}\nInstansi: ${guest.asal_instansi}\nKeperluan: ${guest.keperluan}`);
+    
+    // Create a beautiful modal content with landscape layout
+    const modalContent = `
+      <div style="
+        width: 90vw;
+        max-width: 1000px;
+        height: 70vh;
+        max-height: 600px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 0;
+        color: white;
+        font-family: system-ui, sans-serif;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      ">
+        <!-- Header -->
+        <div style="
+          background: rgba(255,255,255,0.1);
+          backdrop-filter: blur(10px);
+          padding: 20px 30px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          flex-shrink: 0;
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center;">
+              <div style="
+                width: 50px;
+                height: 50px;
+                background: rgba(255,255,255,0.2);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                font-weight: bold;
+                margin-right: 16px;
+              ">
+                ${guest.nama.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h2 style="margin: 0; font-size: 24px; font-weight: bold;">${guest.nama}</h2>
+                <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">
+                  ${guest.jenis_kelamin === 'Laki-laki' ? '👨‍💼' : '👩‍💼'} ${guest.jenis_kelamin} • 📅 ${new Date(guest.tanggal_kunjungan).toLocaleDateString('id-ID', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </p>
+              </div>
+            </div>
+            <button onclick="this.closest('.modal-overlay').remove()" style="
+              background: rgba(255,255,255,0.2);
+              border: none;
+              width: 35px;
+              height: 35px;
+              border-radius: 50%;
+              color: white;
+              cursor: pointer;
+              font-size: 18px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">×</button>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="
+          flex: 1;
+          padding: 30px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+        ">
+          <!-- Main Info Grid -->
+          <div style="
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-shrink: 0;
+          ">
+            <div style="
+              background: rgba(255,255,255,0.1);
+              padding: 16px;
+              border-radius: 12px;
+              border: 1px solid rgba(255,255,255,0.1);
+            ">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="margin-right: 8px; font-size: 16px;">�</span>
+                <strong style="font-size: 13px;">Email</strong>
+              </div>
+              <p style="margin: 0; opacity: 0.9; font-size: 14px; word-break: break-all;">${guest.email || 'Tidak tersedia'}</p>
+            </div>
+
+            <div style="
+              background: rgba(255,255,255,0.1);
+              padding: 16px;
+              border-radius: 12px;
+              border: 1px solid rgba(255,255,255,0.1);
+            ">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="margin-right: 8px; font-size: 16px;">⏰</span>
+                <strong style="font-size: 13px;">Waktu Kunjungan</strong>
+              </div>
+              <p style="margin: 0; opacity: 0.9; font-size: 14px;">${guest.waktu_kunjungan?.substring(0, 5) || 'Tidak tersedia'}</p>
+            </div>
+
+            <div style="
+              background: rgba(255,255,255,0.1);
+              padding: 16px;
+              border-radius: 12px;
+              border: 1px solid rgba(255,255,255,0.1);
+            ">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="margin-right: 8px; font-size: 16px;">🏢</span>
+                <strong style="font-size: 13px;">Instansi</strong>
+              </div>
+              <p style="margin: 0; opacity: 0.9; font-size: 14px;">${guest.asal_instansi || 'Tidak tersedia'}</p>
+            </div>
+
+            <div style="
+              background: rgba(255,255,255,0.1);
+              padding: 16px;
+              border-radius: 12px;
+              border: 1px solid rgba(255,255,255,0.1);
+            ">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="margin-right: 8px; font-size: 16px;">💼</span>
+                <strong style="font-size: 13px;">Profesi</strong>
+              </div>
+              <p style="margin: 0; opacity: 0.9; font-size: 14px;">${guest.profesi || 'Tidak tersedia'}</p>
+            </div>
+
+            <div style="
+              background: rgba(255,255,255,0.1);
+              padding: 16px;
+              border-radius: 12px;
+              border: 1px solid rgba(255,255,255,0.1);
+            ">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="margin-right: 8px; font-size: 16px;">🎓</span>
+                <strong style="font-size: 13px;">Pendidikan</strong>
+              </div>
+              <p style="margin: 0; opacity: 0.9; font-size: 14px;">${guest.pendidikan_terakhir || 'Tidak tersedia'}</p>
+            </div>
+
+            <div style="
+              background: rgba(255,255,255,0.1);
+              padding: 16px;
+              border-radius: 12px;
+              border: 1px solid rgba(255,255,255,0.1);
+            ">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="margin-right: 8px; font-size: 16px;">📍</span>
+                <strong style="font-size: 13px;">Alamat</strong>
+              </div>
+              <p style="margin: 0; opacity: 0.9; font-size: 14px; line-height: 1.3;">${guest.alamat || 'Tidak tersedia'}</p>
+            </div>
+          </div>
+
+          <!-- Keperluan Section -->
+          ${guest.keperluan ? `
+            <div style="
+              background: linear-gradient(135deg, rgba(255,193,7,0.2), rgba(255,152,0,0.2));
+              padding: 20px;
+              border-radius: 12px;
+              border: 1px solid rgba(255,193,7,0.3);
+              flex-shrink: 0;
+            ">
+              <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="margin-right: 8px; font-size: 18px;">📋</span>
+                <strong style="font-size: 16px;">Keperluan Kunjungan</strong>
+              </div>
+              <p style="margin: 0; opacity: 0.95; font-size: 15px; line-height: 1.5;">${guest.keperluan}</p>
+            </div>
+          ` : ''}
+
+          <!-- Footer Info -->
+          <div style="
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            flex-shrink: 0;
+          ">
+            <p style="margin: 0; opacity: 0.7; font-size: 12px;">
+              📊 Data Tamu DISNAKERTRANS Provinsi Jawa Tengah
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
+    
+    modal.innerHTML = modalContent;
+    
+    // Close on click outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+    
+    // Close on ESC key
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(modal);
+        document.removeEventListener('keydown', handleEsc);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    
+    document.body.appendChild(modal);
   };
 
   const handleCheckIn = async (guestId: string) => {
@@ -85,7 +319,8 @@ export default function Guests() {
 
           {/* Guest List Component */}
           <div className="max-w-7xl mx-auto">
-            <GuestList 
+            <GuestListNew 
+              guests={guests}
               onViewDetails={handleViewDetails}
               onCheckIn={handleCheckIn}
               onCheckOut={handleCheckOut}

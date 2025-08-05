@@ -27,10 +27,10 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
   const params = [
     formData.name,
     formData.email,
-    formData.notes || '', // alamat from notes field
-    'Laki-laki', // default gender, you can add gender field to form later
-    '', // pendidikan_terakhir - can be added to form
-    '', // profesi - can be added to form  
+    formData.address,
+    formData.gender,
+    formData.education,
+    formData.profession,
     formData.company,
     formData.purpose
   ];

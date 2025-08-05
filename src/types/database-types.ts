@@ -76,14 +76,14 @@ export interface GuestFormData {
   name: string;
   email: string;
   phone: string;
+  address: string;
+  gender: string;
+  education: string;
+  profession: string;
   company: string;
   purpose: string;
   department: string;
   notes: string;
-  address?: string;
-  gender: 'Laki-laki' | 'Perempuan';
-  education?: string;
-  profession?: string;
 }
 
 export interface SurveyFormData {

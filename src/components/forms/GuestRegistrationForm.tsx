@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PrimaryButton from '../ui/PrimaryButton';
 import FormInput from '../ui/FormInput';
 import FormSelect from '../ui/FormSelect';
@@ -19,6 +19,10 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     name: '',
     email: '',
     phone: '',
+    address: '',
+    gender: '',
+    education: '',
+    profession: '',
     company: '',
     purpose: '',
     department: '',
@@ -26,6 +30,17 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
   });
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [showNotification, setShowNotification] = useState(false);
+
+  // Auto hide notification after 5 seconds
+  useEffect(() => {
+    if (showNotification) {
+      const timer = setTimeout(() => {
+        setShowNotification(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showNotification]);
 
   const purposeOptions = [
     { value: '', label: 'Pilih tujuan kunjungan' },
@@ -47,6 +62,25 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     { value: 'norma', label: 'Bidang Norma Kerja' },
     { value: 'transmigrasi', label: 'Bidang Transmigrasi' },
     { value: 'kepala', label: 'Kepala Dinas' }
+  ];
+
+  const genderOptions = [
+    { value: '', label: 'Pilih jenis kelamin' },
+    { value: 'Laki-laki', label: 'Laki-laki' },
+    { value: 'Perempuan', label: 'Perempuan' }
+  ];
+
+  const educationOptions = [
+    { value: '', label: 'Pilih pendidikan terakhir' },
+    { value: 'SD', label: 'SD/Sederajat' },
+    { value: 'SMP', label: 'SMP/Sederajat' },
+    { value: 'SMA/SMK', label: 'SMA/SMK/Sederajat' },
+    { value: 'D1', label: 'Diploma 1 (D1)' },
+    { value: 'D2', label: 'Diploma 2 (D2)' },
+    { value: 'D3', label: 'Diploma 3 (D3)' },
+    { value: 'S1', label: 'Sarjana (S1)' },
+    { value: 'S2', label: 'Magister (S2)' },
+    { value: 'S3', label: 'Doktor (S3)' }
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -82,6 +116,22 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
       newErrors.phone = 'Nomor telepon harus diisi';
     }
 
+    if (!formData.address.trim()) {
+      newErrors.address = 'Alamat harus diisi';
+    }
+
+    if (!formData.gender) {
+      newErrors.gender = 'Jenis kelamin harus dipilih';
+    }
+
+    if (!formData.education) {
+      newErrors.education = 'Pendidikan terakhir harus dipilih';
+    }
+
+    if (!formData.profession.trim()) {
+      newErrors.profession = 'Profesi harus diisi';
+    }
+
     if (!formData.purpose) {
       newErrors.purpose = 'Tujuan kunjungan harus dipilih';
     }
@@ -99,15 +149,35 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     
     if (validateForm()) {
       onSubmit?.(formData);
+      
+      // Show success notification
+      setShowNotification(true);
+      
+      // Auto reset form setelah submit berhasil
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        gender: '',
+        education: '',
+        profession: '',
+        company: '',
+        purpose: '',
+        department: '',
+        notes: ''
+      });
+      setErrors({});
     }
   };
 
   return (
-    <Card variant="elevated" padding="lg">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrasi Tamu</h2>
-        <p className="text-gray-600">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
-      </div>
+    <>
+      <Card variant="elevated" padding="lg">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrasi Tamu</h2>
+          <p className="text-gray-600">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
+        </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -169,6 +239,74 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            }
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          <FormInput
+            label="Alamat"
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            error={errors.address}
+            placeholder="Masukkan alamat lengkap"
+            required
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            }
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormSelect
+            label="Jenis Kelamin"
+            name="gender"
+            value={formData.gender}
+            onChange={handleInputChange}
+            error={errors.gender}
+            options={genderOptions}
+            required
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
+          />
+
+          <FormSelect
+            label="Pendidikan Terakhir"
+            name="education"
+            value={formData.education}
+            onChange={handleInputChange}
+            error={errors.education}
+            options={educationOptions}
+            required
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+              </svg>
+            }
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          <FormInput
+            label="Profesi"
+            name="profession"
+            value={formData.profession}
+            onChange={handleInputChange}
+            error={errors.profession}
+            placeholder="Masukkan profesi/pekerjaan"
+            required
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0H8" />
               </svg>
             }
           />
@@ -241,6 +379,10 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
                 name: '',
                 email: '',
                 phone: '',
+                address: '',
+                gender: '',
+                education: '',
+                profession: '',
                 company: '',
                 purpose: '',
                 department: '',
@@ -254,5 +396,65 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
         </div>
       </form>
     </Card>
+
+    {/* Success Notification Toast */}
+    {showNotification && (
+      <div className="fixed top-4 right-4 z-50 transform transition-all duration-500 ease-in-out">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl border border-green-400 min-w-80 max-w-md">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-lg">Registrasi Berhasil! 🎉</h4>
+                  <p className="text-green-100 text-sm mt-1">
+                    Selamat datang di DISNAKERTRANS Jawa Tengah
+                  </p>
+                  <p className="text-green-100 text-xs mt-1">
+                    Data Anda telah tersimpan dengan aman
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowNotification(false)}
+                  className="ml-3 text-white/80 hover:text-white transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="mt-3 bg-white/20 rounded-full h-1 overflow-hidden">
+            <div 
+              className="h-full bg-white/60 rounded-full transition-all ease-linear"
+              style={{
+                width: '100%',
+                animation: 'progressBar 5s linear forwards'
+              }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Inline styles for animation */}
+    <style dangerouslySetInnerHTML={{
+      __html: `
+        @keyframes progressBar {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `
+    }} />
+    </>
   );
 }

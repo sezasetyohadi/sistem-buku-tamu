@@ -114,26 +114,58 @@ export default function GuestList({
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="text-sm text-blue-600 font-medium">Total Tamu</div>
-            <div className="text-2xl font-bold text-blue-600">{guests.length}</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-sm text-green-600 font-medium">Hari Ini</div>
-            <div className="text-2xl font-bold text-green-600">
-              {guests.filter(g => g.tanggal_kunjungan === new Date().toISOString().split('T')[0]).length}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white transform hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-blue-100 font-medium text-sm">Total Tamu</div>
+                <div className="text-3xl font-bold mt-1">{guests.length}</div>
+                <div className="text-blue-200 text-xs mt-1">Keseluruhan data</div>
+              </div>
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
             </div>
           </div>
-          <div className="bg-orange-50 p-4 rounded-lg">
-            <div className="text-sm text-orange-600 font-medium">Minggu Ini</div>
-            <div className="text-2xl font-bold text-orange-600">
-              {guests.filter(g => {
-                const guestDate = new Date(g.tanggal_kunjungan);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return guestDate >= weekAgo;
-              }).length}
+          
+          <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-2xl shadow-lg text-white transform hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-green-100 font-medium text-sm">Hari Ini</div>
+                <div className="text-3xl font-bold mt-1">
+                  {guests.filter(g => g.tanggal_kunjungan === new Date().toISOString().split('T')[0]).length}
+                </div>
+                <div className="text-green-200 text-xs mt-1">{new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}</div>
+              </div>
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-orange-500 to-red-500 p-6 rounded-2xl shadow-lg text-white transform hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-orange-100 font-medium text-sm">Minggu Ini</div>
+                <div className="text-3xl font-bold mt-1">
+                  {guests.filter(g => {
+                    const guestDate = new Date(g.tanggal_kunjungan);
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return guestDate >= weekAgo;
+                  }).length}
+                </div>
+                <div className="text-orange-200 text-xs mt-1">7 hari terakhir</div>
+              </div>
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -154,77 +186,151 @@ export default function GuestList({
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-6">
             {sortedGuests.map((guest) => (
               <div
                 key={guest.id}
-                className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                className="bg-gradient-to-r from-white via-blue-50 to-white border border-blue-200 rounded-2xl p-6 hover:shadow-xl hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1"
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                  {/* Guest Info Section */}
                   <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{guest.nama}</h3>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          👤 {guest.jenis_kelamin}
-                        </span>
+                    {/* Header with Name and Badge */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          {guest.nama.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900 text-xl">{guest.nama}</h3>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800">
+                              {guest.jenis_kelamin === 'Laki-laki' ? '👨‍💼' : '👩‍�'} {guest.jenis_kelamin}
+                            </span>
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-green-100 to-green-200 text-green-800">
+                              📅 {formatDate(guest.tanggal_kunjungan)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">Email:</span> {guest.email || '-'}
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-xl border border-gray-100">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 font-medium">Email</div>
+                          <div className="text-sm font-semibold text-gray-900">{guest.email || 'Tidak tersedia'}</div>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-medium">Tanggal:</span> {formatDate(guest.tanggal_kunjungan)}
+
+                      <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-xl border border-gray-100">
+                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 font-medium">Waktu</div>
+                          <div className="text-sm font-semibold text-gray-900">{formatTime(guest.waktu_kunjungan)}</div>
+                        </div>
                       </div>
+
                       {guest.asal_instansi && (
-                        <div>
-                          <span className="font-medium">Instansi:</span> {guest.asal_instansi}
+                        <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-xl border border-gray-100">
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 font-medium">Instansi</div>
+                            <div className="text-sm font-semibold text-gray-900">{guest.asal_instansi}</div>
+                          </div>
                         </div>
                       )}
-                      <div>
-                        <span className="font-medium">Waktu:</span> {formatTime(guest.waktu_kunjungan)}
-                      </div>
-                      {guest.keperluan && (
-                        <div className="md:col-span-2">
-                          <span className="font-medium">Keperluan:</span> {guest.keperluan}
-                        </div>
-                      )}
+
                       {guest.profesi && (
-                        <div>
-                          <span className="font-medium">Profesi:</span> {guest.profesi}
+                        <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-xl border border-gray-100">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0H8" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 font-medium">Profesi</div>
+                            <div className="text-sm font-semibold text-gray-900">{guest.profesi}</div>
+                          </div>
                         </div>
                       )}
+
                       {guest.pendidikan_terakhir && (
-                        <div>
-                          <span className="font-medium">Pendidikan:</span> {guest.pendidikan_terakhir}
+                        <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-xl border border-gray-100">
+                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 font-medium">Pendidikan</div>
+                            <div className="text-sm font-semibold text-gray-900">{guest.pendidikan_terakhir}</div>
+                          </div>
                         </div>
                       )}
                     </div>
+
+                    {/* Purpose Section */}
+                    {guest.keperluan && (
+                      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                          </svg>
+                          <span className="text-sm font-semibold text-yellow-800">Keperluan Kunjungan</span>
+                        </div>
+                        <p className="text-sm text-yellow-700 leading-relaxed">{guest.keperluan}</p>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0 md:ml-4">
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row lg:flex-col gap-3 mt-6 lg:mt-0 lg:ml-6 lg:min-w-[160px]">
                     <PrimaryButton
                       variant="secondary"
                       size="sm"
                       onClick={() => onViewDetails?.(guest)}
                     >
-                      👁️ Detail
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Detail
                     </PrimaryButton>
                     <PrimaryButton
-                      variant="primary"
+                      variant="success"
                       size="sm"
                       onClick={() => onCheckIn?.(guest.id.toString())}
                     >
-                      ✅ Check-in
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Check-in
                     </PrimaryButton>
                     <PrimaryButton
-                      variant="secondary"
+                      variant="warning"
                       size="sm"
                       onClick={() => onCheckOut?.(guest.id.toString())}
                     >
-                      ↩️ Check-out
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Check-out
                     </PrimaryButton>
                   </div>
                 </div>
