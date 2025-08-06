@@ -1,54 +1,81 @@
+// Enum untuk jenis kelamin
+export enum Gender {
+  MALE = 'Laki-laki',
+  FEMALE = 'Perempuan'
+}
+
 // Guest model types
 export interface Guest {
   id?: number;
-  name: string;
-  email: string;
-  phone?: string;
-  message: string;
-  purpose: string;
-  check_in: Date;
-  check_out?: Date | null;
-  created_at?: Date;
-  updated_at?: Date;
+  nama: string;
+  alamat?: string;
+  jenis_kelamin: Gender;
+  pendidikan_terakhir?: string;
+  profesi?: string;
+  asal_instansi?: string;
+  keperluan: string;
+  tanggal_kunjungan: Date;
+  waktu_kunjungan?: string;
+  email?: string;
+  tanggapan?: boolean | null;
+  file_upload?: string;
 }
 
 export interface GuestCreate {
-  name: string;
-  email: string;
-  phone?: string;
-  message: string;
-  purpose: string;
+  nama: string;
+  alamat?: string;
+  jenis_kelamin: Gender;
+  pendidikan_terakhir?: string;
+  profesi?: string;
+  asal_instansi?: string;
+  keperluan: string;
+  tanggal_kunjungan?: string;
+  waktu_kunjungan?: string;
+  email?: string;
+  file_upload?: string;
 }
 
 export interface GuestUpdate {
-  name?: string;
+  nama?: string;
+  alamat?: string;
+  jenis_kelamin?: Gender;
+  pendidikan_terakhir?: string;
+  profesi?: string;
+  asal_instansi?: string;
+  keperluan?: string;
+  tanggal_kunjungan?: string;
+  waktu_kunjungan?: string;
   email?: string;
-  phone?: string;
-  message?: string;
-  purpose?: string;
-  check_out?: Date;
+  tanggapan?: boolean;
+  file_upload?: string;
 }
 
 // SQL queries for guests
 export const GUEST_QUERIES = {
   CREATE_TABLE: `
-    CREATE TABLE IF NOT EXISTS guests (
+    CREATE TABLE IF NOT EXISTS daftar_tamu (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      email VARCHAR(100) NOT NULL,
-      phone VARCHAR(20),
-      message TEXT NOT NULL,
-      purpose VARCHAR(255) NOT NULL,
-      check_in DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      check_out DATETIME,
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      nama VARCHAR(100) NOT NULL,
+      alamat TEXT DEFAULT NULL,
+      jenis_kelamin ENUM('Laki-laki','Perempuan') NOT NULL,
+      pendidikan_terakhir VARCHAR(100) DEFAULT NULL,
+      profesi VARCHAR(100) DEFAULT NULL,
+      asal_instansi VARCHAR(100) DEFAULT NULL,
+      keperluan TEXT DEFAULT NULL,
+      tanggal_kunjungan TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      email VARCHAR(100) DEFAULT NULL,
+      tanggapan TINYINT(1) DEFAULT NULL,
+      file_upload VARCHAR(255) DEFAULT NULL
     )
   `,
-  GET_ALL: 'SELECT * FROM guests ORDER BY check_in DESC',
-  GET_BY_ID: 'SELECT * FROM guests WHERE id = ?',
-  CREATE: 'INSERT INTO guests (name, email, phone, message, purpose) VALUES (?, ?, ?, ?, ?)',
-  UPDATE: 'UPDATE guests SET ? WHERE id = ?',
-  DELETE: 'DELETE FROM guests WHERE id = ?',
-  CHECK_OUT: 'UPDATE guests SET check_out = CURRENT_TIMESTAMP WHERE id = ? AND check_out IS NULL',
+  GET_ALL: 'SELECT * FROM daftar_tamu ORDER BY tanggal_kunjungan DESC',
+  GET_BY_ID: 'SELECT * FROM daftar_tamu WHERE id = ?',
+  CREATE: `INSERT INTO daftar_tamu 
+    (nama, alamat, jenis_kelamin, pendidikan_terakhir, profesi, asal_instansi, keperluan, tanggal_kunjungan, waktu_kunjungan, email, file_upload) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  UPDATE: 'UPDATE daftar_tamu SET ? WHERE id = ?',
+  DELETE: 'DELETE FROM daftar_tamu WHERE id = ?',
+  SET_TANGGAPAN: 'UPDATE daftar_tamu SET tanggapan = ? WHERE id = ?',
+  GET_EDUCATION_OPTIONS: 'SELECT * FROM pendidikan_terakhir ORDER BY id',
+  GET_PROFESSION_OPTIONS: 'SELECT * FROM profesi ORDER BY id',
 };

@@ -1,4 +1,8 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Database connection configuration
 const dbConfig = {

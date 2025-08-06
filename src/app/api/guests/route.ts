@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   getAllGuests, 
-  createGuest 
+  createGuest,
+  getEducationOptions,
+  getProfessionOptions
 } from '@/backend/services/guestService';
 import { initializeTables } from '@/backend/config/db';
 import { GuestFormData } from '@/types/database-types';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Initialize tables if they don't exist
-    await initializeTables();
-    
+    await ensureTableInitialized();
     const guests = await getAllGuests();
     return NextResponse.json({ 
       success: true, 
@@ -18,7 +18,7 @@ export async function GET() {
       message: 'Guests retrieved successfully' 
     });
   } catch (error: any) {
-    console.error('Error getting guests:', error);
+    console.error('Error getting data:', error);
     return NextResponse.json(
       { success: false, message: 'Failed to retrieve guests', error: error.message },
       { status: 500 }
@@ -31,11 +31,14 @@ export async function POST(request: NextRequest) {
     const body: GuestFormData = await request.json();
     
     // Validate required fields
-    if (!body.name || !body.email || !body.purpose) {
-      return NextResponse.json(
-        { success: false, message: 'Name, email, and purpose are required' },
-        { status: 400 }
-      );
+    const requiredFields = ['name', 'email', 'message', 'purpose'];
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return NextResponse.json(
+          { success: false, message: `${field} is required` },
+          { status: 400 }
+        );
+      }
     }
 
     const guestId = await createGuest(body);
