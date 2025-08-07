@@ -7,6 +7,7 @@ export async function up() {
       id int(11) NOT NULL AUTO_INCREMENT,
       email varchar(100) DEFAULT NULL,
       nama varchar(100) NOT NULL,
+      nomor_telp VARCHAR(20) DEFAULT NULL,
       alamat text DEFAULT NULL,
       jenis_kelamin enum('Laki-laki','Perempuan') NOT NULL,
       pendidikan_terakhir varchar(100) DEFAULT NULL,
