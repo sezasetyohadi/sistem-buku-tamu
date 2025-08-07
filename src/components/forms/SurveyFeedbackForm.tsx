@@ -98,7 +98,7 @@ export default function SurveyFeedbackForm({ onSubmit, isLoading = false }: Surv
     <Card variant="elevated" padding="lg">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Survey Kepuasan Pelayanan</h2>
-        <p className="text-gray-600">Berikan penilaian Anda terhadap pelayanan DISNAKERTRANS Jawa Tengah</p>
+        <p className="text-gray-800">Berikan penilaian Anda terhadap pelayanan DISNAKERTRANS Jawa Tengah</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

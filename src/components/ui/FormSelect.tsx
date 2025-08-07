@@ -50,7 +50,7 @@ export default function FormSelect({
       
       <div className="relative">
         {icon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-700">
             {icon}
           </div>
         )}
@@ -77,7 +77,7 @@ export default function FormSelect({
         
         {/* Custom dropdown arrow */}
         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -91,7 +91,7 @@ export default function FormSelect({
               {error}
             </p>
           ) : helperText ? (
-            <p className="text-sm text-gray-600">{helperText}</p>
+            <p className="text-sm text-gray-800">{helperText}</p>
           ) : null}
         </div>
       )}
