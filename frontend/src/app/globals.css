@@ -44,6 +44,66 @@ body {
   }
 }
 
+@keyframes float-wave {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  25% {
+    transform: translateY(-15px) translateX(8px) scale(1.02);
+  }
+  50% {
+    transform: translateY(10px) translateX(-12px) scale(0.98);
+  }
+  75% {
+    transform: translateY(-8px) translateX(5px) scale(1.01);
+  }
+}
+
+@keyframes float-wave-2 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  33% {
+    transform: translateY(12px) translateX(-8px) scale(1.03);
+  }
+  66% {
+    transform: translateY(-10px) translateX(6px) scale(0.97);
+  }
+}
+
+@keyframes wave-scroll {
+  0%, 100% {
+    transform: translateX(0px) scaleY(1);
+  }
+  50% {
+    transform: translateX(-20px) scaleY(1.1);
+  }
+}
+
+@keyframes wave-scroll-2 {
+  0%, 100% {
+    transform: translateX(0px) scaleY(1) scaleX(1.05);
+  }
+  33% {
+    transform: translateX(15px) scaleY(0.9) scaleX(1);
+  }
+  66% {
+    transform: translateX(-10px) scaleY(1.2) scaleX(1.03);
+  }
+}
+
+@keyframes wave-scroll-3 {
+  0%, 100% {
+    transform: translateX(0px) scaleY(1);
+  }
+  25% {
+    transform: translateX(-25px) scaleY(1.15);
+  }
+  75% {
+    transform: translateX(20px) scaleY(0.85);
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -78,4 +138,31 @@ body {
   background: rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced Abstract wavy lines animation */
+.animate-float-wave {
+  animation: float-wave 12s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.animate-float-wave-2 {
+  animation: float-wave-2 9s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Wave scroll animations */
+.animate-wave-scroll {
+  animation: wave-scroll 8s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.animate-wave-scroll-2 {
+  animation: wave-scroll-2 12s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.animate-wave-scroll-3 {
+  animation: wave-scroll-3 15s ease-in-out infinite;
+  transform-origin: bottom;
 }
