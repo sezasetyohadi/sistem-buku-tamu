@@ -14,7 +14,7 @@ export default function AdminReportsAnalytics() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">📊 Laporan & Analitik</h1>
-              <p className="text-gray-600">
+              <p className="text-gray-800">
                 Dashboard analitik dan laporan komprehensif sistem buku tamu
               </p>
             </div>
@@ -40,9 +40,9 @@ export default function AdminReportsAnalytics() {
           <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#EBF4FF', borderColor: '#BFDBFE'}}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-700">Total Kunjungan</h3>
-                <p className="text-3xl font-bold" style={{color: '#3D5DC3'}}>2,847</p>
-                <p className="text-sm text-green-600">↗️ +12.5% dari bulan lalu</p>
+                <h3 className="font-semibold text-gray-800">Total Kunjungan</h3>
+                <p className="text-3xl font-bold text-gray-900">2,847</p>
+                <p className="text-sm text-gray-900">↗️ +12.5% dari bulan lalu</p>
               </div>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
                 <span className="text-white text-xl">👥</span>
@@ -53,9 +53,9 @@ export default function AdminReportsAnalytics() {
           <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#FEF3E2', borderColor: '#FED7AA'}}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-700">Rata-rata Harian</h3>
-                <p className="text-3xl font-bold" style={{color: '#F29442'}}>67</p>
-                <p className="text-sm text-green-600">↗️ +8.3% dari periode lalu</p>
+                <h3 className="font-semibold text-gray-800">Rata-rata Harian</h3>
+                <p className="text-3xl font-bold text-gray-900">67</p>
+                <p className="text-sm text-gray-900">↗️ +8.3% dari periode lalu</p>
               </div>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}>
                 <span className="text-white text-xl">📈</span>
@@ -66,9 +66,9 @@ export default function AdminReportsAnalytics() {
           <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#F0FDF4', borderColor: '#BBF7D0'}}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-700">Waktu Rata-rata</h3>
-                <p className="text-3xl font-bold" style={{color: '#22C55E'}}>2.4h</p>
-                <p className="text-sm text-red-600">↘️ -5.2% durasi kunjungan</p>
+                <h3 className="font-semibold text-gray-800">Waktu Rata-rata</h3>
+                <p className="text-3xl font-bold text-gray-900">2.4h</p>
+                <p className="text-sm text-gray-900">↘️ -5.2% durasi kunjungan</p>
               </div>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
                 <span className="text-white text-xl">⏱️</span>
@@ -79,9 +79,9 @@ export default function AdminReportsAnalytics() {
           <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#F9FAFB', borderColor: '#E5E7EB'}}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-700">Tingkat Kepuasan</h3>
-                <p className="text-3xl font-bold text-gray-700">4.8/5</p>
-                <p className="text-sm text-green-600">↗️ +0.3 dari survei lalu</p>
+                <h3 className="font-semibold text-gray-800">Tingkat Kepuasan</h3>
+                <p className="text-3xl font-bold text-gray-800">4.8/5</p>
+                <p className="text-sm text-gray-900">↗️ +0.3 dari survei lalu</p>
               </div>
               <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
                 <span className="text-white text-xl">⭐</span>
@@ -98,8 +98,8 @@ export default function AdminReportsAnalytics() {
             <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
               <div className="text-center">
                 <div className="text-4xl mb-2">📊</div>
-                <p className="text-gray-500">Chart akan ditampilkan di sini</p>
-                <p className="text-sm text-gray-400">Integrasi dengan Chart.js atau library lain</p>
+                <p className="text-gray-800">Chart akan ditampilkan di sini</p>
+                <p className="text-sm text-gray-700">Integrasi dengan Chart.js atau library lain</p>
               </div>
             </div>
           </div>
@@ -111,30 +111,30 @@ export default function AdminReportsAnalytics() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-4 h-4 rounded" style={{backgroundColor: '#3D5DC3'}}></div>
-                  <span className="ml-3 text-sm">Konsultasi Bisnis</span>
+                  <span className="ml-3 text-sm text-gray-900">Konsultasi Bisnis</span>
                 </div>
-                <span className="text-sm font-semibold">45%</span>
+                <span className="text-sm font-semibold text-gray-900">45%</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-4 h-4 rounded" style={{backgroundColor: '#22C55E'}}></div>
-                  <span className="ml-3 text-sm">Bantuan Teknis</span>
+                  <span className="ml-3 text-sm text-gray-900">Bantuan Teknis</span>
                 </div>
-                <span className="text-sm font-semibold">28%</span>
+                <span className="text-sm font-semibold text-gray-900">28%</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-4 h-4 rounded" style={{backgroundColor: '#F29442'}}></div>
-                  <span className="ml-3 text-sm">Informasi Produk</span>
+                  <span className="ml-3 text-sm text-gray-900">Informasi Produk</span>
                 </div>
-                <span className="text-sm font-semibold">18%</span>
+                <span className="text-sm font-semibold text-gray-900">18%</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="w-4 h-4 bg-gray-400 rounded"></div>
-                  <span className="ml-3 text-sm">Lainnya</span>
+                  <div className="w-4 h-4 bg-gray-700 rounded"></div>
+                  <span className="ml-3 text-sm text-gray-900">Lainnya</span>
                 </div>
-                <span className="text-sm font-semibold">9%</span>
+                <span className="text-sm font-semibold text-gray-900">9%</span>
               </div>
             </div>
           </div>
@@ -163,10 +163,10 @@ export default function AdminReportsAnalytics() {
                     {activity.type === 'in' ? '→' : activity.type === 'out' ? '←' : activity.type === 'request' ? '📋' : '⭐'}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-gray-500">{activity.user}</p>
+                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                    <p className="text-xs text-gray-800">{activity.user}</p>
                   </div>
-                  <span className="text-xs text-gray-400">{activity.time}</span>
+                  <span className="text-xs text-gray-700">{activity.time}</span>
                 </div>
               ))}
             </div>
@@ -189,12 +189,12 @@ export default function AdminReportsAnalytics() {
                     {visitor.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{visitor.name}</p>
-                    <p className="text-xs text-gray-500">{visitor.visits} kunjungan</p>
+                    <p className="text-sm font-medium text-gray-900">{visitor.name}</p>
+                    <p className="text-xs text-gray-800">{visitor.visits} kunjungan</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold" style={{color: '#3D5DC3'}}>{visitor.visits}</span>
-                    <p className="text-xs text-gray-400">kali</p>
+                    <span className="text-sm font-bold text-gray-900">{visitor.visits}</span>
+                    <p className="text-xs text-gray-700">kali</p>
                   </div>
                 </div>
               ))}

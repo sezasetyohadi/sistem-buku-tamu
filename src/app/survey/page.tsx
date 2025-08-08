@@ -46,7 +46,7 @@ export default function Survey() {
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
               📋 Survey Kepuasan Pelayanan
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-800 max-w-2xl mx-auto">
               Bantu kami meningkatkan kualitas pelayanan dengan memberikan penilaian dan masukan Anda.
             </p>
           </div>

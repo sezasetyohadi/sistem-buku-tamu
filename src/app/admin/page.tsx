@@ -14,14 +14,14 @@ export default function AdminDashboard() {
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">🏠 Dashboard Admin</h1>
-              <p className="text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">🏠 Dashboard Admin</h1>
+              <p className="text-gray-900">
                 Selamat datang di panel administrasi. Kelola semua aspek sistem buku tamu dari sini.
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Terakhir login</p>
-              <p className="font-semibold">4 Agustus 2025, 09:00 WIB</p>
+              <p className="text-sm text-gray-900">Terakhir login</p>
+              <p className="font-semibold text-gray-900">4 Agustus 2025, 09:00 WIB</p>
             </div>
           </div>
         </div>
@@ -29,21 +29,21 @@ export default function AdminDashboard() {
         {/* Quick Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#EBF4FF', borderColor: '#BFDBFE'}}>
-            <h3 className="font-bold text-xl mb-2">Total Guests</h3>
-            <p className="text-4xl font-bold" style={{color: '#3D5DC3'}}>1,234</p>
-            <p className="text-sm text-green-600 mt-2">↗️ +15% dari bulan lalu</p>
+            <h3 className="font-bold text-xl mb-2 text-gray-900">Total Guests</h3>
+            <p className="text-4xl font-bold text-gray-900">1,234</p>
+            <p className="text-sm text-gray-900 mt-2">↗️ +15% dari bulan lalu</p>
           </div>
           
           <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#F0FDF4', borderColor: '#BBF7D0'}}>
-            <h3 className="font-bold text-xl mb-2">Checked In</h3>
-            <p className="text-4xl font-bold" style={{color: '#22C55E'}}>45</p>
-            <p className="text-sm text-blue-600 mt-2">📊 Hari ini</p>
+            <h3 className="font-bold text-xl mb-2 text-gray-900">Checked In</h3>
+            <p className="text-4xl font-bold text-gray-900">45</p>
+            <p className="text-sm text-gray-900 mt-2">📊 Hari ini</p>
           </div>
           
           <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#FEF3E2', borderColor: '#FED7AA'}}>
-            <h3 className="font-bold text-xl mb-2">Checked Out</h3>
-            <p className="text-4xl font-bold" style={{color: '#F29442'}}>38</p>
-            <p className="text-sm text-gray-600 mt-2">🕒 Hari ini</p>
+            <h3 className="font-bold text-xl mb-2 text-gray-900">Checked Out</h3>
+            <p className="text-4xl font-bold text-gray-900">38</p>
+            <p className="text-sm text-gray-800 mt-2">🕒 Hari ini</p>
           </div>
         </div>
 
@@ -55,10 +55,10 @@ export default function AdminDashboard() {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
                   <span className="text-white text-xl">👥</span>
                 </div>
-                <span className="text-gray-400 group-hover:text-gray-600">→</span>
+                <span className="text-gray-700 group-hover:text-gray-800">→</span>
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Manajemen Tamu</h3>
-              <p className="text-gray-600 text-sm">Kelola data tamu, check-in/out, dan riwayat kunjungan</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Manajemen Tamu</h3>
+              <p className="text-gray-900 text-sm">Kelola data tamu, check-in/out, dan riwayat kunjungan</p>
             </div>
           </Link>
 
@@ -68,10 +68,10 @@ export default function AdminDashboard() {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
                   <span className="text-white text-xl">🙏</span>
                 </div>
-                <span className="text-gray-400 group-hover:text-gray-600">→</span>
+                <span className="text-gray-700 group-hover:text-gray-800">→</span>
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Manajemen Layanan</h3>
-              <p className="text-gray-600 text-sm">Review permohonan layanan dan kelola approval</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Manajemen Layanan</h3>
+              <p className="text-gray-900 text-sm">Review permohonan layanan dan kelola approval</p>
             </div>
           </Link>
 
@@ -81,16 +81,16 @@ export default function AdminDashboard() {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}>
                   <span className="text-white text-xl">📊</span>
                 </div>
-                <span className="text-gray-400 group-hover:text-gray-600">→</span>
+                <span className="text-gray-700 group-hover:text-gray-800">→</span>
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Laporan & Analitik</h3>
-              <p className="text-gray-600 text-sm">Lihat statistik, tren, dan laporan detail</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Laporan & Analitik</h3>
+              <p className="text-gray-900 text-sm">Lihat statistik, tren, dan laporan detail</p>
             </div>
           </Link>
         </div>
         
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-4">📋 Daftar Tamu Terbaru</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900">📋 Daftar Tamu Terbaru</h2>
           <GuestDataTable />
         </div>
       </div>

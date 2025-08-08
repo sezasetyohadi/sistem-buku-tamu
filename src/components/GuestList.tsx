@@ -140,7 +140,7 @@ export default function GuestList({
       <Card variant="elevated" padding="lg">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3D5DC3]"></div>
-          <span className="ml-3 text-gray-600">Memuat data tamu...</span>
+          <span className="ml-3 text-gray-800">Memuat data tamu...</span>
         </div>
       </Card>
     );
@@ -184,28 +184,28 @@ export default function GuestList({
         <Card variant="gradient" padding="md">
           <div className="text-center">
             <div className="text-2xl font-bold text-[#3D5DC3]">{guests.length}</div>
-            <div className="text-sm text-gray-600">Total Tamu</div>
+            <div className="text-sm text-gray-800">Total Tamu</div>
           </div>
         </Card>
         
         <Card variant="gradient" padding="md">
           <div className="text-center">
             <div className="text-2xl font-bold text-yellow-600">{guests.filter(g => g.status === 'waiting').length}</div>
-            <div className="text-sm text-gray-600">Menunggu</div>
+            <div className="text-sm text-gray-800">Menunggu</div>
           </div>
         </Card>
         
         <Card variant="gradient" padding="md">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{guests.filter(g => g.status === 'checked-in').length}</div>
-            <div className="text-sm text-gray-600">Check-in</div>
+            <div className="text-sm text-gray-800">Check-in</div>
           </div>
         </Card>
         
         <Card variant="gradient" padding="md">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-600">{guests.filter(g => g.status === 'checked-out').length}</div>
-            <div className="text-sm text-gray-600">Check-out</div>
+            <div className="text-2xl font-bold text-gray-800">{guests.filter(g => g.status === 'checked-out').length}</div>
+            <div className="text-sm text-gray-800">Check-out</div>
           </div>
         </Card>
       </div>
@@ -214,14 +214,14 @@ export default function GuestList({
       <Card variant="elevated" padding="lg">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900">Daftar Tamu Hari Ini</h2>
-          <p className="text-gray-600">Menampilkan {filteredGuests.length} dari {guests.length} tamu</p>
+          <p className="text-gray-800">Menampilkan {filteredGuests.length} dari {guests.length} tamu</p>
         </div>
 
         {filteredGuests.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">👤</div>
+            <div className="text-gray-700 text-6xl mb-4">👤</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada tamu ditemukan</h3>
-            <p className="text-gray-600">Coba ubah kata kunci pencarian atau filter status</p>
+            <p className="text-gray-800">Coba ubah kata kunci pencarian atau filter status</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -239,7 +239,7 @@ export default function GuestList({
                       </span>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-600">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-800">
                       <div className="flex items-center">
                         <span className="mr-2">📧</span>
                         {guest.email}

@@ -14,7 +14,7 @@ export default function AdminGuestsManagement() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">📋 Manajemen Data Tamu</h1>
-              <p className="text-gray-600">
+              <p className="text-gray-800">
                 Kelola semua data tamu yang telah mendaftar dalam sistem
               </p>
             </div>
@@ -77,7 +77,7 @@ export default function AdminGuestsManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-700">Check Out</h3>
-                <p className="text-3xl font-bold text-gray-600">33</p>
+                <p className="text-3xl font-bold text-gray-800">33</p>
               </div>
               <div className="w-12 h-12 bg-gray-500 rounded-xl flex items-center justify-center">
                 <span className="text-white text-xl">🚪</span>
@@ -111,11 +111,11 @@ export default function AdminGuestsManagement() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keperluan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check In</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Tamu</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Keperluan</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Check In</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -129,17 +129,17 @@ export default function AdminGuestsManagement() {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">John Doe {i}</div>
-                          <div className="text-sm text-gray-500">john{i}@email.com</div>
+                          <div className="text-sm text-gray-800">john{i}@email.com</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">Konsultasi Bisnis</div>
-                      <div className="text-sm text-gray-500">Lantai 3 - Ruang Meetinng</div>
+                      <div className="text-sm text-gray-800">Lantai 3 - Ruang Meetinng</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">09:30 WIB</div>
-                      <div className="text-sm text-gray-500">4 Agustus 2025</div>
+                      <div className="text-sm text-gray-800">4 Agustus 2025</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full" style={{backgroundColor: '#F0FDF4', color: '#22C55E'}}>

@@ -176,7 +176,7 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
       <Card variant="elevated" padding="lg">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrasi Tamu</h2>
-          <p className="text-gray-600">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
+          <p className="text-gray-800">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
         </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -413,10 +413,10 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-bold text-lg">Registrasi Berhasil! 🎉</h4>
-                  <p className="text-green-100 text-sm mt-1">
+                  <p className="text-green-50 text-sm mt-1">
                     Selamat datang di DISNAKERTRANS Jawa Tengah
                   </p>
-                  <p className="text-green-100 text-xs mt-1">
+                  <p className="text-green-50 text-xs mt-1">
                     Data Anda telah tersimpan dengan aman
                   </p>
                 </div>

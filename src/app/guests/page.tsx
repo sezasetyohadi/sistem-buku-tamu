@@ -319,7 +319,7 @@ export default function Guests() {
               </svg>
               Daftar Tamu Hari Ini
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-800 max-w-2xl mx-auto">
               Monitor dan kelola kunjungan tamu dengan mudah. Lihat status, lakukan check-in/check-out, dan akses detail lengkap setiap tamu.
             </p>
           </div>
