@@ -1,69 +1,59 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import Button from '@/components/ui/PrimaryButton';
+import Input from '@/components/ui/FormInput';
 import { isValidEmail } from '@/lib/utils';
 
 // Types based on the DB schema
+interface SurveySection {
+  id: number;
+  nama_section: string;
+  urutan: number;
+  questions: SurveyQuestion[];
+}
+
 interface SurveyQuestion {
   id: number;
-  pertanyaan: string;
-  is_aktif: boolean;
-  options: SurveyOption[];
-}
-
-interface SurveyOption {
-  id: number;
-  pertanyaan_id: number;
-  isi_opsi: string;
+  section_id: number;
   urutan: number;
+  pertanyaan: string;
+  tipe_jawaban: 'rating' | 'teks';
+  is_aktif: boolean;
+  created_at: string;
+  jenis_rating_id?: number;
+  ratingOptions?: RatingOption[];
 }
 
-interface EducationOption {
+interface RatingOption {
   id: number;
-  pendidikan_terakhir: string;
-}
-
-interface ProfessionOption {
-  id: number;
-  nama_profesi: string;
-}
-
-enum Gender {
-  MALE = 'Laki-laki',
-  FEMALE = 'Perempuan'
+  jenis_rating_id: number;
+  skala_rating: string;
+  urutan_rating: number;
 }
 
 interface FormData {
   nama_lengkap: string;
-  jenis_kelamin: Gender;
-  pendidikan_terakhir: string;
-  profesi: string;
-  instansi: string;
-  answers: { [key: number]: number }; // questionId: optionId
+  email: string;
+  tanggal_kunjungan: string;
+  answers: { [key: number]: number | string }; // questionId: answer (number for rating, string for text)
   saran: string;
 }
 
 export default function SurveyForm() {
-  const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
-  const [educationOptions, setEducationOptions] = useState<EducationOption[]>([]);
-  const [professionOptions, setProfessionOptions] = useState<ProfessionOption[]>([]);
-  const [isCustomEducation, setIsCustomEducation] = useState(false);
-  const [isCustomProfession, setIsCustomProfession] = useState(false);
+  const [sections, setSections] = useState<SurveySection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   
-  // Initialize form data
+  // Initialize form data with today's date as default
+  const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
   const [formData, setFormData] = useState<FormData>({
     nama_lengkap: '',
-    jenis_kelamin: Gender.MALE,
-    pendidikan_terakhir: '',
-    profesi: '',
-    instansi: '',
+    email: '',
+    tanggal_kunjungan: today,
     answers: {},
     saran: '',
   });
@@ -71,38 +61,20 @@ export default function SurveyForm() {
   // Validation errors
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   
-  // Fetch survey questions and options
+  // Fetch survey sections, questions and rating options
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError('');
       
       try {
-        // Fetch survey questions
-        const questionsResponse = await fetch('/api/survey/questions');
-        if (!questionsResponse.ok) {
-          throw new Error('Failed to fetch survey questions');
+        // Fetch survey data organized by sections
+        const response = await fetch('/api/survey/questions-by-section');
+        if (!response.ok) {
+          throw new Error('Failed to fetch survey data');
         }
-        const questionsData = await questionsResponse.json();
-        setQuestions(questionsData.data || []);
-        
-        // Fetch education options
-        const educationResponse = await fetch('/api/guests?options=education');
-        if (educationResponse.ok) {
-          const data = await educationResponse.json();
-          if (data.success) {
-            setEducationOptions(data.data);
-          }
-        }
-        
-        // Fetch profession options
-        const professionResponse = await fetch('/api/guests?options=profession');
-        if (professionResponse.ok) {
-          const data = await professionResponse.json();
-          if (data.success) {
-            setProfessionOptions(data.data);
-          }
-        }
+        const data = await response.json();
+        setSections(data.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         setError(error instanceof Error ? error.message : 'An unknown error occurred');
@@ -118,39 +90,10 @@ export default function SurveyForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
-    // Handle special cases for "Lainnya" options
-    if (name === 'pendidikan_terakhir') {
-      if (value === 'Lainnya') {
-        setIsCustomEducation(true);
-        return;
-      } else {
-        setIsCustomEducation(false);
-      }
-    } 
-    
-    if (name === 'profesi') {
-      if (value === 'Lainnya') {
-        setIsCustomProfession(true);
-        return;
-      } else {
-        setIsCustomProfession(false);
-      }
-    }
-    
-    // Handle custom inputs
-    if ((name === 'pendidikan_terakhir_custom' && isCustomEducation) || 
-        (name === 'profesi_custom' && isCustomProfession)) {
-      const actualFieldName = name === 'pendidikan_terakhir_custom' ? 'pendidikan_terakhir' : 'profesi';
-      setFormData((prev) => ({
-        ...prev,
-        [actualFieldName]: value,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
     
     // Clear error for this field when user types
     if (errors[name]) {
@@ -161,17 +104,36 @@ export default function SurveyForm() {
     }
   };
   
-  // Handle survey question answer selection
-  const handleAnswerSelection = (questionId: number, optionId: number) => {
+  // Handle survey question answer selection for rating questions
+  const handleRatingSelection = (questionId: number, ratingValue: number) => {
     setFormData((prev) => ({
       ...prev,
       answers: {
         ...prev.answers,
-        [questionId]: optionId,
+        [questionId]: ratingValue,
       },
     }));
     
     // Clear error for this question when user selects an answer
+    if (errors[`question_${questionId}`]) {
+      setErrors((prev) => ({
+        ...prev,
+        [`question_${questionId}`]: '',
+      }));
+    }
+  };
+  
+  // Handle survey question answer input for text questions
+  const handleTextAnswer = (questionId: number, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      answers: {
+        ...prev.answers,
+        [questionId]: value,
+      },
+    }));
+    
+    // Clear error for this question when user types an answer
     if (errors[`question_${questionId}`]) {
       setErrors((prev) => ({
         ...prev,
@@ -188,27 +150,42 @@ export default function SurveyForm() {
       newErrors.nama_lengkap = 'Nama lengkap harus diisi';
     }
     
-    if (!formData.jenis_kelamin) {
-      newErrors.jenis_kelamin = 'Jenis kelamin harus dipilih';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email harus diisi';
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = 'Format email tidak valid';
     }
     
-    if (!formData.pendidikan_terakhir) {
-      newErrors.pendidikan_terakhir = 'Pendidikan terakhir harus dipilih';
+    if (!formData.tanggal_kunjungan) {
+      newErrors.tanggal_kunjungan = 'Tanggal kunjungan harus diisi';
     }
     
-    if (!formData.profesi) {
-      newErrors.profesi = 'Profesi harus dipilih';
-    }
-    
-    // Check if all questions have been answered
-    questions.forEach((question) => {
-      if (!formData.answers[question.id]) {
-        newErrors[`question_${question.id}`] = 'Silakan pilih jawaban untuk pertanyaan ini';
-      }
+    // Check if all required questions have been answered
+    sections.forEach(section => {
+      section.questions.forEach(question => {
+        // Rating questions are mandatory
+        if (question.tipe_jawaban === 'rating') {
+          if (!formData.answers[question.id]) {
+            newErrors[`question_${question.id}`] = 'Silakan pilih jawaban untuk pertanyaan ini';
+          }
+        }
+      });
     });
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+  
+  // Handle form reset
+  const handleReset = () => {
+    setFormData({
+      nama_lengkap: '',
+      email: '',
+      tanggal_kunjungan: today,
+      answers: {},
+      saran: '',
+    });
+    setErrors({});
   };
   
   // Submit form
@@ -227,17 +204,32 @@ export default function SurveyForm() {
     setIsSubmitting(true);
     
     try {
-      // Prepare data for submission
-      const answers = Object.entries(formData.answers).map(([questionId, optionId]) => ({
-        pertanyaan_id: parseInt(questionId),
-        jawaban: optionId,
-        nama_lengkap: formData.nama_lengkap,
-        jenis_kelamin: formData.jenis_kelamin,
-        pendidikan_terakhir: formData.pendidikan_terakhir,
-        profesi: formData.profesi,
-        instansi: formData.instansi,
-        saran: formData.saran
-      }));
+      // Create an array for all questions in all sections
+      const allQuestions: SurveyQuestion[] = [];
+      sections.forEach(section => {
+        if (section.questions) {
+          allQuestions.push(...section.questions);
+        }
+      });
+      
+      // Prepare data for submission - create an array of all answers
+      const answers = allQuestions.map(question => {
+        let answer = formData.answers[question.id] || '';
+        
+        // For text type questions that weren't answered, use empty string
+        if (question.tipe_jawaban === 'teks' && !answer) {
+          answer = '';
+        }
+        
+        return {
+          pertanyaan_id: question.id,
+          jawaban: answer,
+          nama_lengkap: formData.nama_lengkap,
+          email: formData.email,
+          tanggal_kunjungan: formData.tanggal_kunjungan,
+          saran: formData.saran
+        };
+      });
       
       // Send the request
       const response = await fetch('/api/survey/submit', {
@@ -257,25 +249,38 @@ export default function SurveyForm() {
       // Clear form on success
       setFormData({
         nama_lengkap: '',
-        jenis_kelamin: Gender.MALE,
-        pendidikan_terakhir: '',
-        profesi: '',
-        instansi: '',
+        email: '',
+        tanggal_kunjungan: today,
         answers: {},
         saran: '',
       });
       
-      // Reset custom input states
-      setIsCustomEducation(false);
-      setIsCustomProfession(false);
-      
       setSubmitSuccess(true);
+      window.scrollTo(0, 0); // Scroll to top to show success message
     } catch (error) {
       console.error('Error submitting survey:', error);
       setSubmitError(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Helper function to find a question's type
+  const findQuestionType = (questionId: number): 'rating' | 'teks' => {
+    for (const section of sections) {
+      const question = section.questions.find(q => q.id === questionId);
+      if (question) {
+        return question.tipe_jawaban;
+      }
+    }
+    return 'teks'; // default
+  };
+  
+  // Helper function to determine if a section should display questions in a grid
+  const shouldDisplayGrid = (sectionId: number): boolean => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section || !section.questions) return false;
+    return section.questions.length > 1;
   };
   
   if (isLoading) {
@@ -297,6 +302,138 @@ export default function SurveyForm() {
       </div>
     );
   }
+  
+  // Render select dropdown for rating questions
+  const renderRatingSelect = (question: SurveyQuestion) => {
+    return (
+      <div className="w-full">
+        <label htmlFor={`question_${question.id}`} className="block text-sm font-medium text-gray-700 mb-1">
+          {question.pertanyaan} <span className="text-red-500">*</span>
+        </label>
+        <select
+          id={`question_${question.id}`}
+          name={`question_${question.id}`}
+          value={formData.answers[question.id] as string || ''}
+          onChange={(e) => handleRatingSelection(question.id, parseInt(e.target.value))}
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors[`question_${question.id}`] ? "border-red-500" : "border-gray-300"
+          }`}
+          required
+        >
+          <option value="">Pilih rating</option>
+          {question.ratingOptions?.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.skala_rating}
+            </option>
+          ))}
+        </select>
+        {errors[`question_${question.id}`] && (
+          <p className="mt-1 text-sm text-red-600">{errors[`question_${question.id}`]}</p>
+        )}
+      </div>
+    );
+  };
+  
+  // Render input or textarea for text questions with dropdown for recommendation questions
+  const renderTextInput = (question: SurveyQuestion) => {
+    // For questions with jenis_rating_id = 2 (Skala 3), use a special dropdown
+    if (question.jenis_rating_id === 2) {
+      return (
+        <div className="w-full">
+          <label htmlFor={`question_${question.id}`} className="block text-sm font-medium text-gray-700 mb-1">
+            {question.pertanyaan} <span className="text-red-500">*</span>
+          </label>
+          <select
+            id={`question_${question.id}`}
+            name={`question_${question.id}`}
+            value={formData.answers[question.id] as string || ''}
+            onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors[`question_${question.id}`] ? "border-red-500" : "border-gray-300"
+            }`}
+            required
+          >
+            <option value="">Pilih jawaban</option>
+            {/* Using dropdown options from ratingOptions if available */}
+            {question.ratingOptions?.map((option) => (
+              <option key={option.id} value={option.skala_rating}>
+                {option.skala_rating}
+              </option>
+            ))}
+            {/* Fallback options if ratingOptions is not available */}
+            {(!question.ratingOptions || question.ratingOptions.length === 0) && (
+              <>
+                <option value="Memuaskan">Memuaskan</option>
+                <option value="Cukup">Cukup</option>
+                <option value="Kurang Memuaskan">Kurang Memuaskan</option>
+              </>
+            )}
+          </select>
+          {errors[`question_${question.id}`] && (
+            <p className="mt-1 text-sm text-red-600">{errors[`question_${question.id}`]}</p>
+          )}
+        </div>
+      );
+    }
+    
+    // For text questions (jenis_rating_id = 3)
+    return (
+      <div className="w-full">
+        <label htmlFor={`question_${question.id}_text`} className="block text-sm font-medium text-gray-700 mb-1">
+          {question.pertanyaan}
+        </label>
+        <textarea
+          id={`question_${question.id}_text`}
+          name={`question_${question.id}_text`}
+          value={formData.answers[question.id] as string || ''}
+          onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+          placeholder="Masukkan jawaban Anda"
+          rows={2}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {errors[`question_${question.id}`] && (
+          <p className="mt-1 text-sm text-red-600">{errors[`question_${question.id}`]}</p>
+        )}
+      </div>
+    );
+  };
+  
+  // Function to render questions by section in a grid or single column
+  const renderSectionQuestions = (sectionId: number) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section || !section.questions) return null;
+    
+    const questions = section.questions.sort((a, b) => a.urutan - b.urutan);
+    const useGrid = questions.length > 1;
+    
+    if (useGrid) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {questions.map((question) => (
+            <div key={question.id}>
+              {question.tipe_jawaban === 'rating'
+                ? renderRatingSelect(question)
+                : renderTextInput(question)
+              }
+            </div>
+          ))}
+        </div>
+      );
+    } else {
+      return (
+        <div className="mb-4">
+          {questions.map((question) => (
+            <div key={question.id}>
+              {question.tipe_jawaban === 'rating'
+                ? renderRatingSelect(question)
+                : renderTextInput(question)
+              }
+            </div>
+          ))}
+        </div>
+      );
+    }
+  };
   
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -329,165 +466,88 @@ export default function SurveyForm() {
             required
           />
           
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Jenis Kelamin
-            </label>
-            <select
-              name="jenis_kelamin"
-              value={formData.jenis_kelamin}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.jenis_kelamin ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            >
-              <option value={Gender.MALE}>Laki-laki</option>
-              <option value={Gender.FEMALE}>Perempuan</option>
-            </select>
-            {errors.jenis_kelamin && (
-              <p className="mt-1 text-sm text-red-600">{errors.jenis_kelamin}</p>
-            )}
-          </div>
-          
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pendidikan Terakhir
-            </label>
-            <select
-              name="pendidikan_terakhir"
-              value={isCustomEducation ? 'Lainnya' : formData.pendidikan_terakhir}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.pendidikan_terakhir ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            >
-              <option value="">- Pilih Pendidikan Terakhir -</option>
-              {educationOptions.map((option) => (
-                <option key={option.id} value={option.pendidikan_terakhir}>
-                  {option.pendidikan_terakhir}
-                </option>
-              ))}
-              <option value="Lainnya">Lainnya</option>
-            </select>
-            {isCustomEducation && (
-              <Input
-                name="pendidikan_terakhir_custom"
-                placeholder="Tuliskan pendidikan terakhir Anda"
-                value={formData.pendidikan_terakhir !== 'Lainnya' ? formData.pendidikan_terakhir : ''}
-                onChange={(e) => setFormData(prev => ({...prev, pendidikan_terakhir: e.target.value}))}
-                className="mt-2"
-                autoFocus
-              />
-            )}
-            {errors.pendidikan_terakhir && (
-              <p className="mt-1 text-sm text-red-600">{errors.pendidikan_terakhir}</p>
-            )}
-          </div>
-          
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Profesi
-            </label>
-            <select
-              name="profesi"
-              value={isCustomProfession ? 'Lainnya' : formData.profesi}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.profesi ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            >
-              <option value="">- Pilih Profesi -</option>
-              {professionOptions.map((option) => (
-                <option key={option.id} value={option.nama_profesi}>
-                  {option.nama_profesi}
-                </option>
-              ))}
-              <option value="Lainnya">Lainnya</option>
-            </select>
-            {isCustomProfession && (
-              <Input
-                name="profesi_custom"
-                placeholder="Tuliskan profesi Anda"
-                value={formData.profesi !== 'Lainnya' ? formData.profesi : ''}
-                onChange={(e) => setFormData(prev => ({...prev, profesi: e.target.value}))}
-                className="mt-2"
-                autoFocus
-              />
-            )}
-            {errors.profesi && (
-              <p className="mt-1 text-sm text-red-600">{errors.profesi}</p>
-            )}
-          </div>
-          
           <Input
-            label="Instansi/Lembaga"
-            name="instansi"
-            value={formData.instansi}
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
             onChange={handleChange}
-            placeholder="Masukkan asal instansi/lembaga"
+            placeholder="Masukkan alamat email"
+            error={errors.email}
+            required
           />
           
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium mb-4">Penilaian Layanan</h3>
-            
-            {questions.length === 0 && (
-              <p className="text-gray-500 italic">Tidak ada pertanyaan survei yang tersedia.</p>
-            )}
-            
-            {questions.map((question) => (
-              <div key={question.id} className="mb-6">
-                <p className="font-medium mb-2">{question.pertanyaan}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {question.options.map((option) => (
-                    <div key={option.id} className="flex items-center">
-                      <input
-                        type="radio"
-                        id={`question_${question.id}_option_${option.id}`}
-                        name={`question_${question.id}`}
-                        value={option.id}
-                        checked={formData.answers[question.id] === option.id}
-                        onChange={() => handleAnswerSelection(question.id, option.id)}
-                        className="mr-2"
-                      />
-                      <label htmlFor={`question_${question.id}_option_${option.id}`} className="text-sm">
-                        {option.isi_opsi}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                {errors[`question_${question.id}`] && (
-                  <p className="mt-1 text-sm text-red-600">{errors[`question_${question.id}`]}</p>
-                )}
-              </div>
-            ))}
-          </div>
-          
           <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Saran dan Masukan
+              Tanggal Kunjungan <span className="text-red-500">*</span>
             </label>
-            <textarea
-              name="saran"
-              value={formData.saran}
+            <input
+              type="date"
+              name="tanggal_kunjungan"
+              value={formData.tanggal_kunjungan}
               onChange={handleChange}
-              placeholder="Tuliskan saran dan masukan Anda untuk peningkatan layanan kami"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.tanggal_kunjungan ? "border-red-500" : "border-gray-300"
+              }`}
+              required
             />
+            {errors.tanggal_kunjungan && (
+              <p className="mt-1 text-sm text-red-600">{errors.tanggal_kunjungan}</p>
+            )}
           </div>
           
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full"
-            isLoading={isSubmitting}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Mengirim...' : 'Kirim Survei'}
-          </Button>
+          {/* Penilaian Pelayanan Section */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-medium mb-4">Penilaian Pelayanan</h3>
+            
+            {/* Render Section 1 */}
+            {renderSectionQuestions(1)}
+            
+            {/* Render Section 2 */}
+            {renderSectionQuestions(2)}
+          </div>
+          
+          {/* Recommendation Question - Section 3 */}
+          {sections.find(s => s.id === 3) && (
+            <div className="border-t border-gray-200 pt-4">
+              {renderSectionQuestions(3)}
+            </div>
+          )}
+          
+          {/* Service Speed Assessment - Section 4 */}
+          {sections.find(s => s.id === 4) && (
+            <div className="pt-4">
+              {renderSectionQuestions(4)}
+            </div>
+          )}
+          
+          {/* Saran Perbaikan - Section 5 */}
+          {sections.find(s => s.id === 5) && (
+            <div className="border-t border-gray-200 pt-4">
+              {renderSectionQuestions(5)}
+            </div>
+          )}
+          
+          <div className="flex gap-4 pt-4">
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex-1"
+              isLoading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Mengirim...' : 'Kirim Survey →'}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={handleReset}
+            >
+              Reset →
+            </Button>
+          </div>
         </div>
       </form>
     </div>
