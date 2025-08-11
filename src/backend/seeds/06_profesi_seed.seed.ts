@@ -7,14 +7,19 @@ export async function seed() {
   if (count[0].count === 0) {
     // Insert profesi data
     const profesiData = [
-      'Pelajar/Mahasiswa',
       'PNS',
       'Wiraswasta',
       'Karyawan Swasta',
       'Guru/Dosen',
       'TNI/Polri',
       'Dokter/Nakes',
-      'Tidak Bekerja'
+      'Petani',
+      'Buruh',
+      'Pengacara',
+      'Konsultan',
+      'Pelajar/Mahasiswa',
+      'Tidak Bekerja',
+      'Lainnya'
     ];
     
     for (const profesi of profesiData) {

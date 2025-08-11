@@ -8,12 +8,14 @@ export async function up() {
       section_id int(11) DEFAULT NULL,
       urutan int(11) DEFAULT 1,
       pertanyaan text NOT NULL,
-      tipe_jawaban enum('rating','teks') DEFAULT 'teks',
+      jenis_rating_id int(11) DEFAULT NULL,
       is_aktif tinyint(1) DEFAULT 1,
       created_at timestamp NOT NULL DEFAULT current_timestamp(),
       PRIMARY KEY (id),
       KEY section_id (section_id),
-      CONSTRAINT pertanyaan_survei_ibfk_1 FOREIGN KEY (section_id) REFERENCES section_survei (id) ON DELETE SET NULL
+      KEY fk_jenis_rating (jenis_rating_id),
+      CONSTRAINT pertanyaan_survei_ibfk_1 FOREIGN KEY (section_id) REFERENCES section_survei (id) ON DELETE SET NULL,
+      CONSTRAINT fk_jenis_rating FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating (id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
   `);
   

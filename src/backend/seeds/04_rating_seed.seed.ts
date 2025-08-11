@@ -8,6 +8,7 @@ export async function seed() {
     // Insert jenis_rating data
     await executeQuery(`INSERT INTO jenis_rating (nama_rating) VALUES ('Skala 5')`);
     await executeQuery(`INSERT INTO jenis_rating (nama_rating) VALUES ('Skala 3')`);
+    await executeQuery(`INSERT INTO jenis_rating (nama_rating) VALUES ('Text')`);
     
     console.log('Jenis Rating seed data inserted successfully');
     

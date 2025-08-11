@@ -56,12 +56,14 @@ CREATE TABLE IF NOT EXISTS pertanyaan_survei (
   section_id int(11) DEFAULT NULL,
   urutan int(11) DEFAULT 1,
   pertanyaan text NOT NULL,
-  tipe_jawaban enum('rating','teks') DEFAULT 'teks',
+  jenis_rating_id int(11) DEFAULT NULL,
   is_aktif tinyint(1) DEFAULT 1,
   created_at timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (id),
   KEY section_id (section_id),
-  CONSTRAINT pertanyaan_survei_ibfk_1 FOREIGN KEY (section_id) REFERENCES section_survei (id) ON DELETE SET NULL
+  KEY fk_jenis_rating (jenis_rating_id),
+  CONSTRAINT pertanyaan_survei_ibfk_1 FOREIGN KEY (section_id) REFERENCES section_survei (id) ON DELETE SET NULL,
+  CONSTRAINT fk_jenis_rating FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table for survey answers
@@ -134,9 +136,9 @@ CREATE TABLE IF NOT EXISTS tujuan_kunjungan (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default admin user (password: admin123)
+-- Default admin user (password: dummy123)
 INSERT INTO admin (username, password, nama_lengkap, email, is_super_admin) 
-VALUES ('admin', '$2y$10$YourHashedPasswordHere', 'Super Admin', 'admin@disnaker.go.id', 1);
+VALUES ('dummy123', '$2y$10$0bBOPUT8Vp6.2dG7K7VPvOdoBtkE.TC3PZHP2SqaWrJmTO7ttf5/y', 'Admin Dummy', 'dummy@example.com', 1);
 
 -- Default data for bidang_tujuan
 INSERT INTO bidang_tujuan (bidang) VALUES
@@ -157,19 +159,20 @@ INSERT INTO section_survei (nama_section, urutan) VALUES
 ('Section 5', 5);
 
 -- Default data for pertanyaan_survei
-INSERT INTO pertanyaan_survei (section_id, urutan, pertanyaan, tipe_jawaban, is_aktif) VALUES
-(1, 1, 'Rating Keseluruhan', 'rating', 1),
-(1, 2, 'Rating Pelayanan Staff', 'rating', 1),
-(2, 1, 'Rating Fasilitas', 'rating', 1),
-(2, 2, 'Rating Kecepatan Layanan', 'rating', 1),
-(3, 1, 'Apakah Anda akan merekomendasikan pelayanan DISNAKERTRANS Jateng?', 'teks', 1),
-(4, 1, 'Bagaimana penilaian Anda terhadap kecepatan pelayanan?', 'teks', 1),
-(5, 1, 'Saran Perbaikan', 'teks', 1);
+INSERT INTO pertanyaan_survei (section_id, urutan, pertanyaan, jenis_rating_id, is_aktif) VALUES
+(1, 1, 'Rating Keseluruhan', 1, 1),
+(1, 2, 'Rating Pelayanan Staff', 1, 1),
+(2, 1, 'Rating Fasilitas', 1, 1),
+(2, 2, 'Rating Kecepatan Layanan', 1, 1),
+(3, 1, 'Apakah Anda akan merekomendasikan pelayanan DISNAKERTRANS Jateng?', 2, 1),
+(4, 1, 'Bagaimana penilaian Anda terhadap kecepatan pelayanan?', 2, 1),
+(5, 1, 'Saran Perbaikan', 3, 1);
 
 -- Default data for jenis_rating
 INSERT INTO jenis_rating (nama_rating) VALUES
 ('Skala 5'),
-('Skala 3');
+('Skala 3'),
+('Text');
 
 -- Default data for opsi_rating
 INSERT INTO opsi_rating (jenis_rating_id, skala_rating, urutan_rating) VALUES
