@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import GuestListNew from '../../components/GuestListNew';
+import GuestList from '../../components/GuestList';
 
 export default function Guests() {
   const [isLoading, setIsLoading] = useState(false);
@@ -326,7 +326,7 @@ export default function Guests() {
 
           {/* Guest List Component */}
           <div className="max-w-7xl mx-auto">
-            <GuestListNew 
+            <GuestList 
               guests={guests}
               onViewDetails={handleViewDetails}
               onCheckIn={handleCheckIn}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SurveyFeedbackForm from '../../components/forms/SurveyFeedbackForm';
+import SurveyFeedbackForm from '../../../components/forms/SurveyFeedbackForm';
 
 export default function Survey() {
   const [isLoading, setIsLoading] = useState(false);

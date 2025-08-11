@@ -49,7 +49,7 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Link href="/admin/guests" className="group">
+          <Link href="/guests" className="group">
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
-                  <span className="text-white text-xl">🙏</span>
+                  <span className="text-white text-xl">🏢</span>
                 </div>
                 <span className="text-gray-700 group-hover:text-gray-800">→</span>
               </div>

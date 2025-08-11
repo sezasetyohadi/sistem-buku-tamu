@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import GuestRegistrationForm from '../../components/forms/GuestRegistrationForm';
+import GuestRegistrationForm from '../../../components/forms/GuestRegistrationForm';
 
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
