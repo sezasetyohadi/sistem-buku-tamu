@@ -14,11 +14,11 @@ export interface Guest {
   profesi?: string;
   asal_instansi?: string;
   keperluan: string;
-  tanggal_kunjungan: Date;
   waktu_kunjungan?: string;
   email?: string;
   tanggapan?: boolean | null;
   file_upload?: string;
+  waktu_dibuat?: Date;
 }
 
 export interface GuestCreate {
@@ -29,7 +29,6 @@ export interface GuestCreate {
   profesi?: string;
   asal_instansi?: string;
   keperluan: string;
-  tanggal_kunjungan?: string;
   waktu_kunjungan?: string;
   email?: string;
   file_upload?: string;
@@ -43,7 +42,6 @@ export interface GuestUpdate {
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
-  tanggal_kunjungan?: string;
   waktu_kunjungan?: string;
   email?: string;
   tanggapan?: boolean;
@@ -62,17 +60,18 @@ export const GUEST_QUERIES = {
       profesi VARCHAR(100) DEFAULT NULL,
       asal_instansi VARCHAR(100) DEFAULT NULL,
       keperluan TEXT DEFAULT NULL,
-      tanggal_kunjungan TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      waktu_dibuat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      waktu_kunjungan VARCHAR(8) DEFAULT NULL,
       email VARCHAR(100) DEFAULT NULL,
       tanggapan TINYINT(1) DEFAULT NULL,
       file_upload VARCHAR(255) DEFAULT NULL
     )
   `,
-  GET_ALL: 'SELECT * FROM daftar_tamu ORDER BY tanggal_kunjungan DESC',
+  GET_ALL: 'SELECT * FROM daftar_tamu ORDER BY waktu_dibuat DESC',
   GET_BY_ID: 'SELECT * FROM daftar_tamu WHERE id = ?',
   CREATE: `INSERT INTO daftar_tamu 
-    (nama, alamat, jenis_kelamin, pendidikan_terakhir, profesi, asal_instansi, keperluan, tanggal_kunjungan, waktu_kunjungan, email, file_upload) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    (nama, alamat, jenis_kelamin, pendidikan_terakhir, profesi, asal_instansi, keperluan, waktu_kunjungan, email, file_upload) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   UPDATE: 'UPDATE daftar_tamu SET ? WHERE id = ?',
   DELETE: 'DELETE FROM daftar_tamu WHERE id = ?',
   SET_TANGGAPAN: 'UPDATE daftar_tamu SET tanggapan = ? WHERE id = ?',

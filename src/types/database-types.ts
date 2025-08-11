@@ -6,16 +6,20 @@ export interface DaftarTamu {
   id?: number;
   email?: string;
   nama: string;
+  nomor_telp?: string;
   alamat?: string;
   jenis_kelamin: 'Laki-laki' | 'Perempuan';
   pendidikan_terakhir?: string;
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
-  tanggal_kunjungan: string; // date
+  // tanggal_kunjungan field removed as it doesn't exist in the database
   waktu_kunjungan?: string; // time
-  tanggapan?: boolean;
+  bidang_tujuan_id?: number;
+  tujuan_kunjungan_id?: number;
+  tanggapan?: 'Check-in' | 'Check-out' | 'Menunggu';
   file_upload?: string;
+  waktu_dibuat?: string; // datetime
 }
 
 // Survey Types (sesuai tabel jawaban_survei)
@@ -71,19 +75,25 @@ export interface Profesi {
   nama_profesi: string;
 }
 
-// Form Data Types untuk frontend
+// Form Data Types untuk frontend - Disederhanakan
 export interface GuestFormData {
-  name: string;
+  nama: string;
   email: string;
-  phone: string;
-  address: string;
-  gender: string;
-  education: string;
-  profession: string;
-  company: string;
-  purpose: string;
-  department: string;
-  notes: string;
+  nomor_telp?: string;
+  alamat: string;
+  jenis_kelamin: 'Laki-laki' | 'Perempuan';
+  pendidikan_terakhir?: string; // Langsung string untuk menyederhanakan
+  profesi?: string; // Langsung string untuk menyederhanakan
+  profesi_id?: number; // ID for profesi
+  pendidikan_terakhir_id?: number; // ID for pendidikan
+  asal_instansi?: string;
+  keperluan: string;
+  // tanggal_kunjungan removed as it doesn't exist in database
+  waktu_kunjungan?: string;
+  bidang_tujuan_id?: number;
+  tujuan_kunjungan_id?: number;
+  catatan?: string;
+  file_upload?: string;
 }
 
 export interface SurveyFormData {

@@ -89,7 +89,7 @@
       "profesi": "Software Developer",
       "asal_instansi": "PT. Teknologi Maju",
       "keperluan": "Konsultasi pengembangan sistem",
-      "tanggal_kunjungan": "2025-08-05",
+      "waktu_dibuat": "2025-08-05T10:30:00.000Z",
       "waktu_kunjungan": "10:30:00",
       "created_at": "2025-08-05T10:30:00.000Z"
     }
@@ -242,7 +242,7 @@ CREATE TABLE daftar_tamu (
   profesi VARCHAR(100),
   asal_instansi VARCHAR(100),
   keperluan TEXT NOT NULL,
-  tanggal_kunjungan DATE NOT NULL,
+  waktu_dibuat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   waktu_kunjungan TIME DEFAULT NULL,
   tanggapan BOOLEAN DEFAULT FALSE,
   file_upload VARCHAR(255) DEFAULT NULL,
