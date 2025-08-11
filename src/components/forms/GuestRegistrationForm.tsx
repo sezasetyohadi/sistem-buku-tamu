@@ -29,6 +29,18 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     notes: ''
   });
 
+  const [professionOptions, setProfessionOptions] = useState<Array<{value: string, label: string}>>([
+    { value: '', label: 'Pilih profesi' }
+  ]);
+  const [educationOptions, setEducationOptions] = useState<Array<{value: string, label: string}>>([
+    { value: '', label: 'Pilih pendidikan terakhir' }
+  ]);
+  const [departmentOptions, setDepartmentOptions] = useState<Array<{value: string, label: string}>>([
+    { value: '', label: 'Pilih bidang tujuan' }
+  ]);
+  const [purposeOptions, setPurposeOptions] = useState<Array<{value: string, label: string}>>([
+    { value: '', label: 'Pilih tujuan kunjungan' }
+  ]);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showNotification, setShowNotification] = useState(false);
 
@@ -42,45 +54,74 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     }
   }, [showNotification]);
 
-  const purposeOptions = [
-    { value: '', label: 'Pilih tujuan kunjungan' },
-    { value: 'consultation', label: 'Konsultasi Layanan' },
-    { value: 'complaint', label: 'Pengaduan/Keluhan' },
-    { value: 'application', label: 'Pengajuan Permohonan' },
-    { value: 'information', label: 'Mencari Informasi' },
-    { value: 'meeting', label: 'Meeting/Rapat' },
-    { value: 'survey', label: 'Survey/Penelitian' },
-    { value: 'other', label: 'Lainnya' }
-  ];
+  // Fetch options from API
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const response = await fetch('/api/lookup');
+        const result = await response.json();
+        
+        console.log('API lookup response:', result);
+        
+        // Process profession options
+        if (result.success && result.data?.professions) {
+          const options = [
+            { value: '', label: 'Pilih profesi' },
+            ...result.data.professions.map((p: { id: number, nama_profesi: string }) => ({
+              value: p.id.toString(),
+              label: p.nama_profesi
+            }))
+          ];
+          setProfessionOptions(options);
+        }
+        
+        // Process education options
+        if (result.success && result.data?.educationLevels) {
+          const options = [
+            { value: '', label: 'Pilih pendidikan terakhir' },
+            ...result.data.educationLevels.map((e: { id: number, pendidikan_terakhir: string }) => ({
+              value: e.id.toString(),
+              label: e.pendidikan_terakhir
+            }))
+          ];
+          setEducationOptions(options);
+        }
+        
+        // Process bidang tujuan options
+        if (result.success && result.data?.bidangTujuan) {
+          const options = [
+            { value: '', label: 'Pilih bidang tujuan' },
+            ...result.data.bidangTujuan.map((d: { id: number, bidang: string }) => ({
+              value: d.id.toString(),
+              label: d.bidang
+            }))
+          ];
+          setDepartmentOptions(options);
+        }
+        
+        // Process tujuan kunjungan options
+        if (result.success && result.data?.tujuanKunjungan) {
+          const options = [
+            { value: '', label: 'Pilih tujuan kunjungan' },
+            ...result.data.tujuanKunjungan.map((t: { id: number, tujuan: string }) => ({
+              value: t.id.toString(),
+              label: t.tujuan
+            }))
+          ];
+          setPurposeOptions(options);
+        }
+      } catch (error) {
+        console.error('Error fetching form options:', error);
+      }
+    };
 
-  const departmentOptions = [
-    { value: '', label: 'Pilih bidang tujuan' },
-    { value: 'sekretariat', label: 'Sekretariat' },
-    { value: 'pelatihan', label: 'Bidang Pelatihan Kerja' },
-    { value: 'penempatan', label: 'Bidang Penempatan Tenaga Kerja' },
-    { value: 'hubind', label: 'Bidang Hubungan Industrial' },
-    { value: 'norma', label: 'Bidang Norma Kerja' },
-    { value: 'transmigrasi', label: 'Bidang Transmigrasi' },
-    { value: 'kepala', label: 'Kepala Dinas' }
-  ];
+    fetchOptions();
+  }, []);
 
   const genderOptions = [
     { value: '', label: 'Pilih jenis kelamin' },
     { value: 'Laki-laki', label: 'Laki-laki' },
     { value: 'Perempuan', label: 'Perempuan' }
-  ];
-
-  const educationOptions = [
-    { value: '', label: 'Pilih pendidikan terakhir' },
-    { value: 'SD', label: 'SD/Sederajat' },
-    { value: 'SMP', label: 'SMP/Sederajat' },
-    { value: 'SMA/SMK', label: 'SMA/SMK/Sederajat' },
-    { value: 'D1', label: 'Diploma 1 (D1)' },
-    { value: 'D2', label: 'Diploma 2 (D2)' },
-    { value: 'D3', label: 'Diploma 3 (D3)' },
-    { value: 'S1', label: 'Sarjana (S1)' },
-    { value: 'S2', label: 'Magister (S2)' },
-    { value: 'S3', label: 'Doktor (S3)' }
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -128,8 +169,8 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
       newErrors.education = 'Pendidikan terakhir harus dipilih';
     }
 
-    if (!formData.profession.trim()) {
-      newErrors.profession = 'Profesi harus diisi';
+    if (!formData.profession) {
+      newErrors.profession = 'Profesi harus dipilih';
     }
 
     if (!formData.purpose) {
@@ -148,7 +189,24 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit?.(formData);
+      // Transform data untuk sesuai dengan format API
+      const apiFormData = {
+        nama: formData.name,
+        email: formData.email,
+        nomor_telp: formData.phone,
+        alamat: formData.address,
+        jenis_kelamin: formData.gender,
+        pendidikan_terakhir_id: formData.education,
+        profesi_id: formData.profession,
+        asal_instansi: formData.company,
+        keperluan: formData.notes || 'Kunjungan umum',
+        catatan: formData.notes,
+        bidang_tujuan_id: formData.department ? parseInt(formData.department) : undefined,
+        tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined
+      };
+      
+      console.log('Sending data to API:', apiFormData);
+      onSubmit?.(apiFormData);
       
       // Show success notification
       setShowNotification(true);
@@ -230,15 +288,17 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
             }
           />
 
-          <FormInput
-            label="Perusahaan/Instansi"
-            name="company"
-            value={formData.company}
+          <FormSelect
+            label="Jenis Kelamin"
+            name="gender"
+            value={formData.gender}
             onChange={handleInputChange}
-            placeholder="Nama perusahaan (opsional)"
+            error={errors.gender}
+            options={genderOptions}
+            required
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             }
           />
@@ -264,13 +324,18 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormSelect
-            label="Jenis Kelamin"
-            name="gender"
-            value={formData.gender}
+            label="Profesi"
+            name="profession"
+            value={formData.profession}
             onChange={handleInputChange}
-            error={errors.gender}
-            options={genderOptions}
+            error={errors.profession}
+            options={professionOptions}
             required
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
           />
 
           <FormSelect
@@ -286,16 +351,14 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
 
         <div className="grid grid-cols-1 gap-6">
           <FormInput
-            label="Profesi"
-            name="profession"
-            value={formData.profession}
+            label="Perusahaan/Instansi"
+            name="company"
+            value={formData.company}
             onChange={handleInputChange}
-            error={errors.profession}
-            placeholder="Masukkan profesi/pekerjaan"
-            required
+            placeholder="Nama perusahaan/instansi"
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0H8" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             }
           />

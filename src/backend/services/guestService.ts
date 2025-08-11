@@ -6,7 +6,7 @@ import { DaftarTamu, JawabanSurvei, GuestFormData, SurveyFormData, DatabaseResul
 export async function getAllGuests(): Promise<DaftarTamu[]> {
   const query = `
     SELECT * FROM daftar_tamu 
-    ORDER BY tanggal_kunjungan DESC, id DESC
+    ORDER BY id DESC
   `;
   return executeQuery<DaftarTamu[]>(query);
 }
@@ -18,26 +18,66 @@ export async function getGuestById(id: number): Promise<DaftarTamu | null> {
 }
 
 export async function createGuest(formData: GuestFormData): Promise<number> {
-  const query = `
-    INSERT INTO daftar_tamu (
-      nama, email, alamat, jenis_kelamin, pendidikan_terakhir, 
-      profesi, asal_instansi, keperluan, tanggal_kunjungan
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURDATE())
-  `;
-  
-  const params = [
-    formData.name,
-    formData.email,
-    formData.address,
-    formData.gender,
-    formData.education,
-    formData.profession,
-    formData.company,
-    formData.purpose
-  ];
+  console.log('Received form data:', formData);
 
-  const result = await executeQuery<any>(query, params);
-  return result.insertId;
+  // Retrieve education and profession labels if IDs are provided
+  let pendidikanTerakhir = null;
+  let profesi = null;
+  
+  try {
+    // Get education label if ID is provided
+    if (formData.pendidikan_terakhir_id) {
+      const educationResult = await executeQuery<Array<{ pendidikan_terakhir: string }>>(
+        'SELECT pendidikan_terakhir FROM pendidikan_terakhir WHERE id = ?',
+        [formData.pendidikan_terakhir_id]
+      );
+      if (educationResult.length > 0) {
+        pendidikanTerakhir = educationResult[0].pendidikan_terakhir;
+      }
+    }
+    
+    // Get profession label if ID is provided
+    if (formData.profesi_id) {
+      const professionResult = await executeQuery<Array<{ nama_profesi: string }>>(
+        'SELECT nama_profesi FROM profesi WHERE id = ?',
+        [formData.profesi_id]
+      );
+      if (professionResult.length > 0) {
+        profesi = professionResult[0].nama_profesi;
+      }
+    }
+    
+    console.log('Resolved education:', pendidikanTerakhir);
+    console.log('Resolved profession:', profesi);
+    
+    // Insert query
+    const query = `
+      INSERT INTO daftar_tamu 
+      (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir, 
+       profesi, asal_instansi, keperluan, tanggapan) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu')
+    `;
+    
+    // Parameter minimal yang diperlukan
+    const params = [
+      formData.nama,
+      formData.email,
+      formData.nomor_telp || null,
+      formData.alamat,
+      formData.jenis_kelamin,
+      pendidikanTerakhir, // Use resolved education string
+      profesi, // Use resolved profession string
+      formData.asal_instansi || null,
+      formData.keperluan
+    ];
+
+    const result = await executeQuery<any>(query, params);
+    console.log('Guest inserted with ID:', result.insertId);
+    return result.insertId;
+  } catch (error) {
+    console.error('Database error:', error);
+    throw error;
+  }
 }
 
 export async function updateGuest(id: number, data: Partial<DaftarTamu>): Promise<boolean> {
@@ -63,7 +103,7 @@ export async function searchGuests(searchTerm: string): Promise<DaftarTamu[]> {
        OR email LIKE ? 
        OR asal_instansi LIKE ? 
        OR keperluan LIKE ?
-    ORDER BY tanggal_kunjungan DESC
+    ORDER BY waktu_dibuat DESC, id DESC
   `;
   
   const searchPattern = `%${searchTerm}%`;
@@ -171,8 +211,8 @@ export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
 // Statistics Service
 export async function getGuestStatistics(): Promise<any> {
   const totalGuestsQuery = 'SELECT COUNT(*) as total FROM daftar_tamu';
-  const todayGuestsQuery = 'SELECT COUNT(*) as today FROM daftar_tamu WHERE DATE(tanggal_kunjungan) = CURDATE()';
-  const thisMonthGuestsQuery = 'SELECT COUNT(*) as thisMonth FROM daftar_tamu WHERE MONTH(tanggal_kunjungan) = MONTH(CURDATE()) AND YEAR(tanggal_kunjungan) = YEAR(CURDATE())';
+  const todayGuestsQuery = 'SELECT COUNT(*) as today FROM daftar_tamu WHERE DATE(waktu_dibuat) = CURDATE()';
+  const thisMonthGuestsQuery = 'SELECT COUNT(*) as thisMonth FROM daftar_tamu WHERE MONTH(waktu_dibuat) = MONTH(CURDATE()) AND YEAR(waktu_dibuat) = YEAR(CURDATE())';
   const genderStatsQuery = 'SELECT jenis_kelamin, COUNT(*) as count FROM daftar_tamu GROUP BY jenis_kelamin';
   const educationStatsQuery = 'SELECT pendidikan_terakhir, COUNT(*) as count FROM daftar_tamu GROUP BY pendidikan_terakhir ORDER BY count DESC';
   

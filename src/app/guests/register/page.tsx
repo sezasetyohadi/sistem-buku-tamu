@@ -44,7 +44,7 @@ export default function Register() {
               Formulir Pendaftaran
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-              📝 Formulir Pendaftaran Tamu
+              Formulir Pendaftaran Tamu
             </h1>
             <p className="text-xl text-gray-800 max-w-2xl mx-auto">
               Silakan isi formulir di bawah ini untuk mendaftar sebagai tamu. Pastikan semua informasi yang Anda berikan adalah akurat.

@@ -1,22 +1,29 @@
 import { NextResponse } from 'next/server';
-import { getAllEducationLevels, getAllProfessions } from '@/backend/services/guestService';
-import { initializeTables } from '@/backend/config/db';
+import { 
+  getEducationOptions, 
+  getProfessionOptions, 
+  getBidangTujuanOptions, 
+  getTujuanKunjunganOptions
+} from '@/backend/config/db';
 
 export async function GET() {
   try {
-    // Initialize tables if they don't exist
-    await initializeTables();
+    // Tables are now handled by migrations
     
-    const [educationLevels, professions] = await Promise.all([
-      getAllEducationLevels(),
-      getAllProfessions()
+    const [educationLevels, professions, bidangTujuan, tujuanKunjungan] = await Promise.all([
+      getEducationOptions(),
+      getProfessionOptions(),
+      getBidangTujuanOptions(),
+      getTujuanKunjunganOptions()
     ]);
 
     return NextResponse.json({ 
       success: true, 
       data: {
         educationLevels,
-        professions
+        professions,
+        bidangTujuan,
+        tujuanKunjungan
       },
       message: 'Lookup data retrieved successfully' 
     });

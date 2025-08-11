@@ -79,7 +79,7 @@ export default function Guests() {
                 <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">
                   <span style="color: ${guest.jenis_kelamin === 'Laki-laki' ? '#3B82F6' : '#EC4899'};">
                     ⚤ ${guest.jenis_kelamin}
-                  </span> • 📅 ${new Date(guest.tanggal_kunjungan).toLocaleDateString('id-ID', { 
+                  </span> • 📅 ${new Date(guest.waktu_dibuat || '').toLocaleDateString('id-ID', { 
                     day: 'numeric', 
                     month: 'long', 
                     year: 'numeric' 

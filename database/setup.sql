@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS daftar_tamu (
   profesi VARCHAR(100),
   asal_instansi VARCHAR(100),
   keperluan TEXT NOT NULL,
-  tanggal_kunjungan DATE NOT NULL,
+  waktu_dibuat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   waktu_kunjungan TIME DEFAULT NULL,
   tanggapan BOOLEAN DEFAULT FALSE,
   file_upload VARCHAR(255) DEFAULT NULL,
@@ -140,7 +140,7 @@ INSERT IGNORE INTO opsi_jawaban (pertanyaan_id, isi_opsi, urutan) VALUES
 (4, 'Sangat Puas', 5);
 
 -- Insert sample data for testing
-INSERT IGNORE INTO daftar_tamu (nama, email, alamat, jenis_kelamin, pendidikan_terakhir, profesi, asal_instansi, keperluan, tanggal_kunjungan) VALUES
-('John Doe', 'john@example.com', 'Jl. Contoh No. 123', 'Laki-laki', 'S1', 'Software Developer', 'PT. Teknologi Maju', 'Konsultasi pengembangan sistem', CURDATE()),
-('Jane Smith', 'jane@example.com', 'Jl. Sample No. 456', 'Perempuan', 'S2', 'Data Analyst', 'CV. Data Prima', 'Presentasi proposal kerjasama', CURDATE()),
-('Ahmad Rahman', 'ahmad@example.com', 'Jl. Test No. 789', 'Laki-laki', 'S1', 'Marketing Manager', 'PT. Sukses Bersama', 'Permohonan informasi program', CURDATE());
+INSERT IGNORE INTO daftar_tamu (nama, email, alamat, jenis_kelamin, pendidikan_terakhir, profesi, asal_instansi, keperluan) VALUES
+('John Doe', 'john@example.com', 'Jl. Contoh No. 123', 'Laki-laki', 'S1', 'Software Developer', 'PT. Teknologi Maju', 'Konsultasi pengembangan sistem'),
+('Jane Smith', 'jane@example.com', 'Jl. Sample No. 456', 'Perempuan', 'S2', 'Data Analyst', 'CV. Data Prima', 'Presentasi proposal kerjasama'),
+('Ahmad Rahman', 'ahmad@example.com', 'Jl. Test No. 789', 'Laki-laki', 'S1', 'Marketing Manager', 'PT. Sukses Bersama', 'Permohonan informasi program');
