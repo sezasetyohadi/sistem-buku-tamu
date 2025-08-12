@@ -40,7 +40,7 @@ export default function FormInput({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-black mb-2">
           {label}
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -55,7 +55,7 @@ export default function FormInput({
         
         <input
           className={`
-            w-full px-4 py-3 text-gray-900 placeholder-gray-500 
+            w-full px-4 py-3 text-black placeholder-black 
             border rounded-lg shadow-sm transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-opacity-50
             ${inputVariant.border} ${inputVariant.ring}
@@ -75,7 +75,7 @@ export default function FormInput({
               {error}
             </p>
           ) : helperText ? (
-            <p className="text-sm text-gray-800">{helperText}</p>
+            <p className="text-sm text-black">{helperText}</p>
           ) : null}
         </div>
       )}

@@ -97,8 +97,8 @@ export default function SurveyFeedbackForm({ onSubmit, isLoading = false }: Surv
   return (
     <Card variant="elevated" padding="lg">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Survey Kepuasan Pelayanan</h2>
-        <p className="text-gray-800">Berikan penilaian Anda terhadap pelayanan DISNAKERTRANS Jawa Tengah</p>
+        <h2 className="text-2xl font-bold text-black mb-2">Survey Kepuasan Masyarakat</h2>
+        <p className="text-black">Bantu kami meningkatkan layanan dengan mengisi survei ini</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -136,7 +136,7 @@ export default function SurveyFeedbackForm({ onSubmit, isLoading = false }: Surv
         />
 
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Penilaian Pelayanan</h3>
+          <h3 className="text-lg font-bold text-black">Penilaian Pelayanan</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormSelect
@@ -190,7 +190,7 @@ export default function SurveyFeedbackForm({ onSubmit, isLoading = false }: Surv
         />
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-black mb-2">
             Saran Perbaikan
           </label>
           <textarea
@@ -198,13 +198,13 @@ export default function SurveyFeedbackForm({ onSubmit, isLoading = false }: Surv
             value={formData.improvements}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-4 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white hover:bg-gray-50 focus:bg-white"
+            className="w-full px-4 py-3 text-black placeholder-black border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white hover:bg-gray-50 focus:bg-white"
             placeholder="Apa yang bisa kami perbaiki untuk meningkatkan pelayanan?"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-black mb-2">
             Feedback Tambahan
           </label>
           <textarea
@@ -212,7 +212,7 @@ export default function SurveyFeedbackForm({ onSubmit, isLoading = false }: Surv
             value={formData.feedback}
             onChange={handleInputChange}
             rows={4}
-            className="w-full px-4 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white hover:bg-gray-50 focus:bg-white"
+            className="w-full px-4 py-3 text-black placeholder-black border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white hover:bg-gray-50 focus:bg-white"
             placeholder="Ceritakan pengalaman Anda atau berikan saran lainnya..."
           />
         </div>

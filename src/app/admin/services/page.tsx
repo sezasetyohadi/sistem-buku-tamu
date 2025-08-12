@@ -1,185 +1,333 @@
-import { Metadata } from 'next';
+"use client";
 
-export const metadata: Metadata = {
-  title: 'Admin - Manajemen Layanan | Sistem Buku Tamu',
-  description: 'Halaman manajemen layanan dan permohonan untuk administrator',
-};
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function AdminServicesManagement() {
+export default function AdminServices() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [adminData, setAdminData] = useState<any>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if admin is logged in
+    const adminSession = localStorage.getItem('admin_session');
+    
+    if (!adminSession) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      const adminInfo = JSON.parse(adminSession);
+      setAdminData(adminInfo);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Invalid admin session:', error);
+      localStorage.removeItem('admin_session');
+      router.push('/login');
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_session');
+    document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    router.push('/dashboard');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat halaman...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">🙏 Manajemen Layanan</h1>
-              <p className="text-gray-800">
-                Kelola semua permohonan layanan dari tamu dan pelanggan
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <button 
-                className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300"
-                style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}
-              >
-                📊 Laporan Layanan
-              </button>
-              <button 
-                className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300"
-                style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}
-              >
-                ➕ Layanan Baru
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#EBF4FF', borderColor: '#BFDBFE'}}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-700">Total Permohonan</h3>
-                <p className="text-3xl font-bold" style={{color: '#3D5DC3'}}>456</p>
-              </div>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
-                <span className="text-white text-xl">📋</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#FEF3E2', borderColor: '#FED7AA'}}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-700">Menunggu Review</h3>
-                <p className="text-3xl font-bold" style={{color: '#F29442'}}>23</p>
-              </div>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}>
-                <span className="text-white text-xl">⏳</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#F0FDF4', borderColor: '#BBF7D0'}}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-700">Disetujui</h3>
-                <p className="text-3xl font-bold" style={{color: '#22C55E'}}>398</p>
-              </div>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
-                <span className="text-white text-xl">✅</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#FEF2F2', borderColor: '#FECACA'}}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-700">Ditolak</h3>
-                <p className="text-3xl font-bold text-red-600">35</p>
-              </div>
-              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">❌</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Service Requests Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        {/* Admin Sidebar */}
+        <div className="w-64 bg-white shadow-lg h-screen sticky top-0">
+          {/* Logo */}
           <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800">Permohonan Layanan Terbaru</h2>
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  placeholder="Cari permohonan..."
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-lg border border-gray-200 p-2">
+                <img 
+                  src="/logo-jateng.svg" 
+                  alt="Logo Provinsi Jawa Tengah" 
+                  className="w-full h-full object-contain"
                 />
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Semua Status</option>
-                  <option>Menunggu Review</option>
-                  <option>Disetujui</option>
-                  <option>Ditolak</option>
-                  <option>Selesai</option>
-                </select>
+              </div>
+              <div className="ml-3">
+                <h1 className="text-lg font-bold text-gray-900">SIM Buku Tamu</h1>
+                <p className="text-sm text-gray-600">Admin Panel</p>
               </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Pemohon</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Jenis Layanan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Prioritas</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Tanggal</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {/* Sample Data Rows */}
-                {[
-                  { name: 'Ahmad Yani', service: 'Konsultasi Bisnis', priority: 'Tinggi', status: 'Menunggu Review', color: '#F29442' },
-                  { name: 'Siti Rahayu', service: 'Bantuan Teknis', priority: 'Sedang', status: 'Disetujui', color: '#22C55E' },
-                  { name: 'Budi Santoso', service: 'Informasi Produk', priority: 'Rendah', status: 'Selesai', color: '#6B7280' },
-                  { name: 'Maya Putri', service: 'Komplain Layanan', priority: 'Tinggi', status: 'Ditolak', color: '#EF4444' },
-                  { name: 'Andi Wijaya', service: 'Permintaan Data', priority: 'Sedang', status: 'Menunggu Review', color: '#F29442' },
-                ].map((item, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
-                          {item.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                          <div className="text-sm text-gray-800">Tamu Reguler</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{item.service}</div>
-                      <div className="text-sm text-gray-800">Kategori Umum</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        item.priority === 'Tinggi' ? 'bg-red-100 text-red-800' :
-                        item.priority === 'Sedang' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {item.priority}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">4 Agustus 2025</div>
-                      <div className="text-sm text-gray-800">10:30 WIB</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full" style={{
-                        backgroundColor: item.color === '#22C55E' ? '#F0FDF4' : 
-                                        item.color === '#F29442' ? '#FEF3E2' :
-                                        item.color === '#EF4444' ? '#FEF2F2' : '#F3F4F6',
-                        color: item.color
-                      }}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">👁️ Detail</button>
-                        <button className="text-green-600 hover:text-green-900">✅ Setujui</button>
-                        <button className="text-red-600 hover:text-red-900">❌ Tolak</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Navigation */}
+          <nav className="mt-6 px-3">
+            <Link
+              href="/dashboard"
+              className="flex items-center px-4 py-3 mb-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <span className="mr-3 text-lg">🏠</span>
+              Dashboard
+            </Link>
+            <Link
+              href="/register"
+              className="flex items-center px-4 py-3 mb-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <span className="mr-3 text-lg">👤</span>
+              Pendaftaran Tamu
+            </Link>
+            <Link
+              href="/admin/guests"
+              className="flex items-center px-4 py-3 mb-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <span className="mr-3 text-lg">👥</span>
+              Daftar Tamu
+            </Link>
+            <Link
+              href="/admin/services"
+              className="flex items-center px-4 py-3 mb-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+            >
+              <span className="mr-3 text-lg">🔧</span>
+              Survey
+            </Link>
+            <Link
+              href="/admin/reports"
+              className="flex items-center px-4 py-3 mb-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <span className="mr-3 text-lg">�</span>
+              Laporan
+            </Link>
+          </nav>
+
+          {/* Admin Info */}
+          <div className="absolute bottom-6 left-3 right-3">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {adminData?.nama_lengkap || adminData?.username}
+                  </p>
+                  <p className="text-xs text-gray-500">Administrator</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-400 hover:text-red-600 text-sm font-medium"
+                  title="Logout"
+                >
+                  🚪
+                </button>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto">
+          {/* Top Header */}
+          <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Survey Management
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Kelola survey kepuasan layanan DISNAKERTRANS Jateng
+                  </p>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <Link
+                    href="/"
+                    className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                  >
+                    🌐 Lihat Website
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Page Content */}
+          <main className="p-6">
+            {/* Survey Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">📋</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Survey</p>
+                    <p className="text-2xl font-bold text-gray-900">156</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">📝</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Bulan Ini</p>
+                    <p className="text-2xl font-bold text-gray-900">42</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">⭐</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Rata-rata Rating</p>
+                    <p className="text-2xl font-bold text-gray-900">4.2</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">📈</span>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Tingkat Kepuasan</p>
+                    <p className="text-2xl font-bold text-gray-900">84%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Survey Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <Link href="/survey" className="group">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Formulir Survey</h3>
+                      <p className="text-gray-600">Lihat dan kelola formulir survey kepuasan layanan</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <span className="text-2xl">📋</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              <div className="group cursor-pointer">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Hasil Survey</h3>
+                      <p className="text-gray-600">Analisis hasil survey dan feedback dari tamu</p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                      <span className="text-2xl">📊</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Survey Submissions */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Survey Terbaru</h3>
+                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Lihat Semua
+                  </button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {/* Sample survey entries */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-blue-600">AS</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Ahmad Subagyo</p>
+                        <p className="text-sm text-gray-600">Layanan Ketenagakerjaan</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        {[1,2,3,4,5].map((star) => (
+                          <span key={star} className="text-yellow-400">⭐</span>
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-500">2 hari lalu</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-green-600">SM</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Siti Maryam</p>
+                        <p className="text-sm text-gray-600">Layanan Transmigrasi</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        {[1,2,3,4].map((star) => (
+                          <span key={star} className="text-yellow-400">⭐</span>
+                        ))}
+                        <span className="text-gray-300">⭐</span>
+                      </div>
+                      <span className="text-sm text-gray-500">1 minggu lalu</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-purple-600">BH</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Budi Hartono</p>
+                        <p className="text-sm text-gray-600">Konsultasi Kartu AK1</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        {[1,2,3,4,5].map((star) => (
+                          <span key={star} className="text-yellow-400">⭐</span>
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-500">1 minggu lalu</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center mt-6">
+                  <button className="text-blue-600 hover:text-blue-700 font-medium">
+                    Muat lebih banyak
+                  </button>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     </div>

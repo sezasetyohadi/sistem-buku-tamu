@@ -134,7 +134,7 @@ export default function Home() {
             {/* Enhanced CTA buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
-                href="/register"
+                href="/guest/register"
                 className="group relative text-white font-bold py-6 px-12 rounded-2xl text-lg transition-all duration-500 shadow-2xl transform hover:scale-110 hover:-translate-y-2 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-100 group-hover:opacity-90"></div>
@@ -142,19 +142,19 @@ export default function Home() {
                 <div className="absolute inset-0 animate-pulse bg-white/10"></div>
                 <span className="relative flex items-center z-10">
                   <span className="mr-3 text-2xl">📝</span>
-                  <span>Daftar Sebagai Tamu</span>
+                  <span>Pendaftaran Tamu</span>
                   <span className="ml-3 transform group-hover:translate-x-2 transition-transform duration-300">→</span>
                 </span>
               </Link>
               
               <Link
-                href="/guests"
+                href="/guest/survey"
                 className="group relative bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white hover:bg-white hover:text-purple-700 font-bold py-6 px-12 rounded-2xl text-lg transition-all duration-500 shadow-xl hover:shadow-white/25 transform hover:scale-110 hover:-translate-y-1 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <span className="relative flex items-center z-10">
-                  <span className="mr-3 text-2xl">🙏</span>
-                  <span>Permohonan Layanan</span>
+                  <span className="mr-3 text-2xl">⭐</span>
+                  <span>Survey Kepuasan</span>
                   <span className="ml-3 transform group-hover:translate-x-2 transition-transform duration-300">→</span>
                 </span>
               </Link>
@@ -284,14 +284,14 @@ export default function Home() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
-                    href="/register"
+                    href="/guest/register"
                     className="text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                     style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}
                   >
                     Daftar Sekarang
                   </Link>
                   <Link
-                    href="/survey"
+                    href="/guest/survey"
                     className="border-2 border-white text-white hover:bg-white hover:text-indigo-600 font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                   >
                     Berikan Feedback
@@ -308,6 +308,16 @@ export default function Home() {
             <path d="M0,0 C200,80 400,40 600,60 C800,80 1000,20 1200,40 L1200,120 L0,120 Z" 
                   className="fill-white"></path>
           </svg>
+        </div>
+        
+        {/* Admin Access - for testing */}
+        <div className="absolute bottom-4 right-4 z-10">
+          <Link 
+            href="/admin/login" 
+            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+          >
+            Admin Login
+          </Link>
         </div>
       </div>
     </div>

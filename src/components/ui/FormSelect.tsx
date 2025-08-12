@@ -42,7 +42,7 @@ export default function FormSelect({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+  <label className="block text-sm font-semibold text-black mb-2">
           {label}
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -57,7 +57,7 @@ export default function FormSelect({
         
         <select
           className={`
-            w-full px-4 py-3 text-gray-900 
+            w-full px-4 py-3 text-black 
             border rounded-lg shadow-sm transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-opacity-50
             appearance-none cursor-pointer
@@ -69,7 +69,7 @@ export default function FormSelect({
           {...props}
         >
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option key={option.value} value={option.value} className="text-black">
               {option.label}
             </option>
           ))}
@@ -77,7 +77,7 @@ export default function FormSelect({
         
         {/* Custom dropdown arrow */}
         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -91,7 +91,7 @@ export default function FormSelect({
               {error}
             </p>
           ) : helperText ? (
-            <p className="text-sm text-gray-800">{helperText}</p>
+            <p className="text-sm text-black">{helperText}</p>
           ) : null}
         </div>
       )}
