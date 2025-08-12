@@ -9,10 +9,10 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { name: '🏠 Beranda', href: '/' },
-    { name: '📝 Daftar Tamu', href: '/register' },
-    { name: '🙏 Permohonan Layanan', href: '/guests' },
-    { name: '⭐ Survei Kepuasan', href: '/survey' },
+    { name: 'Beranda', href: '/' },
+    { name: 'Daftar Tamu', href: '/guests/register' },
+    { name: 'Permohonan Layanan', href: '/guests' },
+    { name: 'Survei Kepuasan', href: '/guests/survey' },
   ];
 
   return (

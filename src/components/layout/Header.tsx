@@ -29,7 +29,7 @@ export default function Header() {
           Registrasi Tamu
         </span>
       ), 
-      href: '/register' 
+      href: '/guests/register' 
     },
     { 
       name: (
@@ -51,7 +51,7 @@ export default function Header() {
           Survey Kepuasan
         </span>
       ), 
-      href: '/survey' 
+      href: '/guests/survey' 
     },
   ];
 

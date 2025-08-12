@@ -1,44 +1,48 @@
-// Komponen Select yang dapat digunakan ulang
+// Komponen Select yang dapat digunakan ulang dengan icon
 // Filename: FormSelect.tsx
 
-import React from 'react';
+"use client";
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
-  helperText?: string;
-  error?: string;
-  icon?: React.ReactNode;
-  variant?: 'default' | 'success' | 'error';
-  options: { value: string; label: string }[];
+import React, { useState } from 'react';
+
+interface SelectOption {
+  value: string;
+  label: string;
 }
 
-const SelectVariants = {
-  default: {
-    border: 'border-gray-300 focus:border-[#3D5DC3]',
-    ring: 'focus:ring-[#3D5DC3]'
-  },
-  success: {
-    border: 'border-green-500 focus:border-green-600',
-    ring: 'focus:ring-green-500'
-  },
-  error: {
-    border: 'border-red-500 focus:border-red-600',
-    ring: 'focus:ring-red-500'
-  }
-};
+interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label: string;
+  error?: string;
+  options: SelectOption[];
+  required?: boolean;
+  helperText?: string;
+  icon?: React.ReactNode;
+}
 
 export default function FormSelect({ 
   label, 
-  helperText, 
   error, 
-  icon, 
-  variant = 'default',
-  options,
-  className = '', 
+  options, 
+  required = false,
+  helperText,
+  icon,
+  className = "",
   ...props 
-}: SelectProps) {
-  const selectVariant = error ? SelectVariants.error : variant === 'success' ? SelectVariants.success : SelectVariants.default;
-  
+}: FormSelectProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Get appropriate icon based on the label
+  const getContextualIcon = () => {
+    if (icon) return icon;
+    
+    // Return generic list icon for all dropdowns - no more contextual icons
+    return (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+      </svg>
+    );
+  };
+
   return (
     <div className="w-full">
       {label && (
@@ -49,11 +53,19 @@ export default function FormSelect({
       )}
       
       <div className="relative">
-        {icon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-700">
-            {icon}
-          </div>
-        )}
+        {/* Icon di sebelah kiri */}
+        <div className={`
+          absolute left-3 top-1/2 transform -translate-y-1/2 z-10
+          transition-colors duration-200
+          ${error 
+            ? 'text-red-400' 
+            : isFocused 
+              ? 'text-blue-500' 
+              : 'text-gray-400 hover:text-gray-600'
+          }
+        `}>
+          {getContextualIcon()}
+        </div>
         
         <select
           className={`
@@ -61,11 +73,13 @@ export default function FormSelect({
             border rounded-lg shadow-sm transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-opacity-50
             appearance-none cursor-pointer
-            ${selectVariant.border} ${selectVariant.ring}
-            ${icon ? 'pl-10' : ''}
-            ${error ? 'bg-red-50' : 'bg-white hover:bg-gray-50 focus:bg-white'}
+            bg-gradient-to-r from-white to-gray-50
+            hover:from-blue-50 hover:to-white
+            focus:from-white focus:to-blue-50
             ${className}
           `}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           {...props}
         >
           {options.map((option) => (
@@ -81,6 +95,11 @@ export default function FormSelect({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
+        
+        {/* Subtle border highlight on focus */}
+        {isFocused && !error && (
+          <div className="absolute inset-0 rounded-xl pointer-events-none bg-blue-50 opacity-20 ring-1 ring-blue-200 -z-10" />
+        )}
       </div>
       
       {(helperText || error) && (

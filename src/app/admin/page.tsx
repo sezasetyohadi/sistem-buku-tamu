@@ -86,6 +86,15 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Link href="/guests" className="group">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
+                  <span className="text-white text-xl">👥</span>
+                </div>
+                <span className="text-gray-700 group-hover:text-gray-800">→</span>
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Link href="/admin/guests" className="group">
@@ -95,6 +104,18 @@ export default function AdminDashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Daftar Tamu</h3>
                 <p className="text-gray-600">Kelola data tamu, check-in/out, dan riwayat kunjungan</p>
               </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Manajemen Tamu</h3>
+              <p className="text-gray-900 text-sm">Kelola data tamu, check-in/out, dan riwayat kunjungan</p>
+            </div>
+          </Link>
+
+          <Link href="/admin/services" className="group">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
+                  <span className="text-white text-xl">🏢</span>
+                </div>
+                <span className="text-gray-700 group-hover:text-gray-800">→</span>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                 <span className="text-2xl">👥</span>
               </div>

@@ -16,7 +16,7 @@ interface Guest {
   created_at: string;
 }
 
-export default function GuestList() {
+export default function GuestDataTable() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
