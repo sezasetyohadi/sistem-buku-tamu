@@ -5,10 +5,17 @@ export async function up() {
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS pertanyaan_survei (
       id int(11) NOT NULL AUTO_INCREMENT,
+      section_id int(11) DEFAULT NULL,
+      urutan int(11) DEFAULT 1,
       pertanyaan text NOT NULL,
+      jenis_rating_id int(11) DEFAULT NULL,
       is_aktif tinyint(1) DEFAULT 1,
       created_at timestamp NOT NULL DEFAULT current_timestamp(),
-      PRIMARY KEY (id)
+      PRIMARY KEY (id),
+      KEY section_id (section_id),
+      KEY fk_jenis_rating (jenis_rating_id),
+      CONSTRAINT pertanyaan_survei_ibfk_1 FOREIGN KEY (section_id) REFERENCES section_survei (id) ON DELETE SET NULL,
+      CONSTRAINT fk_jenis_rating FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating (id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
   `);
   
@@ -19,10 +26,8 @@ export async function up() {
     CREATE TABLE IF NOT EXISTS jawaban_survei (
       id int(11) NOT NULL AUTO_INCREMENT,
       nama_lengkap varchar(100) NOT NULL,
-      jenis_kelamin enum('Laki-laki','Perempuan') NOT NULL,
-      pendidikan_terakhir varchar(100) DEFAULT NULL,
-      profesi varchar(100) DEFAULT NULL,
-      instansi varchar(100) DEFAULT NULL,
+      email varchar(100) NOT NULL,
+      tanggal_kunjungan date NOT NULL,
       pertanyaan_id int(11) NOT NULL,
       jawaban int(11) NOT NULL,
       created_at timestamp NOT NULL DEFAULT current_timestamp(),

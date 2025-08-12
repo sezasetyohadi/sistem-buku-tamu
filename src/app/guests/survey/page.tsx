@@ -1,37 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import SurveyFeedbackForm from '../../../components/forms/SurveyFeedbackForm';
+
+import SurveyForm from '@/components/SurveyForm';
 
 export default function Survey() {
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSurveySubmit = async (data: any) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/surveys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert('Terima kasih! Survey kepuasan Anda telah berhasil dikirim ke DISNAKERTRANS Jawa Tengah.');
-        console.log('Survey submitted:', result);
-      } else {
-        alert(`Survey gagal dikirim: ${result.message}`);
-      }
-    } catch (error) {
-      console.error('Error submitting survey:', error);
-      alert('Terjadi kesalahan saat mengirim survey. Silakan coba lagi.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // No longer needed as SurveyForm handles its own submissions
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
@@ -53,10 +27,7 @@ export default function Survey() {
 
           {/* Survey Form */}
           <div className="max-w-4xl mx-auto">
-            <SurveyFeedbackForm 
-              onSubmit={handleSurveySubmit}
-              isLoading={isLoading}
-            />
+            <SurveyForm />
           </div>
         </div>
       </div>

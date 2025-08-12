@@ -15,10 +15,10 @@ interface Guest {
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
-  tanggal_kunjungan: string;
   waktu_kunjungan?: string;
   tanggapan?: boolean;
   file_upload?: string;
+  waktu_dibuat?: string;
 }
 
 interface GuestListProps {
@@ -37,7 +37,7 @@ export default function GuestList({
   onCheckOut 
 }: GuestListProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('tanggal_kunjungan');
+  const [sortBy, setSortBy] = useState('waktu_dibuat');
 
   const filteredGuests = guests.filter(guest => {
     const matchesSearch = 
@@ -50,8 +50,8 @@ export default function GuestList({
   });
 
   const sortedGuests = [...filteredGuests].sort((a, b) => {
-    if (sortBy === 'tanggal_kunjungan') {
-      return new Date(b.tanggal_kunjungan).getTime() - new Date(a.tanggal_kunjungan).getTime();
+    if (sortBy === 'waktu_dibuat') {
+      return new Date(b.waktu_dibuat || '').getTime() - new Date(a.waktu_dibuat || '').getTime();
     }
     if (sortBy === 'nama') {
       return a.nama.localeCompare(b.nama);
@@ -107,7 +107,7 @@ export default function GuestList({
               onChange={(e) => setSortBy(e.target.value)}
               className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="tanggal_kunjungan">Tanggal Kunjungan</option>
+              <option value="waktu_dibuat">Tanggal Kunjungan</option>
               <option value="nama">Nama</option>
             </select>
           </div>
@@ -135,7 +135,7 @@ export default function GuestList({
               <div>
                 <div className="text-green-50 font-medium text-sm">Hari Ini</div>
                 <div className="text-3xl font-bold mt-1">
-                  {guests.filter(g => g.tanggal_kunjungan === new Date().toISOString().split('T')[0]).length}
+                  {guests.filter(g => g.waktu_dibuat?.split('T')[0] === new Date().toISOString().split('T')[0]).length}
                 </div>
                 <div className="text-green-50 text-xs mt-1">{new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}</div>
               </div>
@@ -153,7 +153,8 @@ export default function GuestList({
                 <div className="text-orange-50 font-medium text-sm">Minggu Ini</div>
                 <div className="text-3xl font-bold mt-1">
                   {guests.filter(g => {
-                    const guestDate = new Date(g.tanggal_kunjungan);
+                    if (!g.waktu_dibuat) return false;
+                    const guestDate = new Date(g.waktu_dibuat);
                     const weekAgo = new Date();
                     weekAgo.setDate(weekAgo.getDate() - 7);
                     return guestDate >= weekAgo;
@@ -229,7 +230,7 @@ export default function GuestList({
                               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
-                              {formatDate(guest.tanggal_kunjungan)}
+                              {formatDate(guest.waktu_dibuat || '')}
                             </span>
                           </div>
                         </div>

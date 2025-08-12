@@ -115,22 +115,20 @@ export async function searchGuests(searchTerm: string): Promise<DaftarTamu[]> {
 // Survey Service untuk tabel jawaban_survei
 export async function submitSurvey(formData: SurveyFormData): Promise<boolean> {
   try {
+    // Based on the actual database structure (jawaban_survei table)
     const query = `
       INSERT INTO jawaban_survei (
-        nama_lengkap, jenis_kelamin, pendidikan_terakhir, 
-        profesi, instansi, pertanyaan_id, jawaban, saran
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        nama_lengkap, email, tanggal_kunjungan, pertanyaan_id, jawaban, saran
+      ) VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
       formData.name,
-      formData.gender || 'Laki-laki',
-      formData.education || '',
-      formData.profession || '',
-      formData.institution || '',
+      formData.email,
+      formData.visitDate || new Date().toISOString().split('T')[0],
       1, // default pertanyaan_id
       parseInt(formData.overallRating) || 5,
-      formData.feedback
+      formData.feedback || ''
     ];
 
     const result = await executeQuery<any>(query, params);
