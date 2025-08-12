@@ -35,6 +35,11 @@ export default function AdminDashboard() {
 
   return (
     <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Admin</h1>
+        <p className="text-gray-600">Selamat datang di panel admin sistem buku tamu</p>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -86,36 +91,15 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Link href="/guests" className="group">
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
-                  <span className="text-white text-xl">👥</span>
-                </div>
-                <span className="text-gray-700 group-hover:text-gray-800">→</span>
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Link href="/admin/guests" className="group">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Daftar Tamu</h3>
-                <p className="text-gray-600">Kelola data tamu, check-in/out, dan riwayat kunjungan</p>
+                <p className="text-gray-600">Kelola data tamu dan check-in/out</p>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Manajemen Tamu</h3>
-              <p className="text-gray-900 text-sm">Kelola data tamu, check-in/out, dan riwayat kunjungan</p>
-            </div>
-          </Link>
-
-          <Link href="/admin/services" className="group">
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
-                  <span className="text-white text-xl">🏢</span>
-                </div>
-                <span className="text-gray-700 group-hover:text-gray-800">→</span>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                 <span className="text-2xl">👥</span>
               </div>
@@ -128,17 +112,31 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Laporan</h3>
-                <p className="text-gray-600">Lihat laporan statistik dan export data tamu</p>
+                <p className="text-gray-600">Lihat laporan dan statistik</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                <span className="text-2xl">📊</span>
+                <span className="text-2xl">�</span>
+              </div>
+            </div>
+          </div>
+        </Link>
+
+        <Link href="/admin/services" className="group">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Layanan</h3>
+                <p className="text-gray-600">Kelola layanan dan bidang</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                <span className="text-2xl">🏢</span>
               </div>
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Recent Activity (placeholder for future implementation) */}
+      {/* Recent Activity */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Aktivitas Terbaru</h3>

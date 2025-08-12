@@ -134,7 +134,6 @@ export default function Home() {
             {/* Enhanced CTA buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
-                href="/guests/register"
                 href="/guest/register"
                 className="group relative text-white font-bold py-6 px-12 rounded-2xl text-lg transition-all duration-500 shadow-2xl transform hover:scale-110 hover:-translate-y-2 overflow-hidden"
               >
@@ -287,7 +286,6 @@ export default function Home() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
-                    href="/guests/register"
                     href="/guest/register"
                     className="text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                     style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}
@@ -295,7 +293,6 @@ export default function Home() {
                     Daftar Sekarang
                   </Link>
                   <Link
-                    href="/guests/survey"
                     href="/guest/survey"
                     className="border-2 border-white text-white hover:bg-white hover:text-indigo-600 font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                   >

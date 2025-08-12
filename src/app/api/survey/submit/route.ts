@@ -13,8 +13,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Convert the answers to the format expected by the service
+    const formattedAnswers = body.answers.map((answer: any) => ({
+      pertanyaan_id: answer.pertanyaan_id,
+      jawaban: answer.rating,
+      nama_lengkap: 'Anonymous', // Default since we don't have user info in this context
+      email: 'anonymous@example.com', // Default email
+      tanggal_kunjungan: new Date().toISOString().split('T')[0], // Today's date
+      saran: body.feedback || null
+    }));
+
     // Submit all answers
-    await submitSurveyAnswers(body.answers);
+    await submitSurveyAnswers(formattedAnswers);
     
     return NextResponse.json({
       success: true,
