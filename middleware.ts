@@ -2,14 +2,39 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Check if the request is for admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Check if user is authenticated (you might want to implement JWT or session checking here)
-    const isAuthenticated = checkAdminAuthentication(request);
+  const appMode = process.env.APP_MODE;
+  const pathname = request.nextUrl.pathname;
+  
+  // Mode-specific routing
+  if (appMode === 'admin') {
+    // Block guest routes in admin mode
+    if (pathname.startsWith('/guest') && !pathname.startsWith('/guest/dashboard')) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
     
-    if (!isAuthenticated) {
-      // Redirect to login page
-      return NextResponse.redirect(new URL('/login', request.url));
+    // Ensure admin authentication for admin routes
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+      const isAuthenticated = checkAdminAuthentication(request);
+      if (!isAuthenticated) {
+        return NextResponse.redirect(new URL('/admin/login', request.url));
+      }
+    }
+  }
+  
+  if (appMode === 'guest') {
+    // Block admin routes in guest mode
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/guest', request.url));
+    }
+  }
+  
+  // Original admin authentication logic for full mode
+  if (!appMode || appMode === 'full') {
+    if (pathname.startsWith('/admin')) {
+      const isAuthenticated = checkAdminAuthentication(request);
+      if (!isAuthenticated) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
     }
   }
   
@@ -29,5 +54,7 @@ function checkAdminAuthentication(request: NextRequest): boolean {
 export const config = {
   matcher: [
     '/admin/:path*',
+    '/guest/:path*',
+    '/api/:path*'
   ],
 };

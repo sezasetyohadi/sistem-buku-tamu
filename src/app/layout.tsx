@@ -22,11 +22,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'full';
+  
   return (
     <html lang="id" suppressHydrationWarning>
       <head />
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased app-mode-${appMode}`}>
+        <div data-app-mode={appMode}>
+          {children}
+        </div>
       </body>
     </html>
   );
