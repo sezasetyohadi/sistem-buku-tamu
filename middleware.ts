@@ -5,6 +5,14 @@ export function middleware(request: NextRequest) {
   const appMode = process.env.APP_MODE;
   const pathname = request.nextUrl.pathname;
   
+  console.log('Middleware - Path:', pathname, 'Mode:', appMode);
+  
+  // Always allow login page - no authentication required
+  if (pathname === '/admin/login') {
+    console.log('Allowing access to login page');
+    return NextResponse.next();
+  }
+  
   // Mode-specific routing
   if (appMode === 'admin') {
     // Block guest routes in admin mode
@@ -12,10 +20,12 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     
-    // Ensure admin authentication for admin routes
+    // Ensure admin authentication for ALL admin routes except login
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const isAuthenticated = checkAdminAuthentication(request);
+      console.log('Admin page access check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
+        console.log('Redirecting to login - not authenticated');
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     }
@@ -30,10 +40,10 @@ export function middleware(request: NextRequest) {
   
   // Original admin authentication logic for full mode
   if (!appMode || appMode === 'full') {
-    if (pathname.startsWith('/admin')) {
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const isAuthenticated = checkAdminAuthentication(request);
       if (!isAuthenticated) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     }
   }
@@ -42,13 +52,18 @@ export function middleware(request: NextRequest) {
 }
 
 function checkAdminAuthentication(request: NextRequest): boolean {
-  // For now, we'll check a simple cookie or header
-  // In a real app, you'd want to verify JWT tokens or sessions
-  const authCookie = request.cookies.get('admin_auth');
-  const authHeader = request.headers.get('authorization');
-  
-  // Simple check - in production, verify the token properly
-  return !!(authCookie || authHeader);
+  try {
+    // Check a simple cookie for authentication
+    const authCookie = request.cookies.get('admin_auth');
+    
+    console.log('Middleware auth check - Cookie:', authCookie?.value);
+    
+    // Simple check - cookie should exist and have value 'true'
+    return authCookie?.value === 'true';
+  } catch (error) {
+    console.error('Auth check error in middleware:', error);
+    return false;
+  }
 }
 
 export const config = {

@@ -44,6 +44,21 @@ body {
   }
 }
 
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
 @keyframes float-wave {
   0%, 100% {
     transform: translateY(0px) translateX(0px) scale(1);
@@ -165,4 +180,139 @@ body {
 .animate-wave-scroll-3 {
   animation: wave-scroll-3 15s ease-in-out infinite;
   transform-origin: bottom;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Fix for dark mode browsers (Edge, Chrome, etc.) */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+select,
+textarea {
+  background-color: white !important;
+  color: #1f2937 !important;
+  -webkit-text-fill-color: #1f2937 !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  background-color: white !important;
+  color: #1f2937 !important;
+  -webkit-text-fill-color: #1f2937 !important;
+}
+
+/* Fix for autofill in dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  background-color: white !important;
+  color: #1f2937 !important;
+  -webkit-text-fill-color: #1f2937 !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Specific fix for admin survey forms */
+.admin-survey input,
+.admin-survey select,
+.admin-survey textarea {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  -webkit-text-fill-color: #1f2937 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  caret-color: #1f2937 !important;
+}
+
+.admin-survey input::placeholder,
+.admin-survey textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* Fix for select options in dark mode */
+select option {
+  background-color: white !important;
+  color: #1f2937 !important;
+}
+
+/* Specific fix for login form inputs */
+.login-form input[type="text"],
+.login-form input[type="password"],
+.login-form input[type="email"] {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  -webkit-text-fill-color: #1f2937 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  caret-color: #1f2937 !important;
+}
+
+.login-form input::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* Remove browser default password reveal button */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-strong-password-auto-fill-button {
+  display: none !important;
+  position: absolute !important;
+  right: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Specific styling for password field to remove default icons */
+.password-field {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.password-field::-ms-reveal,
+.password-field::-ms-clear {
+  display: none !important;
+}
+
+.password-field::-webkit-credentials-auto-fill-button,
+.password-field::-webkit-strong-password-auto-fill-button,
+.password-field::-webkit-password-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
 }

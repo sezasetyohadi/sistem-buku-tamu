@@ -63,21 +63,21 @@ export default function SurveyForm() {
     }));
     
     // Mock guest identity - in real app, this would come from session or API
-    // For now, using sample data
+    // For now, using sample data with empty dropdowns for user selection
     setGuestIdentity({
       id: 1,
       nama: 'John Doe',
       email: 'john.doe@example.com',
       nomor_telp: '081234567890',
       umur: 30,
-      jenis_kelamin: 'Laki-laki',
+      jenis_kelamin: '', // Let user select
       alamat: 'Jl. Contoh No. 123',
       kecamatan: 'Semarang Tengah',
       kab_kota: 'Semarang',
       provinsi: 'Jawa Tengah',
-      pendidikan_terakhir: 'Sarjana (S-1)',
-      pekerjaan_utama: 'Pegawai Swasta',
-      jenis_layanan: 'Konsultasi Perizinan P3MI'
+      pendidikan_terakhir: '', // Let user select
+      pekerjaan_utama: '', // Let user select
+      jenis_layanan: '' // Let user select
     });
   }, []);
 
@@ -291,9 +291,20 @@ export default function SurveyForm() {
                   <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <div className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg">
-                    {guestIdentity?.jenis_kelamin || '-'}
-                  </div>
+                  <select 
+                    value={guestIdentity?.jenis_kelamin || ''}
+                    onChange={(e) => setGuestIdentity(prev => prev ? {...prev, jenis_kelamin: e.target.value} : null)}
+                    className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      backgroundColor: '#ffffff !important',
+                      color: '#1f2937 !important',
+                      WebkitTextFillColor: '#1f2937 !important'
+                    }}
+                  >
+                    <option value="">Pilih Jenis Kelamin</option>
+                    <option value="Laki-laki">1. Laki-laki</option>
+                    <option value="Perempuan">2. Perempuan</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -324,9 +335,24 @@ export default function SurveyForm() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                   </svg>
-                  <div className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg">
-                    {guestIdentity?.pendidikan_terakhir || '-'}
-                  </div>
+                  <select 
+                    value={guestIdentity?.pendidikan_terakhir || ''}
+                    onChange={(e) => setGuestIdentity(prev => prev ? {...prev, pendidikan_terakhir: e.target.value} : null)}
+                    className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      backgroundColor: '#ffffff !important',
+                      color: '#1f2937 !important',
+                      WebkitTextFillColor: '#1f2937 !important'
+                    }}
+                  >
+                    <option value="">Pilih Pendidikan Terakhir</option>
+                    <option value="SD/Sederajat">1. SD/Sederajat</option>
+                    <option value="SLTP">2. SLTP</option>
+                    <option value="SLTA">3. SLTA</option>
+                    <option value="Diploma (D-1, D-2, D-3)">4. Diploma (D-1, D-2, D-3)</option>
+                    <option value="Sarjana (S-1)">5. Sarjana (S-1)</option>
+                    <option value="Pasca Sarjana (S-2, S-3)">6. Pasca Sarjana (S-2, S-3)</option>
+                  </select>
                 </div>
               </div>
 
@@ -338,9 +364,26 @@ export default function SurveyForm() {
                   <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v6a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />
                   </svg>
-                  <div className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg">
-                    {guestIdentity?.pekerjaan_utama || '-'}
-                  </div>
+                  <select 
+                    value={guestIdentity?.pekerjaan_utama || ''}
+                    onChange={(e) => setGuestIdentity(prev => prev ? {...prev, pekerjaan_utama: e.target.value} : null)}
+                    className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      backgroundColor: '#ffffff !important',
+                      color: '#1f2937 !important',
+                      WebkitTextFillColor: '#1f2937 !important'
+                    }}
+                  >
+                    <option value="">Pilih Pekerjaan Utama</option>
+                    <option value="PNS / TNI / Polri">1. PNS / TNI / Polri</option>
+                    <option value="Pensiunan">2. Pensiunan</option>
+                    <option value="Pegawai Swasta">3. Pegawai Swasta</option>
+                    <option value="Wiraswasta">4. Wiraswasta</option>
+                    <option value="Buruh Tani/Bangunan">5. Buruh Tani/Bangunan</option>
+                    <option value="Pelajar/Mahasiswa">6. Pelajar/Mahasiswa</option>
+                    <option value="Tidak Bekerja">7. Tidak Bekerja</option>
+                    <option value="Lainnya, Sebutkan :">8. Lainnya, Sebutkan :</option>
+                  </select>
                 </div>
               </div>
 
@@ -352,9 +395,38 @@ export default function SurveyForm() {
                   <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <div className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg">
-                    {guestIdentity?.jenis_layanan || '-'}
-                  </div>
+                  <select 
+                    value={guestIdentity?.jenis_layanan || ''}
+                    onChange={(e) => setGuestIdentity(prev => prev ? {...prev, jenis_layanan: e.target.value} : null)}
+                    className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      backgroundColor: '#ffffff !important',
+                      color: '#1f2937 !important',
+                      WebkitTextFillColor: '#1f2937 !important'
+                    }}
+                  >
+                    <option value="">Pilih Jenis Layanan</option>
+                    <option value="Akreditasi LPKS">1. Akreditasi LPKS</option>
+                    <option value="Uji Kompetensi">2. Uji Kompetensi</option>
+                    <option value="Pendaftaran Magang Jepang">3. Pendaftaran Magang Jepang</option>
+                    <option value="Rekomendasi LPKS yang akan Akreditasi">4. Rekomendasi LPKS yang akan Akreditasi</option>
+                    <option value="Layanan Informasi Program Magang Dalam dan Luar Negeri">5. Layanan Informasi Program Magang Dalam dan Luar Negeri</option>
+                    <option value="Konsultasi Perizinan P3MI">6. Konsultasi Perizinan P3MI</option>
+                    <option value="Konsultasi Perizinan TKA">7. Konsultasi Perizinan TKA</option>
+                    <option value="Konsultasi Perizinan LPTKS">8. Konsultasi Perizinan LPTKS</option>
+                    <option value="Informasi Pasar Kerja dan Bursa Kerja">9. Informasi Pasar Kerja dan Bursa Kerja</option>
+                    <option value="Pengesahan Peraturan Perusahaan">10. Pengesahan Peraturan Perusahaan</option>
+                    <option value="Pendaftaran Perjanjian Kerja Bersama">11. Pendaftaran Perjanjian Kerja Bersama</option>
+                    <option value="Konsultasi dan Rekomendasi Izin Perusahaan Penyedia Jasa Pekerja">12. Konsultasi dan Rekomendasi Izin Perusahaan Penyedia Jasa Pekerja</option>
+                    <option value="Mediasi Hubungan Industrial">13. Mediasi Hubungan Industrial</option>
+                    <option value="Konsultasi Hubungan Industrial">14. Konsultasi Hubungan Industrial</option>
+                    <option value="Wajib Lapor Ketenagakerjaan">15. Wajib Lapor Ketenagakerjaan</option>
+                    <option value="Pengesahan/Konsultasi Kebijakan Keselamatan Kerja & Perhitungan Klaim Jaminan Kecelakaan Kerja & LAHK (K3)">16. Pengesahan/Konsultasi Kebijakan Keselamatan Kerja & Perhitungan Klaim Jaminan Kecelakaan Kerja & LAHK (K3)</option>
+                    <option value="Penelitian Produk Layanan K3">17. Penelitian Produk Layanan K3</option>
+                    <option value="Penanganan Kasus Ketenagakerjaan">18. Penanganan Kasus Ketenagakerjaan</option>
+                    <option value="Penyidikan Tindak Pidana">19. Penyidikan Tindak Pidana</option>
+                    <option value="Pengesahan Permasalahan Tenaga Kerja">20. Pengesahan Permasalahan Tenaga Kerja</option>
+                  </select>
                 </div>
               </div>
 

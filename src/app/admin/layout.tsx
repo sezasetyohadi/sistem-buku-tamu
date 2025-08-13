@@ -1,7 +1,8 @@
 "use client";
 import React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import AuthGuard from "../../components/auth/AuthGuard";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -10,9 +11,30 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Don't apply layout to login page
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  // Function to handle logout
+  const handleLogout = () => {
+    // Clear localStorage and cookies
+    localStorage.removeItem('admin_session');
+    document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    
+    // Redirect to login page
+    router.push('/admin/login');
+  };
 
   // Function to check if menu item is active
   const isActive = (path: string) => {
+    // For dashboard, only match exact path
+    if (path === '/admin') {
+      return pathname === '/admin';
+    }
+    // For other paths, check if pathname starts with the path
     return pathname.startsWith(path);
   };
 
@@ -56,7 +78,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   return (
-    <div className="h-screen flex bg-gray-50 overflow-hidden">
+    <AuthGuard>
+      <div className="h-screen flex bg-gray-50 overflow-hidden">
       {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out
@@ -126,15 +149,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           
           {/* Logout */}
           <div className="p-4 border-t border-gray-200">
-            <Link
-              href="/"
-              className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200"
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left"
             >
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               {sidebarOpen && "Logout"}
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -162,21 +185,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </button>
 
               {/* User Profile */}
-              <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100">
+              <Link href="/admin/profile" className="flex items-center space-x-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors duration-200 group">
+                <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200">
                   <span className="text-sm font-medium text-white">A</span>
                 </div>
-                <span className="text-sm font-medium text-gray-700 hidden sm:block">Admin</span>
-              </div>
+                <span className="text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">Admin</span>
+              </Link>
             </div>
           </div>
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="min-h-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>
+    </AuthGuard>
   );
 }
