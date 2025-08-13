@@ -18,15 +18,6 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
 
   const menuItems = [
     {
-      name: 'Dashboard',
-      path: '/guest/dashboard',
-      icon: (
-        <svg className="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-        </svg>
-      )
-    },
-    {
       name: 'Pendaftaran Tamu',
       path: '/guest/register',
       icon: (
@@ -147,18 +138,10 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
               {/* Notifications */}
               <button className="p-2 rounded-full text-gray-700 hover:text-gray-800 hover:bg-gray-100 relative transition-colors duration-200">
                 <span className="sr-only">View notifications</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-3.405-3.405A2.032 2.032 0 0118 11.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v.158c0 .538-.214 1.055-.595 1.436L2 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C13.1 2 14 2.9 14 4V5.08C16.39 5.57 18 7.54 18 10V16L20 18V19H4V18L6 16V10C6 7.54 7.61 5.57 10 5.08V4C10 2.9 10.9 2 12 2ZM10 21H14C14 22.1 13.1 23 12 23S10 22.1 10 21Z"/>
                 </svg>
               </button>
-
-              {/* User Profile */}
-              <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center ring-2 ring-green-100">
-                  <span className="text-sm font-medium text-white">T</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 hidden sm:block">Tamu</span>
-              </div>
             </div>
           </div>
         </div>

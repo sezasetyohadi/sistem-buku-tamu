@@ -182,7 +182,7 @@ export default function Home() {
       </div>
 
       {/* Features Section with scroll fade animation */}
-      <div className="py-24 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden opacity-0 translate-y-8 transition-all duration-1000 ease-out" data-fade="up">
+      <div className="py-24 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden opacity-0 translate-y-8 transition-all duration-1000 ease-out -mt-8" data-fade="up">
         {/* Background decorative elements */}
         <div className="absolute inset-0 opacity-20">
           {/* Subtle geometric patterns */}

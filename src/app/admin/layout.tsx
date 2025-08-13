@@ -156,8 +156,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {/* Notifications */}
               <button className="p-2 rounded-full text-gray-700 hover:text-gray-800 hover:bg-gray-100 relative transition-colors duration-200">
                 <span className="sr-only">View notifications</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-3.405-3.405A2.032 2.032 0 0118 11.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v.158c0 .538-.214 1.055-.595 1.436L2 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C13.1 2 14 2.9 14 4V5.08C16.39 5.57 18 7.54 18 10V16L20 18V19H4V18L6 16V10C6 7.54 7.61 5.57 10 5.08V4C10 2.9 10.9 2 12 2ZM10 21H14C14 22.1 13.1 23 12 23S10 22.1 10 21Z"/>
                 </svg>
               </button>
 
