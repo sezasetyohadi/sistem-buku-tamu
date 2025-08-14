@@ -316,3 +316,61 @@ input[type="password"]::-webkit-strong-password-auto-fill-button {
   display: none !important;
   visibility: hidden !important;
 }
+
+/* Form Select Enhanced Fixes */
+select {
+  /* Ensure proper text color in all browsers */
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  padding-left: 3rem !important;
+  padding-right: 3rem !important;
+}
+
+select option {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  padding: 8px 12px;
+}
+
+/* Enhanced spacing for form select icons */
+.form-select-wrapper {
+  position: relative;
+}
+
+.form-select-icon-left {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.form-select-icon-right {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Dark mode form input fixes */
+@media (prefers-color-scheme: dark) {
+  select,
+  select option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+}
+
+/* Browser-specific fixes */
+select::-ms-expand {
+  display: none;
+}
+
+select::-webkit-outer-spin-button,
+select::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
