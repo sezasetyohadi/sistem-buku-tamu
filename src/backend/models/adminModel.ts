@@ -5,6 +5,7 @@ interface Admin {
   nama_lengkap?: string;
   created_at: string;
   email?: string;
+  is_super_admin?: boolean;
 }
 
 export default Admin;

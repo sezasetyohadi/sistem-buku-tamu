@@ -70,26 +70,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Demo credentials check first
-    if (formData.username === 'dummy123' && formData.password === 'dummy123') {
-      // Set dummy session for testing
-      const dummyAdminData = {
-        id: 1,
-        username: 'dummy123',
-        nama_lengkap: 'Admin Demo',
-        email: 'admin@demo.com',
-        loginTime: new Date().toISOString()
-      };
-      
-      localStorage.setItem('admin_session', JSON.stringify(dummyAdminData));
-      document.cookie = `admin_auth=true; path=/; max-age=86400`; // 24 hours
-      
-      console.log('Demo login successful, redirecting to admin dashboard');
-      // Redirect to admin dashboard
-      router.replace('/admin');
-      return;
-    }
-
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
@@ -314,36 +294,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">Demo</span>
-              </div>
-            </div>
-
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="text-center">
-                <p className="text-sm text-blue-800 font-medium mb-2">Akun Demo</p>
-                <div className="text-xs text-blue-600 space-y-1">
-                  <p><strong>Username:</strong> dummy123</p>
-                  <p><strong>Password:</strong> dummy123</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center">
-            <Link href="/" className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Kembali ke Beranda
-            </Link>
-          </div>
         </div>
       </div>
     </div>

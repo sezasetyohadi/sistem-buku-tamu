@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received POST request with body:', body);
     
-    // Hanya validasi field paling penting
+    // Validasi field wajib
     if (!body.nama) {
       return NextResponse.json(
         { success: false, message: 'Nama harus diisi' },
@@ -99,21 +99,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Pastikan data untuk guestFormData terbentuk dengan benar
+    // Validasi jenis kelamin harus enum yang benar
+    if (body.jenis_kelamin && !['Laki-laki', 'Perempuan'].includes(body.jenis_kelamin)) {
+      return NextResponse.json(
+        { success: false, message: 'Jenis kelamin harus "Laki-laki" atau "Perempuan"' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch nama dari tabel referensi berdasarkan ID - Fix logic
+    let pendidikanTerakhir = null;
+    let profesi = null;
+    
+    if (body.pendidikan_terakhir_id) {
+      const educationOptions = await getEducationOptions();
+      const education = educationOptions.find(e => e.id === parseInt(body.pendidikan_terakhir_id));
+      pendidikanTerakhir = education ? education.pendidikan_terakhir : null;
+    }
+    
+    if (body.profesi_id) {
+      const professionOptions = await getProfessionOptions();
+      const profession = professionOptions.find(p => p.id === parseInt(body.profesi_id));
+      profesi = profession ? profession.nama_profesi : null;
+    }
+
+    // Pastikan data untuk guestFormData sesuai dengan struktur tabel daftar_tamu
     const guestData: GuestFormData = {
-      nama: body.nama || '',
+      nama: body.nama,
       email: body.email || '',
+      nomor_telp: body.nomor_telp || undefined,
       alamat: body.alamat || '',
       jenis_kelamin: body.jenis_kelamin || 'Laki-laki',
-      keperluan: body.keperluan || 'Kunjungan',
-      // Field opsional
-      nomor_telp: body.nomor_telp,
+      pendidikan_terakhir: pendidikanTerakhir || undefined, // Pass resolved string
+      profesi: profesi || undefined, // Pass resolved string
       pendidikan_terakhir_id: body.pendidikan_terakhir_id ? parseInt(body.pendidikan_terakhir_id) : undefined,
       profesi_id: body.profesi_id ? parseInt(body.profesi_id) : undefined,
-      asal_instansi: body.asal_instansi,
-      waktu_kunjungan: body.waktu_kunjungan,
-      bidang_tujuan_id: body.bidang_tujuan_id,
-      tujuan_kunjungan_id: body.tujuan_kunjungan_id
+      asal_instansi: body.asal_instansi || undefined,
+      keperluan: body.keperluan || 'Kunjungan umum',
+      catatan: body.catatan || undefined, // Add catatan_tambahan
+      file_upload: undefined,
+      cara_memperoleh: body.cara_memperoleh || undefined, // Pass checkbox data
+      cara_salinan: body.cara_salinan || undefined // Pass checkbox data
     };
 
     const guestId = await createGuest(guestData);

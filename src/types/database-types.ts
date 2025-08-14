@@ -92,8 +92,10 @@ export interface GuestFormData {
   waktu_kunjungan?: string;
   bidang_tujuan_id?: number;
   tujuan_kunjungan_id?: number;
-  catatan?: string;
+  catatan?: string; // For catatan_tambahan column
   file_upload?: string;
+  cara_memperoleh?: number[]; // Array of IDs from memperoleh_informasi table
+  cara_salinan?: number[]; // Array of IDs from mendapatkan_salinan table
 }
 
 export interface SurveyFormData {

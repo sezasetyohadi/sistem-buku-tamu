@@ -26,8 +26,8 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     company: '',
     purpose: '',
     department: '',
-    cara_memperoleh: [] as string[],
-    cara_salinan: [] as string[],
+    cara_memperoleh: [] as number[], // Changed to number array for IDs
+    cara_salinan: [] as number[], // Changed to number array for IDs
     notes: ''
   });
 
@@ -43,6 +43,8 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
   const [purposeOptions, setPurposeOptions] = useState<Array<{value: string, label: string}>>([
     { value: '', label: 'Pilih tujuan kunjungan' }
   ]);
+  const [memperolehOptions, setMemperolehOptions] = useState<Array<{id: number, nama_opsi: string}>>([]);
+  const [salinanOptions, setSalinanOptions] = useState<Array<{id: number, nama_opsi: string}>>([]);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showNotification, setShowNotification] = useState(false);
 
@@ -112,6 +114,16 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
           ];
           setPurposeOptions(options);
         }
+        
+        // Process memperoleh informasi options
+        if (result.success && result.data?.memperolehInformasi) {
+          setMemperolehOptions(result.data.memperolehInformasi);
+        }
+        
+        // Process mendapatkan salinan options
+        if (result.success && result.data?.mendapatkanSalinan) {
+          setSalinanOptions(result.data.mendapatkanSalinan);
+        }
       } catch (error) {
         console.error('Error fetching form options:', error);
       }
@@ -131,11 +143,13 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     
     if (type === 'checkbox' && (name === 'cara_memperoleh' || name === 'cara_salinan')) {
       const checkbox = e.target as HTMLInputElement;
+      const numericValue = parseInt(value); // Convert to number since we're storing IDs
+      
       setFormData(prev => ({
         ...prev,
         [name]: checkbox.checked 
-          ? [...(prev[name as keyof typeof prev] as string[]), value]
-          : (prev[name as keyof typeof prev] as string[]).filter(item => item !== value)
+          ? [...(prev[name as keyof typeof prev] as number[]), numericValue]
+          : (prev[name as keyof typeof prev] as number[]).filter(item => item !== numericValue)
       }));
     } else {
       setFormData(prev => ({
@@ -202,6 +216,12 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
     e.preventDefault();
     
     if (validateForm()) {
+      // Resolve names from selected IDs
+      const selectedEducation = educationOptions.find(e => e.value === formData.education);
+      const selectedProfession = professionOptions.find(p => p.value === formData.profession);
+      const selectedPurpose = purposeOptions.find(p => p.value === formData.purpose);
+      const selectedDepartment = departmentOptions.find(d => d.value === formData.department);
+      
       // Transform data untuk sesuai dengan format API
       const apiFormData = {
         nama: formData.name,
@@ -209,15 +229,15 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
         nomor_telp: formData.phone,
         alamat: formData.address,
         jenis_kelamin: formData.gender,
-        pendidikan_terakhir_id: formData.education,
-        profesi_id: formData.profession,
+        pendidikan_terakhir_id: formData.education ? parseInt(formData.education) : undefined,
+        profesi_id: formData.profession ? parseInt(formData.profession) : undefined,
         asal_instansi: formData.company,
-        keperluan: formData.notes || 'Kunjungan umum',
-        catatan: formData.notes,
+        keperluan: `${selectedPurpose?.label || 'Kunjungan umum'}${formData.notes ? ` - ${formData.notes}` : ''}`,
+        catatan: formData.notes, // Add catatan_tambahan
         bidang_tujuan_id: formData.department ? parseInt(formData.department) : undefined,
         tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined,
-        cara_memperoleh: formData.cara_memperoleh,
-        cara_salinan: formData.cara_salinan
+        cara_memperoleh: formData.cara_memperoleh, // Send as array of numbers
+        cara_salinan: formData.cara_salinan // Send as array of numbers
       };
       
       console.log('Sending data to API:', apiFormData);
@@ -407,38 +427,24 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Cara Memperoleh</h3>
           <div className="space-y-3">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="cara_memperoleh"
-                value="melihat"
-                checked={formData.cara_memperoleh.includes('melihat')}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  backgroundImage: formData.cara_memperoleh.includes('melihat') 
-                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                    : 'none'
-                }}
-              />
-              <span className="text-sm text-gray-700">Melihat/membaca/mendengarkan/mencatat</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="cara_memperoleh"
-                value="mendapatkan"
-                checked={formData.cara_memperoleh.includes('mendapatkan')}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  backgroundImage: formData.cara_memperoleh.includes('mendapatkan') 
-                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                    : 'none'
-                }}
-              />
-              <span className="text-sm text-gray-700">Mendapatkan salinan informasi</span>
-            </label>
+            {memperolehOptions.map((option) => (
+              <label key={option.id} className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="cara_memperoleh"
+                  value={option.id.toString()}
+                  checked={formData.cara_memperoleh.includes(option.id)}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
+                  style={{
+                    backgroundImage: formData.cara_memperoleh.includes(option.id)
+                      ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
+                      : 'none'
+                  }}
+                />
+                <span className="text-sm text-gray-700">{option.nama_opsi}</span>
+              </label>
+            ))}
           </div>
         </div>
 
@@ -446,86 +452,24 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
         <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Cara Mendapatkan Salinan Informasi*</h3>
           <div className="space-y-3">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="cara_salinan"
-                value="mengambil"
-                checked={formData.cara_salinan.includes('mengambil')}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  backgroundImage: formData.cara_salinan.includes('mengambil') 
-                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                    : 'none'
-                }}
-              />
-              <span className="text-sm text-gray-700">Mengambil langsung</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="cara_salinan"
-                value="kurir"
-                checked={formData.cara_salinan.includes('kurir')}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  backgroundImage: formData.cara_salinan.includes('kurir') 
-                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                    : 'none'
-                }}
-              />
-              <span className="text-sm text-gray-700">Kurir</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="cara_salinan"
-                value="pos"
-                checked={formData.cara_salinan.includes('pos')}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  backgroundImage: formData.cara_salinan.includes('pos') 
-                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a .5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                    : 'none'
-                }}
-              />
-              <span className="text-sm text-gray-700">Pos</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="cara_salinan"
-                value="faksimili"
-                checked={formData.cara_salinan.includes('faksimili')}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  backgroundImage: formData.cara_salinan.includes('faksimili') 
-                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a .5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                    : 'none'
-                }}
-              />
-              <span className="text-sm text-gray-700">Faksimili</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="cara_salinan"
-                value="email"
-                checked={formData.cara_salinan.includes('email')}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  backgroundImage: formData.cara_salinan.includes('email') 
-                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                    : 'none'
-                }}
-              />
-              <span className="text-sm text-gray-700">E-mail</span>
-            </label>
+            {salinanOptions.map((option) => (
+              <label key={option.id} className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="cara_salinan"
+                  value={option.id.toString()}
+                  checked={formData.cara_salinan.includes(option.id)}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
+                  style={{
+                    backgroundImage: formData.cara_salinan.includes(option.id)
+                      ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
+                      : 'none'
+                  }}
+                />
+                <span className="text-sm text-gray-700">{option.nama_opsi}</span>
+              </label>
+            ))}
           </div>
         </div>
 

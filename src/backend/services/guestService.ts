@@ -50,15 +50,15 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
     console.log('Resolved education:', pendidikanTerakhir);
     console.log('Resolved profession:', profesi);
     
-    // Insert query
+    // Insert query - Updated to include catatan_tambahan
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir, 
-       profesi, asal_instansi, keperluan, tanggapan) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu')
+       profesi, asal_instansi, keperluan, catatan_tambahan, tanggapan) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu')
     `;
     
-    // Parameter minimal yang diperlukan
+    // Parameter dengan catatan tambahan
     const params = [
       formData.nama,
       formData.email,
@@ -68,14 +68,62 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       pendidikanTerakhir, // Use resolved education string
       profesi, // Use resolved profession string
       formData.asal_instansi || null,
-      formData.keperluan
+      formData.keperluan,
+      formData.catatan || null // Add catatan_tambahan
     ];
 
     const result = await executeQuery<any>(query, params);
-    console.log('Guest inserted with ID:', result.insertId);
-    return result.insertId;
+    const tamuId = result.insertId;
+    console.log('Guest inserted with ID:', tamuId);
+    
+    // Save checkbox answers if provided - fix the logic
+    if (formData.cara_memperoleh && Array.isArray(formData.cara_memperoleh) && formData.cara_memperoleh.length > 0) {
+      console.log('Saving cara_memperoleh answers:', formData.cara_memperoleh);
+      await saveMemperolehInformasiAnswers(tamuId, formData.cara_memperoleh);
+    }
+    
+    if (formData.cara_salinan && Array.isArray(formData.cara_salinan) && formData.cara_salinan.length > 0) {
+      console.log('Saving cara_salinan answers:', formData.cara_salinan);
+      await saveMendapatkanSalinanAnswers(tamuId, formData.cara_salinan);
+    }
+    
+    return tamuId;
   } catch (error) {
     console.error('Database error:', error);
+    throw error;
+  }
+}
+
+// Save answers to jawaban_memperoleh_informasi table
+export async function saveMemperolehInformasiAnswers(tamuId: number, answers: number[]): Promise<void> {
+  try {
+    for (const caraMemperolehId of answers) {
+      const query = `
+        INSERT INTO jawaban_memperoleh_informasi (tamu_id, cara_memperoleh_id)
+        VALUES (?, ?)
+      `;
+      await executeQuery(query, [tamuId, caraMemperolehId]);
+    }
+    console.log('Memperoleh informasi answers saved:', answers);
+  } catch (error) {
+    console.error('Error saving memperoleh informasi answers:', error);
+    throw error;
+  }
+}
+
+// Save answers to jawaban_mendapatkan_salinan table
+export async function saveMendapatkanSalinanAnswers(tamuId: number, answers: number[]): Promise<void> {
+  try {
+    for (const caraSalinanId of answers) {
+      const query = `
+        INSERT INTO jawaban_mendapatkan_salinan (tamu_id, cara_salinan_id)
+        VALUES (?, ?)
+      `;
+      await executeQuery(query, [tamuId, caraSalinanId]);
+    }
+    console.log('Mendapatkan salinan answers saved:', answers);
+  } catch (error) {
+    console.error('Error saving mendapatkan salinan answers:', error);
     throw error;
   }
 }

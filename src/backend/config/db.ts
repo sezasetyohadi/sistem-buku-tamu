@@ -112,3 +112,29 @@ export async function getBidangTujuanOptions(): Promise<Array<{ id: number, bida
     return [];
   }
 }
+
+// Get cara memperoleh informasi options
+export async function getMemperolehInformasiOptions(): Promise<Array<{ id: number, nama_opsi: string }>> {
+  try {
+    const options = await executeQuery<Array<{ id: number, nama_opsi: string }>>(
+      'SELECT id, nama_opsi FROM memperoleh_informasi ORDER BY id ASC'
+    );
+    return options;
+  } catch (error) {
+    console.error('Error getting memperoleh informasi options:', error);
+    return [];
+  }
+}
+
+// Get cara mendapatkan salinan options
+export async function getMendapatkanSalinanOptions(): Promise<Array<{ id: number, nama_opsi: string }>> {
+  try {
+    const options = await executeQuery<Array<{ id: number, nama_opsi: string }>>(
+      'SELECT id, nama_opsi FROM mendapatkan_salinan ORDER BY id ASC'
+    );
+    return options;
+  } catch (error) {
+    console.error('Error getting mendapatkan salinan options:', error);
+    return [];
+  }
+}
