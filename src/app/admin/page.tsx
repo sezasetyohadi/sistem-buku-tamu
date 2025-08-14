@@ -96,7 +96,7 @@ export default function AdminDashboard() {
       <div className="mb-10">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Menu Utama</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          <Link href="/admin/guests" className="group">
+          <Link href="/admin/guest-management" className="group">
             <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-200 transition-all duration-300 transform hover:scale-[1.02]">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
