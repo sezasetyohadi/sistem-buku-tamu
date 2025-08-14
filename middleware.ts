@@ -32,6 +32,11 @@ export function middleware(request: NextRequest) {
   }
   
   if (appMode === 'guest') {
+    // Allow access to the main landing page ("/")
+    if (pathname === '/') {
+      return NextResponse.next();
+    }
+    
     // Block admin routes in guest mode
     if (pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/guest', request.url));
@@ -71,5 +76,6 @@ export const config = {
     '/admin/:path*',
     '/guest/:path*',
     '/api/:path*'
+    // Removed '/' from matcher so it doesn't interfere with landing page
   ],
 };

@@ -48,20 +48,20 @@ export default function FormSelect({
       {label && (
   <label className="block text-sm font-semibold text-black mb-2">
           {label}
-          {props.required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       
       <div className="relative">
         {/* Icon di sebelah kiri */}
         <div className={`
-          absolute left-3 top-1/2 transform -translate-y-1/2 z-10
-          transition-colors duration-200
+          absolute left-4 top-1/2 transform -translate-y-1/2 z-10
+          transition-colors duration-200 pointer-events-none
           ${error 
             ? 'text-red-400' 
             : isFocused 
               ? 'text-blue-500' 
-              : 'text-gray-400 hover:text-gray-600'
+              : 'text-gray-400'
           }
         `}>
           {getContextualIcon()}
@@ -69,36 +69,52 @@ export default function FormSelect({
         
         <select
           className={`
-            w-full px-4 py-3 text-black 
-            border rounded-lg shadow-sm transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-opacity-50
+            w-full pl-12 pr-12 py-3 text-black 
+            border border-gray-300 rounded-lg shadow-sm transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 focus:border-blue-500
             appearance-none cursor-pointer
-            bg-gradient-to-r from-white to-gray-50
-            hover:from-blue-50 hover:to-white
-            focus:from-white focus:to-blue-50
+            bg-white hover:bg-gray-50 focus:bg-white
+            ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
             ${className}
           `}
+          style={{
+            paddingLeft: '3rem',    /* 48px - space for icon */
+            paddingRight: '3rem',   /* 48px - space for dropdown arrow */
+            color: '#000000',
+            backgroundColor: '#ffffff',
+            /* Dark mode fixes */
+            WebkitAppearance: 'none',
+            MozAppearance: 'none'
+          }}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}
         >
           {options.map((option) => (
-            <option key={option.value} value={option.value} className="text-black">
+            <option key={option.value} value={option.value} 
+              style={{ 
+                color: '#000000',
+                backgroundColor: '#ffffff',
+                padding: '8px 12px'
+              }}
+            >
               {option.label}
             </option>
           ))}
         </select>
         
         {/* Custom dropdown arrow */}
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+          <svg className={`w-5 h-5 transition-colors duration-200 ${
+            error ? 'text-red-400' : isFocused ? 'text-blue-500' : 'text-gray-400'
+          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
         
         {/* Subtle border highlight on focus */}
         {isFocused && !error && (
-          <div className="absolute inset-0 rounded-xl pointer-events-none bg-blue-50 opacity-20 ring-1 ring-blue-200 -z-10" />
+          <div className="absolute inset-0 rounded-lg pointer-events-none ring-2 ring-blue-200 ring-opacity-50 -z-10" />
         )}
       </div>
       

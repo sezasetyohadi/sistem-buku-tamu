@@ -27,11 +27,12 @@ const nextConfig: NextConfig = {
     
     if (appMode === 'guest') {
       return [
-        {
-          source: '/',
-          destination: '/guest',
-          permanent: false,
-        },
+        // Remove the root redirect so landing page can be accessed
+        // {
+        //   source: '/',
+        //   destination: '/guest',
+        //   permanent: false,
+        // },
         {
           source: '/admin/:path*',
           destination: '/guest',
