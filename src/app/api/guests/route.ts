@@ -107,22 +107,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch nama dari tabel referensi berdasarkan ID - Fix logic
-    let pendidikanTerakhir = null;
-    let profesi = null;
-    
-    if (body.pendidikan_terakhir_id) {
-      const educationOptions = await getEducationOptions();
-      const education = educationOptions.find(e => e.id === parseInt(body.pendidikan_terakhir_id));
-      pendidikanTerakhir = education ? education.pendidikan_terakhir : null;
-    }
-    
-    if (body.profesi_id) {
-      const professionOptions = await getProfessionOptions();
-      const profession = professionOptions.find(p => p.id === parseInt(body.profesi_id));
-      profesi = profession ? profession.nama_profesi : null;
-    }
-
     // Pastikan data untuk guestFormData sesuai dengan struktur tabel daftar_tamu
     const guestData: GuestFormData = {
       nama: body.nama,
@@ -130,14 +114,14 @@ export async function POST(request: NextRequest) {
       nomor_telp: body.nomor_telp || undefined,
       alamat: body.alamat || '',
       jenis_kelamin: body.jenis_kelamin || 'Laki-laki',
-      pendidikan_terakhir: pendidikanTerakhir || undefined, // Pass resolved string
-      profesi: profesi || undefined, // Pass resolved string
       pendidikan_terakhir_id: body.pendidikan_terakhir_id ? parseInt(body.pendidikan_terakhir_id) : undefined,
       profesi_id: body.profesi_id ? parseInt(body.profesi_id) : undefined,
       asal_instansi: body.asal_instansi || undefined,
       keperluan: body.keperluan || 'Kunjungan umum',
       catatan: body.catatan || undefined, // Add catatan_tambahan
-      file_upload: undefined,
+      bidang_tujuan_id: body.bidang_tujuan_id ? parseInt(body.bidang_tujuan_id) : undefined,
+      tujuan_kunjungan_id: body.tujuan_kunjungan_id ? parseInt(body.tujuan_kunjungan_id) : undefined,
+      file_upload: body.file_upload || undefined,
       cara_memperoleh: body.cara_memperoleh || undefined, // Pass checkbox data
       cara_salinan: body.cara_salinan || undefined // Pass checkbox data
     };

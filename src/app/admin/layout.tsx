@@ -12,6 +12,31 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const pathname = usePathname();
   const router = useRouter();
+  const [adminName, setAdminName] = React.useState<string>('Admin');
+  const [adminInitial, setAdminInitial] = React.useState<string>('A');
+
+  React.useEffect(() => {
+    // Get admin session data when component mounts
+    const getAdminData = () => {
+      try {
+        const adminSessionStr = localStorage.getItem('admin_session');
+        if (adminSessionStr) {
+          const adminSession = JSON.parse(adminSessionStr);
+          if (adminSession.nama_lengkap) {
+            // Get the first word of the full name
+            const firstName = adminSession.nama_lengkap.split(' ')[0];
+            setAdminName(firstName);
+            // Get the first letter for the initial
+            setAdminInitial(firstName.charAt(0).toUpperCase());
+          }
+        }
+      } catch (error) {
+        console.error('Error getting admin data:', error);
+      }
+    };
+    
+    getAdminData();
+  }, []);
 
   // Don't apply layout to login page
   if (pathname === '/admin/login') {
@@ -187,9 +212,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {/* User Profile */}
               <Link href="/admin/profile" className="flex items-center space-x-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors duration-200 group">
                 <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200">
-                  <span className="text-sm font-medium text-white">A</span>
+                  <span className="text-sm font-medium text-white">{adminInitial}</span>
                 </div>
-                <span className="text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">Admin</span>
+                <span className="text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">{adminName}</span>
               </Link>
             </div>
           </div>

@@ -23,6 +23,8 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
   // Retrieve education and profession labels if IDs are provided
   let pendidikanTerakhir = null;
   let profesi = null;
+  let bidangTujuan = null;
+  let tujuanKunjungan = null;
   
   try {
     // Get education label if ID is provided
@@ -46,19 +48,48 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
         profesi = professionResult[0].nama_profesi;
       }
     }
+
+    // Get bidang tujuan if ID is provided
+    if (formData.bidang_tujuan_id) {
+      const bidangResult = await executeQuery<Array<{ bidang: string }>>(
+        'SELECT bidang FROM bidang_tujuan WHERE id = ?',
+        [formData.bidang_tujuan_id]
+      );
+      if (bidangResult.length > 0) {
+        bidangTujuan = bidangResult[0].bidang;
+      }
+    }
+
+    // Get tujuan kunjungan if ID is provided
+    if (formData.tujuan_kunjungan_id) {
+      const tujuanResult = await executeQuery<Array<{ tujuan: string }>>(
+        'SELECT tujuan FROM tujuan_kunjungan WHERE id = ?',
+        [formData.tujuan_kunjungan_id]
+      );
+      if (tujuanResult.length > 0) {
+        tujuanKunjungan = tujuanResult[0].tujuan;
+      }
+    }
     
     console.log('Resolved education:', pendidikanTerakhir);
     console.log('Resolved profession:', profesi);
+    console.log('Resolved bidang tujuan:', bidangTujuan);
+    console.log('Resolved tujuan kunjungan:', tujuanKunjungan);
     
-    // Insert query - Updated to include catatan_tambahan
+    // Set keperluan to tujuan_kunjungan if available, don't include catatan
+    const keperluan = tujuanKunjungan 
+      ? tujuanKunjungan
+      : formData.keperluan || 'Kunjungan umum';
+    
+    // Insert query - Updated to match the SQL schema from disnaker.sql
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir, 
-       profesi, asal_instansi, keperluan, catatan_tambahan, tanggapan) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu')
+       profesi, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
     `;
     
-    // Parameter dengan catatan tambahan
+    // Parameter with all needed fields
     const params = [
       formData.nama,
       formData.email,
@@ -68,15 +99,16 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       pendidikanTerakhir, // Use resolved education string
       profesi, // Use resolved profession string
       formData.asal_instansi || null,
-      formData.keperluan,
-      formData.catatan || null // Add catatan_tambahan
+      keperluan,
+      formData.catatan || null, // Add catatan_tambahan
+      formData.file_upload || null
     ];
 
     const result = await executeQuery<any>(query, params);
     const tamuId = result.insertId;
     console.log('Guest inserted with ID:', tamuId);
     
-    // Save checkbox answers if provided - fix the logic
+    // Save checkbox answers if provided
     if (formData.cara_memperoleh && Array.isArray(formData.cara_memperoleh) && formData.cara_memperoleh.length > 0) {
       console.log('Saving cara_memperoleh answers:', formData.cara_memperoleh);
       await saveMemperolehInformasiAnswers(tamuId, formData.cara_memperoleh);
@@ -97,6 +129,20 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
 // Save answers to jawaban_memperoleh_informasi table
 export async function saveMemperolehInformasiAnswers(tamuId: number, answers: number[]): Promise<void> {
   try {
+    // First check if the table exists
+    const checkTableQuery = `
+      SELECT COUNT(*) as count 
+      FROM information_schema.tables 
+      WHERE table_schema = DATABASE() 
+      AND table_name = 'jawaban_memperoleh_informasi'
+    `;
+    
+    const tableCheck = await executeQuery<Array<{count: number}>>(checkTableQuery);
+    if (tableCheck[0].count === 0) {
+      console.log('Table jawaban_memperoleh_informasi does not exist, skipping save');
+      return;
+    }
+    
     for (const caraMemperolehId of answers) {
       const query = `
         INSERT INTO jawaban_memperoleh_informasi (tamu_id, cara_memperoleh_id)
@@ -114,6 +160,20 @@ export async function saveMemperolehInformasiAnswers(tamuId: number, answers: nu
 // Save answers to jawaban_mendapatkan_salinan table
 export async function saveMendapatkanSalinanAnswers(tamuId: number, answers: number[]): Promise<void> {
   try {
+    // First check if the table exists
+    const checkTableQuery = `
+      SELECT COUNT(*) as count 
+      FROM information_schema.tables 
+      WHERE table_schema = DATABASE() 
+      AND table_name = 'jawaban_mendapatkan_salinan'
+    `;
+    
+    const tableCheck = await executeQuery<Array<{count: number}>>(checkTableQuery);
+    if (tableCheck[0].count === 0) {
+      console.log('Table jawaban_mendapatkan_salinan does not exist, skipping save');
+      return;
+    }
+    
     for (const caraSalinanId of answers) {
       const query = `
         INSERT INTO jawaban_mendapatkan_salinan (tamu_id, cara_salinan_id)
@@ -262,7 +322,7 @@ export async function getRecentActivities(limit: number = 5): Promise<any[]> {
       nama, 
       asal_instansi, 
       keperluan, 
-      tanggapan, 
+      status_kunjungan as tanggapan, 
       waktu_dibuat
     FROM daftar_tamu 
     WHERE waktu_dibuat >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
@@ -270,29 +330,54 @@ export async function getRecentActivities(limit: number = 5): Promise<any[]> {
     LIMIT ?
   `;
   
-  return executeQuery<any[]>(query, [limit]);
+  try {
+    const results = await executeQuery<any[]>(query, [limit]);
+    return Array.isArray(results) ? results : [];
+  } catch (error) {
+    console.error('Error fetching recent activities:', error);
+    return [];
+  }
 }
 
 // Statistics Service
 export async function getGuestStatistics(): Promise<any> {
+  // Basic guest statistics
   const totalGuestsQuery = 'SELECT COUNT(*) as total FROM daftar_tamu';
   const todayGuestsQuery = 'SELECT COUNT(*) as today FROM daftar_tamu WHERE DATE(waktu_dibuat) = CURDATE()';
   const thisMonthGuestsQuery = 'SELECT COUNT(*) as thisMonth FROM daftar_tamu WHERE MONTH(waktu_dibuat) = MONTH(CURDATE()) AND YEAR(waktu_dibuat) = YEAR(CURDATE())';
+  
+  // Dashboard statistics for admin
+  const todayCheckInQuery = 'SELECT COUNT(*) as count FROM daftar_tamu WHERE DATE(waktu_checkin) = CURDATE()';
+  const todayCheckOutQuery = 'SELECT COUNT(*) as count FROM daftar_tamu WHERE DATE(waktu_checkout) = CURDATE()';
+  const currentlyVisitingQuery = 'SELECT COUNT(*) as count FROM daftar_tamu WHERE status_kunjungan = "Datang" AND DATE(waktu_checkin) = CURDATE() AND waktu_checkout IS NULL';
+  
+  // Demographic statistics
   const genderStatsQuery = 'SELECT jenis_kelamin, COUNT(*) as count FROM daftar_tamu GROUP BY jenis_kelamin';
   const educationStatsQuery = 'SELECT pendidikan_terakhir, COUNT(*) as count FROM daftar_tamu GROUP BY pendidikan_terakhir ORDER BY count DESC';
   
-  const [total, today, thisMonth, gender, education] = await Promise.all([
+  const [total, today, thisMonth, todayCheckIn, todayCheckOut, currentlyVisiting, gender, education] = await Promise.all([
     executeQuery<any[]>(totalGuestsQuery),
     executeQuery<any[]>(todayGuestsQuery),
     executeQuery<any[]>(thisMonthGuestsQuery),
+    executeQuery<any[]>(todayCheckInQuery),
+    executeQuery<any[]>(todayCheckOutQuery),
+    executeQuery<any[]>(currentlyVisitingQuery),
     executeQuery<any[]>(genderStatsQuery),
     executeQuery<any[]>(educationStatsQuery)
   ]);
 
   return {
+    // Total counts
     totalGuests: total[0]?.total || 0,
     todayGuests: today[0]?.today || 0,
     thisMonthGuests: thisMonth[0]?.thisMonth || 0,
+    
+    // Dashboard metrics for admin
+    todayCheckIn: todayCheckIn[0]?.count || 0,
+    todayCheckOut: todayCheckOut[0]?.count || 0,
+    currentlyVisiting: currentlyVisiting[0]?.count || 0,
+    
+    // Demographic stats
     genderStats: gender,
     educationStats: education
   };

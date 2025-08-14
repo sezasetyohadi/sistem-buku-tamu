@@ -12,14 +12,17 @@ export async function GET() {
     return NextResponse.json({ 
       success: true, 
       data: {
-        // For compatibility with both admin and guest dashboards
-        totalGuests: guestStats.total || 0,
+        // Dashboard metrics for admin
+        totalGuests: guestStats.totalGuests || 0,
         todayCheckIn: guestStats.todayCheckIn || 0,
         todayCheckOut: guestStats.todayCheckOut || 0,
-        totalSurveys: surveyStats.total || 0,
+        currentlyVisiting: guestStats.currentlyVisiting || 0,
+        totalSurveys: surveyStats.totalSurveys || 0,
+        
         // Add recent activities
         recentActivities: recentActivities,
-        // Original structure
+        
+        // Complete data for charts and tables
         guests: guestStats,
         surveys: surveyStats
       },

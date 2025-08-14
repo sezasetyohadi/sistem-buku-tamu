@@ -232,10 +232,12 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
         pendidikan_terakhir_id: formData.education ? parseInt(formData.education) : undefined,
         profesi_id: formData.profession ? parseInt(formData.profession) : undefined,
         asal_instansi: formData.company,
-        keperluan: `${selectedPurpose?.label || 'Kunjungan umum'}${formData.notes ? ` - ${formData.notes}` : ''}`,
-        catatan: formData.notes, // Add catatan_tambahan
+        // Use tujuan_kunjungan for keperluan field, notes will go in catatan_tambahan
+        keperluan: undefined, // Let the backend set this based on tujuan_kunjungan_id
+        catatan: formData.notes, // Use notes for catatan_tambahan field only
         bidang_tujuan_id: formData.department ? parseInt(formData.department) : undefined,
         tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined,
+        status_kunjungan: 'Menunggu',
         cara_memperoleh: formData.cara_memperoleh, // Send as array of numbers
         cara_salinan: formData.cara_salinan // Send as array of numbers
       };
