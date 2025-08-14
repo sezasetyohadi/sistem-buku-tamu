@@ -254,6 +254,25 @@ export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
   return result.insertId;
 }
 
+// Get Recent Activities for Dashboard (last 24 hours)
+export async function getRecentActivities(limit: number = 5): Promise<any[]> {
+  const query = `
+    SELECT 
+      id, 
+      nama, 
+      asal_instansi, 
+      keperluan, 
+      tanggapan, 
+      waktu_dibuat
+    FROM daftar_tamu 
+    WHERE waktu_dibuat >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    ORDER BY waktu_dibuat DESC
+    LIMIT ?
+  `;
+  
+  return executeQuery<any[]>(query, [limit]);
+}
+
 // Statistics Service
 export async function getGuestStatistics(): Promise<any> {
   const totalGuestsQuery = 'SELECT COUNT(*) as total FROM daftar_tamu';
