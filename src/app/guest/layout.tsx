@@ -11,11 +11,6 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const pathname = usePathname();
 
-  // Skip layout for the main guest landing page
-  if (pathname === '/guest') {
-    return <>{children}</>;
-  }
-
   // Function to check if menu item is active
   const isActive = (path: string) => {
     return pathname.startsWith(path);
