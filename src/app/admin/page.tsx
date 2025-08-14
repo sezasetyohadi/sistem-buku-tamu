@@ -10,6 +10,7 @@ export default function AdminDashboard() {
     todayCheckOut: 0,
     totalSurveys: 0
   });
+  const [recentActivities, setRecentActivities] = useState([]);
 
   useEffect(() => {
     fetchStats();
@@ -27,6 +28,11 @@ export default function AdminDashboard() {
           todayCheckOut: result.data.todayCheckOut || 0,
           totalSurveys: result.data.totalSurveys || 0
         });
+        
+        // Set recent activities
+        if (result.data.recentActivities) {
+          setRecentActivities(result.data.recentActivities);
+        }
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -144,15 +150,61 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="px-8 py-6 border-b border-gray-200">
           <h3 className="text-2xl font-semibold text-gray-900">Aktivitas Terbaru</h3>
+          <p className="text-sm text-gray-500">Menampilkan aktivitas tamu dalam 24 jam terakhir</p>
         </div>
-        <div className="p-8">
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📋</span>
+        <div className="p-6">
+          {recentActivities.length > 0 ? (
+            <div className="overflow-hidden">
+              {recentActivities.map((activity: any, index: number) => (
+                <div 
+                  key={activity.id} 
+                  className={`flex items-center p-4 ${
+                    index < recentActivities.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}
+                >
+                  <div className="w-10 h-10 mr-4 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg">
+                      {activity.tanggapan === 'Check-in' ? '📥' : 
+                       activity.tanggapan === 'Check-out' ? '📤' : '⏳'}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-md font-medium text-gray-900">{activity.nama}</h4>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        activity.tanggapan === 'Check-in' ? 'bg-green-100 text-green-800' : 
+                        activity.tanggapan === 'Check-out' ? 'bg-blue-100 text-blue-800' : 
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {activity.tanggapan}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {activity.asal_instansi && `Dari ${activity.asal_instansi}. `}
+                      {activity.keperluan && `Keperluan: ${activity.keperluan}`}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(activity.waktu_dibuat).toLocaleString('id-ID', {
+                        day: 'numeric',
+                        month: 'long', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-gray-500 text-lg">Data aktivitas terbaru akan ditampilkan di sini</p>
-            <p className="text-gray-400 text-sm mt-2">Sistem akan mencatat semua aktivitas pengguna</p>
-          </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📋</span>
+              </div>
+              <p className="text-gray-500 text-lg">Belum ada aktivitas tamu dalam 24 jam terakhir</p>
+              <p className="text-gray-400 text-sm mt-2">Aktivitas terbaru akan muncul setelah tamu melakukan registrasi</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

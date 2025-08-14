@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getGuestStatistics, getSurveyStatistics } from '@/backend/services/guestService';
+import { getGuestStatistics, getSurveyStatistics, getRecentActivities } from '@/backend/services/guestService';
 
 export async function GET() {
   try {
-    const [guestStats, surveyStats] = await Promise.all([
+    const [guestStats, surveyStats, recentActivities] = await Promise.all([
       getGuestStatistics(),
-      getSurveyStatistics()
+      getSurveyStatistics(),
+      getRecentActivities(5) // Get 5 most recent activities
     ]);
 
     return NextResponse.json({ 
@@ -16,6 +17,8 @@ export async function GET() {
         todayCheckIn: guestStats.todayCheckIn || 0,
         todayCheckOut: guestStats.todayCheckOut || 0,
         totalSurveys: surveyStats.total || 0,
+        // Add recent activities
+        recentActivities: recentActivities,
         // Original structure
         guests: guestStats,
         surveys: surveyStats
