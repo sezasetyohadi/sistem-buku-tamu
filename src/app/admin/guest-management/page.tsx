@@ -175,22 +175,22 @@ export default function AdminGuestsManagement() {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons - Pastel Version */}
       <div className="flex flex-wrap gap-4 mb-6">
         <Link
           href="/guest/register"
-          className="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+          className="bg-red-200 text-red-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-300 transition-colors flex items-center space-x-2"
         >
           <span>➕</span>
           <span>Tambah Tamu</span>
         </Link>
-        <button className="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
+        <button className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
           <span>📊</span>
           <span>Export Data</span>
         </button>
         <button 
           onClick={handleRefresh}
-          className="bg-gray-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors flex items-center space-x-2"
+          className="bg-blue-200 text-blue-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-300 transition-colors flex items-center space-x-2"
           disabled={isLoading}
         >
           <span>{isLoading ? "⏳" : "🔄"}</span>
