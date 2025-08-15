@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import GuestListNew from '../../../components/GuestListNew';
+import GuestList from '../../../components/GuestList';
 
 export default function AdminGuestsManagement() {
   const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +98,7 @@ export default function AdminGuestsManagement() {
 
         {/* Guest List Component */}
         <div className="bg-white rounded-lg shadow-md">
-          <GuestListNew 
+          <GuestList 
             guests={guests}
             onViewDetails={handleViewDetails}
             onCheckIn={handleCheckIn}
