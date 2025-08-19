@@ -477,6 +477,7 @@ export default function AdminGuestsManagement() {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         guest={selectedGuest}
+        onGuestUpdate={handleRefresh}
       />
     </div>
   );

@@ -1,6 +1,8 @@
 import { DaftarTamu } from "@/types/database-types";
 import Modal from "../ui/Modal";
 import { useState } from "react";
+import ScheduleModal from "./ScheduleModal";
+import { toast } from "react-hot-toast";
 
 // Tooltip component
 interface TooltipProps {
@@ -33,9 +35,13 @@ interface GuestDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   guest: DaftarTamu | null;
+  onGuestUpdate?: () => void; // Callback for when guest data is updated
 }
 
-export default function GuestDetailModal({ isOpen, onClose, guest }: GuestDetailModalProps) {
+export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate }: GuestDetailModalProps) {
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   if (!guest) return null;
 
   const formatDate = (dateString?: string | null) => {
@@ -52,6 +58,42 @@ export default function GuestDetailModal({ isOpen, onClose, guest }: GuestDetail
       }).format(date);
     } catch (error) {
       return "Format tanggal tidak valid";
+    }
+  };
+  
+  const handleSchedule = async (scheduledDateTime: string) => {
+    try {
+      setIsSubmitting(true);
+      
+      const response = await fetch(`/api/guests/${guest.id}/schedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ scheduledDateTime }),
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to schedule visit');
+      }
+      
+      // Show success message
+      toast.success('Jadwal kunjungan berhasil diatur');
+      
+      // Close the modal and trigger a refresh
+      setIsScheduleModalOpen(false);
+      
+      // Trigger refresh of guest data in the parent component
+      if (onGuestUpdate) {
+        onGuestUpdate();
+      }
+    } catch (error) {
+      console.error('Error scheduling visit:', error);
+      toast.error('Gagal menjadwalkan kunjungan');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -302,7 +344,13 @@ export default function GuestDetailModal({ isOpen, onClose, guest }: GuestDetail
         {/* Footer with action buttons */}
         <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
           {guest.status_kunjungan === "Menunggu" && (
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            <button 
+              onClick={() => setIsScheduleModalOpen(true)} 
+              disabled={isSubmitting}
+              className={`px-4 py-2 text-white rounded-md transition-colors ${
+                isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
               Jadwalkan
             </button>
           )}
@@ -335,6 +383,16 @@ export default function GuestDetailModal({ isOpen, onClose, guest }: GuestDetail
           </button>
         </div>
       </div>
+      
+      {/* Schedule Modal */}
+      {guest && (
+        <ScheduleModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          onSchedule={handleSchedule}
+          guestId={guest.id || 0}
+        />
+      )}
     </Modal>
   );
 }
