@@ -134,11 +134,21 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
               {guest.nama.split(' ').map(n => n[0]).join('').toUpperCase()}
             </span>
           </div>
-          <div className="ml-4">
-            <h3 className="text-xl font-semibold text-gray-900">{guest.nama}</h3>
-            <div className="flex items-center mt-1">
-              {formatStatusBadge(guest.status_kunjungan)}
-              <span className="ml-2 text-sm text-gray-500">ID: {guest.id}</span>
+          <div className="ml-4 flex-grow">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">{guest.nama}</h3>
+                <div className="flex items-center mt-1">
+                  {formatStatusBadge(guest.status_kunjungan)}
+                  <span className="ml-2 text-sm text-gray-500">ID: {guest.id}</span>
+                </div>
+              </div>
+              {guest.jadwal_checkin && (
+                <div className="text-right">
+                  <h4 className="text-sm font-medium text-gray-500">Jadwal Kunjungan</h4>
+                  <p className="text-base font-medium text-blue-600">{formatDate(guest.jadwal_checkin)}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
