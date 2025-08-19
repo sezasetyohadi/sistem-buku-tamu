@@ -142,7 +142,9 @@ export default function LoginPage() {
                 <div className="text-sm text-blue-100">Manajemen Tamu</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <div className="text-2xl mb-2">📊</div>
+                <svg className="w-8 h-8 text-blue-100 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                </svg>
                 <div className="text-sm text-blue-100">Laporan Detail</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">

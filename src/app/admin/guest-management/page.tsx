@@ -201,7 +201,9 @@ export default function AdminGuestsManagement() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <span className="text-2xl">💼</span>
+              <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Datang Hari Ini</p>
@@ -217,11 +219,15 @@ export default function AdminGuestsManagement() {
           onClick={() => setIsModalOpen(true)}
           className="bg-red-200 text-red-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-300 transition-colors flex items-center space-x-2"
         >
-          <span>➕</span>
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
           <span>Tambah Tamu</span>
         </button>
         <button className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
-          <span>📊</span>
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+          </svg>
           <span>Export Data</span>
         </button>
         <button 
@@ -229,7 +235,16 @@ export default function AdminGuestsManagement() {
           className="bg-blue-200 text-blue-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-300 transition-colors flex items-center space-x-2"
           disabled={isLoading}
         >
-          <span>{isLoading ? "⏳" : "🔄"}</span>
+          {isLoading ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+          )}
           <span>{isLoading ? "Memuat..." : "Refresh"}</span>
         </button>
       </div>

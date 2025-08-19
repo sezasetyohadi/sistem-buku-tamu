@@ -153,7 +153,9 @@ export default function AdminDashboard() {
         <div className="bg-white p-6 lg:p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center">
             <div className="w-14 h-14 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
-              <span className="text-3xl">💼</span>
+              <svg className="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
             </div>
             <div className="ml-5">
               <p className="text-sm font-medium text-gray-600 mb-1">Datang Hari Ini</p>
@@ -189,7 +191,9 @@ export default function AdminDashboard() {
                   <p className="text-gray-600 leading-relaxed">Lihat laporan dan statistik</p>
                 </div>
                 <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center group-hover:from-green-200 group-hover:to-green-300 transition-all duration-300 ml-6">
-                  <span className="text-3xl">📊</span>
+                  <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -203,7 +207,9 @@ export default function AdminDashboard() {
                   <p className="text-gray-600 leading-relaxed">Kelola survei dan feedback</p>
                 </div>
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center group-hover:from-purple-200 group-hover:to-purple-300 transition-all duration-300 ml-6">
-                  <span className="text-3xl">📝</span>
+                  <svg className="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h5a1 1 0 011 1v2a1 1 0 01-1 1h-5a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h5a1 1 0 011 1v2a1 1 0 01-1 1h-5a1 1 0 01-1-1v-2z" clipRule="evenodd" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -233,11 +239,23 @@ export default function AdminDashboard() {
                   }`}
                 >
                   <div className="w-10 h-10 mr-4 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg">
-                      {activity.tanggapan === 'Check-in' || activity.tanggapan === 'Datang' ? '📥' : 
-                       activity.tanggapan === 'Check-out' || activity.tanggapan === 'Selesai' ? '📤' : 
-                       activity.tanggapan === 'Terjadwal' ? '📅' : '⏳'}
-                    </span>
+                    {activity.tanggapan === 'Check-in' || activity.tanggapan === 'Datang' ? (
+                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    ) : activity.tanggapan === 'Check-out' || activity.tanggapan === 'Selesai' ? (
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    ) : activity.tanggapan === 'Terjadwal' ? (
+                      <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                    )}
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
@@ -271,7 +289,9 @@ export default function AdminDashboard() {
           ) : (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📋</span>
+                <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h5a1 1 0 011 1v2a1 1 0 01-1 1h-5a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h5a1 1 0 011 1v2a1 1 0 01-1 1h-5a1 1 0 01-1-1v-2z" clipRule="evenodd" />
+                </svg>
               </div>
               <p className="text-gray-500 text-lg">Belum ada aktivitas tamu dalam 24 jam terakhir</p>
               <p className="text-gray-400 text-sm mt-2">Aktivitas terbaru akan muncul setelah tamu melakukan registrasi</p>
