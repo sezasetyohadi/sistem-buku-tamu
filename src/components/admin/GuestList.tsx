@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import Card from './ui/Card';
-import PrimaryButton from './ui/PrimaryButton';
-import FormInput from './ui/FormInput';
+import Card from '../ui/Card';
+import PrimaryButton from '../ui/PrimaryButton';
+import FormInput from '../ui/FormInput';
 
 interface Guest {
   id: number;

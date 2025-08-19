@@ -172,7 +172,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">Daftar Tamu</h3>
-                  <p className="text-gray-600 leading-relaxed">Kelola data tamu dan check-in/out</p>
+                  <p className="text-gray-600 leading-relaxed">Kelola data tamu</p>
                 </div>
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300 ml-6">
                   <span className="text-3xl">👥</span>

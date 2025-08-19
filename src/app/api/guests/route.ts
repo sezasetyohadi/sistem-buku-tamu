@@ -11,60 +11,7 @@ import {
 } from '@/backend/config/db';
 import { GuestFormData } from '@/types/database-types';
 
-// Mock data untuk development
-const mockGuests = [
-  {
-    id: 1,
-    nama: 'Ahmad Zaki',
-    email: 'ahmad.zaki@email.com',
-    nomor_telp: '08123456789',
-    alamat: 'Jl. Sudirman No. 123, Semarang',
-    jenis_kelamin: 'Laki-laki',
-    pendidikan_terakhir: 'S1',
-    profesi: 'PNS',
-    asal_instansi: 'PT. Tech Indonesia',
-    keperluan: 'Konsultasi mengenai program pelatihan kerja',
-    waktu_kunjungan: '09:30:00',
-    bidang_tujuan_id: 2,
-    tujuan_kunjungan_id: 1,
-    tanggapan: 'Menunggu',
-    waktu_dibuat: new Date().toISOString()
-  },
-  {
-    id: 2,
-    nama: 'Siti Nurhaliza',
-    email: 'siti.nurhaliza@email.com',
-    nomor_telp: '08567890123',
-    alamat: 'Jl. Diponegoro No. 456, Yogyakarta',
-    jenis_kelamin: 'Perempuan',
-    pendidikan_terakhir: 'S2',
-    profesi: 'Pegawai Swasta',
-    asal_instansi: 'CV. Maju Bersama',
-    keperluan: 'Pengurusan izin tenaga kerja asing',
-    waktu_kunjungan: '10:15:00',
-    bidang_tujuan_id: 3,
-    tujuan_kunjungan_id: 3,
-    tanggapan: 'Check-in',
-    waktu_dibuat: new Date().toISOString()
-  },
-  {
-    id: 3,
-    nama: 'Budi Santoso',
-    email: 'budi.santoso@email.com',
-    nomor_telp: '08912345678',
-    alamat: 'Jl. Pemuda No. 789, Solo',
-    jenis_kelamin: 'Laki-laki',
-    pendidikan_terakhir: 'SMA/SMK',
-    profesi: 'Wiraswasta',
-    asal_instansi: 'Toko Berkah Jaya',
-    keperluan: 'Informasi program bantuan UMKM',
-    waktu_kunjungan: '11:00:00',
-    bidang_tujuan_id: 1,
-    tujuan_kunjungan_id: 4,
-    tanggapan: 'Check-out',
-    waktu_dibuat: new Date().toISOString()
-  }
-];
+// No mock data - we'll use real data from the database
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,9 +20,8 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ 
       success: true, 
-      data: guests.length > 0 ? guests : mockGuests,
-      message: guests.length > 0 ? 'Guests retrieved successfully' : 'Using mock data - database not available',
-      isUsingMockData: guests.length === 0
+      data: guests,
+      message: 'Guests retrieved successfully',
     });
   } catch (error: any) {
     console.error('Error getting guests:', error);

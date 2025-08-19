@@ -5,8 +5,10 @@ import { DaftarTamu, JawabanSurvei, GuestFormData, SurveyFormData, DatabaseResul
 // Guest Service untuk tabel daftar_tamu
 export async function getAllGuests(): Promise<DaftarTamu[]> {
   const query = `
-    SELECT * FROM daftar_tamu 
-    ORDER BY id DESC
+    SELECT t.*, b.bidang as bidang_tujuan 
+    FROM daftar_tamu t
+    LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
+    ORDER BY t.id DESC
   `;
   return executeQuery<DaftarTamu[]>(query);
 }
@@ -85,8 +87,8 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir, 
-       profesi, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
+       profesi, asal_instansi, keperluan, bidang_tujuan_id, catatan_tambahan, status_kunjungan, file_upload) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
     `;
     
     // Parameter with all needed fields
@@ -100,6 +102,7 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       profesi, // Use resolved profession string
       formData.asal_instansi || null,
       keperluan,
+      formData.bidang_tujuan_id || null,
       formData.catatan || null, // Add catatan_tambahan
       formData.file_upload || null
     ];

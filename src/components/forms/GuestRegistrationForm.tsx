@@ -12,9 +12,14 @@ import Card from '../ui/Card';
 interface GuestRegistrationFormProps {
   onSubmit?: (data: any) => void;
   isLoading?: boolean;
+  isInModal?: boolean; // New prop to indicate if the form is displayed in a modal
 }
 
-export default function GuestRegistrationForm({ onSubmit, isLoading = false }: GuestRegistrationFormProps) {
+export default function GuestRegistrationForm({ 
+  onSubmit, 
+  isLoading = false,
+  isInModal = false 
+}: GuestRegistrationFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -270,13 +275,19 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
 
   return (
     <>
-      <Card variant="elevated" padding="lg">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrasi Tamu</h2>
-          <p className="text-gray-800">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
-        </div>
+      <Card 
+        variant={isInModal ? "default" : "elevated"} 
+        padding={isInModal ? "md" : "lg"}
+        className={isInModal ? "shadow-none border-0" : ""}
+      >
+        {!isInModal && (
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrasi Tamu</h2>
+            <p className="text-gray-800">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={`space-y-6 ${isInModal ? "overflow-y-visible" : ""}`}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormInput
             label="Nama Lengkap"
@@ -542,8 +553,8 @@ export default function GuestRegistrationForm({ onSubmit, isLoading = false }: G
             Reset
           </PrimaryButton>
         </div>
-      </form>
-    </Card>
+        </form>
+      </Card>
 
     {/* Success Notification Toast */}
     {showNotification && (

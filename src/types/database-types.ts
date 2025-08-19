@@ -13,6 +13,8 @@ export interface DaftarTamu {
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
+  bidang_tujuan_id?: number;
+  bidang_tujuan?: string; // Nama bidang (Sekretariat, Bidang Pelatihan Kerja, dll)
   catatan_tambahan?: string;
   status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null; // datetime
@@ -20,6 +22,8 @@ export interface DaftarTamu {
   waktu_checkout?: string | null; // datetime
   file_upload?: string;
   waktu_dibuat?: string; // datetime
+  cara_memperoleh_informasi?: string[]; // Array of cara memperoleh informasi names
+  cara_mendapatkan_salinan?: string[]; // Array of cara mendapatkan salinan names
 }
 
 // Survey Types (sesuai tabel jawaban_survei)

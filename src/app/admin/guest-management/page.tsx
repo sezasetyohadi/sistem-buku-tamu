@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { DaftarTamu } from "@/types/database-types";
+import Modal from "@/components/ui/Modal";
+import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
+import GuestDetailModal from '@/components/admin/GuestDetailModal';
 
 export default function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,6 +19,10 @@ export default function AdminGuestsManagement() {
   });
   const [guests, setGuests] = useState<DaftarTamu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedGuest, setSelectedGuest] = useState<DaftarTamu | null>(null);
 
   useEffect(() => {
     const initialFetchData = async () => {
@@ -40,6 +47,35 @@ export default function AdminGuestsManagement() {
       console.error("Error refreshing data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGuestFormSubmit = async (data: any) => {
+    setIsFormSubmitting(true);
+    try {
+      const response = await fetch('/api/guests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Tamu berhasil ditambahkan!');
+        setIsModalOpen(false);
+        // Refresh the guest list
+        await fetchData();
+      } else {
+        alert(`Gagal menambahkan tamu: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Terjadi kesalahan saat menambahkan tamu. Silakan coba lagi.');
+    } finally {
+      setIsFormSubmitting(false);
     }
   };
 
@@ -177,13 +213,13 @@ export default function AdminGuestsManagement() {
 
       {/* Action Buttons - Pastel Version */}
       <div className="flex flex-wrap gap-4 mb-6">
-        <Link
-          href="/guest/register"
+        <button
+          onClick={() => setIsModalOpen(true)}
           className="bg-red-200 text-red-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-300 transition-colors flex items-center space-x-2"
         >
           <span>➕</span>
           <span>Tambah Tamu</span>
-        </Link>
+        </button>
         <button className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
           <span>📊</span>
           <span>Export Data</span>
@@ -249,8 +285,22 @@ export default function AdminGuestsManagement() {
           </div>
         ) : guests.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-gray-500 mb-2">Belum ada data tamu</div>
-            <div className="text-sm text-gray-400">Data tamu akan muncul di sini setelah tamu melakukan registrasi</div>
+            <div className="inline-flex justify-center items-center w-24 h-24 bg-gray-100 rounded-full mb-4">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM18.5 12l2.25 2.25M18.5 16.5l2.25-2.25" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-medium text-gray-700 mb-2">Tidak ada data tamu</h3>
+            <p className="text-gray-500 max-w-sm mx-auto">
+              Belum ada tamu yang terdaftar. Data tamu akan muncul di sini setelah tamu melakukan registrasi atau Anda menambahkan tamu secara manual.
+            </p>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="mt-6 bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center mx-auto"
+            >
+              <span className="mr-2">+</span>
+              <span>Tambah Tamu Baru</span>
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -266,9 +316,28 @@ export default function AdminGuestsManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {/* Guest Data */}
                 {guests.map((guest, i) => (
-                  <tr key={guest.id || i} className="hover:bg-gray-50">
+                  <tr 
+                    key={guest.id || i} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/guests/${guest.id}/details`);
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                          setSelectedGuest(result.data);
+                        } else {
+                          console.error('Failed to fetch detailed guest information:', result.message);
+                          setSelectedGuest(guest);
+                        }
+                      } catch (error) {
+                        console.error('Error fetching guest details:', error);
+                        setSelectedGuest(guest);
+                      }
+                      setIsDetailModalOpen(true);
+                    }}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -312,9 +381,44 @@ export default function AdminGuestsManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900 p-1" title="Lihat Detail">👁️</button>
-                        <button className="text-green-600 hover:text-green-900 p-1" title="Edit">✏️</button>
-                        <button className="text-red-600 hover:text-red-900 p-1" title="Hapus">🗑️</button>
+                        <button 
+                          className="text-blue-600 hover:text-blue-900 p-1" 
+                          title="Lihat Detail"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const response = await fetch(`/api/guests/${guest.id}/details`);
+                              const result = await response.json();
+                              
+                              if (result.success) {
+                                setSelectedGuest(result.data);
+                              } else {
+                                console.error('Failed to fetch detailed guest information:', result.message);
+                                setSelectedGuest(guest);
+                              }
+                            } catch (error) {
+                              console.error('Error fetching guest details:', error);
+                              setSelectedGuest(guest);
+                            }
+                            setIsDetailModalOpen(true);
+                          }}
+                        >
+                          👁️
+                        </button>
+                        <button 
+                          className="text-green-600 hover:text-green-900 p-1" 
+                          title="Edit"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          className="text-red-600 hover:text-red-900 p-1" 
+                          title="Hapus"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          🗑️
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -353,6 +457,27 @@ export default function AdminGuestsManagement() {
           </div>
         )}
       </div>
+
+      {/* Modal for adding guests */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title="Tambah Tamu Baru"
+        size="xl"
+      >
+        <GuestRegistrationForm 
+          onSubmit={handleGuestFormSubmit}
+          isLoading={isFormSubmitting}
+          isInModal={true}
+        />
+      </Modal>
+
+      {/* Modal for viewing guest details */}
+      <GuestDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        guest={selectedGuest}
+      />
     </div>
   );
 }
