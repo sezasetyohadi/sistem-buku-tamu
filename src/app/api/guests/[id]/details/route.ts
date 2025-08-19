@@ -4,16 +4,16 @@ import { getGuestById } from '@/backend/services/guestService';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id?: string } }
 ) {
   try {
     // Pastikan params ada dan id tidak kosong
-    if (!params || !params.id) {
+    if (!context?.params?.id) {
       return NextResponse.json({ success: false, message: 'ID tamu tidak ditemukan' }, { status: 400 });
     }
     
     // Ambil id dan pastikan valid sebagai angka
-    const id = String(params.id);
+    const id = String(context.params.id);
     const guestId = parseInt(id, 10);
     if (isNaN(guestId)) {
       return NextResponse.json({ success: false, message: 'ID tamu tidak valid' }, { status: 400 });

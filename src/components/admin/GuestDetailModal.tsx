@@ -2,6 +2,7 @@ import { DaftarTamu } from "@/types/database-types";
 import Modal from "../ui/Modal";
 import { useState } from "react";
 import ScheduleModal from "./ScheduleModal";
+import DeleteConfirmationDialog from "../ui/DeleteConfirmationDialog";
 import { toast } from "react-hot-toast";
 
 // Tooltip component
@@ -36,11 +37,13 @@ interface GuestDetailModalProps {
   onClose: () => void;
   guest: DaftarTamu | null;
   onGuestUpdate?: () => void; // Callback for when guest data is updated
+  isEditMode?: boolean; // Whether the modal is opened in edit mode
 }
 
-export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate }: GuestDetailModalProps) {
+export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate, isEditMode = false }: GuestDetailModalProps) {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   if (!guest) return null;
 
@@ -125,7 +128,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Detail Tamu" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? "Edit Tamu" : "Detail Tamu"} size="lg">
       <div className="space-y-6">
         {/* Header with avatar and basic info */}
         <div className="flex items-center pb-4 border-b border-gray-200">
@@ -377,11 +380,20 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
             </button>
           )}
           
-          <button className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors">
+          <button 
+            onClick={() => {
+              // TODO: Implement edit functionality
+            }}
+            className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+          >
             Edit
           </button>
           
-          <button className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
+          <button 
+            onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
+          >
             Hapus
           </button>
           
@@ -401,6 +413,53 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
           onClose={() => setIsScheduleModalOpen(false)}
           onSchedule={handleSchedule}
           guestId={guest.id || 0}
+        />
+      )}
+      
+      {/* Delete Confirmation Dialog */}
+      {guest && (
+        <DeleteConfirmationDialog
+          isOpen={isDeleteDialogOpen}
+          title="Konfirmasi Hapus Data"
+          message="Apakah Anda yakin ingin menghapus tamu ini dari daftar?"
+          itemName={guest.nama}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          isLoading={isSubmitting}
+          onConfirm={async () => {
+            try {
+              setIsSubmitting(true);
+              
+              const response = await fetch(`/api/guests/${guest.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              });
+              
+              const result = await response.json();
+              
+              if (!result.success) {
+                throw new Error(result.message || 'Gagal menghapus data tamu');
+              }
+              
+              // Show success message
+              toast.success('Data tamu berhasil dihapus');
+              
+              // Close both dialogs
+              setIsDeleteDialogOpen(false);
+              onClose();
+              
+              // Trigger refresh of guest data in the parent component
+              if (onGuestUpdate) {
+                onGuestUpdate();
+              }
+            } catch (error) {
+              console.error('Error deleting guest:', error);
+              toast.error('Gagal menghapus data tamu');
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
         />
       )}
     </Modal>

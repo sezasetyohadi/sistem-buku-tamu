@@ -6,6 +6,8 @@ import { DaftarTamu } from "@/types/database-types";
 import Modal from "@/components/ui/Modal";
 import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
+import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
+import { toast } from "react-hot-toast";
 
 export default function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +25,10 @@ export default function AdminGuestsManagement() {
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<DaftarTamu | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [guestToDelete, setGuestToDelete] = useState<DaftarTamu | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const initialFetchData = async () => {
@@ -342,6 +348,7 @@ export default function AdminGuestsManagement() {
                         
                         if (result.success) {
                           setSelectedGuest(result.data);
+                          setIsEditMode(false); // View mode by default when clicking a row
                         } else {
                           console.error('Failed to fetch detailed guest information:', result.message);
                           setSelectedGuest(guest);
@@ -397,10 +404,11 @@ export default function AdminGuestsManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button 
-                          className="text-blue-600 hover:text-blue-900 p-1" 
-                          title="Lihat Detail"
+                          className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-50" 
+                          title="Edit"
                           onClick={async (e) => {
                             e.stopPropagation();
+                            // Handle edit functionality
                             try {
                               const response = await fetch(`/api/guests/${guest.id}/details`);
                               const result = await response.json();
@@ -408,31 +416,34 @@ export default function AdminGuestsManagement() {
                               if (result.success) {
                                 setSelectedGuest(result.data);
                               } else {
-                                console.error('Failed to fetch detailed guest information:', result.message);
                                 setSelectedGuest(guest);
                               }
+                              
+                              setIsEditMode(true); // Set edit mode to true when clicking edit button
+                              setIsDetailModalOpen(true);
                             } catch (error) {
-                              console.error('Error fetching guest details:', error);
+                              console.error('Error selecting guest for edit:', error);
                               setSelectedGuest(guest);
+                              setIsDetailModalOpen(true);
                             }
-                            setIsDetailModalOpen(true);
                           }}
                         >
-                          👁️
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                          </svg>
                         </button>
                         <button 
-                          className="text-green-600 hover:text-green-900 p-1" 
-                          title="Edit"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          className="text-red-600 hover:text-red-900 p-1" 
+                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-50" 
                           title="Hapus"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setGuestToDelete(guest);
+                            setIsDeleteDialogOpen(true);
+                          }}
                         >
-                          🗑️
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
                         </button>
                       </div>
                     </td>
@@ -490,10 +501,65 @@ export default function AdminGuestsManagement() {
       {/* Modal for viewing guest details */}
       <GuestDetailModal
         isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setIsEditMode(false); // Reset edit mode when closing modal
+        }}
         guest={selectedGuest}
         onGuestUpdate={handleRefresh}
+        isEditMode={isEditMode}
       />
+
+      {/* Delete Confirmation Dialog */}
+      {guestToDelete && (
+        <DeleteConfirmationDialog
+          isOpen={isDeleteDialogOpen}
+          title="Konfirmasi Hapus Data"
+          message="Apakah Anda yakin ingin menghapus tamu ini dari daftar?"
+          itemName={guestToDelete.nama}
+          onClose={() => {
+            setIsDeleteDialogOpen(false);
+            setGuestToDelete(null);
+          }}
+          isLoading={isDeleting}
+          onConfirm={async () => {
+            try {
+              setIsDeleting(true);
+              
+              const response = await fetch(`/api/guests/${guestToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              });
+              
+              const result = await response.json();
+              
+              if (!result.success) {
+                throw new Error(result.message || 'Gagal menghapus data tamu');
+              }
+              
+              // Remove the guest from the local state to update UI immediately
+              setGuests(prev => prev.filter(g => g.id !== guestToDelete.id));
+              
+              // Show success message
+              toast.success('Data tamu berhasil dihapus');
+              
+              // Close dialog
+              setIsDeleteDialogOpen(false);
+              setGuestToDelete(null);
+              
+              // Refresh data completely
+              await fetchData();
+            } catch (error) {
+              console.error('Error deleting guest:', error);
+              toast.error('Gagal menghapus data tamu');
+            } finally {
+              setIsDeleting(false);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
