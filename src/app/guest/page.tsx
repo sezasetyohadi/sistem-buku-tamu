@@ -164,7 +164,7 @@ export default function GuestLandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           {/* Section header */}
           <div className="text-center mb-20 opacity-0 translate-y-8 transition-all duration-1000 ease-out" data-fade="up">
-            <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6" style={{backgroundColor: '#FEF3E2', color: '#EA580C'}}>
+            <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6 bg-badge-orange">
               <span className="mr-2">✨</span>
               Layanan Kami
             </div>
@@ -181,7 +181,7 @@ export default function GuestLandingPage() {
             {/* Card 1 */}
             <div className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-8 ease-out" data-fade="up">
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform bg-gradient-blue">
                   📝
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-4">Registrasi Tamu</h3>
@@ -194,7 +194,7 @@ export default function GuestLandingPage() {
             {/* Card 2 */}
             <div className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-8 ease-out" data-fade="up">
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform bg-gradient-green">
                   🏢
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-4">Layanan Ketenagakerjaan</h3>
@@ -207,7 +207,7 @@ export default function GuestLandingPage() {
             {/* Card 3 */}
             <div className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-8 ease-out" data-fade="up">
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform" style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform bg-gradient-orange">
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
@@ -222,7 +222,7 @@ export default function GuestLandingPage() {
 
           {/* CTA Section */}
           <div className="text-center opacity-0 translate-y-8 transition-all duration-1000 ease-out" data-fade="up">
-            <div className="rounded-3xl p-12 text-white relative overflow-hidden shadow-2xl" style={{background: 'linear-gradient(135deg, #3D5DC3 0%, #2563EB 100%)'}}>
+            <div className="rounded-3xl p-12 text-white relative overflow-hidden shadow-2xl bg-cta-gradient">
               <div className="relative z-10">
                 <h3 className="text-3xl font-bold mb-4">Mulai Sekarang!</h3>
                 <p className="text-xl text-blue-50 mb-8 max-w-2xl mx-auto">
@@ -231,8 +231,7 @@ export default function GuestLandingPage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
                     href="/guest/register"
-                    className="text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
-                    style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}
+                    className="text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 bg-gradient-orange"
                   >
                     Daftar Sekarang
                   </Link>

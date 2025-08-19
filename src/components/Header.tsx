@@ -16,11 +16,11 @@ export default function Header() {
   ];
 
   return (
-    <header className="text-white shadow-2xl relative overflow-hidden" style={{background: 'linear-gradient(135deg, #3D5DC3 0%, #2563EB 50%, #1D4ED8 100%)'}}>
+    <header className="text-white shadow-2xl relative overflow-hidden bg-header-gradient">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-black opacity-10"></div>
       <div className="absolute -top-4 -right-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
-      <div className="absolute -bottom-4 -left-4 w-32 h-32 opacity-5 rounded-full" style={{backgroundColor: '#F29442'}}></div>
+      <div className="absolute -bottom-4 -left-4 w-32 h-32 opacity-5 rounded-full bg-decoration-orange"></div>
       <div className="absolute top-0 left-1/2 w-64 h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
       
       <div className="container mx-auto px-4 relative z-10">

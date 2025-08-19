@@ -12,7 +12,7 @@ export default function Survey() {
         <div className="container mx-auto px-4">
           {/* Header Section */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6" style={{backgroundColor: '#EBF4FF', color: '#3D5DC3'}}>
+            <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6 bg-badge-blue">
               <span className="mr-2">📊</span>
               Survey Kepuasan
             </div>
