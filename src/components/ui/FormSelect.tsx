@@ -3,7 +3,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface SelectOption {
   value: string;
@@ -29,7 +29,25 @@ export default function FormSelect({
   className = "",
   ...props 
 }: FormSelectProps) {
-  const [isFocused, setIsFocused] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  const handleMouseDown = () => {
+    setIsOpen(prev => !prev);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Call original onChange first
+    if (props.onChange) {
+      props.onChange(e);
+    }
+    // Close dropdown after selection
+    setIsOpen(false);
+  };
+
+  const handleBlur = () => {
+    setIsOpen(false);
+  };
 
   // Get appropriate icon based on the label
   const getContextualIcon = () => {
@@ -59,8 +77,8 @@ export default function FormSelect({
           transition-colors duration-200 pointer-events-none
           ${error 
             ? 'text-red-400' 
-            : isFocused 
-              ? 'text-blue-500' 
+            : isOpen 
+              ? 'text-[#3D5DC3]' 
               : 'text-gray-400'
           }
         `}>
@@ -68,10 +86,11 @@ export default function FormSelect({
         </div>
         
         <select
+          ref={selectRef}
           className={`
             w-full pl-12 pr-12 py-3 text-black 
             border border-gray-300 rounded-lg shadow-sm transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 focus:border-blue-500
+            focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3]
             appearance-none cursor-pointer
             bg-white hover:bg-gray-50 focus:bg-white
             ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
@@ -86,8 +105,9 @@ export default function FormSelect({
             WebkitAppearance: 'none',
             MozAppearance: 'none'
           }}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onMouseDown={handleMouseDown}
+          onBlur={handleBlur}
+          onChange={handleChange}
           {...props}
         >
           {options.map((option) => (
@@ -103,18 +123,20 @@ export default function FormSelect({
           ))}
         </select>
         
-        {/* Custom dropdown arrow */}
+        {/* Custom dropdown arrow with rotation animation */}
         <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-          <svg className={`w-5 h-5 transition-colors duration-200 ${
-            error ? 'text-red-400' : isFocused ? 'text-blue-500' : 'text-gray-400'
+          <svg className={`w-5 h-5 transition-all duration-200 transform ${
+            isOpen ? 'rotate-180' : 'rotate-0'
+          } ${
+            error ? 'text-red-400' : isOpen ? 'text-[#3D5DC3]' : 'text-gray-400'
           }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
         
         {/* Subtle border highlight on focus */}
-        {isFocused && !error && (
-          <div className="absolute inset-0 rounded-lg pointer-events-none ring-2 ring-blue-200 ring-opacity-50 -z-10" />
+        {isOpen && !error && (
+          <div className="absolute inset-0 rounded-lg pointer-events-none ring-2 ring-[#3D5DC3] ring-opacity-50 -z-10" />
         )}
       </div>
       

@@ -1,12 +1,156 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { DaftarTamu } from "@/types/database-types";
+import Modal from "@/components/ui/Modal";
+import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
+import GuestDetailModal from '@/components/admin/GuestDetailModal';
 
 export default function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua Status");
   const [dateFilter, setDateFilter] = useState("Hari Ini");
+  const [stats, setStats] = useState({
+    totalGuests: 0,
+    todayCheckIn: 0,
+    todayCheckOut: 0,
+    currentlyVisiting: 0
+  });
+  const [guests, setGuests] = useState<DaftarTamu[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedGuest, setSelectedGuest] = useState<DaftarTamu | null>(null);
+
+  useEffect(() => {
+    const initialFetchData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchData();
+      } catch (error) {
+        console.error("Error in initial data fetch:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialFetchData();
+  }, []);
+
+  const handleRefresh = async () => {
+    try {
+      setIsLoading(true);
+      await fetchData();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGuestFormSubmit = async (data: any) => {
+    setIsFormSubmitting(true);
+    try {
+      const response = await fetch('/api/guests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Tamu berhasil ditambahkan!');
+        setIsModalOpen(false);
+        // Refresh the guest list
+        await fetchData();
+      } else {
+        alert(`Gagal menambahkan tamu: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Terjadi kesalahan saat menambahkan tamu. Silakan coba lagi.');
+    } finally {
+      setIsFormSubmitting(false);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      // Fetch statistics
+      const statsResponse = await fetch('/api/statistics');
+      if (!statsResponse.ok) {
+        throw new Error(`HTTP error! Status: ${statsResponse.status}`);
+      }
+      
+      // Parse JSON with error handling for statistics
+      let statsData;
+      try {
+        statsData = await statsResponse.json();
+      } catch (parseError) {
+        console.error('Error parsing statistics JSON response:', parseError);
+        throw new Error('Invalid JSON response from statistics endpoint');
+      }
+      
+      if (statsData && statsData.success && statsData.data) {
+        setStats({
+          totalGuests: statsData.data.totalGuests || 0,
+          todayCheckIn: statsData.data.todayCheckIn || 0,
+          todayCheckOut: statsData.data.todayCheckOut || 0,
+          currentlyVisiting: statsData.data.currentlyVisiting || 0
+        });
+      }
+      
+      // Fetch guest list
+      const guestsResponse = await fetch('/api/guests', {
+        // Add cache: 'no-store' to prevent caching
+        cache: 'no-store',
+        // Add a timestamp to bust the cache
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      
+      if (!guestsResponse.ok) {
+        throw new Error(`HTTP error! Status: ${guestsResponse.status}`);
+      }
+      
+      // Parse JSON with error handling for guests
+      let guestsData;
+      try {
+        guestsData = await guestsResponse.json();
+      } catch (parseError) {
+        console.error('Error parsing guests JSON response:', parseError);
+        throw new Error('Invalid JSON response from guests endpoint');
+      }
+      
+      if (guestsData && guestsData.success) {
+        const guestsArray = guestsData.data || [];
+        if (Array.isArray(guestsArray)) {
+          // Map tanggapan to status_kunjungan if needed
+          const mappedGuests = guestsArray.map(guest => {
+            if (guest.tanggapan && !guest.status_kunjungan) {
+              return { ...guest, status_kunjungan: guest.tanggapan };
+            }
+            return guest;
+          });
+          setGuests(mappedGuests);
+        } else {
+          console.error('Guests data is not an array:', guestsData.data);
+          setGuests([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setGuests([]);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -25,7 +169,7 @@ export default function AdminGuestsManagement() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Tamu</p>
-              <p className="text-2xl font-bold text-gray-900">1,234</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
             </div>
           </div>
         </div>
@@ -36,8 +180,8 @@ export default function AdminGuestsManagement() {
               <span className="text-2xl">📅</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Check-in Hari Ini</p>
-              <p className="text-2xl font-bold text-gray-900">45</p>
+              <p className="text-sm font-medium text-gray-600">Terjadwal Hari Ini</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckIn}</p>
             </div>
           </div>
         </div>
@@ -45,11 +189,11 @@ export default function AdminGuestsManagement() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <span className="text-2xl">📤</span>
+              <span className="text-2xl">✅</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Check-out Hari Ini</p>
-              <p className="text-2xl font-bold text-gray-900">38</p>
+              <p className="text-sm font-medium text-gray-600">Selesai Hari Ini</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckOut}</p>
             </div>
           </div>
         </div>
@@ -57,32 +201,36 @@ export default function AdminGuestsManagement() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <span className="text-2xl">🔄</span>
+              <span className="text-2xl">💼</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Sedang Berkunjung</p>
-              <p className="text-2xl font-bold text-gray-900">7</p>
+              <p className="text-sm font-medium text-gray-600">Datang Hari Ini</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.currentlyVisiting}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons - Pastel Version */}
       <div className="flex flex-wrap gap-4 mb-6">
-        <Link
-          href="/guest/register"
-          className="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-red-200 text-red-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-300 transition-colors flex items-center space-x-2"
         >
           <span>➕</span>
           <span>Tambah Tamu</span>
-        </Link>
-        <button className="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
+        </button>
+        <button className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
           <span>📊</span>
           <span>Export Data</span>
         </button>
-        <button className="bg-gray-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors flex items-center space-x-2">
-          <span>🔄</span>
-          <span>Refresh</span>
+        <button 
+          onClick={handleRefresh}
+          className="bg-blue-200 text-blue-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-300 transition-colors flex items-center space-x-2"
+          disabled={isLoading}
+        >
+          <span>{isLoading ? "⏳" : "🔄"}</span>
+          <span>{isLoading ? "Memuat..." : "Refresh"}</span>
         </button>
       </div>
 
@@ -105,9 +253,10 @@ export default function AdminGuestsManagement() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
               <option>Semua Status</option>
-              <option>Check-in</option>
-              <option>Check-out</option>
-              <option>Sedang Berkunjung</option>
+              <option>Menunggu</option>
+              <option>Terjadwal</option>
+              <option>Datang</option>
+              <option>Selesai</option>
             </select>
             <select 
               value={dateFilter}
@@ -128,94 +277,207 @@ export default function AdminGuestsManagement() {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Daftar Tamu Terbaru</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instansi</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {/* Sample Data */}
-              {[
-                { name: 'Ahmad Yani', instansi: 'PT Telkom Indonesia', tujuan: 'Konsultasi Tenaga Kerja', status: 'Check-in', time: '09:15' },
-                { name: 'Siti Rahayu', instansi: 'Dinas Pendidikan Semarang', tujuan: 'Koordinasi Program', status: 'Check-out', time: '10:30' },
-                { name: 'Budi Santoso', instansi: 'UMKM Batik Jateng', tujuan: 'Bantuan Pelatihan', status: 'Sedang Berkunjung', time: '11:45' },
-                { name: 'Maya Putri', instansi: 'Universitas Diponegoro', tujuan: 'Penelitian', status: 'Check-in', time: '13:20' },
-                { name: 'Andi Wijaya', instansi: 'Koperasi Sejahtera', tujuan: 'Informasi Transmigrasi', status: 'Check-out', time: '14:15' },
-              ].map((guest, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <span className="text-sm font-bold text-red-600">
-                          {guest.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{guest.name}</div>
-                        <div className="text-sm text-gray-500">ID: TM{String(i + 1).padStart(3, '0')}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{guest.instansi}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{guest.tujuan}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">12 Agu 2025</div>
-                    <div className="text-sm text-gray-500">{guest.time} WIB</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      guest.status === 'Check-in' ? 'bg-blue-100 text-blue-800' :
-                      guest.status === 'Check-out' ? 'bg-green-100 text-green-800' :
-                      'bg-orange-100 text-orange-800'
-                    }`}>
-                      {guest.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900 p-1" title="Lihat Detail">👁️</button>
-                      <button className="text-green-600 hover:text-green-900 p-1" title="Edit">✏️</button>
-                      <button className="text-red-600 hover:text-red-900 p-1" title="Hapus">🗑️</button>
-                    </div>
-                  </td>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+            <span className="ml-3 text-gray-600">Memuat data...</span>
+          </div>
+        ) : guests.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="inline-flex justify-center items-center w-24 h-24 bg-gray-100 rounded-full mb-4">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM18.5 12l2.25 2.25M18.5 16.5l2.25-2.25" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-medium text-gray-700 mb-2">Tidak ada data tamu</h3>
+            <p className="text-gray-500 max-w-sm mx-auto">
+              Belum ada tamu yang terdaftar. Data tamu akan muncul di sini setelah tamu melakukan registrasi atau Anda menambahkan tamu secara manual.
+            </p>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="mt-6 bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center mx-auto"
+            >
+              <span className="mr-2">+</span>
+              <span>Tambah Tamu Baru</span>
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instansi</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {guests.map((guest, i) => (
+                  <tr 
+                    key={guest.id || i} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/guests/${guest.id}/details`);
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                          setSelectedGuest(result.data);
+                        } else {
+                          console.error('Failed to fetch detailed guest information:', result.message);
+                          setSelectedGuest(guest);
+                        }
+                      } catch (error) {
+                        console.error('Error fetching guest details:', error);
+                        setSelectedGuest(guest);
+                      }
+                      setIsDetailModalOpen(true);
+                    }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                          <span className="text-sm font-bold text-red-600">
+                            {guest.nama.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{guest.nama}</div>
+                          <div className="text-sm text-gray-500">ID: {guest.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{guest.asal_instansi || "-"}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{guest.keperluan || "-"}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {guest.waktu_checkin 
+                          ? new Date(guest.waktu_checkin).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})
+                          : "-"}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {guest.waktu_checkin 
+                          ? new Date(guest.waktu_checkin).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'})
+                          : ""}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        guest.status_kunjungan === 'Datang' ? 'bg-blue-100 text-blue-800' :
+                        guest.status_kunjungan === 'Selesai' ? 'bg-green-100 text-green-800' :
+                        guest.status_kunjungan === 'Terjadwal' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {guest.status_kunjungan || 'Menunggu'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button 
+                          className="text-blue-600 hover:text-blue-900 p-1" 
+                          title="Lihat Detail"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const response = await fetch(`/api/guests/${guest.id}/details`);
+                              const result = await response.json();
+                              
+                              if (result.success) {
+                                setSelectedGuest(result.data);
+                              } else {
+                                console.error('Failed to fetch detailed guest information:', result.message);
+                                setSelectedGuest(guest);
+                              }
+                            } catch (error) {
+                              console.error('Error fetching guest details:', error);
+                              setSelectedGuest(guest);
+                            }
+                            setIsDetailModalOpen(true);
+                          }}
+                        >
+                          👁️
+                        </button>
+                        <button 
+                          className="text-green-600 hover:text-green-900 p-1" 
+                          title="Edit"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          className="text-red-600 hover:text-red-900 p-1" 
+                          title="Hapus"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         
         {/* Pagination */}
-        <div className="bg-white px-6 py-3 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Menampilkan <span className="font-medium">1</span> sampai <span className="font-medium">5</span> dari{' '}
-              <span className="font-medium">1,234</span> hasil
-            </div>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">
-                Sebelumnya
-              </button>
-              <button className="px-3 py-1 text-sm bg-red-600 text-white rounded">1</button>
-              <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">2</button>
-              <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">3</button>
-              <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">
-                Selanjutnya
-              </button>
+        {!isLoading && guests.length > 0 && (
+          <div className="bg-white px-6 py-3 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Menampilkan <span className="font-medium">1</span> sampai <span className="font-medium">{Math.min(guests.length, 10)}</span> dari{' '}
+                <span className="font-medium">{guests.length}</span> hasil
+              </div>
+              <div className="flex space-x-2">
+                <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">
+                  Sebelumnya
+                </button>
+                <button className="px-3 py-1 text-sm bg-red-600 text-white rounded">1</button>
+                {guests.length > 10 && (
+                  <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">2</button>
+                )}
+                {guests.length > 20 && (
+                  <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">3</button>
+                )}
+                {guests.length > 10 && (
+                  <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">
+                    Selanjutnya
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Modal for adding guests */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title="Tambah Tamu Baru"
+        size="xl"
+      >
+        <GuestRegistrationForm 
+          onSubmit={handleGuestFormSubmit}
+          isLoading={isFormSubmitting}
+          isInModal={true}
+        />
+      </Modal>
+
+      {/* Modal for viewing guest details */}
+      <GuestDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        guest={selectedGuest}
+      />
     </div>
   );
 }

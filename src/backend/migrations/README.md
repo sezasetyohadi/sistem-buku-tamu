@@ -61,29 +61,39 @@ To run a specific seed:
 npm run migrate:single -- 01_admin_seed.seed.ts
 ```
 
-## Available Migrations
+## Correct Migration Order
 
 1. `01_create_admin_table.migration.ts` - Creates the admin table
 2. `02_create_bidang_tujuan_table.migration.ts` - Creates the bidang_tujuan table
-3. `03_create_daftar_tamu_table.migration.ts` - Creates the daftar_tamu table
-4. `03b_create_section_survei_table.migration.ts` - Creates the section_survei table
+3. `03_create_daftar_tamu_table.migration.ts` - Creates the daftar_tamu table 
+4. `03c_create_section_survei_table.migration.ts` - Creates the section_survei table
 5. `04_create_rating_tables.migration.ts` - Creates jenis_rating and opsi_rating tables
 6. `05_create_survey_tables.migration.ts` - Creates pertanyaan_survei and jawaban_survei tables
 7. `06_create_pendidikan_terakhir_table.migration.ts` - Creates the pendidikan_terakhir table
 8. `07_create_pesan_email_table.migration.ts` - Creates the pesan_email table
 9. `08_create_profesi_table.migration.ts` - Creates the profesi table
 10. `09_create_tujuan_kunjungan_table.migration.ts` - Creates the tujuan_kunjungan table
+11. `10_create_memperoleh_informasi_table.migration.ts` - Creates the memperoleh_informasi table
 
-## Available Seeds
+## Correct Seed Order
 
 1. `01_admin_seed.seed.ts` - Inserts default admin user
 2. `02_bidang_tujuan_seed.seed.ts` - Inserts bidang tujuan data
-3. `03_section_survei_seed.seed.ts` - Inserts survey sections
-4. `03_pertanyaan_survei_seed.seed.ts` - Inserts survey questions
-5. `04_rating_seed.seed.ts` - Inserts rating scales and options
-6. `05_pendidikan_terakhir_seed.seed.ts` - Inserts education levels
+3. `02c_section_survei_seed.seed.ts` - Inserts survey sections
+4. `04_rating_seed.seed.ts` - Inserts rating scales and options
+5. `05_pendidikan_terakhir_seed.seed.ts` - Inserts education levels
+6. `05b_pertanyaan_survei_seed.seed.ts` - Inserts survey questions
 7. `06_profesi_seed.seed.ts` - Inserts professions
 8. `07_tujuan_kunjungan_seed.seed.ts` - Inserts visit purposes
+9. `08_memperoleh_informasi_seed.seed.ts` - Inserts information acquisition methods
+10. `09_mendapatkan_salinan_seed.seed.ts` - Inserts copy acquisition methods
+
+## Key Dependencies
+
+- `pertanyaan_survei` depends on `section_survei` and `jenis_rating`
+- `opsi_rating` depends on `jenis_rating`
+- `jawaban_survei` depends on `pertanyaan_survei`
+- `pesan_email` depends on `admin` and `daftar_tamu`
 
 ## Database Schema
 

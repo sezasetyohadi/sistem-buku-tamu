@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
   async redirects() {
     const appMode = process.env.APP_MODE;
     
+    // Default redirect for root to guest landing
+    const defaultRedirects = [
+      {
+        source: '/',
+        destination: '/guest/landing',
+        permanent: false,
+      }
+    ];
+    
     if (appMode === 'admin') {
       return [
         {
@@ -27,12 +36,11 @@ const nextConfig: NextConfig = {
     
     if (appMode === 'guest') {
       return [
-        // Remove the root redirect so landing page can be accessed
-        // {
-        //   source: '/',
-        //   destination: '/guest',
-        //   permanent: false,
-        // },
+        {
+          source: '/',
+          destination: '/guest/landing',
+          permanent: false,
+        },
         {
           source: '/admin/:path*',
           destination: '/guest',
@@ -41,7 +49,7 @@ const nextConfig: NextConfig = {
       ];
     }
     
-    return [];
+    return defaultRedirects;
   },
   // Conditional rewrites for API routes
   async rewrites() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Card from './ui/Card';
+import Card from '@/components/ui/Card';
 
 interface SurveyQuestion {
   id: number;
@@ -17,7 +17,7 @@ interface RatingOption {
   label?: string;
   deskripsi?: string;
   skala_rating?: string;
-  urutan_rating?: number;
+  urutan?: number;
 }
 
 interface SurveyResponse {
@@ -51,6 +51,29 @@ export default function SurveyForm() {
   const [submitted, setSubmitted] = useState(false);
   const [guestIdentity, setGuestIdentity] = useState<GuestIdentity | null>(null);
   const [surveyDate, setSurveyDate] = useState('');
+  const [focusedDropdowns, setFocusedDropdowns] = useState<{[key: string]: boolean}>({});
+
+  const handleDropdownMouseDown = (key: string) => {
+    setFocusedDropdowns(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleDropdownBlur = (key: string) => {
+    setFocusedDropdowns(prev => ({
+      ...prev,
+      [key]: false
+    }));
+  };
+
+  const handleDropdownChange = (key: string) => {
+    // Close dropdown after selection
+    setFocusedDropdowns(prev => ({
+      ...prev,
+      [key]: false
+    }));
+  };
 
   useEffect(() => {
     fetchSurveyData();
@@ -294,7 +317,12 @@ export default function SurveyForm() {
                   <div className="relative w-full">
                     <select 
                       value={guestIdentity?.jenis_kelamin || ''}
-                      onChange={(e) => setGuestIdentity(prev => prev ? {...prev, jenis_kelamin: e.target.value} : null)}
+                      onChange={(e) => {
+                        setGuestIdentity(prev => prev ? {...prev, jenis_kelamin: e.target.value} : null);
+                        handleDropdownChange('gender');
+                      }}
+                      onMouseDown={() => handleDropdownMouseDown('gender')}
+                      onBlur={() => handleDropdownBlur('gender')}
                       className="w-full pl-4 pr-10 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] appearance-none hover:bg-gray-50 focus:bg-white"
                       style={{
                         backgroundColor: '#ffffff !important',
@@ -306,9 +334,9 @@ export default function SurveyForm() {
                       <option value="Laki-laki">1. Laki-laki</option>
                       <option value="Perempuan">2. Perempuan</option>
                     </select>
-                    {/* Dropdown arrow */}
+                    {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns.gender ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -346,7 +374,12 @@ export default function SurveyForm() {
                   <div className="relative w-full">
                     <select 
                       value={guestIdentity?.pendidikan_terakhir || ''}
-                      onChange={(e) => setGuestIdentity(prev => prev ? {...prev, pendidikan_terakhir: e.target.value} : null)}
+                      onChange={(e) => {
+                        setGuestIdentity(prev => prev ? {...prev, pendidikan_terakhir: e.target.value} : null);
+                        handleDropdownChange('education');
+                      }}
+                      onMouseDown={() => handleDropdownMouseDown('education')}
+                      onBlur={() => handleDropdownBlur('education')}
                       className="w-full pl-4 pr-10 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] appearance-none hover:bg-gray-50 focus:bg-white"
                       style={{
                         backgroundColor: '#ffffff !important',
@@ -362,9 +395,9 @@ export default function SurveyForm() {
                       <option value="Sarjana (S-1)">5. Sarjana (S-1)</option>
                       <option value="Pasca Sarjana (S-2, S-3)">6. Pasca Sarjana (S-2, S-3)</option>
                     </select>
-                    {/* Dropdown arrow */}
+                    {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns.education ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -383,7 +416,12 @@ export default function SurveyForm() {
                   <div className="relative w-full">
                     <select 
                       value={guestIdentity?.pekerjaan_utama || ''}
-                      onChange={(e) => setGuestIdentity(prev => prev ? {...prev, pekerjaan_utama: e.target.value} : null)}
+                      onChange={(e) => {
+                        setGuestIdentity(prev => prev ? {...prev, pekerjaan_utama: e.target.value} : null);
+                        handleDropdownChange('job');
+                      }}
+                      onMouseDown={() => handleDropdownMouseDown('job')}
+                      onBlur={() => handleDropdownBlur('job')}
                       className="w-full pl-4 pr-10 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] appearance-none hover:bg-gray-50 focus:bg-white"
                       style={{
                         backgroundColor: '#ffffff !important',
@@ -401,9 +439,9 @@ export default function SurveyForm() {
                       <option value="Tidak Bekerja">7. Tidak Bekerja</option>
                       <option value="Lainnya, Sebutkan :">8. Lainnya, Sebutkan :</option>
                     </select>
-                    {/* Dropdown arrow */}
+                    {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns.job ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -422,7 +460,12 @@ export default function SurveyForm() {
                   <div className="relative w-full">
                     <select 
                       value={guestIdentity?.jenis_layanan || ''}
-                      onChange={(e) => setGuestIdentity(prev => prev ? {...prev, jenis_layanan: e.target.value} : null)}
+                      onChange={(e) => {
+                        setGuestIdentity(prev => prev ? {...prev, jenis_layanan: e.target.value} : null);
+                        handleDropdownChange('service');
+                      }}
+                      onMouseDown={() => handleDropdownMouseDown('service')}
+                      onBlur={() => handleDropdownBlur('service')}
                       className="w-full pl-4 pr-10 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] appearance-none hover:bg-gray-50 focus:bg-white"
                       style={{
                         backgroundColor: '#ffffff !important',
@@ -452,9 +495,9 @@ export default function SurveyForm() {
                       <option value="Penyidikan Tindak Pidana">19. Penyidikan Tindak Pidana</option>
                       <option value="Pengesahan Permasalahan Tenaga Kerja">20. Pengesahan Permasalahan Tenaga Kerja</option>
                     </select>
-                    {/* Dropdown arrow */}
+                    {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns.service ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -510,14 +553,17 @@ export default function SurveyForm() {
                               const value = e.target.value;
                               if (value) {
                                 handleRatingChange(question.id, parseInt(value));
+                                handleDropdownChange(`question-${question.id}`);
                               }
                             }}
+                            onMouseDown={() => handleDropdownMouseDown(`question-${question.id}`)}
+                            onBlur={() => handleDropdownBlur(`question-${question.id}`)}
                             className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white text-gray-900 appearance-none hover:bg-gray-50 focus:bg-white"
                             required
                           >
                             <option value="">Pilih rating...</option>
                             {question.ratingOptions?.map((option) => {
-                              const ratingValue = option.nilai || option.urutan_rating || 1;
+                              const ratingValue = option.nilai || option.urutan || 1;
                               const ratingLabel = option.label || option.skala_rating || `Rating ${ratingValue}`;
                               
                               return (
@@ -527,9 +573,9 @@ export default function SurveyForm() {
                               );
                             })}
                           </select>
-                          {/* Dropdown arrow */}
+                          {/* Dropdown arrow with animation */}
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns[`question-${question.id}`] ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </div>

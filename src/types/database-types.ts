@@ -13,13 +13,17 @@ export interface DaftarTamu {
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
-  // tanggal_kunjungan field removed as it doesn't exist in the database
-  waktu_kunjungan?: string; // time
   bidang_tujuan_id?: number;
-  tujuan_kunjungan_id?: number;
-  tanggapan?: 'Check-in' | 'Check-out' | 'Menunggu';
+  bidang_tujuan?: string; // Nama bidang (Sekretariat, Bidang Pelatihan Kerja, dll)
+  catatan_tambahan?: string;
+  status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
+  jadwal_checkin?: string | null; // datetime
+  waktu_checkin?: string | null; // datetime
+  waktu_checkout?: string | null; // datetime
   file_upload?: string;
   waktu_dibuat?: string; // datetime
+  cara_memperoleh_informasi?: string[]; // Array of cara memperoleh informasi names
+  cara_mendapatkan_salinan?: string[]; // Array of cara mendapatkan salinan names
 }
 
 // Survey Types (sesuai tabel jawaban_survei)
@@ -87,15 +91,15 @@ export interface GuestFormData {
   profesi_id?: number; // ID for profesi
   pendidikan_terakhir_id?: number; // ID for pendidikan
   asal_instansi?: string;
-  keperluan: string;
-  // tanggal_kunjungan removed as it doesn't exist in database
-  waktu_kunjungan?: string;
+  keperluan?: string;
   bidang_tujuan_id?: number;
   tujuan_kunjungan_id?: number;
   catatan?: string; // For catatan_tambahan column
   file_upload?: string;
   cara_memperoleh?: number[]; // Array of IDs from memperoleh_informasi table
   cara_salinan?: number[]; // Array of IDs from mendapatkan_salinan table
+  status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
+  jadwal_checkin?: string | null;
 }
 
 export interface SurveyFormData {

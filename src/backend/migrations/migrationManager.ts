@@ -68,21 +68,28 @@ export class MigrationManager {
     const files = await fs.readdir(migrationsDir);
     const migrationFiles = files
       .filter(file => file.endsWith('.migration.ts') || file.endsWith('.migration.js'))
-      .sort(); // Sort to ensure migrations run in order
+      .sort(); // Sort to ensure migrations run in order based on numeric prefix
     
     console.log('Found migration files:', migrationFiles);
+    console.log('Migration files will execute in the order shown above to respect dependencies');
     
     // Execute migrations that haven't been run yet
     for (const file of migrationFiles) {
       if (!executedMigrations.includes(file)) {
         console.log(`Running migration: ${file}`);
-        const migration = require(path.join(migrationsDir, file));
-        if (typeof migration.up === 'function') {
-          await migration.up();
-          await this.recordMigration(file);
-          console.log(`Migration ${file} completed`);
-        } else {
-          console.error(`Migration ${file} has no up() function`);
+        try {
+          const migration = require(path.join(migrationsDir, file));
+          if (typeof migration.up === 'function') {
+            await migration.up();
+            await this.recordMigration(file);
+            console.log(`Migration ${file} completed successfully`);
+          } else {
+            console.error(`Migration ${file} has no up() function`);
+          }
+        } catch (error) {
+          console.error(`ERROR executing migration ${file}:`, error);
+          console.error('This error might be due to a foreign key constraint. Check migration dependencies.');
+          throw error; // Rethrow to stop the migration process
         }
       } else {
         console.log(`Skipping already executed migration: ${file}`);
@@ -100,21 +107,28 @@ export class MigrationManager {
     const files = await fs.readdir(seedsDir);
     const seedFiles = files
       .filter(file => file.endsWith('.seed.ts') || file.endsWith('.seed.js'))
-      .sort(); // Sort to ensure seeds run in order
+      .sort(); // Sort to ensure seeds run in order based on numeric prefix
     
     console.log('Found seed files:', seedFiles);
+    console.log('Seed files will execute in the order shown above to respect dependencies');
     
     // Execute seeds that haven't been run yet
     for (const file of seedFiles) {
       if (!executedSeeds.includes(file)) {
         console.log(`Running seed: ${file}`);
-        const seed = require(path.join(seedsDir, file));
-        if (typeof seed.seed === 'function') {
-          await seed.seed();
-          await this.recordSeed(file);
-          console.log(`Seed ${file} completed`);
-        } else {
-          console.error(`Seed ${file} has no seed() function`);
+        try {
+          const seed = require(path.join(seedsDir, file));
+          if (typeof seed.seed === 'function') {
+            await seed.seed();
+            await this.recordSeed(file);
+            console.log(`Seed ${file} completed successfully`);
+          } else {
+            console.error(`Seed ${file} has no seed() function`);
+          }
+        } catch (error) {
+          console.error(`ERROR executing seed ${file}:`, error);
+          console.error('This error might be due to missing referenced data. Check seed dependencies.');
+          throw error; // Rethrow to stop the seeding process
         }
       } else {
         console.log(`Skipping already executed seed: ${file}`);
