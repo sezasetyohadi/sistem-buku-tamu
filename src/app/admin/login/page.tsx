@@ -185,17 +185,21 @@ export default function LoginPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <div className="text-2xl mb-2">�</div>
+                <svg className="w-8 h-8 text-blue-100 mb-2 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
                 <div className="text-sm text-blue-100">Manajemen Tamu</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <svg className="w-8 h-8 text-blue-100 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-8 h-8 text-blue-100 mb-2 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
                 <div className="text-sm text-blue-100">Laporan Detail</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <div className="text-2xl mb-2">🔐</div>
+                <svg className="w-8 h-8 text-blue-100 mb-2 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
                 <div className="text-sm text-blue-100">Keamanan Terjamin</div>
               </div>
             </div>
@@ -334,7 +338,7 @@ export default function LoginPage() {
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors duration-200"
               />
               <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700 cursor-pointer hover:text-gray-900 transition-colors duration-200">
-                Ingat saya selama 30 hari
+                Ingat saya selama 7 hari
               </label>
             </div>
 
