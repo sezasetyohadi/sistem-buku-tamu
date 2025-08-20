@@ -1,14 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import SurveyQuestionModal from "@/components/admin/SurveyQuestionModal";
 
 interface SurveyQuestion {
-  id: number;
+  id?: number;
   pertanyaan: string;
   tipe_pertanyaan: 'rating' | 'text';
   urutan: number;
   status: boolean;
   placeholder?: string;
+  jenis_rating_id?: number;
+}
+
+interface SurveyStatistics {
+  totalQuestions: number;
+  activeQuestions: number;
+  ratingQuestions: number;
+  textQuestions: number;
+  totalResponses: number;
+  averageRating: number;
+  statistics: any[];
 }
 
 export default function AdminSurvey() {
@@ -17,6 +29,15 @@ export default function AdminSurvey() {
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
   const [activeTab, setActiveTab] = useState<'questions' | 'responses'>('questions');
+  const [statistics, setStatistics] = useState<SurveyStatistics>({
+    totalQuestions: 0,
+    activeQuestions: 0,
+    ratingQuestions: 0,
+    textQuestions: 0,
+    totalResponses: 0,
+    averageRating: 0,
+    statistics: []
+  });
   const [newQuestion, setNewQuestion] = useState({
     pertanyaan: '',
     tipe_pertanyaan: 'rating' as 'rating' | 'text',
@@ -78,179 +99,165 @@ export default function AdminSurvey() {
   ];
 
   useEffect(() => {
-    // Langsung set dummy data tanpa mengecek API untuk demo
-    const dummyQuestions: SurveyQuestion[] = [
-      {
-        id: 1,
-        pertanyaan: "Bagaimana penilaian Anda terhadap pelayanan yang diberikan oleh petugas?",
-        tipe_pertanyaan: 'rating',
-        urutan: 1,
-        status: true
-      },
-      {
-        id: 2,
-        pertanyaan: "Bagaimana penilaian Anda terhadap kecepatan pelayanan?",
-        tipe_pertanyaan: 'rating',
-        urutan: 2,
-        status: true
-      },
-      {
-        id: 3,
-        pertanyaan: "Bagaimana penilaian Anda terhadap kejelasan informasi yang diberikan?",
-        tipe_pertanyaan: 'rating',
-        urutan: 3,
-        status: true
-      },
-      {
-        id: 4,
-        pertanyaan: "Bagaimana penilaian Anda terhadap fasilitas yang tersedia?",
-        tipe_pertanyaan: 'rating',
-        urutan: 4,
-        status: true
-      },
-      {
-        id: 5,
-        pertanyaan: "Bagaimana penilaian Anda secara keseluruhan terhadap layanan kami?",
-        tipe_pertanyaan: 'rating',
-        urutan: 5,
-        status: true
-      },
-      {
-        id: 6,
-        pertanyaan: "Apakah ada saran atau kritik untuk perbaikan layanan kami?",
-        tipe_pertanyaan: 'text',
-        urutan: 6,
-        status: true,
-        placeholder: "Tuliskan saran atau kritik Anda untuk membantu kami memberikan pelayanan yang lebih baik..."
-      },
-      {
-        id: 7,
-        pertanyaan: "Apakah Anda akan merekomendasikan layanan kami kepada orang lain?",
-        tipe_pertanyaan: 'rating',
-        urutan: 7,
-        status: true
-      },
-      {
-        id: 8,
-        pertanyaan: "Bagaimana Anda mengetahui tentang layanan kami?",
-        tipe_pertanyaan: 'text',
-        urutan: 8,
-        status: false,
-        placeholder: "Contoh: media sosial, website, teman, dll..."
-      }
-    ];
-    
-    setQuestions(dummyQuestions);
-    setLoading(false);
+    fetchSurveyData();
   }, []);
 
-  // Fungsi untuk demo - langsung return dummy data
-  const fetchQuestions = async () => {
-    // Simulasi loading
-    setLoading(true);
-    
-    // Set dummy data untuk demo
-    const dummyQuestions: SurveyQuestion[] = [
-      {
-        id: 1,
-        pertanyaan: "Bagaimana penilaian Anda terhadap pelayanan yang diberikan oleh petugas?",
-        tipe_pertanyaan: 'rating',
-        urutan: 1,
-        status: true
-      },
-      {
-        id: 2,
-        pertanyaan: "Bagaimana penilaian Anda terhadap kecepatan pelayanan?",
-        tipe_pertanyaan: 'rating',
-        urutan: 2,
-        status: true
-      },
-      {
-        id: 3,
-        pertanyaan: "Bagaimana penilaian Anda terhadap kejelasan informasi yang diberikan?",
-        tipe_pertanyaan: 'rating',
-        urutan: 3,
-        status: true
-      },
-      {
-        id: 4,
-        pertanyaan: "Bagaimana penilaian Anda terhadap fasilitas yang tersedia?",
-        tipe_pertanyaan: 'rating',
-        urutan: 4,
-        status: true
-      },
-      {
-        id: 5,
-        pertanyaan: "Bagaimana penilaian Anda secara keseluruhan terhadap layanan kami?",
-        tipe_pertanyaan: 'rating',
-        urutan: 5,
-        status: true
-      },
-      {
-        id: 6,
-        pertanyaan: "Apakah ada saran atau kritik untuk perbaikan layanan kami?",
-        tipe_pertanyaan: 'text',
-        urutan: 6,
-        status: true,
-        placeholder: "Tuliskan saran atau kritik Anda untuk membantu kami memberikan pelayanan yang lebih baik..."
-      },
-      {
-        id: 7,
-        pertanyaan: "Apakah Anda akan merekomendasikan layanan kami kepada orang lain?",
-        tipe_pertanyaan: 'rating',
-        urutan: 7,
-        status: true
-      },
-      {
-        id: 8,
-        pertanyaan: "Bagaimana Anda mengetahui tentang layanan kami?",
-        tipe_pertanyaan: 'text',
-        urutan: 8,
-        status: false,
-        placeholder: "Contoh: media sosial, website, teman, dll..."
+  // Function to fetch all survey data
+  const fetchSurveyData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch questions data
+      const questionsResponse = await fetch('/api/survey/questions');
+      if (!questionsResponse.ok) {
+        throw new Error(`Error fetching questions: ${questionsResponse.statusText}`);
       }
-    ];
+      const questionsData = await questionsResponse.json();
+      
+      if (questionsData.success && Array.isArray(questionsData.data)) {
+        // Map from API format to our component format
+        const mappedQuestions: SurveyQuestion[] = questionsData.data.map((q: any) => ({
+          id: q.id,
+          pertanyaan: q.pertanyaan,
+          tipe_pertanyaan: q.tipe_jawaban === 'rating' ? 'rating' : 'text',
+          urutan: q.urutan,
+          status: q.is_aktif,
+          placeholder: q.placeholder || ''
+        }));
+        
+        setQuestions(mappedQuestions);
+      }
+      
+      // Fetch statistics data
+      const statsResponse = await fetch('/api/survey/statistics');
+      if (!statsResponse.ok) {
+        throw new Error(`Error fetching statistics: ${statsResponse.statusText}`);
+      }
+      const statsData = await statsResponse.json();
+      
+      if (statsData.success && statsData.data) {
+        setStatistics(statsData.data);
+      }
+    } catch (error) {
+      console.error("Error fetching survey data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddQuestion = async (question: SurveyQuestion) => {
+    try {
+      // Create a request body that matches the API expectations
+      const requestBody = {
+        pertanyaan: question.pertanyaan,
+        tipe_pertanyaan: question.tipe_pertanyaan,
+        urutan: question.urutan || questions.length + 1,
+        // Map our tipe_pertanyaan to the API's expected format
+        tipe_jawaban: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
+        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined
+      };
+      
+      const response = await fetch('/api/survey/questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error adding question: ${response.statusText}`);
+      }
+      
+      // Refresh the data after successful addition
+      await fetchSurveyData();
+      
+      // Reset the form
+      setNewQuestion({
+        pertanyaan: '',
+        tipe_pertanyaan: 'rating',
+        urutan: 0,
+        status: true,
+        placeholder: ''
+      });
+      
+      setShowAddQuestion(false);
+    } catch (error) {
+      console.error('Error adding question:', error);
+      alert('Gagal menambahkan pertanyaan. Silakan coba lagi.');
+    }
+  };
+
+  const handleEditQuestion = async (question: SurveyQuestion | null) => {
+    if (!question || !question.id) {
+      console.error('Cannot edit question without ID');
+      return;
+    }
     
-    setQuestions(dummyQuestions);
-    setLoading(false);
+    try {
+      // Create a request body that matches the API expectations
+      const requestBody = {
+        id: question.id,
+        section_id: 1, // Default section
+        urutan: question.urutan,
+        pertanyaan: question.pertanyaan,
+        tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
+        is_aktif: question.status
+      };
+      
+      const response = await fetch(`/api/survey/questions/${question.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating question: ${response.statusText}`);
+      }
+      
+      // Refresh the data after successful update
+      await fetchSurveyData();
+      setEditingQuestion(null);
+    } catch (error) {
+      console.error('Error updating question:', error);
+      alert('Gagal memperbarui pertanyaan. Silakan coba lagi.');
+    }
   };
 
-  const handleAddQuestion = async () => {
-    // Simulasi penambahan pertanyaan untuk demo
-    const newId = Math.max(...questions.map(q => q.id)) + 1;
-    const newQuestionWithId = {
-      ...newQuestion,
-      id: newId,
-      urutan: newQuestion.urutan || questions.length + 1
-    };
+  const handleDeleteQuestion = async (id: number | undefined) => {
+    if (!id) {
+      console.error('Cannot delete question without ID');
+      return;
+    }
     
-    setQuestions([...questions, newQuestionWithId]);
-    setNewQuestion({
-      pertanyaan: '',
-      tipe_pertanyaan: 'rating',
-      urutan: 0,
-      status: true,
-      placeholder: ''
-    });
-    setShowAddQuestion(false);
-  };
-
-  const handleEditQuestion = async (question: SurveyQuestion) => {
-    // Simulasi edit untuk demo
-    setQuestions(questions.map(q => q.id === question.id ? question : q));
-    setEditingQuestion(null);
-  };
-
-  const handleDeleteQuestion = async (id: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus pertanyaan ini?')) {
-      // Simulasi hapus untuk demo
-      setQuestions(questions.filter(q => q.id !== id));
+      try {
+        const response = await fetch(`/api/survey/questions/${id}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error deleting question: ${response.statusText}`);
+        }
+        
+        // Refresh the data after successful deletion
+        await fetchSurveyData();
+      } catch (error) {
+        console.error('Error deleting question:', error);
+        alert('Gagal menghapus pertanyaan. Silakan coba lagi.');
+      }
     }
   };
 
   const toggleQuestionStatus = async (question: SurveyQuestion) => {
-    const updatedQuestion = { ...question, status: !question.status };
-    handleEditQuestion(updatedQuestion);
+    try {
+      const updatedQuestion = { ...question, status: !question.status };
+      await handleEditQuestion(updatedQuestion);
+    } catch (error) {
+      console.error('Error toggling question status:', error);
+    }
   };
 
   if (loading) {
@@ -287,7 +294,7 @@ export default function AdminSurvey() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm">Total Pertanyaan</p>
-                  <p className="text-2xl font-bold">{questions.length}</p>
+                  <p className="text-2xl font-bold">{statistics.totalQuestions}</p>
                 </div>
                 <div className="bg-blue-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -301,7 +308,7 @@ export default function AdminSurvey() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm">Pertanyaan Aktif</p>
-                  <p className="text-2xl font-bold">{questions.filter(q => q.status).length}</p>
+                  <p className="text-2xl font-bold">{statistics.activeQuestions}</p>
                 </div>
                 <div className="bg-green-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -315,7 +322,7 @@ export default function AdminSurvey() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100 text-sm">Rating Questions</p>
-                  <p className="text-2xl font-bold">{questions.filter(q => q.tipe_pertanyaan === 'rating').length}</p>
+                  <p className="text-2xl font-bold">{statistics.ratingQuestions}</p>
                 </div>
                 <div className="bg-purple-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -329,7 +336,7 @@ export default function AdminSurvey() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-100 text-sm">Text Questions</p>
-                  <p className="text-2xl font-bold">{questions.filter(q => q.tipe_pertanyaan === 'text').length}</p>
+                  <p className="text-2xl font-bold">{statistics.textQuestions}</p>
                 </div>
                 <div className="bg-orange-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -401,165 +408,56 @@ export default function AdminSurvey() {
                 {Array.isArray(questions) && questions.length > 0 ? (
                   questions.map((question) => (
                   <div key={question.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                    {editingQuestion?.id === question.id ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Pertanyaan
-                        </label>
-                        <input
-                          type="text"
-                          value={editingQuestion.pertanyaan}
-                          onChange={(e) => setEditingQuestion({
-                            ...editingQuestion,
-                            pertanyaan: e.target.value
-                          })}
-                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                          style={{
-                            backgroundColor: '#ffffff !important',
-                            color: '#1f2937 !important',
-                            WebkitTextFillColor: '#1f2937 !important',
-                            WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                            boxShadow: '0 0 0 1000px #ffffff inset !important'
-                          }}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Tipe
-                          </label>
-                          <select
-                            value={editingQuestion.tipe_pertanyaan}
-                            onChange={(e) => setEditingQuestion({
-                              ...editingQuestion,
-                              tipe_pertanyaan: e.target.value as 'rating' | 'text'
-                            })}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                            style={{
-                              backgroundColor: '#ffffff !important',
-                              color: '#1f2937 !important',
-                              WebkitTextFillColor: '#1f2937 !important',
-                              WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                              boxShadow: '0 0 0 1000px #ffffff inset !important'
-                            }}
-                          >
-                            <option value="rating">Rating</option>
-                            <option value="text">Text</option>
-                          </select>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-base font-medium text-gray-900">
+                            {question.urutan}. {question.pertanyaan}
+                          </h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            question.tipe_pertanyaan === 'rating' 
+                              ? 'bg-blue-100 text-blue-700' 
+                              : 'bg-purple-100 text-purple-700'
+                          }`}>
+                            {question.tipe_pertanyaan === 'rating' ? 'Rating' : 'Text'}
+                          </span>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Urutan
-                          </label>
-                          <input
-                            type="number"
-                            value={editingQuestion.urutan}
-                            onChange={(e) => setEditingQuestion({
-                              ...editingQuestion,
-                              urutan: parseInt(e.target.value)
-                            })}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                            style={{
-                              backgroundColor: '#ffffff !important',
-                              color: '#1f2937 !important',
-                              WebkitTextFillColor: '#1f2937 !important',
-                              WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                              boxShadow: '0 0 0 1000px #ffffff inset !important'
-                            }}
-                          />
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${
+                            question.status ? 'bg-green-400' : 'bg-red-400'
+                          }`}></span>
+                          <span className="text-sm text-gray-600">
+                            {question.status ? 'Aktif' : 'Nonaktif'}
+                          </span>
                         </div>
-                      </div>
-                      
-                      {editingQuestion.tipe_pertanyaan === 'text' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Placeholder (opsional)
-                          </label>
-                          <textarea
-                            value={editingQuestion.placeholder || ''}
-                            onChange={(e) => setEditingQuestion({
-                              ...editingQuestion,
-                              placeholder: e.target.value
-                            })}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 resize-none bg-white text-gray-900"
-                            style={{
-                              backgroundColor: '#ffffff !important',
-                              color: '#1f2937 !important',
-                              WebkitTextFillColor: '#1f2937 !important',
-                              WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                              boxShadow: '0 0 0 1000px #ffffff inset !important'
-                            }}
-                            placeholder="Contoh jawaban untuk membantu user..."
-                          />
-                        </div>
-                      )}                    <div className="flex gap-2 pt-2">
-                      <button
-                        onClick={() => handleEditQuestion(editingQuestion)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
-                      >
-                        Simpan
-                      </button>
-                      <button
-                        onClick={() => setEditingQuestion(null)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors text-sm"
-                      >
-                        Batal
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-base font-medium text-gray-900">
-                          {question.urutan}. {question.pertanyaan}
-                        </h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          question.tipe_pertanyaan === 'rating' 
-                            ? 'bg-blue-100 text-blue-700' 
-                            : 'bg-purple-100 text-purple-700'
-                        }`}>
-                          {question.tipe_pertanyaan === 'rating' ? 'Rating' : 'Text'}
-                        </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${
-                          question.status ? 'bg-green-400' : 'bg-red-400'
-                        }`}></span>
-                        <span className="text-sm text-gray-600">
-                          {question.status ? 'Aktif' : 'Nonaktif'}
-                        </span>
+                        <button
+                          onClick={() => toggleQuestionStatus(question)}
+                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                            question.status 
+                              ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          }`}
+                        >
+                          {question.status ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                        <button
+                          onClick={() => setEditingQuestion(question)}
+                          className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteQuestion(question.id)}
+                          className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
+                        >
+                          Hapus
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleQuestionStatus(question)}
-                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                          question.status 
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
-                        }`}
-                      >
-                        {question.status ? 'Nonaktifkan' : 'Aktifkan'}
-                      </button>
-                      <button
-                        onClick={() => setEditingQuestion(question)}
-                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteQuestion(question.id)}
-                        className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
-                      >
-                        Hapus
-                      </button>
-                    </div>
                   </div>
-                )}
-              </div>
-            ))
+                ))
                 ) : (
                   <div className="text-center py-12">
                     <div className="text-gray-400 mb-3">
@@ -580,15 +478,19 @@ export default function AdminSurvey() {
                 <h3 className="text-sm font-medium text-gray-800 mb-2">Statistik Respon</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">{dummyResponses.length}</p>
+                    <p className="text-2xl font-bold text-blue-600">{statistics.totalResponses}</p>
                     <p className="text-sm text-gray-600">Total Respon</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">4.5</p>
+                    <p className="text-2xl font-bold text-green-600">{statistics.averageRating}</p>
                     <p className="text-sm text-gray-600">Rata-rata Rating</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600">100%</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {statistics.totalQuestions > 0 
+                        ? `${Math.round((statistics.totalResponses / statistics.totalQuestions) * 100)}%` 
+                        : '0%'}
+                    </p>
                     <p className="text-sm text-gray-600">Tingkat Respon</p>
                   </div>
                 </div>
@@ -639,133 +541,13 @@ export default function AdminSurvey() {
             </div>
           )}
 
-          {/* Add Question Modal */}
-          {showAddQuestion && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg max-w-lg w-full mx-4 shadow-xl">
-                <h2 className="text-lg font-semibold mb-4 text-gray-900">Tambah Pertanyaan Baru</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Pertanyaan
-                    </label>
-                    <input
-                      type="text"
-                      value={newQuestion.pertanyaan}
-                      onChange={(e) => setNewQuestion({
-                        ...newQuestion,
-                        pertanyaan: e.target.value
-                      })}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                      style={{
-                        backgroundColor: '#ffffff !important',
-                        color: '#1f2937 !important',
-                        WebkitTextFillColor: '#1f2937 !important',
-                        WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                        boxShadow: '0 0 0 1000px #ffffff inset !important'
-                      }}
-                      placeholder="Masukkan pertanyaan..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tipe
-                      </label>
-                      <select
-                        value={newQuestion.tipe_pertanyaan}
-                        onChange={(e) => setNewQuestion({
-                          ...newQuestion,
-                          tipe_pertanyaan: e.target.value as 'rating' | 'text'
-                        })}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                        style={{
-                          backgroundColor: '#ffffff !important',
-                          color: '#1f2937 !important',
-                          WebkitTextFillColor: '#1f2937 !important',
-                          WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                          boxShadow: '0 0 0 1000px #ffffff inset !important'
-                        }}
-                      >
-                        <option value="rating">Rating</option>
-                        <option value="text">Text</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Urutan
-                      </label>
-                      <input
-                        type="number"
-                        value={newQuestion.urutan}
-                        onChange={(e) => setNewQuestion({
-                          ...newQuestion,
-                          urutan: parseInt(e.target.value) || 0
-                        })}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                        style={{
-                          backgroundColor: '#ffffff !important',
-                          color: '#1f2937 !important',
-                          WebkitTextFillColor: '#1f2937 !important',
-                          WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                          boxShadow: '0 0 0 1000px #ffffff inset !important'
-                        }}
-                        placeholder="1, 2, 3..."
-                      />
-                    </div>
-                  </div>
-                  
-                  {newQuestion.tipe_pertanyaan === 'text' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Placeholder (opsional)
-                      </label>
-                      <textarea
-                        value={newQuestion.placeholder}
-                        onChange={(e) => setNewQuestion({
-                          ...newQuestion,
-                          placeholder: e.target.value
-                        })}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 resize-none bg-white text-gray-900"
-                        style={{
-                          backgroundColor: '#ffffff !important',
-                          color: '#1f2937 !important',
-                          WebkitTextFillColor: '#1f2937 !important',
-                          WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
-                          boxShadow: '0 0 0 1000px #ffffff inset !important'
-                        }}
-                        placeholder="Contoh jawaban untuk membantu user..."
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-end gap-3 pt-4 border-t">
-                    <button
-                      onClick={() => {
-                        setNewQuestion({
-                          pertanyaan: '',
-                          tipe_pertanyaan: 'rating',
-                          urutan: 0,
-                          status: true,
-                          placeholder: ''
-                        });
-                        setShowAddQuestion(false);
-                      }}
-                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      onClick={handleAddQuestion}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-                    >
-                      Tambah Pertanyaan
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Survey Question Modal */}
+          <SurveyQuestionModal 
+            isOpen={showAddQuestion} 
+            onClose={() => setShowAddQuestion(false)}
+            onAddQuestion={handleAddQuestion}
+            initialQuestion={newQuestion}
+          />
         </div>
       </div>
     </div>
