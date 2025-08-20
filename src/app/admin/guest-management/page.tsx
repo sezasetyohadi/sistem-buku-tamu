@@ -566,11 +566,11 @@ export default function AdminGuestsManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button 
-                          className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-50" 
-                          title="Edit"
+                          className="text-green-600 hover:text-green-900 p-1" 
+                          title={guest.status_kunjungan === "Menunggu" ? "Jadwalkan" : 
+                                 guest.status_kunjungan === "Terjadwal" ? "Edit Jadwal" : "Edit"}
                           onClick={async (e) => {
                             e.stopPropagation();
-                            // Handle edit functionality
                             try {
                               const response = await fetch(`/api/guests/${guest.id}/details`);
                               const result = await response.json();
@@ -581,7 +581,8 @@ export default function AdminGuestsManagement() {
                                 setSelectedGuest(guest);
                               }
                               
-                              setIsEditMode(true); // Set edit mode to true when clicking edit button
+                              // Set edit mode based on guest status
+                              setIsEditMode(true);
                               setIsDetailModalOpen(true);
                             } catch (error) {
                               console.error('Error selecting guest for edit:', error);
@@ -589,16 +590,6 @@ export default function AdminGuestsManagement() {
                               setIsDetailModalOpen(true);
                             }
                           }}
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                          </svg>
-                        </button>
-                        <button 
-                          className="text-green-600 hover:text-green-900 p-1" 
-                          title="Edit"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>

@@ -51,6 +51,13 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     setGuest(initialGuest);
   }, [initialGuest]);
   
+  // Auto-open schedule modal if edit mode is active and guest status is "Menunggu" or "Terjadwal"
+  useEffect(() => {
+    if (isOpen && isEditMode && guest && (guest.status_kunjungan === "Menunggu" || guest.status_kunjungan === "Terjadwal")) {
+      setIsScheduleModalOpen(true);
+    }
+  }, [isOpen, isEditMode, guest]);
+  
   if (!guest) return null;
 
   const formatDate = (dateString?: string | null) => {
