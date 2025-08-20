@@ -50,7 +50,12 @@ export default function AdminReportsAnalytics() {
               <div>
                 <h3 className="font-semibold text-gray-800">Total Kunjungan</h3>
                 <p className="text-3xl font-bold text-gray-900">2,847</p>
-                <p className="text-sm text-gray-900">↗️ +12.5% dari bulan lalu</p>
+                <p className="text-sm text-gray-900 flex items-center">
+                  <svg className="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+                  </svg>
+                  +12.5% dari bulan lalu
+                </p>
               </div>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -65,7 +70,12 @@ export default function AdminReportsAnalytics() {
               <div>
                 <h3 className="font-semibold text-gray-800">Rata-rata Harian</h3>
                 <p className="text-3xl font-bold text-gray-900">67</p>
-                <p className="text-sm text-gray-900">↗️ +8.3% dari periode lalu</p>
+                <p className="text-sm text-gray-900 flex items-center">
+                  <svg className="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+                  </svg>
+                  +8.3% dari periode lalu
+                </p>
               </div>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}>
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -80,7 +90,12 @@ export default function AdminReportsAnalytics() {
               <div>
                 <h3 className="font-semibold text-gray-800">Waktu Rata-rata</h3>
                 <p className="text-3xl font-bold text-gray-900">2.4h</p>
-                <p className="text-sm text-gray-900">↘️ -5.2% durasi kunjungan</p>
+                <p className="text-sm text-gray-900 flex items-center">
+                  <svg className="w-4 h-4 mr-1 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                  </svg>
+                  -5.2% durasi kunjungan
+                </p>
               </div>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -95,7 +110,12 @@ export default function AdminReportsAnalytics() {
               <div>
                 <h3 className="font-semibold text-gray-800">Tingkat Kepuasan</h3>
                 <p className="text-3xl font-bold text-gray-800">4.8/5</p>
-                <p className="text-sm text-gray-900">↗️ +0.3 dari survei lalu</p>
+                <p className="text-sm text-gray-900 flex items-center">
+                  <svg className="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+                  </svg>
+                  +0.3 dari survei lalu
+                </p>
               </div>
               <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -167,7 +187,12 @@ export default function AdminReportsAnalytics() {
         <div className="grid md:grid-cols-2 gap-8">
           {/* Recent Activity */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">🕒 Aktivitas Terbaru</h3>
+            <div className="flex items-center mb-4">
+              <svg className="w-5 h-5 text-gray-700 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+              </svg>
+              <h3 className="text-lg font-bold text-gray-800">Aktivitas Terbaru</h3>
+            </div>
             <div className="space-y-4">
               {[
                 { time: '10:30', action: 'Check-in', user: 'Ahmad Yani', type: 'in' },
@@ -183,7 +208,24 @@ export default function AdminReportsAnalytics() {
                     activity.type === 'request' ? 'bg-blue-500' :
                     'bg-yellow-500'
                   }`}>
-                    {activity.type === 'in' ? '→' : activity.type === 'out' ? '←' : activity.type === 'request' ? '📋' : '⭐'}
+                    {activity.type === 'in' ? (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 111.414-1.414l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : activity.type === 'out' ? (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M9.707 4.293a1 1 0 010 1.414L5.414 10H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 11-1.414 1.414l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    ) : activity.type === 'request' ? (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h4a2 2 0 002-2V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{activity.action}</p>
@@ -197,17 +239,29 @@ export default function AdminReportsAnalytics() {
 
           {/* Top Visitors */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">🏆 Tamu Paling Aktif</h3>
+            <div className="flex items-center mb-4">
+              <svg className="w-5 h-5 text-gray-700 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+              <h3 className="text-lg font-bold text-gray-800">Tamu Paling Aktif</h3>
+            </div>
             <div className="space-y-4">
               {[
-                { name: 'Ahmad Yani', visits: 15, badge: '🥇' },
-                { name: 'Siti Rahayu', visits: 12, badge: '🥈' },
-                { name: 'Budi Santoso', visits: 10, badge: '🥉' },
-                { name: 'Maya Putri', visits: 8, badge: '4️⃣' },
-                { name: 'Andi Wijaya', visits: 7, badge: '5️⃣' },
+                { name: 'Ahmad Yani', visits: 15, rank: 1 },
+                { name: 'Siti Rahayu', visits: 12, rank: 2 },
+                { name: 'Budi Santoso', visits: 10, rank: 3 },
+                { name: 'Maya Putri', visits: 8, rank: 4 },
+                { name: 'Andi Wijaya', visits: 7, rank: 5 },
               ].map((visitor, i) => (
                 <div key={i} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                  <span className="text-xl">{visitor.badge}</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
+                    visitor.rank === 1 ? 'bg-yellow-500' :
+                    visitor.rank === 2 ? 'bg-gray-400' :
+                    visitor.rank === 3 ? 'bg-orange-500' :
+                    'bg-blue-500'
+                  }`}>
+                    {visitor.rank}
+                  </div>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
                     {visitor.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>

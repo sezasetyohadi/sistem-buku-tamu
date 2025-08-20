@@ -51,6 +51,13 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     setGuest(initialGuest);
   }, [initialGuest]);
   
+  // Auto-open schedule modal if edit mode is active and guest status is "Menunggu" or "Terjadwal"
+  useEffect(() => {
+    if (isOpen && isEditMode && guest && (guest.status_kunjungan === "Menunggu" || guest.status_kunjungan === "Terjadwal")) {
+      setIsScheduleModalOpen(true);
+    }
+  }, [isOpen, isEditMode, guest]);
+  
   if (!guest) return null;
 
   const formatDate = (dateString?: string | null) => {
@@ -209,8 +216,14 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     const statusTooltips = {
       'Menunggu': 'Tamu telah mendaftar namun belum dijadwalkan kunjungan',
       'Terjadwal': 'Tamu telah dijadwalkan untuk kunjungan tertentu',
-      'Datang': 'Tamu telah datang dan sedang berkunjung',
+      'Datang': 'Tamu telah datang dan sedang diproses',
       'Selesai': 'Kunjungan tamu telah selesai'
+    };
+
+    // Alias untuk status "Datang" menjadi "Proses"
+    const getDisplayStatus = (statusValue: string | undefined) => {
+      if (statusValue === 'Datang') return 'Proses';
+      return statusValue || 'Menunggu';
     };
     
     const color = status ? statusColors[status as keyof typeof statusColors] : 'bg-gray-100 text-gray-800';
@@ -219,7 +232,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     return (
       <Tooltip content={tooltip}>
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${color} cursor-help`}>
-          {status || 'Menunggu'}
+          {getDisplayStatus(status)}
         </span>
       </Tooltip>
     );
@@ -244,7 +257,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
                   <span className="ml-2 text-sm text-gray-500">ID: {guest.id}</span>
                 </div>
               </div>
-              {/* Display different header based on guest status */}
+              {/* Display different header based on guest status - Tetap menggunakan status internal "Datang" */}
               {guest.status_kunjungan === "Datang" ? (
                 <div className="text-right">
                   <h4 className="text-sm font-medium text-gray-500">Waktu Kedatangan</h4>
@@ -488,7 +501,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
             </button>
           )}
           
-          {/* Tombol Tandai Selesai (Check-out) */}
+          {/* Tombol Tandai Selesai (Check-out) - Tetap menggunakan status internal "Datang" */}
           {guest.status_kunjungan === "Datang" && (
             <button 
               onClick={handleCheckout}
