@@ -6,9 +6,11 @@ interface ScheduleModalProps {
   onClose: () => void;
   onSchedule: (scheduledDateTime: string) => Promise<void>;
   guestId: number;
+  currentSchedule?: string; // Jadwal yang sudah ada sebelumnya
+  isEdit?: boolean; // Mode edit jadwal
 }
 
-export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId }: ScheduleModalProps) {
+export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId, currentSchedule, isEdit = false }: ScheduleModalProps) {
   // Get current date and time as default values
   const now = new Date();
   const [date, setDate] = useState<string>(now.toISOString().split('T')[0]);
@@ -20,16 +22,34 @@ export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId }: 
   // Calculate minimum allowed date and time
   const minDate = new Date().toISOString().split('T')[0];
   
-  // Reset form when modal is opened
+  // Reset form when modal is opened and handle existing schedule if available
   useEffect(() => {
     if (isOpen) {
-      const now = new Date();
-      setDate(now.toISOString().split('T')[0]);
-      setHour(String(now.getHours()).padStart(2, '0'));
-      setMinute(String(now.getMinutes()).padStart(2, '0'));
+      if (currentSchedule && isEdit) {
+        // Parse existing schedule if available
+        try {
+          const scheduledDate = new Date(currentSchedule);
+          setDate(scheduledDate.toISOString().split('T')[0]);
+          setHour(String(scheduledDate.getHours()).padStart(2, '0'));
+          setMinute(String(scheduledDate.getMinutes()).padStart(2, '0'));
+        } catch (error) {
+          console.error("Error parsing existing schedule:", error);
+          resetToCurrentTime();
+        }
+      } else {
+        resetToCurrentTime();
+      }
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, currentSchedule, isEdit]);
+  
+  // Helper function to reset time to current time
+  const resetToCurrentTime = () => {
+    const now = new Date();
+    setDate(now.toISOString().split('T')[0]);
+    setHour(String(now.getHours()).padStart(2, '0'));
+    setMinute(String(now.getMinutes()).padStart(2, '0'));
+  };
 
   // Handle hour input change with validation
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,10 +229,29 @@ export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId }: 
   // We're using text inputs for hours and minutes now instead of dropdowns
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Jadwalkan Kunjungan" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? "Edit Jadwal" : "Jadwalkan Kunjungan"} size="md">
       <div className="p-2">
+        {isEdit && currentSchedule && (
+          <div className="mb-6">
+            <div className="p-3 bg-gray-100 rounded-md mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-1">Jadwal Kunjungan Saat Ini</h4>
+              <p className="font-medium text-gray-900">
+                {new Date(currentSchedule).toLocaleString('id-ID', {
+                  day: 'numeric',
+                  month: 'long', 
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="text-base text-gray-700 mb-6">
-          Pilih tanggal dan waktu untuk jadwal kunjungan tamu.
+          {isEdit 
+            ? "Pilih tanggal dan waktu baru untuk mengubah jadwal kunjungan tamu."
+            : "Pilih tanggal dan waktu untuk jadwal kunjungan tamu."}
         </div>
 
         <div className="space-y-6">
@@ -290,7 +329,7 @@ export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId }: 
             className={`px-6 py-2 rounded-md text-sm font-medium text-white 
               ${isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
-            {isSubmitting ? 'Menjadwalkan...' : 'Jadwalkan'}
+            {isSubmitting ? 'Menjadwalkan...' : isEdit ? 'Simpan Perubahan' : 'Jadwalkan'}
           </button>
         </div>
       </div>

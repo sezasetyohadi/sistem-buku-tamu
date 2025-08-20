@@ -42,11 +42,23 @@ export async function POST(
       GUEST_QUERIES.SET_SCHEDULE, 
       [scheduledDateTime, guestId]
     );
+    
+    // Get updated guest data with jadwal_dibuat
+    const updatedGuestData = await executeQuery<any[]>(
+      'SELECT jadwal_checkin, jadwal_dibuat, status_kunjungan FROM daftar_tamu WHERE id = ?',
+      [guestId]
+    );
+    
+    const updatedGuest = updatedGuestData && updatedGuestData.length > 0 ? updatedGuestData[0] : null;
 
     return NextResponse.json({ 
       success: true, 
       message: 'Jadwal kunjungan berhasil diatur',
-      data: { scheduledDateTime }
+      data: {
+        scheduledDateTime,
+        jadwal_dibuat: updatedGuest?.jadwal_dibuat || new Date().toISOString(),
+        status_kunjungan: 'Terjadwal'
+      }
     });
   } catch (error) {
     console.error('Error in schedule guest route:', error);

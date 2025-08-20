@@ -1,3 +1,6 @@
+import { executeQuery } from "../config/db";
+import { RowDataPacket } from 'mysql2';
+
 // Enum untuk jenis kelamin
 export enum Gender {
   MALE = 'Laki-laki',
@@ -27,6 +30,7 @@ export interface Guest {
   catatan_tambahan?: string;
   status_kunjungan?: VisitStatus;
   jadwal_checkin?: Date;
+  jadwal_dibuat?: Date;
   waktu_checkin?: Date;
   waktu_checkout?: Date;
   file_upload?: string;
@@ -66,6 +70,13 @@ export interface GuestUpdate {
   file_upload?: string;
 }
 
+// Define result data interface
+export interface ResultData {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 // SQL queries for guests based on the disnaker.sql schema
 export const GUEST_QUERIES = {
   CREATE_TABLE: `
@@ -83,6 +94,7 @@ export const GUEST_QUERIES = {
       catatan_tambahan TEXT DEFAULT NULL,
       status_kunjungan ENUM('Menunggu','Terjadwal','Datang','Selesai') NOT NULL DEFAULT 'Menunggu',
       jadwal_checkin DATETIME DEFAULT NULL,
+      jadwal_dibuat DATETIME DEFAULT NULL,
       waktu_checkin DATETIME DEFAULT NULL,
       waktu_checkout DATETIME DEFAULT NULL,
       file_upload VARCHAR(255) DEFAULT NULL,
@@ -100,9 +112,89 @@ export const GUEST_QUERIES = {
   UPDATE: 'UPDATE daftar_tamu SET ? WHERE id = ?',
   DELETE: 'DELETE FROM daftar_tamu WHERE id = ?',
   SET_STATUS: 'UPDATE daftar_tamu SET status_kunjungan = ? WHERE id = ?',
-  SET_CHECKIN: 'UPDATE daftar_tamu SET waktu_checkin = NOW(), status_kunjungan = "Datang" WHERE id = ?',
-  SET_CHECKOUT: 'UPDATE daftar_tamu SET waktu_checkout = NOW(), status_kunjungan = "Selesai" WHERE id = ?',
-  SET_SCHEDULE: 'UPDATE daftar_tamu SET jadwal_checkin = ?, status_kunjungan = "Terjadwal" WHERE id = ?',
+  SET_CHECKIN: 'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang" WHERE id = ?',
+  SET_CHECKOUT: 'UPDATE daftar_tamu SET waktu_checkout = ?, status_kunjungan = "Selesai" WHERE id = ?',
+  SET_SCHEDULE: 'UPDATE daftar_tamu SET jadwal_checkin = ?, jadwal_dibuat = NOW(), status_kunjungan = "Terjadwal" WHERE id = ?',
   GET_EDUCATION_OPTIONS: 'SELECT * FROM pendidikan_terakhir ORDER BY id',
   GET_PROFESSION_OPTIONS: 'SELECT * FROM profesi ORDER BY id',
 };
+
+// Function to update guest check-in status
+export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Promise<ResultData> {
+  try {
+    // Check if guest exists
+    const rows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
+    
+    if (!rows || rows.length === 0) {
+      return {
+        success: false,
+        message: `Tamu dengan ID ${guestId} tidak ditemukan`,
+      };
+    }
+
+    const guest = rows[0];
+    
+    // Update the guest's check-in time and status
+    await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkInTime, guestId]);
+    
+    // Get the updated guest data
+    const updatedRows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
+    const updatedGuest = updatedRows[0];
+    
+    return {
+      success: true,
+      message: 'Tamu berhasil ditandai datang',
+      data: updatedGuest
+    };
+  } catch (error: any) {
+    console.error('Error updating guest check-in:', error);
+    return {
+      success: false,
+      message: `Error updating check-in status: ${error.message}`,
+    };
+  }
+}
+
+// Function to update guest check-out status
+export async function updateGuestCheckOut(guestId: number, checkOutTime: Date): Promise<ResultData> {
+  try {
+    // Check if guest exists
+    const rows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
+    
+    if (!rows || rows.length === 0) {
+      return {
+        success: false,
+        message: `Tamu dengan ID ${guestId} tidak ditemukan`,
+      };
+    }
+
+    const guest = rows[0];
+    
+    // Make sure guest has checked in before checking out
+    if (guest.status_kunjungan !== 'Datang') {
+      return {
+        success: false,
+        message: 'Tamu harus dalam status "Datang" sebelum ditandai selesai',
+      };
+    }
+    
+    // Update the guest's check-out time and status
+    await executeQuery(GUEST_QUERIES.SET_CHECKOUT, [checkOutTime, guestId]);
+    
+    // Get the updated guest data
+    const updatedRows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
+    const updatedGuest = updatedRows[0];
+    
+    return {
+      success: true,
+      message: 'Kunjungan tamu berhasil ditandai selesai',
+      data: updatedGuest
+    };
+  } catch (error: any) {
+    console.error('Error updating guest check-out:', error);
+    return {
+      success: false,
+      message: `Error updating check-out status: ${error.message}`,
+    };
+  }
+}

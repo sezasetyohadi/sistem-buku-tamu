@@ -1,6 +1,6 @@
 import { DaftarTamu } from "@/types/database-types";
 import Modal from "../ui/Modal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ScheduleModal from "./ScheduleModal";
 import DeleteConfirmationDialog from "../ui/DeleteConfirmationDialog";
 import { toast } from "react-hot-toast";
@@ -40,10 +40,16 @@ interface GuestDetailModalProps {
   isEditMode?: boolean; // Whether the modal is opened in edit mode
 }
 
-export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate, isEditMode = false }: GuestDetailModalProps) {
+export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest, onGuestUpdate, isEditMode = false }: GuestDetailModalProps) {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [guest, setGuest] = useState<DaftarTamu | null>(initialGuest);
+  
+  // Update local guest state when initialGuest changes (e.g. when reopening modal)
+  useEffect(() => {
+    setGuest(initialGuest);
+  }, [initialGuest]);
   
   if (!guest) return null;
 
@@ -85,8 +91,18 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
       // Show success message
       toast.success('Jadwal kunjungan berhasil diatur');
       
-      // Close the modal and trigger a refresh
+      // Close the schedule modal
       setIsScheduleModalOpen(false);
+      
+      // Update guest data locally with response from API
+      if (guest && result.data) {
+        setGuest({
+          ...guest,
+          jadwal_checkin: result.data.scheduledDateTime,
+          jadwal_dibuat: result.data.jadwal_dibuat,
+          status_kunjungan: result.data.status_kunjungan
+        });
+      }
       
       // Trigger refresh of guest data in the parent component
       if (onGuestUpdate) {
@@ -95,6 +111,88 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
     } catch (error) {
       console.error('Error scheduling visit:', error);
       toast.error('Gagal menjadwalkan kunjungan');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleCheckin = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      const response = await fetch(`/api/guests/${guest.id}/checkin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Gagal menandai kedatangan tamu');
+      }
+      
+      // Show success message
+      toast.success('Tamu berhasil ditandai datang');
+      
+      // Update guest data locally with response from API
+      if (guest && result.data) {
+        setGuest({
+          ...guest,
+          waktu_checkin: result.data.waktu_checkin,
+          status_kunjungan: result.data.status_kunjungan
+        });
+      }
+      
+      // Trigger refresh of guest data in the parent component
+      if (onGuestUpdate) {
+        onGuestUpdate();
+      }
+    } catch (error) {
+      console.error('Error checking in guest:', error);
+      toast.error('Gagal menandai tamu datang');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleCheckout = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      const response = await fetch(`/api/guests/${guest.id}/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Gagal menandai selesai tamu');
+      }
+      
+      // Show success message
+      toast.success('Kunjungan tamu berhasil ditandai selesai');
+      
+      // Update guest data locally with response from API
+      if (guest && result.data) {
+        setGuest({
+          ...guest,
+          waktu_checkout: result.data.waktu_checkout,
+          status_kunjungan: result.data.status_kunjungan
+        });
+      }
+      
+      // Trigger refresh of guest data in the parent component
+      if (onGuestUpdate) {
+        onGuestUpdate();
+      }
+    } catch (error) {
+      console.error('Error checking out guest:', error);
+      toast.error('Gagal menandai kunjungan selesai');
     } finally {
       setIsSubmitting(false);
     }
@@ -111,8 +209,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
     const statusTooltips = {
       'Menunggu': 'Tamu telah mendaftar namun belum dijadwalkan kunjungan',
       'Terjadwal': 'Tamu telah dijadwalkan untuk kunjungan tertentu',
-      'Datang': 'Tamu telah melakukan check-in dan sedang berkunjung',
-      'Selesai': 'Kunjungan tamu telah selesai dengan check-out'
+      'Datang': 'Tamu telah datang dan sedang berkunjung',
+      'Selesai': 'Kunjungan tamu telah selesai'
     };
     
     const color = status ? statusColors[status as keyof typeof statusColors] : 'bg-gray-100 text-gray-800';
@@ -146,7 +244,13 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
                   <span className="ml-2 text-sm text-gray-500">ID: {guest.id}</span>
                 </div>
               </div>
-              {guest.jadwal_checkin && (
+              {/* Display different header based on guest status */}
+              {guest.status_kunjungan === "Datang" ? (
+                <div className="text-right">
+                  <h4 className="text-sm font-medium text-gray-500">Waktu Kedatangan</h4>
+                  <p className="text-base font-medium text-blue-600">{formatDate(guest.waktu_checkin)}</p>
+                </div>
+              ) : guest.jadwal_checkin && (
                 <div className="text-right">
                   <h4 className="text-sm font-medium text-gray-500">Jadwal Kunjungan</h4>
                   <p className="text-base font-medium text-blue-600">{formatDate(guest.jadwal_checkin)}</p>
@@ -203,14 +307,14 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
               <h4 className="text-sm font-medium text-gray-500">Waktu Pendaftaran</h4>
               <p className="mt-1 text-gray-900">{formatDate(guest.waktu_dibuat)}</p>
             </div>
-            
+                     
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Check-in</h4>
+              <h4 className="text-sm font-medium text-gray-500">Waktu Kedatangan</h4>
               <p className="mt-1 text-gray-900">{formatDate(guest.waktu_checkin)}</p>
             </div>
             
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Check-out</h4>
+              <h4 className="text-sm font-medium text-gray-500">Selesai</h4>
               <p className="mt-1 text-gray-900">{formatDate(guest.waktu_checkout)}</p>
             </div>
           </div>
@@ -356,47 +460,55 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
 
         {/* Footer with action buttons */}
         <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-          {guest.status_kunjungan === "Menunggu" && (
+          {/* Tombol Jadwalkan / Edit Jadwal */}
+          {(guest.status_kunjungan === "Menunggu" || guest.status_kunjungan === "Terjadwal") && (
             <button 
               onClick={() => setIsScheduleModalOpen(true)} 
               disabled={isSubmitting}
-              className={`px-4 py-2 text-white rounded-md transition-colors ${
-                isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+              className={`px-4 py-2 rounded-md transition-colors ${
+                isSubmitting 
+                  ? 'bg-blue-200 text-blue-600' 
+                  : guest.status_kunjungan === "Terjadwal"
+                    ? 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300' 
+                    : 'bg-blue-200 text-blue-800 hover:bg-blue-300'
               }`}
             >
-              Jadwalkan
+              {guest.status_kunjungan === "Terjadwal" ? 'Edit Jadwal' : 'Jadwalkan'}
             </button>
           )}
           
+          {/* Tombol Tandai Datang (Check-in) */}
           {(guest.status_kunjungan === "Menunggu" || guest.status_kunjungan === "Terjadwal") && (
-            <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-              Check-in
+            <button 
+              onClick={handleCheckin}
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-green-200 text-green-800 rounded-md hover:bg-green-300 transition-colors disabled:bg-green-100 disabled:text-green-500 disabled:cursor-not-allowed"
+            >
+              Tandai Datang
             </button>
           )}
           
+          {/* Tombol Tandai Selesai (Check-out) */}
           {guest.status_kunjungan === "Datang" && (
-            <button className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
-              Check-out
+            <button 
+              onClick={handleCheckout}
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-purple-200 text-purple-800 rounded-md hover:bg-purple-300 transition-colors disabled:bg-purple-100 disabled:text-purple-500 disabled:cursor-not-allowed"
+            >
+              Tandai Selesai
             </button>
           )}
           
-          <button 
-            onClick={() => {
-              // TODO: Implement edit functionality
-            }}
-            className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
-          >
-            Edit
-          </button>
-          
+          {/* Tombol Hapus */}
           <button 
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isSubmitting}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-red-200 text-red-800 rounded-md hover:bg-red-300 transition-colors disabled:bg-red-100 disabled:text-red-400 disabled:cursor-not-allowed"
           >
             Hapus
           </button>
           
+          {/* Tombol Tutup */}
           <button 
             onClick={onClose}
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors ml-auto"
@@ -413,6 +525,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest, onGuestUpdate
           onClose={() => setIsScheduleModalOpen(false)}
           onSchedule={handleSchedule}
           guestId={guest.id || 0}
+          currentSchedule={guest.jadwal_checkin || undefined}
+          isEdit={guest.status_kunjungan === "Terjadwal"}
         />
       )}
       
