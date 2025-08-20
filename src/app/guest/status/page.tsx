@@ -128,7 +128,7 @@ export default function StatusPengajuanPage() {
 						onClick={handleReset}
 						className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
 					>
-						Cek Token Lain
+						Kembali
 					</button>
 				</div>
 			)}

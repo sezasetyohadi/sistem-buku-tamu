@@ -223,6 +223,16 @@ export default function GuestRegistrationForm({
       newErrors.department = 'Bidang tujuan harus dipilih';
     }
 
+    // Wajib memilih minimal satu opsi pada Cara Memperoleh
+    if (!formData.cara_memperoleh || formData.cara_memperoleh.length === 0) {
+      newErrors.cara_memperoleh = 'Pilih minimal satu cara memperoleh informasi';
+    }
+
+    // Wajib memilih minimal satu opsi pada Cara Mendapatkan Salinan Informasi
+    if (!formData.cara_salinan || formData.cara_salinan.length === 0) {
+      newErrors.cara_salinan = 'Pilih minimal satu cara mendapatkan salinan informasi';
+    }
+
     // Validate cara_memperoleh (minimal 1 harus dipilih)
     if (formData.cara_memperoleh.length === 0) {
       newErrors.cara_memperoleh = 'Minimal pilih satu cara memperoleh informasi';
