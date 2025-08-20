@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,11 +51,40 @@ export default function LoginPage() {
     checkAuthAndRedirect();
   }, [router]);
 
+  // Load saved credentials if "Remember Me" was previously checked
+  useEffect(() => {
+    const loadSavedCredentials = () => {
+      try {
+        const savedCredentials = localStorage.getItem('admin_remembered_credentials');
+        if (savedCredentials) {
+          const credentials = JSON.parse(savedCredentials);
+          setFormData(prev => ({
+            ...prev,
+            username: credentials.username || "",
+            password: credentials.password || "",
+            rememberMe: true
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+        localStorage.removeItem('admin_remembered_credentials');
+      }
+    };
+
+    loadSavedCredentials();
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    
+    // If unchecking Remember Me, clear saved credentials
+    if (name === 'rememberMe' && type === 'checkbox' && !checked) {
+      localStorage.removeItem('admin_remembered_credentials');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -82,19 +112,36 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (result.success) {
+        // Determine session duration based on remember me
+        const sessionDuration = formData.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000; // 7 days or 24 hours
+        const cookieMaxAge = formData.rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60; // 7 days or 24 hours in seconds
+        
         // Store admin session/token in localStorage
         localStorage.setItem('admin_session', JSON.stringify({
           id: result.admin.id,
           username: result.admin.username,
           nama_lengkap: result.admin.nama_lengkap,
           email: result.admin.email,
-          loginTime: new Date().toISOString()
+          loginTime: new Date().toISOString(),
+          rememberMe: formData.rememberMe,
+          expiresAt: new Date(Date.now() + sessionDuration).toISOString()
         }));
         
-        // Also set a simple auth cookie for middleware
-        document.cookie = `admin_auth=true; path=/; max-age=86400`; // 24 hours
+        // Set auth cookie with appropriate duration
+        document.cookie = `admin_auth=true; path=/; max-age=${cookieMaxAge}`;
         
-        console.log('Login successful, redirecting to admin dashboard');
+        // Save credentials if Remember Me is checked
+        if (formData.rememberMe) {
+          localStorage.setItem('admin_remembered_credentials', JSON.stringify({
+            username: formData.username,
+            password: formData.password
+          }));
+        } else {
+          // Remove saved credentials if Remember Me is unchecked
+          localStorage.removeItem('admin_remembered_credentials');
+        }
+        
+        console.log(`Login successful${formData.rememberMe ? ' (Remember Me enabled for 7 days)' : ' (24 hour session)'}, redirecting to admin dashboard`);
         // Redirect to admin dashboard
         router.replace('/admin');
       } else {
@@ -274,6 +321,21 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* Remember Me Checkbox */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors duration-200"
+              />
+              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700 cursor-pointer hover:text-gray-900 transition-colors duration-200">
+                Ingat saya selama 30 hari
+              </label>
             </div>
 
             <button
