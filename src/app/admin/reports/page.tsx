@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Metadata } from 'next';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import PdfReport from './PdfReport';
 
 // Note: For client components, we handle metadata differently
 // The metadata will be set in the layout.tsx instead
@@ -26,10 +29,34 @@ interface ReportsData {
   }>;
 }
 
+// Contoh data, ganti dengan data asli dari state/props
+const dummyData = {
+  metrics: {
+    totalVisits: { value: 120 },
+    dailyAverage: { value: 17 },
+    avgDuration: { value: '00:12:30' },
+    satisfaction: { value: '95%' },
+  },
+  topVisitors: [
+    { nama: 'Budi', asal_instansi: 'PT. Maju', visit_count: 5 },
+    { nama: 'Siti', asal_instansi: 'CV. Jaya', visit_count: 4 },
+  ],
+  recentActivities: [
+    {
+      nama: 'Budi',
+      asal_instansi: 'PT. Maju',
+      keperluan: 'Survei',
+      tanggapan: 'Diterima',
+      waktu_dibuat: new Date().toISOString(),
+    },
+  ],
+};
+
 export default function AdminReportsAnalytics() {
   const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchReportsData = async () => {
@@ -53,6 +80,36 @@ export default function AdminReportsAnalytics() {
 
     fetchReportsData();
   }, []);
+
+  const handleExportPDF = async () => {
+    if (!pdfRef.current) return;
+
+    // Tunggu semua gambar di dalam pdfRef selesai dimuat
+    const images = pdfRef.current.querySelectorAll("img");
+    await Promise.all(
+      Array.from(images).map(
+        img =>
+          new Promise(resolve => {
+            if (img.complete) resolve(true);
+            else img.onload = img.onerror = () => resolve(true);
+          })
+      )
+    );
+
+    // Gunakan useCORS agar gambar eksternal bisa diambil
+    const canvas = await html2canvas(pdfRef.current, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "pt",
+      format: "a4",
+    });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgWidth = pageWidth - 40;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
+    pdf.save("laporan-buku-tamu.pdf");
+  };
 
   if (loading) {
     return (
@@ -124,6 +181,7 @@ export default function AdminReportsAnalytics() {
               <button 
                 className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300"
                 style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}
+                onClick={handleExportPDF}
               >
                 <svg className="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -146,7 +204,7 @@ export default function AdminReportsAnalytics() {
                     <path fillRule="evenodd" d={
                       (data?.metrics.totalVisits.growth || 0) >= 0 
                         ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.totalVisits.label || 'No data'}
@@ -170,7 +228,7 @@ export default function AdminReportsAnalytics() {
                     <path fillRule="evenodd" d={
                       (data?.metrics.dailyAverage.growth || 0) >= 0 
                         ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.dailyAverage.label || 'No data'}
@@ -194,7 +252,7 @@ export default function AdminReportsAnalytics() {
                     <path fillRule="evenodd" d={
                       (data?.metrics.avgDuration.growth || 0) >= 0 
                         ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.avgDuration.label || 'No data'}
@@ -218,7 +276,7 @@ export default function AdminReportsAnalytics() {
                     <path fillRule="evenodd" d={
                       (data?.metrics.satisfaction.growth || 0) >= 0 
                         ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.satisfaction.label || 'No data'}
@@ -391,6 +449,13 @@ export default function AdminReportsAnalytics() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Konten PDF tersembunyi */}
+        <div style={{ display: 'none' }}>
+          <div ref={pdfRef}>
+            <PdfReport data={dummyData} />
           </div>
         </div>
       </div>
