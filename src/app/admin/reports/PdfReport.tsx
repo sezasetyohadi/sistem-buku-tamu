@@ -1,108 +1,291 @@
 import React from "react";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 interface PdfReportProps {
   data: any;
 }
 
 const PdfReport = ({ data }: PdfReportProps) => {
-  if (!data) return null;
+  // Ensure we always have some data to render
+  const reportData = data || {
+    metrics: {
+      totalVisits: { value: 0, growth: 0, label: 'No data available' },
+      dailyAverage: { value: 0, growth: 0, label: 'No data available' },
+      avgDuration: { value: '0h', growth: 0, label: 'No data available' },
+      satisfaction: { value: '0/5', growth: 0, label: 'No data available' }
+    },
+    topVisitors: [],
+    recentActivities: []
+  };
+
+  // Handle the actual API data structure - use recentActivities if topVisitors is empty
+  let visitorsToShow = reportData.topVisitors || [];
+  if (!visitorsToShow || visitorsToShow.length === 0) {
+    // Convert recentActivities to visitor-like data
+    const activityMap = new Map();
+    if (reportData.recentActivities && reportData.recentActivities.length > 0) {
+      reportData.recentActivities.forEach((activity: any) => {
+        const key = `${activity.nama}-${activity.asal_instansi}`;
+        if (activityMap.has(key)) {
+          activityMap.get(key).visit_count++;
+        } else {
+          activityMap.set(key, {
+            nama: activity.nama,
+            asal_instansi: activity.asal_instansi,
+            visit_count: 1
+          });
+        }
+      });
+      visitorsToShow = Array.from(activityMap.values()).slice(0, 5);
+    }
+  }
+
+  // Ensure we have fallback data if everything is empty
+  if (visitorsToShow.length === 0) {
+    visitorsToShow = [
+      { nama: 'Belum ada data', asal_instansi: 'Belum ada data', visit_count: 0 }
+    ];
+  }
+
+  let activitiesToShow = reportData.recentActivities || [];
+  if (activitiesToShow.length === 0) {
+    activitiesToShow = [
+      { 
+        nama: 'Belum ada data', 
+        asal_instansi: 'Belum ada data', 
+        keperluan: 'Belum ada data', 
+        tanggapan: 'Belum ada data', 
+        waktu_dibuat: new Date().toISOString() 
+      }
+    ];
+  }
+
   return (
-    <div style={{ fontFamily: "sans-serif", fontSize: 12, color: "#333", padding: 24, background: "#fff" }}>
-      <h2 style={{ textAlign: "center", color: "#333" }}>Laporan Buku Tamu</h2>
-      <p>
-        <strong>Tanggal Cetak:</strong>{" "}
-        {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
-      </p>
+    <div style={{ 
+      fontFamily: "Arial, sans-serif", 
+      fontSize: "12px", 
+      color: "#333", 
+      padding: "30px", 
+      background: "#fff",
+      minWidth: "794px",
+      width: "794px",
+      height: "auto",
+      border: "1px solid #ddd",
+      boxSizing: "border-box"
+    }}>
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "30px", borderBottom: "2px solid #333", paddingBottom: "15px" }}>
+        <h1 style={{ margin: "0", fontSize: "22px", color: "#333", fontWeight: "bold" }}>
+          LAPORAN BUKU TAMU
+        </h1>
+        <p style={{ margin: "10px 0 0 0", fontSize: "14px", color: "#666" }}>
+          Tanggal Cetak: {new Date().toLocaleDateString("id-ID", { 
+            day: "2-digit", 
+            month: "long", 
+            year: "numeric",
+            weekday: "long"
+          })}
+        </p>
+      </div>
 
-      <h3 style={{ marginTop: 24, marginBottom: 8 }}>Statistik Kunjungan</h3>
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
+      {/* Statistics Table */}
+      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+        Statistik Kunjungan
+      </h3>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "25px" }}>
         <thead>
           <tr>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Total Kunjungan</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Rata-rata Harian</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Waktu Rata-rata</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Tingkat Kepuasan</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Total Kunjungan</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Rata-rata Harian</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Waktu Rata-rata</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Tingkat Kepuasan</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: "1px solid #aaa", padding: 8, textAlign: "center" }}>
-              {data.metrics?.totalVisits?.value ?? "-"}
+            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
+              {reportData.metrics?.totalVisits?.value ?? "0"}
             </td>
-            <td style={{ border: "1px solid #aaa", padding: 8, textAlign: "center" }}>
-              {data.metrics?.dailyAverage?.value ?? "-"}
+            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
+              {reportData.metrics?.dailyAverage?.value ?? "0"}
             </td>
-            <td style={{ border: "1px solid #aaa", padding: 8, textAlign: "center" }}>
-              {data.metrics?.avgDuration?.value ?? "-"}
+            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
+              {reportData.metrics?.avgDuration?.value ?? "0h"}
             </td>
-            <td style={{ border: "1px solid #aaa", padding: 8, textAlign: "center" }}>
-              {data.metrics?.satisfaction?.value ?? "-"}
+            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
+              {reportData.metrics?.satisfaction?.value ?? "0/5"}
             </td>
           </tr>
         </tbody>
       </table>
 
-      <h3 style={{ marginTop: 24, marginBottom: 8 }}>Tamu Paling Aktif</h3>
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
+      {/* Visitor Trends Chart */}
+      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+        Tren Kunjungan (7 Hari Terakhir)
+      </h3>
+      <div style={{ width: "100%", height: "200px", marginBottom: "25px", background: "#f9f9f9", border: "1px solid #ddd", borderRadius: "4px" }}>
+        {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 ? (
+          <Line
+            data={{
+              labels: reportData.weeklyTrends.map((item: any) => {
+                const date = new Date(item.date);
+                return date.toLocaleDateString('id-ID', { 
+                  weekday: 'short', 
+                  month: 'short', 
+                  day: 'numeric' 
+                });
+              }),
+              datasets: [
+                {
+                  label: 'Kunjungan',
+                  data: reportData.weeklyTrends.map((item: any) => item.visits),
+                  borderColor: 'rgb(59, 130, 246)',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  borderWidth: 2,
+                  fill: true,
+                  tension: 0.4,
+                  pointBackgroundColor: 'rgb(59, 130, 246)',
+                  pointBorderColor: '#ffffff',
+                  pointBorderWidth: 2,
+                  pointRadius: 4,
+                  pointHoverRadius: 6,
+                },
+              ],
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false,
+                },
+                tooltip: {
+                  enabled: false, // Disable tooltips for PDF
+                },
+              },
+              scales: {
+                x: {
+                  grid: {
+                    display: false,
+                  },
+                  ticks: {
+                    color: '#374151',
+                    font: {
+                      size: 10,
+                    },
+                  },
+                },
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(0, 0, 0, 0.1)',
+                  },
+                  ticks: {
+                    color: '#374151',
+                    font: {
+                      size: 10,
+                    },
+                    stepSize: 1,
+                  },
+                },
+              },
+              interaction: {
+                intersect: false,
+                mode: 'index' as const,
+              },
+            }}
+          />
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#666" }}>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ margin: "0", fontSize: "14px" }}>Tidak ada data trend tersedia</p>
+              <p style={{ margin: "5px 0 0 0", fontSize: "12px" }}>Data akan muncul setelah ada aktivitas kunjungan</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Top Visitors Table */}
+      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+        Tamu Paling Aktif
+      </h3>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "25px" }}>
         <thead>
           <tr>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Nama</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Instansi</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Jumlah Kunjungan</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Nama</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Instansi</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Jumlah Kunjungan</th>
           </tr>
         </thead>
         <tbody>
-          {data.topVisitors && data.topVisitors.length > 0 ? (
-            data.topVisitors.map((visitor: any, idx: number) => (
-              <tr key={idx}>
-                <td style={{ border: "1px solid #aaa", padding: 8 }}>{visitor.nama}</td>
-                <td style={{ border: "1px solid #aaa", padding: 8 }}>{visitor.asal_instansi}</td>
-                <td style={{ border: "1px solid #aaa", padding: 8, textAlign: "center" }}>{visitor.visit_count}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={3} style={{ border: "1px solid #aaa", padding: 8, textAlign: "center", fontStyle: "italic" }}>
-                Tidak ada data tamu aktif
+          {visitorsToShow.map((visitor: any, idx: number) => (
+            <tr key={idx}>
+              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{visitor.nama}</td>
+              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{visitor.asal_instansi}</td>
+              <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>{visitor.visit_count}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Recent Activities Table */}
+      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+        Aktivitas Terbaru
+      </h3>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
+        <thead>
+          <tr>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Nama</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Instansi</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Keperluan</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Tanggapan</th>
+            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          {activitiesToShow.map((activity: any, idx: number) => (
+            <tr key={idx}>
+              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.nama}</td>
+              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.asal_instansi}</td>
+              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.keperluan}</td>
+              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.tanggapan}</td>
+              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>
+                {new Date(activity.waktu_dibuat).toLocaleDateString("id-ID")}
               </td>
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
 
-      <h3 style={{ marginTop: 24, marginBottom: 8 }}>Aktivitas Terbaru</h3>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Nama</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Instansi</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Keperluan</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Tanggapan</th>
-            <th style={{ border: "1px solid #aaa", padding: 8, background: "#f0f0f0" }}>Waktu</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.recentActivities && data.recentActivities.length > 0 ? (
-            data.recentActivities.map((activity: any, idx: number) => (
-              <tr key={idx}>
-                <td style={{ border: "1px solid #aaa", padding: 8 }}>{activity.nama}</td>
-                <td style={{ border: "1px solid #aaa", padding: 8 }}>{activity.asal_instansi}</td>
-                <td style={{ border: "1px solid #aaa", padding: 8 }}>{activity.keperluan}</td>
-                <td style={{ border: "1px solid #aaa", padding: 8 }}>{activity.tanggapan}</td>
-                <td style={{ border: "1px solid #aaa", padding: 8 }}>
-                  {new Date(activity.waktu_dibuat).toLocaleString("id-ID")}
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={5} style={{ border: "1px solid #aaa", padding: 8, textAlign: "center", fontStyle: "italic" }}>
-                Tidak ada aktivitas terbaru
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {/* Footer */}
+      <div style={{ marginTop: "30px", padding: "15px", border: "1px solid #ddd", backgroundColor: "#f9f9f9", fontSize: "10px" }}>
+        <h4 style={{ margin: "0 0 10px 0", fontSize: "12px" }}>Informasi Sistem</h4>
+        <p style={{ margin: "5px 0" }}>Laporan ini dihasilkan dari Sistem Buku Tamu Digital</p>
+        <p style={{ margin: "5px 0" }}>Tanggal: {new Date().toLocaleDateString("id-ID")}</p>
+        <p style={{ margin: "5px 0" }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
+      </div>
     </div>
   );
 };

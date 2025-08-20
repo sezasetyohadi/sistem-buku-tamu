@@ -476,9 +476,9 @@ export async function getReportsStatistics(): Promise<any> {
     const satisfactionQuery = `
       SELECT 
         AVG(jawaban) as current_rating,
-        (SELECT AVG(jawaban) FROM jawaban_survei WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 2 MONTH) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as previous_rating
+        (SELECT AVG(jawaban) FROM jawaban_survei WHERE DATE(created_at) >= DATE_SUB(NOW(), INTERVAL 2 MONTH) AND DATE(created_at) < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as previous_rating
       FROM jawaban_survei 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+      WHERE DATE(created_at) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
     `;
 
     // 5. Weekly trends (last 7 days)
@@ -492,16 +492,16 @@ export async function getReportsStatistics(): Promise<any> {
       ORDER BY date ASC
     `;
 
-    // 6. Service categories (based on tujuan_kunjungan)
+    // 6. Service categories (based on keperluan field instead of tujuan_kunjungan join)
     const serviceCategoriesQuery = `
       SELECT 
-        tk.nama_tujuan as category,
-        COUNT(dt.id) as count,
-        ROUND((COUNT(dt.id) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH))), 1) as percentage
-      FROM daftar_tamu dt
-      LEFT JOIN tujuan_kunjungan tk ON dt.tujuan_kunjungan_id = tk.id
-      WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-      GROUP BY tk.nama_tujuan
+        keperluan as category,
+        COUNT(id) as count,
+        ROUND((COUNT(id) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH))), 1) as percentage
+      FROM daftar_tamu 
+      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+      AND keperluan IS NOT NULL AND keperluan != ''
+      GROUP BY keperluan
       ORDER BY count DESC
       LIMIT 5
     `;

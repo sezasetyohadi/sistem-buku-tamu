@@ -5,6 +5,29 @@ import { Metadata } from 'next';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import PdfReport from './PdfReport';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 // Note: For client components, we handle metadata differently
 // The metadata will be set in the layout.tsx instead
@@ -82,33 +105,97 @@ export default function AdminReportsAnalytics() {
   }, []);
 
   const handleExportPDF = async () => {
-    if (!pdfRef.current) return;
-
-    // Tunggu semua gambar di dalam pdfRef selesai dimuat
-    const images = pdfRef.current.querySelectorAll("img");
-    await Promise.all(
-      Array.from(images).map(
-        img =>
-          new Promise(resolve => {
-            if (img.complete) resolve(true);
-            else img.onload = img.onerror = () => resolve(true);
-          })
-      )
-    );
-
-    // Gunakan useCORS agar gambar eksternal bisa diambil
-    const canvas = await html2canvas(pdfRef.current, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "pt",
-      format: "a4",
-    });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth - 40;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
-    pdf.save("laporan-buku-tamu.pdf");
+    if (!pdfRef.current) {
+      alert('PDF content not ready. Please try again.');
+      return;
+    }
+    
+    try {
+      const element = pdfRef.current;
+      
+      // Temporarily make the element visible for canvas capture
+      const originalStyle = {
+        position: element.style.position,
+        left: element.style.left,
+        visibility: element.style.visibility,
+        zIndex: element.style.zIndex
+      };
+      
+      // Move element into view temporarily but keep it hidden from users
+      element.style.position = 'fixed';
+      element.style.left = '0px';
+      element.style.top = '0px';
+      element.style.visibility = 'visible';
+      element.style.zIndex = '-1000';
+      
+      // Force layout recalculation
+      element.offsetHeight;
+      
+      // Wait a moment for content to finish rendering
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        throw new Error(`Element has zero dimensions: ${rect.width}x${rect.height}`);
+      }
+      
+      // Create canvas with the element's actual dimensions
+      const canvas = await html2canvas(element, { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: element.scrollWidth,
+        height: element.scrollHeight
+      });
+      
+      // Restore original styles immediately
+      element.style.position = originalStyle.position;
+      element.style.left = originalStyle.left;
+      element.style.visibility = originalStyle.visibility;
+      element.style.zIndex = originalStyle.zIndex;
+      
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error(`Canvas has zero dimensions: ${canvas.width}x${canvas.height}`);
+      }
+      
+      const imgData = canvas.toDataURL("image/png");
+      
+      if (!imgData || imgData === 'data:,' || imgData.length < 100) {
+        throw new Error('Failed to generate valid image data from canvas');
+      }
+      
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+      
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth - 40;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // If image is too tall, scale it down to fit the page
+      let finalWidth = imgWidth;
+      let finalHeight = imgHeight;
+      
+      if (imgHeight > pageHeight - 40) {
+        finalHeight = pageHeight - 40;
+        finalWidth = (canvas.width * finalHeight) / canvas.height;
+      }
+      
+      pdf.addImage(imgData, "PNG", 20, 20, finalWidth, finalHeight);
+      pdf.save("laporan-buku-tamu.pdf");
+      
+      alert('PDF berhasil diekspor!');
+      
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Gagal mengekspor PDF: ${errorMessage}`);
+    }
   };
 
   if (loading) {
@@ -154,6 +241,7 @@ export default function AdminReportsAnalytics() {
       </div>
     );
   }
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-6xl mx-auto">
@@ -302,13 +390,96 @@ export default function AdminReportsAnalytics() {
               <h3 className="text-lg font-bold text-gray-800">Tren Kunjungan (7 Hari Terakhir)</h3>
             </div>
             <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                </svg>
-                <p className="text-gray-800">Chart akan ditampilkan di sini</p>
-                <p className="text-sm text-gray-700">Integrasi dengan Chart.js atau library lain</p>
-              </div>
+              {data?.weeklyTrends && data.weeklyTrends.length > 0 ? (
+                <Line
+                  data={{
+                    labels: data.weeklyTrends.map(item => {
+                      const date = new Date(item.date);
+                      return date.toLocaleDateString('id-ID', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      });
+                    }),
+                    datasets: [
+                      {
+                        label: 'Kunjungan',
+                        data: data.weeklyTrends.map(item => item.visits),
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                          label: function(context: any) {
+                            return `${context.parsed.y} kunjungan`;
+                          }
+                        }
+                      },
+                    },
+                    scales: {
+                      x: {
+                        grid: {
+                          display: false,
+                        },
+                        ticks: {
+                          color: '#6B7280',
+                          font: {
+                            size: 12,
+                          },
+                        },
+                      },
+                      y: {
+                        beginAtZero: true,
+                        grid: {
+                          color: 'rgba(0, 0, 0, 0.1)',
+                        },
+                        ticks: {
+                          color: '#6B7280',
+                          font: {
+                            size: 12,
+                          },
+                          stepSize: 1,
+                        },
+                      },
+                    },
+                    interaction: {
+                      intersect: false,
+                      mode: 'index' as const,
+                    },
+                  }}
+                />
+              ) : (
+                <div className="text-center">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                  </svg>
+                  <p className="text-gray-600">Tidak ada data trend</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -453,9 +624,21 @@ export default function AdminReportsAnalytics() {
         </div>
 
         {/* Konten PDF tersembunyi */}
-        <div style={{ display: 'none' }}>
-          <div ref={pdfRef}>
-            <PdfReport data={dummyData} />
+        <div style={{
+          position: 'relative',
+          left: '0px',
+          top: '0',
+          visibility: 'visible',
+          margin: '20px 0'
+        }}>
+          <div ref={pdfRef} data-pdf-content style={{ 
+            width: '794px',  // A4 width in pixels at 96 DPI
+            minHeight: '1123px', // A4 height in pixels at 96 DPI
+            padding: '40px',
+            backgroundColor: 'white',
+            fontFamily: 'Arial, sans-serif'
+          }}>
+            <PdfReport data={data && data.metrics ? data : dummyData} />
           </div>
         </div>
       </div>
