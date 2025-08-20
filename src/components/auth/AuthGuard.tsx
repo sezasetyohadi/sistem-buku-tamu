@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAdminIdleLogout } from '@/hooks/useIdleDetection';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -12,6 +13,10 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Enable idle detection only for authenticated admin pages (not login page)
+  const shouldEnableIdleDetection = isAuthenticated && pathname !== '/admin/login';
+  useAdminIdleLogout(shouldEnableIdleDetection);
 
   useEffect(() => {
     const checkAuth = () => {
