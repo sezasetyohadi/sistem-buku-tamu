@@ -14,6 +14,7 @@ export async function up() {
       profesi varchar(100) DEFAULT NULL,
       asal_instansi varchar(100) DEFAULT NULL,
       keperluan text DEFAULT NULL,
+      bidang_tujuan_id int(11) DEFAULT NULL,
       catatan_tambahan text DEFAULT NULL,
       status_kunjungan enum('Menunggu','Terjadwal','Datang','Selesai') NOT NULL DEFAULT 'Menunggu',
       jadwal_checkin datetime DEFAULT NULL,
@@ -21,18 +22,18 @@ export async function up() {
       waktu_checkout datetime DEFAULT NULL,
       file_upload varchar(255) DEFAULT NULL,
       waktu_dibuat datetime DEFAULT current_timestamp(),
-      PRIMARY KEY (id)
+      PRIMARY KEY (id),
+      KEY fk_bidang_tujuan (bidang_tujuan_id),
+      CONSTRAINT fk_bidang_tujuan FOREIGN KEY (bidang_tujuan_id) REFERENCES bidang_tujuan (id) ON DELETE SET NULL ON UPDATE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
   `);
   
-  // Create triggers for status updates
+  // Create triggers for status updates exactly as in the SQL dump
   await executeQuery(`
     CREATE TRIGGER IF NOT EXISTS set_terjadwal BEFORE UPDATE ON daftar_tamu
     FOR EACH ROW
     BEGIN
       IF NEW.jadwal_checkin IS NOT NULL 
-         AND OLD.status_kunjungan = 'Menunggu' THEN
-          SET NEW.status_kunjungan = 'Terjadwal';
       END IF;
     END;
   `);
@@ -42,8 +43,6 @@ export async function up() {
     FOR EACH ROW
     BEGIN
       IF NEW.waktu_checkin IS NOT NULL
-         AND OLD.status_kunjungan IN ('Menunggu', 'Terjadwal') THEN
-          SET NEW.status_kunjungan = 'Datang';
       END IF;
     END;
   `);
@@ -53,8 +52,6 @@ export async function up() {
     FOR EACH ROW
     BEGIN
       IF NEW.waktu_checkout IS NOT NULL
-         AND OLD.status_kunjungan = 'Datang' THEN
-          SET NEW.status_kunjungan = 'Selesai';
       END IF;
     END;
   `);

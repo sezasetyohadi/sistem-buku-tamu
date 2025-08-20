@@ -86,15 +86,15 @@ export default function LandingPage() {
             <path d="M0,280 Q640,230 1280,300 Q1600,350 1920,280" 
                   stroke="#ffffff" strokeWidth="2" fill="none" opacity="0.8" />
           </svg>
-          <svg className="absolute inset-0 w-full h-full animate-float-wave" viewBox="0 0 1920 400" preserveAspectRatio="none" style={{animationDelay: '2s', animationDuration: '10s'}}>
+          <svg className="absolute inset-0 w-full h-full animate-float-wave anim-delay-2 duration-1000" viewBox="0 0 1920 400" preserveAspectRatio="none">
             <path d="M0,160 Q320,120 640,180 Q1280,240 1920,160" 
                   stroke="#ffffff" strokeWidth="1.5" fill="none" opacity="0.7" />
           </svg>
-          <svg className="absolute inset-0 w-full h-full animate-float-wave-2" viewBox="0 0 1920 400" preserveAspectRatio="none" style={{animationDelay: '4s', animationDuration: '12s'}}>
+          <svg className="absolute inset-0 w-full h-full animate-float-wave-2 anim-delay-4 duration-1200" viewBox="0 0 1920 400" preserveAspectRatio="none">
             <path d="M0,320 Q480,270 960,340 Q1440,390 1920,320" 
                   stroke="#ffffff" strokeWidth="1.8" fill="none" opacity="0.6" />
           </svg>
-          <svg className="absolute inset-0 w-full h-full animate-float-wave" viewBox="0 0 1920 400" preserveAspectRatio="none" style={{animationDelay: '1s', animationDuration: '7s'}}>
+          <svg className="absolute inset-0 w-full h-full animate-float-wave anim-delay-1 duration-700" viewBox="0 0 1920 400" preserveAspectRatio="none">
             <path d="M0,240 Q960,180 1920,240" 
                   stroke="#ffffff" strokeWidth="1.2" fill="none" opacity="0.9" />
           </svg>
@@ -131,9 +131,9 @@ export default function LandingPage() {
               </span>
             </div>
             
-            {/* Enhanced typography with animations */}
-            <div className="mb-8">
-              <h1 className="text-4xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-tight">
+            {/* Enhanced typography with larger text for better readability */}
+            <div className="mb-12">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-tight tracking-tight">
                 <span className="inline-block hover:scale-110 transition-transform duration-500">
                   Selamat Datang di
                 </span>
@@ -143,41 +143,45 @@ export default function LandingPage() {
                 </span>
               </h1>
               <div className="relative">
-                <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-blue-50 tracking-wide">
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-blue-50 tracking-wide">
                   Jawa Tengah
                 </h2>
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-orange-400 to-transparent rounded-full"></div>
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-gradient-to-r from-transparent via-orange-400 to-transparent rounded-full"></div>
               </div>
             </div>
             
-            <p className="text-lg md:text-xl lg:text-2xl mb-12 text-blue-50 max-w-4xl mx-auto leading-relaxed font-light">
+            <p className="text-xl md:text-2xl lg:text-3xl mb-16 text-blue-50 max-w-5xl mx-auto leading-relaxed font-medium">
               Sistem Buku Tamu Digital - Daftarkan kunjungan Anda dengan mudah, 
               akses layanan ketenagakerjaan dan transmigrasi secara digital
             </p>
             
-            {/* Enhanced CTA buttons */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            {/* Enhanced CTA buttons - Larger and more accessible */}
+            <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
               <Link
                 href="/guest/register"
-                className="group relative text-white font-bold py-6 px-12 rounded-2xl text-lg transition-all duration-500 shadow-2xl transform hover:scale-110 hover:-translate-y-2 overflow-hidden"
+                className="group relative text-white font-bold py-8 px-16 rounded-2xl text-xl md:text-2xl transition-all duration-500 shadow-2xl transform hover:scale-105 hover:-translate-y-2 overflow-hidden min-w-[280px]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-100 group-hover:opacity-90"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute inset-0 animate-pulse bg-white/10"></div>
-                <span className="relative flex items-center z-10">
-                  <span className="mr-3 text-2xl">📝</span>
+                <span className="relative flex items-center justify-center z-10">
+                  <svg className="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
                   <span>Pendaftaran Tamu</span>
-                  <span className="ml-3 transform group-hover:translate-x-2 transition-transform duration-300">→</span>
+                  <span className="ml-4 transform group-hover:translate-x-2 transition-transform duration-300 text-2xl">→</span>
                 </span>
               </Link>
               
               <Link
                 href="/guest/survey"
-                className="group relative bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white hover:bg-white hover:text-purple-700 font-bold py-6 px-12 rounded-2xl text-lg transition-all duration-500 shadow-xl hover:shadow-white/25 transform hover:scale-110 hover:-translate-y-1 overflow-hidden"
+                className="group relative bg-white/15 backdrop-blur-xl border-3 border-white/40 text-white hover:bg-white hover:text-purple-700 font-bold py-8 px-16 rounded-2xl text-xl md:text-2xl transition-all duration-500 shadow-xl hover:shadow-white/25 transform hover:scale-105 hover:-translate-y-1 overflow-hidden min-w-[280px]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <span className="relative flex items-center z-10">
-                  <span className="mr-3 text-2xl">⭐</span>
+                <span className="relative flex items-center justify-center z-10">
+                  <svg className="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
                   <span>Survey Kepuasan</span>
                   <span className="ml-3 transform group-hover:translate-x-2 transition-transform duration-300">→</span>
                 </span>
@@ -235,82 +239,96 @@ export default function LandingPage() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          {/* Section header */}
-          <div className="text-center mb-20 opacity-0 translate-y-4 transition-all duration-500 ease-out" data-fade="up" style={{transitionDelay: '50ms'}}>
-            <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6" style={{backgroundColor: '#FEF3E2', color: '#EA580C'}}>
-              <span className="mr-2">✨</span>
+          {/* Section header - Enhanced for better readability */}
+          <div className="text-center mb-24 opacity-0 translate-y-4 transition-all duration-500 ease-out delay-50" data-fade="up">
+            <div className="inline-flex items-center px-8 py-4 rounded-full text-lg font-bold mb-8 bg-badge-orange">
+              <span className="mr-3">✨</span>
               Layanan Kami
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-800 mb-8">
               Pelayanan DISNAKERTRANS Jateng
             </h2>
-            <p className="text-xl text-gray-800 max-w-3xl mx-auto">
+            <p className="text-2xl text-gray-800 max-w-4xl mx-auto leading-relaxed">
               Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah melayani masyarakat dengan sistem digital yang modern dan terintegrasi
             </p>
           </div>
           
-          {/* Feature cards */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20">
+          {/* Feature cards - Enhanced with larger spacing and text */}
+          <div className="grid md:grid-cols-3 gap-12 max-w-7xl mx-auto mb-24">
             {/* Card 1 */}
-            <div className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out" data-fade="up" style={{transition: 'all 500ms ease-out', transitionDelay: '100ms'}}>
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16" style={{background: 'linear-gradient(135deg, rgba(61, 93, 195, 0.1), rgba(37, 99, 235, 0.1))'}}></div>
+            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-100" data-fade="up">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-blue-light"></div>
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
-                  📝
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 transition-transform bg-gradient-blue">
+                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">Registrasi Tamu</h3>
-                <p className="text-gray-800 leading-relaxed">
+                <h3 className="text-3xl font-bold text-gray-800 mb-6">Registrasi Tamu</h3>
+                <p className="text-xl text-gray-700 leading-relaxed">
                   Daftarkan kunjungan Anda ke DISNAKERTRANS Jateng dengan formulir digital yang mudah dan cepat
                 </p>
               </div>
             </div>
 
             {/* Card 2 */}
-            <div className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out" data-fade="up" style={{transition: 'all 500ms ease-out', transitionDelay: '150ms'}}>
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16" style={{background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.1))'}}></div>
+            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-150" data-fade="up">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-green-light"></div>
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
-                  🏢
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 transition-transform bg-gradient-green">
+                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                  </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">Layanan Ketenagakerjaan</h3>
-                <p className="text-gray-800 leading-relaxed">
+                <h3 className="text-3xl font-bold text-gray-800 mb-6">Layanan Ketenagakerjaan</h3>
+                <p className="text-xl text-gray-700 leading-relaxed">
                   Akses berbagai layanan ketenagakerjaan dan transmigrasi dengan sistem yang terintegrasi dan efisien
                 </p>
               </div>
             </div>
 
             {/* Card 3 */}
-            <div className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out" data-fade="up" style={{transition: 'all 500ms ease-out', transitionDelay: '200ms'}}>
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16" style={{background: 'linear-gradient(135deg, rgba(242, 148, 66, 0.1), rgba(234, 88, 12, 0.1))'}}></div>
+            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-200" data-fade="up">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-orange-light"></div>
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 transform group-hover:scale-110 transition-transform" style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}>
-                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 transition-transform bg-gradient-orange">
+                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">Feedback & Evaluasi</h3>
-                <p className="text-gray-800 leading-relaxed">
+                <h3 className="text-3xl font-bold text-gray-800 mb-6">Feedback & Evaluasi</h3>
+                <p className="text-xl text-gray-700 leading-relaxed">
                   Berikan penilaian dan masukan untuk terus meningkatkan kualitas pelayanan DISNAKERTRANS Jateng
                 </p>
               </div>
             </div>
           </div>
 
-          {/* CTA Section */}
-          <div className="text-center opacity-0 translate-y-4 transition-all duration-500 ease-out" data-fade="up" style={{transitionDelay: '250ms'}}>
-            <div className="rounded-3xl p-12 text-white relative overflow-hidden shadow-2xl" style={{background: 'linear-gradient(135deg, #3D5DC3 0%, #2563EB 100%)'}}>
+          {/* CTA Section - Enhanced for better accessibility */}
+          <div className="text-center opacity-0 translate-y-4 transition-all duration-500 ease-out delay-250" data-fade="up">
+            <div className="rounded-3xl p-16 text-white relative overflow-hidden shadow-2xl bg-cta-gradient">
               <div className="absolute inset-0 bg-black opacity-10"></div>
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rounded-full" style={{backgroundColor: '#F29442'}}></div>
+              <div className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rounded-full bg-decoration-orange"></div>
               
               <div className="relative z-10">
-                <h3 className="text-3xl font-bold mb-4">Mulai Sekarang!</h3>
-                <p className="text-xl text-blue-50 mb-8 max-w-2xl mx-auto">
+                <h3 className="text-4xl md:text-5xl font-bold mb-8">Mulai Sekarang!</h3>
+                <p className="text-2xl text-blue-50 mb-12 max-w-4xl mx-auto leading-relaxed">
                   Bergabunglah dengan ribuan pengguna yang telah merasakan kemudahan layanan digital kami
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  
-                  
+                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                  <Link
+                    href="/guest/register"
+                    className="bg-white text-blue-600 font-bold py-6 px-12 rounded-2xl text-xl hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl min-w-[250px]"
+                  >
+                    Daftar Sekarang
+                  </Link>
+                  <Link
+                    href="/guest/survey"
+                    className="border-3 border-white text-white font-bold py-6 px-12 rounded-2xl text-xl hover:bg-white hover:text-blue-600 transition-all duration-300 transform hover:scale-105 min-w-[250px]"
+                  >
+                    Isi Survey
+                  </Link>
                 </div>
               </div>
             </div>

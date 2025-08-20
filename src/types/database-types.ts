@@ -18,6 +18,7 @@ export interface DaftarTamu {
   catatan_tambahan?: string;
   status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null; // datetime
+  jadwal_dibuat?: string | null; // datetime
   waktu_checkin?: string | null; // datetime
   waktu_checkout?: string | null; // datetime
   file_upload?: string;

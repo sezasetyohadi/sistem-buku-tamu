@@ -202,9 +202,47 @@ export async function updateGuest(id: number, data: Partial<DaftarTamu>): Promis
 }
 
 export async function deleteGuest(id: number): Promise<boolean> {
-  const query = 'DELETE FROM daftar_tamu WHERE id = ?';
-  const result = await executeQuery<any>(query, [id]);
-  return result.affectedRows > 0;
+  try {
+    // Start a transaction to ensure all or nothing gets deleted
+    await executeQuery('START TRANSACTION');
+
+    // 1. Delete related records from jawaban_memperoleh_informasi
+    await executeQuery('DELETE FROM jawaban_memperoleh_informasi WHERE tamu_id = ?', [id]);
+    console.log('Deleted related records from jawaban_memperoleh_informasi');
+
+    // 2. Delete related records from jawaban_mendapatkan_salinan
+    await executeQuery('DELETE FROM jawaban_mendapatkan_salinan WHERE tamu_id = ?', [id]);
+    console.log('Deleted related records from jawaban_mendapatkan_salinan');
+
+    // 3. Delete any related survey responses (if there are any)
+    try {
+      await executeQuery('DELETE FROM jawaban_survei WHERE tamu_id = ?', [id]);
+      console.log('Deleted related records from jawaban_survei');
+    } catch (err) {
+      // Table might not have tamu_id column, which is ok
+      console.log('No survey responses linked to this guest or table structure differs');
+    }
+
+    // 4. Finally delete the guest record itself
+    const query = 'DELETE FROM daftar_tamu WHERE id = ?';
+    const result = await executeQuery<any>(query, [id]);
+    
+    // Commit the transaction if everything is successful
+    if (result.affectedRows > 0) {
+      await executeQuery('COMMIT');
+      console.log('Guest deleted successfully with all related records');
+      return true;
+    } else {
+      await executeQuery('ROLLBACK');
+      console.log('Guest not found, rolled back transaction');
+      return false;
+    }
+  } catch (error) {
+    // If any error occurs, roll back the transaction
+    await executeQuery('ROLLBACK');
+    console.error('Error deleting guest and related records:', error);
+    throw error;
+  }
 }
 
 export async function searchGuests(searchTerm: string): Promise<DaftarTamu[]> {

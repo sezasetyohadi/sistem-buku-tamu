@@ -6,6 +6,8 @@ import { DaftarTamu } from "@/types/database-types";
 import Modal from "@/components/ui/Modal";
 import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
+import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
+import { toast } from "react-hot-toast";
 
 export default function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +25,10 @@ export default function AdminGuestsManagement() {
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<DaftarTamu | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [guestToDelete, setGuestToDelete] = useState<DaftarTamu | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const initialFetchData = async () => {
@@ -201,7 +207,9 @@ export default function AdminGuestsManagement() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <span className="text-2xl">💼</span>
+              <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Datang Hari Ini</p>
@@ -217,11 +225,15 @@ export default function AdminGuestsManagement() {
           onClick={() => setIsModalOpen(true)}
           className="bg-red-200 text-red-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-300 transition-colors flex items-center space-x-2"
         >
-          <span>➕</span>
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
           <span>Tambah Tamu</span>
         </button>
         <button className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
-          <span>📊</span>
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+          </svg>
           <span>Export Data</span>
         </button>
         <button 
@@ -229,7 +241,16 @@ export default function AdminGuestsManagement() {
           className="bg-blue-200 text-blue-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-300 transition-colors flex items-center space-x-2"
           disabled={isLoading}
         >
-          <span>{isLoading ? "⏳" : "🔄"}</span>
+          {isLoading ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+          )}
           <span>{isLoading ? "Memuat..." : "Refresh"}</span>
         </button>
       </div>
@@ -310,7 +331,7 @@ export default function AdminGuestsManagement() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instansi</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kedatangan</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
@@ -327,6 +348,7 @@ export default function AdminGuestsManagement() {
                         
                         if (result.success) {
                           setSelectedGuest(result.data);
+                          setIsEditMode(false); // View mode by default when clicking a row
                         } else {
                           console.error('Failed to fetch detailed guest information:', result.message);
                           setSelectedGuest(guest);
@@ -382,10 +404,11 @@ export default function AdminGuestsManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button 
-                          className="text-blue-600 hover:text-blue-900 p-1" 
-                          title="Lihat Detail"
+                          className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-50" 
+                          title="Edit"
                           onClick={async (e) => {
                             e.stopPropagation();
+                            // Handle edit functionality
                             try {
                               const response = await fetch(`/api/guests/${guest.id}/details`);
                               const result = await response.json();
@@ -393,31 +416,34 @@ export default function AdminGuestsManagement() {
                               if (result.success) {
                                 setSelectedGuest(result.data);
                               } else {
-                                console.error('Failed to fetch detailed guest information:', result.message);
                                 setSelectedGuest(guest);
                               }
+                              
+                              setIsEditMode(true); // Set edit mode to true when clicking edit button
+                              setIsDetailModalOpen(true);
                             } catch (error) {
-                              console.error('Error fetching guest details:', error);
+                              console.error('Error selecting guest for edit:', error);
                               setSelectedGuest(guest);
+                              setIsDetailModalOpen(true);
                             }
-                            setIsDetailModalOpen(true);
                           }}
                         >
-                          👁️
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                          </svg>
                         </button>
                         <button 
-                          className="text-green-600 hover:text-green-900 p-1" 
-                          title="Edit"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          className="text-red-600 hover:text-red-900 p-1" 
+                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-50" 
                           title="Hapus"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setGuestToDelete(guest);
+                            setIsDeleteDialogOpen(true);
+                          }}
                         >
-                          🗑️
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
                         </button>
                       </div>
                     </td>
@@ -475,9 +501,65 @@ export default function AdminGuestsManagement() {
       {/* Modal for viewing guest details */}
       <GuestDetailModal
         isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setIsEditMode(false); // Reset edit mode when closing modal
+        }}
         guest={selectedGuest}
+        onGuestUpdate={handleRefresh}
+        isEditMode={isEditMode}
       />
+
+      {/* Delete Confirmation Dialog */}
+      {guestToDelete && (
+        <DeleteConfirmationDialog
+          isOpen={isDeleteDialogOpen}
+          title="Konfirmasi Hapus Data"
+          message="Apakah Anda yakin ingin menghapus tamu ini dari daftar?"
+          itemName={guestToDelete.nama}
+          onClose={() => {
+            setIsDeleteDialogOpen(false);
+            setGuestToDelete(null);
+          }}
+          isLoading={isDeleting}
+          onConfirm={async () => {
+            try {
+              setIsDeleting(true);
+              
+              const response = await fetch(`/api/guests/${guestToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              });
+              
+              const result = await response.json();
+              
+              if (!result.success) {
+                throw new Error(result.message || 'Gagal menghapus data tamu');
+              }
+              
+              // Remove the guest from the local state to update UI immediately
+              setGuests(prev => prev.filter(g => g.id !== guestToDelete.id));
+              
+              // Show success message
+              toast.success('Data tamu berhasil dihapus');
+              
+              // Close dialog
+              setIsDeleteDialogOpen(false);
+              setGuestToDelete(null);
+              
+              // Refresh data completely
+              await fetchData();
+            } catch (error) {
+              console.error('Error deleting guest:', error);
+              toast.error('Gagal menghapus data tamu');
+            } finally {
+              setIsDeleting(false);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

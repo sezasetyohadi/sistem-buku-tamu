@@ -150,25 +150,35 @@ export default function GuestRegistrationForm({
       const checkbox = e.target as HTMLInputElement;
       const numericValue = parseInt(value); // Convert to number since we're storing IDs
       
+      const updatedValues = checkbox.checked 
+        ? [...(formData[name as keyof typeof formData] as number[]), numericValue]
+        : (formData[name as keyof typeof formData] as number[]).filter(item => item !== numericValue);
+      
       setFormData(prev => ({
         ...prev,
-        [name]: checkbox.checked 
-          ? [...(prev[name as keyof typeof prev] as number[]), numericValue]
-          : (prev[name as keyof typeof prev] as number[]).filter(item => item !== numericValue)
+        [name]: updatedValues
       }));
+      
+      // Clear error when at least one option is selected
+      if (updatedValues.length > 0 && errors[name]) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      }
     } else {
       setFormData(prev => ({
         ...prev,
         [name]: value
       }));
-    }
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      
+      // Clear error when user starts typing
+      if (errors[name]) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      }
     }
   };
 
@@ -211,6 +221,16 @@ export default function GuestRegistrationForm({
 
     if (!formData.department) {
       newErrors.department = 'Bidang tujuan harus dipilih';
+    }
+
+    // Validate cara_memperoleh (minimal 1 harus dipilih)
+    if (formData.cara_memperoleh.length === 0) {
+      newErrors.cara_memperoleh = 'Minimal pilih satu cara memperoleh informasi';
+    }
+
+    // Validate cara_salinan (minimal 1 harus dipilih)
+    if (formData.cara_salinan.length === 0) {
+      newErrors.cara_salinan = 'Minimal pilih satu cara mendapatkan salinan informasi';
     }
 
     setErrors(newErrors);
@@ -452,8 +472,11 @@ export default function GuestRegistrationForm({
         </div>
 
         {/* Cara Memperoleh Section */}
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Cara Memperoleh</h3>
+        <div className={`bg-gray-50 p-6 rounded-lg border ${errors.cara_memperoleh ? 'border-red-500' : 'border-gray-200'}`}>
+          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+            Cara Memperoleh Informasi <span className="text-red-500">*</span>
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">Pilih minimal satu opsi</p>
           <div className="space-y-3">
             {memperolehOptions.map((option) => (
               <label key={option.id} className="flex items-center space-x-3 cursor-pointer">
@@ -474,11 +497,17 @@ export default function GuestRegistrationForm({
               </label>
             ))}
           </div>
+          {errors.cara_memperoleh && (
+            <p className="text-red-500 text-sm mt-2">{errors.cara_memperoleh}</p>
+          )}
         </div>
 
         {/* Cara Mendapatkan Salinan Informasi Section */}
-        <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Cara Mendapatkan Salinan Informasi*</h3>
+        <div className={`bg-blue-50 p-6 rounded-lg border ${errors.cara_salinan ? 'border-red-500' : 'border-blue-200'}`}>
+          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+            Cara Mendapatkan Salinan Informasi <span className="text-red-500">*</span>
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">Pilih minimal satu opsi</p>
           <div className="space-y-3">
             {salinanOptions.map((option) => (
               <label key={option.id} className="flex items-center space-x-3 cursor-pointer">
@@ -499,6 +528,9 @@ export default function GuestRegistrationForm({
               </label>
             ))}
           </div>
+          {errors.cara_salinan && (
+            <p className="text-red-500 text-sm mt-2">{errors.cara_salinan}</p>
+          )}
         </div>
 
         <div>

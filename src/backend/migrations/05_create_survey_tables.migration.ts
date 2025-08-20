@@ -5,16 +5,11 @@ export async function up() {
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS jawaban_identitas_survei (
       id int(11) NOT NULL AUTO_INCREMENT,
-      tanggal_survei date NOT NULL,
-      nama_lengkap varchar(100) NOT NULL,
-      umur int(11) NOT NULL,
-      email varchar(100) NOT NULL,
-      nomor_telepon varchar(20) NOT NULL,
-      jenis_kelamin enum('Laki-laki','Perempuan') NOT NULL,
-      alamat text NOT NULL,
-      pendidikan_terakhir_id varchar(100) NOT NULL,
-      pekerjaan_utama_id varchar(100) NOT NULL,
-      jenis_layanan_id varchar(100) NOT NULL,
+      nama_lengkap varchar(100) DEFAULT NULL,
+      jenis_kelamin enum('Laki-laki','Perempuan') DEFAULT NULL,
+      pendidikan_terakhir_id int(11) DEFAULT NULL,
+      profesi_id int(11) DEFAULT NULL,
+      instansi varchar(100) DEFAULT NULL,
       saran text DEFAULT NULL,
       created_at timestamp NOT NULL DEFAULT current_timestamp(),
       PRIMARY KEY (id)
@@ -50,11 +45,13 @@ export async function up() {
       id int(11) NOT NULL AUTO_INCREMENT,
       responden_id int(11) DEFAULT NULL,
       pertanyaan_id int(11) NOT NULL,
-      jawaban int(11) NOT NULL,
+      jawaban_numerik int(11) DEFAULT NULL,
+      jawaban_text text DEFAULT NULL,
       created_at timestamp NOT NULL DEFAULT current_timestamp(),
       PRIMARY KEY (id),
       KEY pertanyaan_id (pertanyaan_id),
-      CONSTRAINT jawaban_survei_ibfk_1 FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE
+      CONSTRAINT jawaban_survei_ibfk_1 FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE,
+      CONSTRAINT fk_responden_survei FOREIGN KEY (id) REFERENCES jawaban_identitas_survei (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
   `);
   
