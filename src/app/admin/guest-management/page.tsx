@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { DaftarTamu } from "@/types/database-types";
 import Modal from "@/components/ui/Modal";
@@ -12,7 +12,7 @@ import { toast } from "react-hot-toast";
 export default function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua Status");
-  const [dateFilter, setDateFilter] = useState("Hari Ini");
+  const [dateFilter, setDateFilter] = useState("Semua Waktu");
   const [stats, setStats] = useState({
     totalGuests: 0,
     todayCheckIn: 0,
@@ -29,6 +29,100 @@ export default function AdminGuestsManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [guestToDelete, setGuestToDelete] = useState<DaftarTamu | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Filter guests based on current filters
+  const filteredGuests = useMemo(() => {
+    return guests.filter(guest => {
+      // Filter by status
+      if (statusFilter !== "Semua Status") {
+        if (statusFilter === "Proses" && guest.status_kunjungan !== "Datang") {
+          return false;
+        } else if (statusFilter !== "Proses" && guest.status_kunjungan !== statusFilter) {
+          return false;
+        }
+      }
+      
+      // Filter by date
+      if (dateFilter !== "Semua Waktu") {
+        const visitDate = guest.waktu_checkin ? new Date(guest.waktu_checkin) : null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+        
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999); // End of today
+        
+        if (!visitDate) return false;
+        
+        if (dateFilter === "Hari Ini") {
+          // Check if visit date is today
+          if (visitDate < today || visitDate > endOfToday) return false;
+        } 
+        else if (dateFilter === "Minggu Ini") {
+          // Start of week (Monday of this week)
+          const startOfWeek = new Date(today);
+          const day = today.getDay();
+          const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+          startOfWeek.setDate(diff);
+          startOfWeek.setHours(0, 0, 0, 0);
+          
+          if (visitDate < startOfWeek || visitDate > endOfToday) return false;
+        } 
+        else if (dateFilter === "Bulan Ini") {
+          // Start of month
+          const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          startOfMonth.setHours(0, 0, 0, 0);
+          
+          if (visitDate < startOfMonth || visitDate > endOfToday) return false;
+        }
+        else if (dateFilter === "Tahun Ini") {
+          // Start of year
+          const startOfYear = new Date(today.getFullYear(), 0, 1);
+          startOfYear.setHours(0, 0, 0, 0);
+          
+          if (visitDate < startOfYear || visitDate > endOfToday) return false;
+        }
+      }
+      
+      // Filter by search term
+      if (searchTerm.trim() !== '') {
+        const searchLower = searchTerm.toLowerCase();
+        
+        // Check if any field contains the search term
+        // Including name, phone number, institution, email
+        const matchesSearch = (
+          (guest.nama && guest.nama.toLowerCase().includes(searchLower)) ||
+          (guest.nomor_telp && guest.nomor_telp.toLowerCase().includes(searchLower)) ||
+          (guest.asal_instansi && guest.asal_instansi.toLowerCase().includes(searchLower)) ||
+          (guest.email && guest.email.toLowerCase().includes(searchLower)) ||
+          (guest.keperluan && guest.keperluan.toLowerCase().includes(searchLower))
+        );
+        
+        if (!matchesSearch) return false;
+      }
+      
+      return true;
+    });
+  }, [guests, statusFilter, searchTerm]);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredGuests.length / itemsPerPage);
+  
+  // Reset to first page when filters change dramatically
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredGuests.length, itemsPerPage, totalPages, currentPage]);
+  
+  // Get current page of guests
+  const currentGuests = useMemo(() => {
+    return filteredGuests.slice(
+      (currentPage - 1) * itemsPerPage, 
+      currentPage * itemsPerPage
+    );
+  }, [filteredGuests, currentPage, itemsPerPage]);
 
   useEffect(() => {
     const initialFetchData = async () => {
@@ -111,14 +205,16 @@ export default function AdminGuestsManagement() {
         });
       }
       
-      // Fetch guest list
-      const guestsResponse = await fetch('/api/guests', {
+      // Fetch guest list with timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const guestsResponse = await fetch(`/api/guests?t=${timestamp}`, {
         // Add cache: 'no-store' to prevent caching
         cache: 'no-store',
-        // Add a timestamp to bust the cache
+        // Add headers to bust the cache
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
+          'Expires': '0',
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
@@ -212,7 +308,7 @@ export default function AdminGuestsManagement() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Datang Hari Ini</p>
+              <p className="text-sm font-medium text-gray-600">Proses Hari Ini</p>
               <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.currentlyVisiting}</p>
             </div>
           </div>
@@ -259,34 +355,64 @@ export default function AdminGuestsManagement() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
         <div className="p-4 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <input
                 type="text"
                 placeholder="Cari nama, NIK, atau instansi..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  const newSearchTerm = e.target.value;
+                  setSearchTerm(newSearchTerm);
+                  setCurrentPage(1); // Reset to first page on search
+                  
+                  // If search is cleared, refresh data to ensure all guests are shown
+                  if (newSearchTerm === '' && searchTerm !== '') {
+                    handleRefresh();
+                  }
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
               />
+              {searchTerm && (
+                <button 
+                  onClick={() => {
+                    setSearchTerm('');
+                    handleRefresh();
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  title="Hapus pencarian"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
             <select 
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1); // Reset to first page on filter change
+              }}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
               <option>Semua Status</option>
               <option>Menunggu</option>
               <option>Terjadwal</option>
-              <option>Datang</option>
+              <option>Proses</option>
               <option>Selesai</option>
             </select>
             <select 
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setCurrentPage(1); // Reset to first page on filter change
+              }}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
               <option>Hari Ini</option>
               <option>Minggu Ini</option>
               <option>Bulan Ini</option>
+              <option>Tahun Ini</option>
               <option>Semua Waktu</option>
             </select>
           </div>
@@ -296,7 +422,37 @@ export default function AdminGuestsManagement() {
       {/* Guests Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Daftar Tamu Terbaru</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Daftar Tamu</h3>
+            
+            {!isLoading && filteredGuests.length > 0 && (
+              <div className="flex items-center">
+                <span className="text-sm text-gray-700 mr-2 whitespace-nowrap">
+                  Tampilkan:
+                </span>
+                <select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1); // Reset to page 1 when changing items per page
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 w-24"
+                  style={{ 
+                    WebkitAppearance: 'none', 
+                    MozAppearance: 'none',
+                    appearance: 'none',
+                    backgroundImage: 'none'
+                  }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            )}
+          </div>
         </div>
         
         {isLoading ? (
@@ -326,18 +482,18 @@ export default function AdminGuestsManagement() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instansi</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kedatangan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {guests.map((guest, i) => (
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instansi</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kedatangan</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {currentGuests.map((guest, i) => (
                   <tr 
                     key={guest.id || i} 
                     className="hover:bg-gray-50 cursor-pointer"
@@ -398,7 +554,7 @@ export default function AdminGuestsManagement() {
                         guest.status_kunjungan === 'Terjadwal' ? 'bg-orange-100 text-orange-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {guest.status_kunjungan || 'Menunggu'}
+                        {guest.status_kunjungan === 'Datang' ? 'Proses' : guest.status_kunjungan || 'Menunggu'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -455,29 +611,85 @@ export default function AdminGuestsManagement() {
         )}
         
         {/* Pagination */}
-        {!isLoading && guests.length > 0 && (
+        {!isLoading && filteredGuests.length > 0 && (
           <div className="bg-white px-6 py-3 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Menampilkan <span className="font-medium">1</span> sampai <span className="font-medium">{Math.min(guests.length, 10)}</span> dari{' '}
-                <span className="font-medium">{guests.length}</span> hasil
+            <div className="flex flex-wrap items-center justify-between">
+              <div className="text-sm text-gray-700 mb-2 sm:mb-0">
+                Menampilkan <span className="font-medium">{filteredGuests.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> sampai{' '}
+                <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredGuests.length)}</span> dari{' '}
+                <span className="font-medium">{filteredGuests.length}</span> hasil
               </div>
+              
               <div className="flex space-x-2">
-                <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">
+                <button 
+                  className={`px-3 py-1 text-sm border border-gray-300 rounded ${
+                    currentPage === 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-gray-50'
+                  }`}
+                  onClick={() => currentPage > 1 && setCurrentPage(prev => prev - 1)}
+                  disabled={currentPage === 1}
+                >
                   Sebelumnya
                 </button>
-                <button className="px-3 py-1 text-sm bg-red-600 text-white rounded">1</button>
-                {guests.length > 10 && (
-                  <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">2</button>
-                )}
-                {guests.length > 20 && (
-                  <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">3</button>
-                )}
-                {guests.length > 10 && (
-                  <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">
-                    Selanjutnya
-                  </button>
-                )}
+                
+                {/* Generate page buttons */}
+                {Array.from({ length: Math.min(5, Math.ceil(filteredGuests.length / itemsPerPage)) }, (_, i) => {
+                  // Calculate page number logic for when there are many pages
+                  let pageNum;
+                  
+                  if (totalPages <= 5) {
+                    // Less than 5 pages, just show the page number
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    // At the beginning
+                    if (i < 4) {
+                      pageNum = i + 1;
+                    } else {
+                      pageNum = totalPages;
+                    }
+                  } else if (currentPage >= totalPages - 2) {
+                    // At the end
+                    if (i === 0) {
+                      pageNum = 1;
+                    } else {
+                      pageNum = totalPages - 4 + i;
+                    }
+                  } else {
+                    // In the middle
+                    if (i === 0) {
+                      pageNum = 1;
+                    } else if (i === 4) {
+                      pageNum = totalPages;
+                    } else {
+                      pageNum = currentPage - 1 + i;
+                    }
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`px-3 py-1 text-sm ${
+                        pageNum === currentPage
+                          ? 'bg-red-600 text-white'
+                          : 'bg-white border border-gray-300 hover:bg-gray-50'
+                      } rounded`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                
+                <button
+                  className={`px-3 py-1 text-sm border border-gray-300 rounded ${
+                    currentPage >= totalPages 
+                      ? 'bg-gray-100 cursor-not-allowed' 
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
+                  onClick={() => currentPage < totalPages && setCurrentPage(prev => prev + 1)}
+                  disabled={currentPage >= totalPages}
+                >
+                  Selanjutnya
+                </button>
               </div>
             </div>
           </div>
