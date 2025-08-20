@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,11 +51,40 @@ export default function LoginPage() {
     checkAuthAndRedirect();
   }, [router]);
 
+  // Load saved credentials if "Remember Me" was previously checked
+  useEffect(() => {
+    const loadSavedCredentials = () => {
+      try {
+        const savedCredentials = localStorage.getItem('admin_remembered_credentials');
+        if (savedCredentials) {
+          const credentials = JSON.parse(savedCredentials);
+          setFormData(prev => ({
+            ...prev,
+            username: credentials.username || "",
+            password: credentials.password || "",
+            rememberMe: true
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+        localStorage.removeItem('admin_remembered_credentials');
+      }
+    };
+
+    loadSavedCredentials();
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    
+    // If unchecking Remember Me, clear saved credentials
+    if (name === 'rememberMe' && type === 'checkbox' && !checked) {
+      localStorage.removeItem('admin_remembered_credentials');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -82,19 +112,36 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (result.success) {
+        // Determine session duration based on remember me
+        const sessionDuration = formData.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000; // 7 days or 24 hours
+        const cookieMaxAge = formData.rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60; // 7 days or 24 hours in seconds
+        
         // Store admin session/token in localStorage
         localStorage.setItem('admin_session', JSON.stringify({
           id: result.admin.id,
           username: result.admin.username,
           nama_lengkap: result.admin.nama_lengkap,
           email: result.admin.email,
-          loginTime: new Date().toISOString()
+          loginTime: new Date().toISOString(),
+          rememberMe: formData.rememberMe,
+          expiresAt: new Date(Date.now() + sessionDuration).toISOString()
         }));
         
-        // Also set a simple auth cookie for middleware
-        document.cookie = `admin_auth=true; path=/; max-age=86400`; // 24 hours
+        // Set auth cookie with appropriate duration
+        document.cookie = `admin_auth=true; path=/; max-age=${cookieMaxAge}`;
         
-        console.log('Login successful, redirecting to admin dashboard');
+        // Save credentials if Remember Me is checked
+        if (formData.rememberMe) {
+          localStorage.setItem('admin_remembered_credentials', JSON.stringify({
+            username: formData.username,
+            password: formData.password
+          }));
+        } else {
+          // Remove saved credentials if Remember Me is unchecked
+          localStorage.removeItem('admin_remembered_credentials');
+        }
+        
+        console.log(`Login successful${formData.rememberMe ? ' (Remember Me enabled for 7 days)' : ' (24 hour session)'}, redirecting to admin dashboard`);
         // Redirect to admin dashboard
         router.replace('/admin');
       } else {
@@ -138,17 +185,21 @@ export default function LoginPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <div className="text-2xl mb-2">�</div>
+                <svg className="w-8 h-8 text-blue-100 mb-2 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
                 <div className="text-sm text-blue-100">Manajemen Tamu</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <svg className="w-8 h-8 text-blue-100 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-8 h-8 text-blue-100 mb-2 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
                 <div className="text-sm text-blue-100">Laporan Detail</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <div className="text-2xl mb-2">🔐</div>
+                <svg className="w-8 h-8 text-blue-100 mb-2 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
                 <div className="text-sm text-blue-100">Keamanan Terjamin</div>
               </div>
             </div>
@@ -274,6 +325,21 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* Remember Me Checkbox */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors duration-200"
+              />
+              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700 cursor-pointer hover:text-gray-900 transition-colors duration-200">
+                Ingat saya selama 7 hari
+              </label>
             </div>
 
             <button

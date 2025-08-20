@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAdminIdleLogout } from '@/hooks/useIdleDetection';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -12,6 +13,10 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Enable idle detection only for authenticated admin pages (not login page)
+  const shouldEnableIdleDetection = isAuthenticated && pathname !== '/admin/login';
+  useAdminIdleLogout(shouldEnableIdleDetection);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -40,14 +45,17 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           try {
             const sessionData = JSON.parse(adminSession);
             
-            // Check if session is not expired (24 hours)
+            // Check if session is not expired (24 hours or 7 days for remember me)
             const loginTime = new Date(sessionData.loginTime);
             const now = new Date();
             const hoursDiff = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
             
-            console.log('Session time check - Hours since login:', hoursDiff);
+            // Check remember me status for extended session
+            const sessionLimit = sessionData.rememberMe ? (7 * 24) : 24; // 7 days or 24 hours
             
-            if (hoursDiff < 24) {
+            console.log('Session time check - Hours since login:', hoursDiff, 'Remember me:', sessionData.rememberMe, 'Limit:', sessionLimit);
+            
+            if (hoursDiff < sessionLimit) {
               console.log('Authentication successful');
               setIsAuthenticated(true);
             } else {
