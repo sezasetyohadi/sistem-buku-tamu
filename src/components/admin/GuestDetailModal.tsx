@@ -23,7 +23,7 @@ function Tooltip({ content, children }: TooltipProps) {
         {children}
       </div>
       {isVisible && (
-        <div className="absolute z-10 w-64 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-lg -left-2 -top-2 transform -translate-y-full opacity-100 transition-opacity duration-300">
+        <div className="absolute z-[100] w-64 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-xl -left-2 -top-2 transform -translate-y-full opacity-100 transition-opacity duration-300 pointer-events-none">
           {content}
           <div className="absolute bottom-0 left-3 w-3 h-3 bg-white border-r border-b border-gray-200 transform translate-y-1/2 rotate-45"></div>
         </div>
