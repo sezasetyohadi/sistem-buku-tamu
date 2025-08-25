@@ -12,12 +12,27 @@ export async function PUT(
   try {
     const questionId = parseInt(params.id);
     const body = await request.json();
-    const { pertanyaan, tipe_pertanyaan, urutan, status } = body;
+    const { 
+      pertanyaan, 
+      tipe_pertanyaan, 
+      status, 
+      baris, 
+      kolom, 
+      jenis_rating_id,
+      is_required = true
+    } = body;
     
-    // Default section_id = 1 if not provided
-    const sectionId = 1;
-    
-    await updateQuestion(questionId, sectionId, urutan, pertanyaan, tipe_pertanyaan, status);
+    // Update the question with all new parameters
+    await updateQuestion(
+      questionId, 
+      baris || 1, 
+      kolom || 1, 
+      pertanyaan, 
+      tipe_pertanyaan, 
+      status, 
+      jenis_rating_id,
+      is_required
+    );
     
     return NextResponse.json({
       success: true,
@@ -26,7 +41,7 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating survey question:', error);
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: `Error updating question: ${error.message}` },
       { status: 500 }
     );
   }

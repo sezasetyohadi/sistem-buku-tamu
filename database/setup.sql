@@ -1,5 +1,5 @@
--- Database setup for Sistem Buku Tamu
--- Run this SQL script to create the required tables
+-- Updated Database setup for Sistem Buku Tamu
+-- Synced with current disnaker.sql structure
 
 CREATE DATABASE IF NOT EXISTS disnaker;
 USE disnaker;
@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS admin (
   created_at timestamp NOT NULL DEFAULT current_timestamp(),
   email varchar(100) DEFAULT NULL,
   is_super_admin tinyint(1) DEFAULT NULL,
+  failed_attempts int(11) DEFAULT 0,
+  locked_until datetime DEFAULT NULL,
+  last_failed_attempt datetime DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -24,7 +27,7 @@ CREATE TABLE IF NOT EXISTS bidang_tujuan (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Table for guest registry
+-- Table for guest registry with updated fields
 CREATE TABLE IF NOT EXISTS daftar_tamu (
   id int(11) NOT NULL AUTO_INCREMENT,
   email varchar(100) DEFAULT NULL,
@@ -32,25 +35,32 @@ CREATE TABLE IF NOT EXISTS daftar_tamu (
   nomor_telp varchar(20) DEFAULT NULL,
   alamat text DEFAULT NULL,
   jenis_kelamin enum('Laki-laki','Perempuan') NOT NULL,
-  pendidikan_terakhir varchar(100) DEFAULT NULL,
-  profesi varchar(100) DEFAULT NULL,
+  pendidikan_terakhir_id int(11) DEFAULT NULL,
+  profesi_id int(11) DEFAULT NULL,
   asal_instansi varchar(100) DEFAULT NULL,
   keperluan text DEFAULT NULL,
-  tanggapan enum('Check-in','Check-out','Menunggu') DEFAULT NULL,
+  status enum('Menunggu','Datang','Selesai','Terjadwal') DEFAULT 'Menunggu',
+  bidang_tujuan_id int(11) DEFAULT NULL,
+  tujuan_kunjungan_id int(11) DEFAULT NULL,
   file_upload varchar(255) DEFAULT NULL,
   waktu_dibuat datetime DEFAULT current_timestamp(),
-  PRIMARY KEY (id)
+  jadwal_checkin datetime DEFAULT NULL,
+  waktu_checkin datetime DEFAULT NULL,
+  waktu_checkout datetime DEFAULT NULL,
+  jadwal_dibuat datetime DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY idx_tamu_waktu_checkout (waktu_checkout),
+  KEY fk_tamu_pendidikan (pendidikan_terakhir_id),
+  KEY fk_tamu_profesi (profesi_id),
+  KEY fk_tamu_bidang (bidang_tujuan_id),
+  KEY fk_tamu_tujuan (tujuan_kunjungan_id),
+  CONSTRAINT fk_tamu_pendidikan FOREIGN KEY (pendidikan_terakhir_id) REFERENCES pendidikan_terakhir (id) ON DELETE SET NULL,
+  CONSTRAINT fk_tamu_profesi FOREIGN KEY (profesi_id) REFERENCES profesi (id) ON DELETE SET NULL,
+  CONSTRAINT fk_tamu_bidang FOREIGN KEY (bidang_tujuan_id) REFERENCES bidang_tujuan (id) ON DELETE SET NULL,
+  CONSTRAINT fk_tamu_tujuan FOREIGN KEY (tujuan_kunjungan_id) REFERENCES tujuan_kunjungan (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Table for survey sections
-CREATE TABLE IF NOT EXISTS section_survei (
-  id int(11) NOT NULL AUTO_INCREMENT,
-  nama_section varchar(255) NOT NULL,
-  urutan int(11) DEFAULT 1,
-  PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Table for survey questions
+-- Table for survey questions with baris and kolom fields
 CREATE TABLE IF NOT EXISTS pertanyaan_survei (
   id int(11) NOT NULL AUTO_INCREMENT,
   section_id int(11) DEFAULT NULL,
@@ -59,11 +69,27 @@ CREATE TABLE IF NOT EXISTS pertanyaan_survei (
   jenis_rating_id int(11) DEFAULT NULL,
   is_aktif tinyint(1) DEFAULT 1,
   created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  baris int(11) DEFAULT 1,
+  kolom int(11) DEFAULT 1,
   PRIMARY KEY (id),
   KEY section_id (section_id),
   KEY fk_jenis_rating (jenis_rating_id),
   CONSTRAINT pertanyaan_survei_ibfk_1 FOREIGN KEY (section_id) REFERENCES section_survei (id) ON DELETE SET NULL,
   CONSTRAINT fk_jenis_rating FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table for question-rating association
+CREATE TABLE IF NOT EXISTS pertanyaan_s_jenis_rating (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  pertanyaan_id int(11) NOT NULL,
+  jenis_rating_id int(11) NOT NULL,
+  urutan int(11) DEFAULT 1,
+  is_required tinyint(1) DEFAULT 1,
+  PRIMARY KEY (id),
+  KEY pertanyaan_id (pertanyaan_id),
+  KEY jenis_rating_id (jenis_rating_id),
+  CONSTRAINT fk_ps_pertanyaan FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE,
+  CONSTRAINT fk_ps_jenis_rating FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table for survey answers
@@ -81,9 +107,18 @@ CREATE TABLE IF NOT EXISTS jawaban_survei (
   CONSTRAINT jawaban_survei_ibfk_1 FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Table for rating types
+-- Table for survey sections
+CREATE TABLE IF NOT EXISTS section_survei (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  nama_section varchar(255) NOT NULL,
+  urutan int(11) DEFAULT 1,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table for rating types with tipe field
 CREATE TABLE IF NOT EXISTS jenis_rating (
   id int(11) NOT NULL AUTO_INCREMENT,
+  tipe enum('rating','text') NOT NULL DEFAULT 'rating',
   nama_rating varchar(100) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -97,6 +132,23 @@ CREATE TABLE IF NOT EXISTS opsi_rating (
   PRIMARY KEY (id),
   KEY jenis_rating_id (jenis_rating_id),
   CONSTRAINT opsi_rating_ibfk_1 FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table for survey respondent identity
+CREATE TABLE IF NOT EXISTS jawaban_identitas_survei (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  nama_lengkap varchar(100) DEFAULT NULL,
+  jenis_kelamin enum('Laki-laki','Perempuan') DEFAULT NULL,
+  pendidikan_terakhir_id int(11) DEFAULT NULL,
+  profesi_id int(11) DEFAULT NULL,
+  instansi varchar(100) DEFAULT NULL,
+  jenis_layanan_id int(11) DEFAULT NULL,
+  saran text DEFAULT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY fk_tujuan_responden (jenis_layanan_id),
+  CONSTRAINT fk_pendidikan_responden FOREIGN KEY (pendidikan_terakhir_id) REFERENCES pendidikan_terakhir (id) ON DELETE SET NULL,
+  CONSTRAINT fk_profesi_responden FOREIGN KEY (profesi_id) REFERENCES profesi (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table for education level
@@ -136,86 +188,110 @@ CREATE TABLE IF NOT EXISTS tujuan_kunjungan (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default admin user (password: dummy123)
-INSERT INTO admin (username, password, nama_lengkap, email, is_super_admin) 
-VALUES ('dummy123', '$2y$10$0bBOPUT8Vp6.2dG7K7VPvOdoBtkE.TC3PZHP2SqaWrJmTO7ttf5/y', 'Admin Dummy', 'dummy@example.com', 1);
+-- Table for login attempts
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  username varchar(50) DEFAULT NULL,
+  ip_address varchar(50) DEFAULT NULL,
+  user_agent text DEFAULT NULL,
+  success tinyint(1) DEFAULT NULL,
+  failure_reason varchar(255) DEFAULT NULL,
+  attempt_time timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default data for bidang_tujuan
-INSERT INTO bidang_tujuan (bidang) VALUES
-('Sekretariat'),
-('Bidang Pelatihan Kerja'),
-('Bidang Penempatan Tenaga Kerja'),
-('Bidang Hubungan Industrial'),
-('Bidang Norma Kerja'),
-('Bidang Transmigrasi'),
-('Kepala Dinas');
+-- Table for account unlock logs
+CREATE TABLE IF NOT EXISTS unlock_log (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  admin_id int(11) DEFAULT NULL,
+  admin_username varchar(50) DEFAULT NULL,
+  unlocked_by int(11) DEFAULT NULL,
+  unlock_time timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY fk_unlocked_admin (admin_id),
+  KEY fk_unlocked_by (unlocked_by),
+  CONSTRAINT fk_unlocked_admin FOREIGN KEY (admin_id) REFERENCES admin (id) ON DELETE SET NULL,
+  CONSTRAINT fk_unlocked_by FOREIGN KEY (unlocked_by) REFERENCES admin (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default data for section_survei
-INSERT INTO section_survei (nama_section, urutan) VALUES
-('Section 1', 1),
-('Section 2', 2),
-('Section 3', 3),
-('Section 4', 4),
-('Section 5', 5);
+-- Table for guest tokens
+CREATE TABLE IF NOT EXISTS tamu_token (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  tamu_id int(11) NOT NULL,
+  token varchar(255) NOT NULL,
+  tipe enum('verifikasi','reset') NOT NULL DEFAULT 'verifikasi',
+  expires_at timestamp NOT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY fk_token_tamu (tamu_id),
+  CONSTRAINT fk_token_tamu FOREIGN KEY (tamu_id) REFERENCES daftar_tamu (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default data for pertanyaan_survei
-INSERT INTO pertanyaan_survei (section_id, urutan, pertanyaan, jenis_rating_id, is_aktif) VALUES
-(1, 1, 'Rating Keseluruhan', 1, 1),
-(1, 2, 'Rating Pelayanan Staff', 1, 1),
-(2, 1, 'Rating Fasilitas', 1, 1),
-(2, 2, 'Rating Kecepatan Layanan', 1, 1),
-(3, 1, 'Apakah Anda akan merekomendasikan pelayanan DISNAKERTRANS Jateng?', 2, 1),
-(4, 1, 'Bagaimana penilaian Anda terhadap kecepatan pelayanan?', 2, 1),
-(5, 1, 'Saran Perbaikan', 3, 1);
+-- Table for memperoleh informasi options
+CREATE TABLE IF NOT EXISTS memperoleh_informasi (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  nama_opsi varchar(255) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default data for jenis_rating
-INSERT INTO jenis_rating (nama_rating) VALUES
-('Skala 5'),
-('Skala 3'),
-('Text');
+-- Table for mendapatkan salinan options
+CREATE TABLE IF NOT EXISTS mendapatkan_salinan (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  nama_opsi varchar(255) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default data for opsi_rating
-INSERT INTO opsi_rating (jenis_rating_id, skala_rating, urutan_rating) VALUES
-(1, 'Sangat Baik', 1),
-(1, 'Baik', 2),
-(1, 'Cukup', 3),
-(1, 'Kurang', 4),
-(1, 'Sangat Kurang', 5),
-(2, 'Memuaskan', 1),
-(2, 'Cukup', 2),
-(2, 'Kurang Memuaskan', 3);
+-- Table for jawaban memperoleh informasi
+CREATE TABLE IF NOT EXISTS jawaban_memperoleh_informasi (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  tamu_id int(11) NOT NULL,
+  cara_memperoleh_id int(11) NOT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY fk_jmi_tamu (tamu_id),
+  KEY cara_memperoleh_id (cara_memperoleh_id),
+  CONSTRAINT fk_jmi_tamu FOREIGN KEY (tamu_id) REFERENCES daftar_tamu (id) ON DELETE CASCADE,
+  CONSTRAINT fk_jmi_cara FOREIGN KEY (cara_memperoleh_id) REFERENCES memperoleh_informasi (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default data for pendidikan_terakhir
-INSERT INTO pendidikan_terakhir (pendidikan_terakhir) VALUES
-('Tidak Sekolah'),
-('SD / Sederajat'),
-('SMP / Sederajat'),
-('SMA / Sederajat'),
-('Diploma'),
-('Sarjana'),
-('Pascasarjana');
+-- Table for jawaban mendapatkan salinan
+CREATE TABLE IF NOT EXISTS jawaban_mendapatkan_salinan (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  tamu_id int(11) NOT NULL,
+  cara_salinan_id int(11) NOT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY fk_jms_tamu (tamu_id),
+  KEY cara_salinan_id (cara_salinan_id),
+  CONSTRAINT fk_jms_tamu FOREIGN KEY (tamu_id) REFERENCES daftar_tamu (id) ON DELETE CASCADE,
+  CONSTRAINT fk_jms_cara FOREIGN KEY (cara_salinan_id) REFERENCES mendapatkan_salinan (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Default data for profesi
-INSERT INTO profesi (nama_profesi) VALUES
-('PNS'),
-('Wiraswasta'),
-('Karyawan Swasta'),
-('Guru/Dosen'),
-('TNI/Polri'),
-('Dokter/Nakes'),
-('Petani'),
-('Buruh'),
-('Pengacara'),
-('Konsultan'),
-('Pelajar/Mahasiswa'),
-('Tidak Bekerja'),
-('Lainnya');
+-- Triggers for guest status updates
+DELIMITER $$
 
--- Default data for tujuan_kunjungan
-INSERT INTO tujuan_kunjungan (tujuan) VALUES
-('Konsultasi Layanan'),
-('Pengaduan/Keluhan'),
-('Pengajuan Permohonan'),
-('Mencari Informasi'),
-('Meeting/Rapat'),
-('Survey/Penelitian');
+CREATE TRIGGER set_datang BEFORE UPDATE ON daftar_tamu
+FOR EACH ROW
+BEGIN
+    IF NEW.waktu_checkin IS NOT NULL AND OLD.waktu_checkin IS NULL THEN
+        SET NEW.status = 'Datang';
+    END IF;
+END$$
+
+CREATE TRIGGER set_selesai BEFORE UPDATE ON daftar_tamu
+FOR EACH ROW
+BEGIN
+    IF NEW.waktu_checkout IS NOT NULL AND OLD.waktu_checkout IS NULL THEN
+        SET NEW.status = 'Selesai';
+    END IF;
+END$$
+
+CREATE TRIGGER set_terjadwal BEFORE UPDATE ON daftar_tamu
+FOR EACH ROW
+BEGIN
+    IF NEW.jadwal_checkin IS NOT NULL AND OLD.jadwal_checkin IS NULL THEN
+        SET NEW.status = 'Terjadwal';
+    END IF;
+END$$
+
+DELIMITER ;

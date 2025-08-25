@@ -5,10 +5,10 @@ export async function seed() {
   const jenisRatingCount = await executeQuery<any[]>('SELECT COUNT(*) as count FROM jenis_rating');
   
   if (jenisRatingCount[0].count === 0) {
-    // Insert jenis_rating data
-    await executeQuery(`INSERT INTO jenis_rating (nama_rating) VALUES ('Skala 5')`);
-    await executeQuery(`INSERT INTO jenis_rating (nama_rating) VALUES ('Skala 3')`);
-    await executeQuery(`INSERT INTO jenis_rating (nama_rating) VALUES ('Text')`);
+    // Insert jenis_rating data with tipe field
+    await executeQuery(`INSERT INTO jenis_rating (tipe, nama_rating) VALUES ('rating', 'Skala 5')`);
+    await executeQuery(`INSERT INTO jenis_rating (tipe, nama_rating) VALUES ('rating', 'Skala 3')`);
+    await executeQuery(`INSERT INTO jenis_rating (tipe, nama_rating) VALUES ('text', 'Text')`);
     
     console.log('Jenis Rating seed data inserted successfully');
     

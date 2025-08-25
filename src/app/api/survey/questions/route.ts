@@ -35,12 +35,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { pertanyaan, tipe_pertanyaan, urutan } = body;
+    const { 
+      pertanyaan, 
+      tipe_pertanyaan, 
+      jenis_rating_id, 
+      status = true,
+      is_required = true
+    } = body;
     
-    // Default section_id = 1 if not provided
-    const sectionId = 1;
-    
-    const questionId = await addQuestion(sectionId, urutan, pertanyaan, tipe_pertanyaan);
+    // Add question with new parameters
+    const questionId = await addQuestion(
+      pertanyaan, 
+      tipe_pertanyaan,
+      jenis_rating_id,
+      is_required
+    );
     
     return NextResponse.json({
       success: true,
@@ -50,7 +59,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error adding survey question:', error);
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: `Error adding question: ${error.message}` },
       { status: 500 }
     );
   }

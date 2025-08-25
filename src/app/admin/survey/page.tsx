@@ -7,10 +7,10 @@ interface SurveyQuestion {
   id?: number;
   pertanyaan: string;
   tipe_pertanyaan: 'rating' | 'text';
-  urutan: number;
   status: boolean;
-  placeholder?: string;
   jenis_rating_id?: number;
+  is_required?: boolean;
+  urutan?: number;
 }
 
 interface SurveyStatistics {
@@ -20,6 +20,7 @@ interface SurveyStatistics {
   textQuestions: number;
   totalResponses: number;
   averageRating: number;
+  completionRate: number;
   statistics: any[];
 }
 
@@ -36,14 +37,14 @@ export default function AdminSurvey() {
     textQuestions: 0,
     totalResponses: 0,
     averageRating: 0,
+    completionRate: 0,
     statistics: []
   });
-  const [newQuestion, setNewQuestion] = useState({
+  const [newQuestion, setNewQuestion] = useState<SurveyQuestion>({
     pertanyaan: '',
-    tipe_pertanyaan: 'rating' as 'rating' | 'text',
-    urutan: 0,
+    tipe_pertanyaan: 'rating',
     status: true,
-    placeholder: ''
+    is_required: true
   });
 
   // Dummy survey responses
@@ -122,13 +123,29 @@ export default function AdminSurvey() {
           tipe_pertanyaan: q.tipe_jawaban === 'rating' ? 'rating' : 'text',
           urutan: q.urutan,
           status: q.is_aktif,
-          placeholder: q.placeholder || ''
+          jenis_rating_id: q.jenis_rating_id,
+          is_required: q.is_required
         }));
         
         setQuestions(mappedQuestions);
+        
+        // Calculate statistics from the questions
+        const totalQuestions = mappedQuestions.length;
+        const activeQuestions = mappedQuestions.filter(q => q.status).length;
+        const ratingQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'rating').length;
+        const textQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'text').length;
+        
+        // Update statistics with question counts
+        setStatistics(prev => ({
+          ...prev,
+          totalQuestions,
+          activeQuestions,
+          ratingQuestions,
+          textQuestions
+        }));
       }
       
-      // Fetch statistics data
+      // Fetch statistics data for response counts and ratings
       const statsResponse = await fetch('/api/survey/statistics');
       if (!statsResponse.ok) {
         throw new Error(`Error fetching statistics: ${statsResponse.statusText}`);
@@ -136,7 +153,13 @@ export default function AdminSurvey() {
       const statsData = await statsResponse.json();
       
       if (statsData.success && statsData.data) {
-        setStatistics(statsData.data);
+        // Merge response statistics with our question counts
+        setStatistics(prev => ({
+          ...prev,
+          totalResponses: statsData.data.totalResponses || 0,
+          averageRating: statsData.data.averageRating || 0,
+          statistics: statsData.data.statistics || []
+        }));
       }
     } catch (error) {
       console.error("Error fetching survey data:", error);
@@ -151,10 +174,10 @@ export default function AdminSurvey() {
       const requestBody = {
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan,
-        urutan: question.urutan || questions.length + 1,
         // Map our tipe_pertanyaan to the API's expected format
         tipe_jawaban: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
-        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined
+        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        is_required: question.is_required
       };
       
       const response = await fetch('/api/survey/questions', {
@@ -176,9 +199,8 @@ export default function AdminSurvey() {
       setNewQuestion({
         pertanyaan: '',
         tipe_pertanyaan: 'rating',
-        urutan: 0,
         status: true,
-        placeholder: ''
+        is_required: true
       });
       
       setShowAddQuestion(false);
@@ -293,12 +315,12 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm">Total Pertanyaan</p>
-                  <p className="text-2xl font-bold">{statistics.totalQuestions}</p>
+                  <p className="text-blue-100 text-sm">Total Responden</p>
+                  <p className="text-2xl font-bold">{statistics.totalResponses}</p>
                 </div>
                 <div className="bg-blue-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -307,12 +329,12 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm">Pertanyaan Aktif</p>
-                  <p className="text-2xl font-bold">{statistics.activeQuestions}</p>
+                  <p className="text-green-100 text-sm">Rata-rata Rating</p>
+                  <p className="text-2xl font-bold">{statistics.averageRating.toFixed(1)}</p>
                 </div>
                 <div className="bg-green-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 </div>
               </div>
@@ -321,12 +343,12 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm">Rating Questions</p>
-                  <p className="text-2xl font-bold">{statistics.ratingQuestions}</p>
+                  <p className="text-purple-100 text-sm">Tingkat Penyelesaian</p>
+                  <p className="text-2xl font-bold">{statistics.completionRate || 0}%</p>
                 </div>
                 <div className="bg-purple-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -335,8 +357,8 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm">Text Questions</p>
-                  <p className="text-2xl font-bold">{statistics.textQuestions}</p>
+                  <p className="text-orange-100 text-sm">Pertanyaan Aktif</p>
+                  <p className="text-2xl font-bold">{statistics.activeQuestions}/{statistics.totalQuestions}</p>
                 </div>
                 <div className="bg-orange-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -479,19 +501,17 @@ export default function AdminSurvey() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-blue-600">{statistics.totalResponses}</p>
-                    <p className="text-sm text-gray-600">Total Respon</p>
+                    <p className="text-sm text-gray-600">Total Responden</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">{statistics.averageRating}</p>
+                    <p className="text-2xl font-bold text-green-600">{statistics.averageRating.toFixed(1)}</p>
                     <p className="text-sm text-gray-600">Rata-rata Rating</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">
-                      {statistics.totalQuestions > 0 
-                        ? `${Math.round((statistics.totalResponses / statistics.totalQuestions) * 100)}%` 
-                        : '0%'}
+                      {statistics.completionRate}%
                     </p>
-                    <p className="text-sm text-gray-600">Tingkat Respon</p>
+                    <p className="text-sm text-gray-600">Tingkat Penyelesaian</p>
                   </div>
                 </div>
               </div>
