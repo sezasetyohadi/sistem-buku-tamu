@@ -333,12 +333,27 @@ export default function AdminSurvey() {
     }
   };
 
+  // Fungsi untuk toggle status aktif/nonaktif
   const toggleQuestionStatus = async (question: SurveyQuestion) => {
     try {
-      const updatedQuestion = { ...question, status: !question.status };
-      await handleEditQuestion(updatedQuestion);
+      // Kirim request ke API untuk update status
+      await fetch(`/api/survey/questions/${question.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...question,
+          is_aktif: !question.status, // status baru
+        }),
+      });
+
+      // Update state lokal agar UI langsung berubah
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === question.id ? { ...q, status: !q.status } : q
+        )
+      );
     } catch (error) {
-      console.error('Error toggling question status:', error);
+      alert('Gagal mengubah status pertanyaan');
     }
   };
   
