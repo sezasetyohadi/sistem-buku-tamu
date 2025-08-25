@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import SurveyQuestionModal from "@/components/admin/SurveyQuestionModal";
+import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import QuestionOrderModal from "@/components/admin/QuestionOrderModal";
 
 interface SurveyQuestion {
   id?: number;
@@ -11,6 +13,8 @@ interface SurveyQuestion {
   jenis_rating_id?: number;
   is_required?: boolean;
   urutan?: number;
+  baris?: number;
+  kolom?: number;
 }
 
 interface SurveyStatistics {
@@ -30,6 +34,11 @@ export default function AdminSurvey() {
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
   const [activeTab, setActiveTab] = useState<'questions' | 'responses'>('questions');
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<SurveyQuestion | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const [statistics, setStatistics] = useState<SurveyStatistics>({
     totalQuestions: 0,
     activeQuestions: 0,
@@ -220,11 +229,14 @@ export default function AdminSurvey() {
       // Create a request body that matches the API expectations
       const requestBody = {
         id: question.id,
-        section_id: 1, // Default section
-        urutan: question.urutan,
+        urutan: question.urutan || 1,
+        baris: question.baris || 1,
+        kolom: question.kolom || question.urutan || 1,
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
-        is_aktif: question.status
+        is_aktif: question.status,
+        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        is_required: question.is_required
       };
       
       const response = await fetch(`/api/survey/questions/${question.id}`, {
@@ -248,28 +260,76 @@ export default function AdminSurvey() {
     }
   };
 
-  const handleDeleteQuestion = async (id: number | undefined) => {
+  const openDeleteConfirmation = async (question: SurveyQuestion) => {
+    // If we have the full question details, use it
+    if (question.pertanyaan) {
+      setQuestionToDelete(question);
+      setDeleteConfirmationOpen(true);
+      return;
+    }
+    
+    // Otherwise fetch the question details first
+    try {
+      const response = await fetch(`/api/survey/questions/${question.id}`);
+      if (!response.ok) {
+        throw new Error(`Error fetching question: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      if (data.success && data.data) {
+        // Map from API format to our component format
+        const fullQuestion: SurveyQuestion = {
+          id: data.data.id,
+          pertanyaan: data.data.pertanyaan,
+          tipe_pertanyaan: data.data.tipe_jawaban === 'rating' ? 'rating' : 'text',
+          urutan: data.data.urutan,
+          status: data.data.is_aktif,
+          jenis_rating_id: data.data.jenis_rating_id,
+          is_required: data.data.is_required
+        };
+        
+        setQuestionToDelete(fullQuestion);
+      } else {
+        // Fallback if we can't get the details
+        setQuestionToDelete(question);
+      }
+    } catch (error) {
+      console.error("Error fetching question details:", error);
+      // Fallback to using the question we have
+      setQuestionToDelete(question);
+    } finally {
+      setDeleteConfirmationOpen(true);
+    }
+  };
+
+  const handleDeleteQuestion = async () => {
+    const id = questionToDelete?.id;
     if (!id) {
       console.error('Cannot delete question without ID');
       return;
     }
     
-    if (confirm('Apakah Anda yakin ingin menghapus pertanyaan ini?')) {
-      try {
-        const response = await fetch(`/api/survey/questions/${id}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error deleting question: ${response.statusText}`);
-        }
-        
-        // Refresh the data after successful deletion
-        await fetchSurveyData();
-      } catch (error) {
-        console.error('Error deleting question:', error);
-        alert('Gagal menghapus pertanyaan. Silakan coba lagi.');
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`/api/survey/questions/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error deleting question: ${response.statusText}`);
       }
+      
+      // Close modal
+      setDeleteConfirmationOpen(false);
+      setQuestionToDelete(null);
+      
+      // Refresh the data after successful deletion
+      await fetchSurveyData();
+    } catch (error) {
+      console.error('Error deleting question:', error);
+      alert('Gagal menghapus pertanyaan. Silakan coba lagi.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -279,6 +339,47 @@ export default function AdminSurvey() {
       await handleEditQuestion(updatedQuestion);
     } catch (error) {
       console.error('Error toggling question status:', error);
+    }
+  };
+  
+  const handleSaveQuestionOrder = async (reorderedQuestions: any[]) => {
+    try {
+      setIsReordering(true);
+      
+      // Create a batch of update promises
+      const updatePromises = reorderedQuestions.map(question => {
+        if (!question.id) return Promise.resolve();
+        
+        // Create a request body for each question's order update
+        const requestBody = {
+          id: question.id,
+          urutan: question.urutan,
+          baris: question.baris || 1,
+          kolom: question.kolom || question.urutan,
+          pertanyaan: question.pertanyaan,
+          tipe_pertanyaan: (question.tipe_pertanyaan === 'rating' || question.tipe_jawaban === 'rating') ? 'rating' : 'teks',
+          is_aktif: question.status !== undefined ? question.status : question.is_aktif
+        };
+        
+        return fetch(`/api/survey/questions/${question.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+      });
+      
+      // Wait for all updates to complete
+      await Promise.all(updatePromises);
+      
+      // Refresh data
+      await fetchSurveyData();
+    } catch (error) {
+      console.error('Error saving question order:', error);
+      alert('Gagal menyimpan urutan pertanyaan. Silakan coba lagi.');
+    } finally {
+      setIsReordering(false);
     }
   };
 
@@ -425,6 +526,19 @@ export default function AdminSurvey() {
                 </div>
               </div>
 
+              {/* Question management buttons */}
+              <div className="flex justify-end mb-4">
+                <button 
+                  onClick={() => setOrderModalOpen(true)}
+                  className="flex items-center bg-blue-100 text-blue-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+                  </svg>
+                  Edit Urutan
+                </button>
+              </div>
+
               {/* Questions List */}
               <div className="space-y-3">
                 {Array.isArray(questions) && questions.length > 0 ? (
@@ -471,7 +585,7 @@ export default function AdminSurvey() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDeleteQuestion(question.id)}
+                          onClick={() => openDeleteConfirmation(question)}
                           className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
                         >
                           Hapus
@@ -561,12 +675,42 @@ export default function AdminSurvey() {
             </div>
           )}
 
-          {/* Survey Question Modal */}
+          {/* Question Modals */}
           <SurveyQuestionModal 
             isOpen={showAddQuestion} 
             onClose={() => setShowAddQuestion(false)}
             onAddQuestion={handleAddQuestion}
             initialQuestion={newQuestion}
+          />
+          
+          <SurveyQuestionModal 
+            isOpen={Boolean(editingQuestion)} 
+            onClose={() => setEditingQuestion(null)}
+            onAddQuestion={handleEditQuestion}
+            initialQuestion={editingQuestion || undefined}
+            isEditMode={true}
+          />
+
+          {/* Delete Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={deleteConfirmationOpen}
+            onClose={() => setDeleteConfirmationOpen(false)}
+            onConfirm={handleDeleteQuestion}
+            title="Konfirmasi Hapus Data"
+            message="Apakah Anda yakin ingin menghapus pertanyaan ini dari daftar?"
+            itemName={questionToDelete?.pertanyaan || "pertanyaan ini"}
+            confirmButtonText="Ya, Hapus Data"
+            cancelButtonText="Batal"
+            isLoading={isDeleting}
+          />
+          
+          {/* Question Order Modal */}
+          <QuestionOrderModal
+            isOpen={orderModalOpen}
+            onClose={() => setOrderModalOpen(false)}
+            onSaveOrder={handleSaveQuestionOrder}
+            questions={questions}
+            isLoading={isReordering}
           />
         </div>
       </div>

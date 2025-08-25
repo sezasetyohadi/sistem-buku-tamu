@@ -39,7 +39,7 @@ export interface SurveyAnswer {
 
 // SQL queries for survey functionality
 export const SURVEY_QUERIES = {
-  // Get all active questions organized by rows and columns
+  // Get all questions organized by rows and columns (including inactive)
   GET_ALL_QUESTIONS_BY_LAYOUT: `
     SELECT 
       ps.id, ps.baris, ps.kolom, ps.pertanyaan, 
@@ -51,11 +51,10 @@ export const SURVEY_QUERIES = {
       pjr.is_required, pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
-    WHERE ps.is_aktif = 1
     ORDER BY ps.baris, ps.kolom
   `,
   
-  // Get all active questions
+  // Get all questions (both active and inactive)
   GET_ALL_QUESTIONS: `
     SELECT 
       ps.id, ps.baris, ps.kolom, ps.pertanyaan, 
@@ -67,7 +66,6 @@ export const SURVEY_QUERIES = {
       pjr.is_required, pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
-    WHERE ps.is_aktif = 1
     ORDER BY ps.baris, ps.kolom
   `,
   
@@ -129,7 +127,7 @@ export const SURVEY_QUERIES = {
     VALUES (?, ?, ?, ?, ?, ?)
   `,
   
-  // Get survey statistics
+  // Get survey statistics (including inactive questions)
   GET_SURVEY_STATISTICS: `
     SELECT 
       ps.id, ps.pertanyaan,
@@ -142,7 +140,7 @@ export const SURVEY_QUERIES = {
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     LEFT JOIN jawaban_survei js ON ps.id = js.pertanyaan_id
-    WHERE ps.is_aktif = 1 AND (pjr.jenis_rating_id != 3 OR pjr.jenis_rating_id IS NULL)
+    WHERE (pjr.jenis_rating_id != 3 OR pjr.jenis_rating_id IS NULL)
     GROUP BY ps.id, ps.pertanyaan, pjr.jenis_rating_id
     ORDER BY ps.baris, ps.kolom
   `,

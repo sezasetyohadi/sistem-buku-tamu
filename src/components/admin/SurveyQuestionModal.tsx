@@ -16,6 +16,9 @@ interface SurveyQuestion {
   status: boolean;
   jenis_rating_id?: number;
   is_required?: boolean;
+  urutan?: number;
+  baris?: number;
+  kolom?: number;
 }
 
 interface SurveyQuestionModalProps {
@@ -123,14 +126,22 @@ export default function SurveyQuestionModal({
       // Call parent handler
       await onAddQuestion(questionData);
       
-      // Reset form and close modal
-      setQuestionData({
-        pertanyaan: '',
-        tipe_pertanyaan: 'rating',
-        status: true,
-        jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined,
-        is_required: true
-      });
+      // Reset form if not in edit mode
+      if (!isEditMode) {
+        setQuestionData({
+          pertanyaan: '',
+          tipe_pertanyaan: 'rating',
+          status: true,
+          jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined,
+          is_required: true
+        });
+      }
+      
+      // Show success message
+      toast.success(isEditMode 
+        ? 'Pertanyaan berhasil diperbarui!' 
+        : 'Pertanyaan berhasil ditambahkan!'
+      );
       
       onClose();
     } catch (error) {
@@ -398,7 +409,7 @@ export default function SurveyQuestionModal({
               isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
-            {isSubmitting ? 'Menyimpan...' : isEditMode ? 'Simpan' : 'Tambah Pertanyaan'}
+            {isSubmitting ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Tambah Pertanyaan'}
           </button>
         </div>
       </div>

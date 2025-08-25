@@ -10,7 +10,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = params;
+    const questionId = parseInt(id);
     const body = await request.json();
     const { 
       pertanyaan, 
@@ -52,7 +54,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = params;
+    const questionId = parseInt(id);
     
     await deleteQuestion(questionId);
     
@@ -74,7 +78,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = params;
+    const questionId = parseInt(id);
     
     const question = await getQuestionById(questionId);
     
