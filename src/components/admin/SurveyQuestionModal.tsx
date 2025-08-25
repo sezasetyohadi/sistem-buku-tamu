@@ -46,6 +46,8 @@ export default function SurveyQuestionModal({
     jenis_rating_id: undefined,
     is_required: true
   });
+  const [extraAnswers, setExtraAnswers] = useState<
+  { tipe: 'rating' | 'text'; jenis_rating_id?: number }[]>([]);
 
   // Fetch rating types when modal is opened or question type changes
   useEffect(() => {
@@ -141,6 +143,13 @@ export default function SurveyQuestionModal({
     }
   };
 
+  const handleAddExtraAnswer = () => {
+    setExtraAnswers([
+      ...extraAnswers,
+      { tipe: 'rating', jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined }
+    ]);
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -223,125 +232,95 @@ export default function SurveyQuestionModal({
               </div>
             )}
           </div>
-          
-          {/* Add new answer type button */}
-          <div className="flex justify-center mt-3">
+
+{/* Tambah Jenis Jawaban di bawah grid (tetap tampil meski sudah diklik) */}
+{questionData.tipe_pertanyaan === 'rating' && (
+  <div className="mt-4">
+    {/* Render semua extraAnswers */}
+    <div className="space-y-4">
+      {extraAnswers.map((ans, idx) => (
+        <div key={idx} className="grid grid-cols-2 gap-4 items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipe Jawaban
+            </label>
+            <select
+              value={ans.tipe}
+              onChange={e => {
+                const tipe = e.target.value as 'rating' | 'text';
+                setExtraAnswers(list =>
+                  list.map((item, i) =>
+                    i === idx
+                      ? { ...item, tipe, jenis_rating_id: tipe === 'rating' ? ratingTypes[0]?.id : undefined }
+                      : item
+                  )
+                );
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="rating">Rating</option>
+              <option value="text">Text</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            {ans.tipe === 'rating' && (
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenis Rating
+                </label>
+                <select
+                  value={ans.jenis_rating_id || ''}
+                  onChange={e =>
+                    setExtraAnswers(list =>
+                      list.map((item, i) =>
+                        i === idx
+                          ? { ...item, jenis_rating_id: parseInt(e.target.value) || undefined }
+                          : item
+                      )
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {ratingTypes.length === 0 ? (
+                    <option>Tidak ada jenis rating</option>
+                  ) : (
+                    ratingTypes
+                      .filter(type => type.tipe === 'rating')
+                      .map(type => (
+                        <option key={type.id} value={type.id}>
+                          {type.nama_rating}
+                        </option>
+                      ))
+                  )}
+                </select>
+              </div>
+            )}
+            {/* Tombol hapus */}
             <button
               type="button"
-              onClick={() => setShowNewTypeDialog(true)}
-              className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={() =>
+                setExtraAnswers(list => list.filter((_, i) => i !== idx))
+              }
+              className="h-10 w-10 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 self-end"
+              title="Hapus"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              Tambah Jenis Jawaban
+              &times;
             </button>
           </div>
+        </div>
+      ))}
+    </div>
+    {/* Tombol selalu di paling bawah */}
+    <button
+      type="button"
+      onClick={handleAddExtraAnswer}
+      className="mt-4 w-full flex items-center justify-center px-3 py-2 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+    >
+      + Tambah Jenis Jawaban
+    </button>
+  </div>
+)}
 
-          {/* New Type Dialog */}
-          {showNewTypeDialog && (
-            <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-sm font-medium text-gray-700">Tambah Jenis Jawaban Baru</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowNewTypeDialog(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="max-h-40 overflow-y-auto space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipe Jawaban
-                  </label>
-                  <select
-                    value={newTypeData.type}
-                    onChange={(e) => setNewTypeData({...newTypeData, type: e.target.value as 'rating' | 'text'})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="rating">Rating</option>
-                    <option value="text">Text</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nama {newTypeData.type === 'rating' ? 'Rating' : 'Teks'}
-                  </label>
-                  <input
-                    type="text"
-                    value={newTypeData.name}
-                    onChange={(e) => setNewTypeData({...newTypeData, name: e.target.value})}
-                    placeholder={`Masukkan nama ${newTypeData.type === 'rating' ? 'rating' : 'teks'} baru`}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                {newTypeData.type === 'rating' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Jenis Rating
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="border border-gray-300 rounded p-2 hover:bg-gray-50 cursor-pointer">
-                        <div className="flex justify-center">
-                          <span className="text-yellow-500">★★★★★</span>
-                        </div>
-                        <p className="text-xs text-center mt-1">Bintang</p>
-                      </div>
-                      <div className="border border-gray-300 rounded p-2 hover:bg-gray-50 cursor-pointer">
-                        <div className="flex justify-center">
-                          <span className="text-blue-500">1-2-3-4-5</span>
-                        </div>
-                        <p className="text-xs text-center mt-1">Angka</p>
-                      </div>
-                      <div className="border border-gray-300 rounded p-2 hover:bg-gray-50 cursor-pointer">
-                        <div className="flex justify-center">
-                          <span className="text-green-500">😀😐😔</span>
-                        </div>
-                        <p className="text-xs text-center mt-1">Emoji</p>
-                      </div>
-                      <div className="border border-gray-300 rounded p-2 hover:bg-gray-50 cursor-pointer">
-                        <div className="flex justify-center">
-                          <span className="text-purple-500">Lainnya</span>
-                        </div>
-                        <p className="text-xs text-center mt-1">Kustom</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end mt-4 pt-3 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowNewTypeDialog(false)}
-                  className="mr-2 px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
-                >
-                  Batal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    toast.success(`Jenis ${newTypeData.type === 'rating' ? 'rating' : 'teks'} baru berhasil ditambahkan (simulasi)`);
-                    setShowNewTypeDialog(false);
-                  }}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                >
-                  Simpan
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {/* Removed urutan field as it's now automatically assigned */}
-          
-          {/* Placeholder field removed */}
 
           <div className="mt-4">
             <div className="mb-3">
