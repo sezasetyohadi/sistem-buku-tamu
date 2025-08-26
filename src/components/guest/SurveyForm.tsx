@@ -11,6 +11,7 @@ interface SurveyQuestion {
   tipe_jawaban?: 'rating' | 'teks';
   tipe_pertanyaan?: 'rating' | 'text';
   ratingOptions?: RatingOption[];
+  is_required?: boolean | number;
 }
 
 interface RatingOption {
@@ -43,6 +44,19 @@ interface GuestIdentity {
   jenis_layanan?: string;
 }
 
+interface LookupOption {
+  id: number;
+  pendidikan_terakhir?: string;
+  nama_profesi?: string;
+  tujuan?: string;
+}
+
+interface LookupData {
+  educationLevels: LookupOption[];
+  professions: LookupOption[];
+  tujuanKunjungan: LookupOption[];
+}
+
 export default function SurveyForm() {
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [ratingOptions, setRatingOptions] = useState<RatingOption[]>([]);
@@ -54,6 +68,11 @@ export default function SurveyForm() {
   const [guestIdentity, setGuestIdentity] = useState<GuestIdentity | null>(null);
   const [surveyDate, setSurveyDate] = useState('');
   const [focusedDropdowns, setFocusedDropdowns] = useState<{[key: string]: boolean}>({});
+  const [lookupData, setLookupData] = useState<LookupData>({
+    educationLevels: [],
+    professions: [],
+    tujuanKunjungan: []
+  });
 
   const handleDropdownMouseDown = (key: string) => {
     setFocusedDropdowns(prev => ({
@@ -79,6 +98,7 @@ export default function SurveyForm() {
 
   useEffect(() => {
     fetchSurveyData();
+    fetchLookupData();
     // Set current date for survey
     const currentDate = new Date();
     setSurveyDate(currentDate.toLocaleDateString('id-ID', {
@@ -108,8 +128,8 @@ export default function SurveyForm() {
 
   const fetchSurveyData = async () => {
     try {
-      // Fetch questions
-      const questionsResponse = await fetch('/api/survey/questions');
+      // Fetch questions with guest parameter to get only active questions
+      const questionsResponse = await fetch('/api/survey/questions?for_guest=true');
       const questionsData = await questionsResponse.json();
 
       // Fetch rating options
@@ -127,6 +147,23 @@ export default function SurveyForm() {
       console.error('Error fetching survey data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLookupData = async () => {
+    try {
+      const response = await fetch('/api/lookup');
+      const data = await response.json();
+
+      if (data.success) {
+        setLookupData({
+          educationLevels: data.data.educationLevels || [],
+          professions: data.data.professions || [],
+          tujuanKunjungan: data.data.tujuanKunjungan || []
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching lookup data:', error);
     }
   };
 
@@ -167,6 +204,14 @@ export default function SurveyForm() {
     setSubmitting(true);
 
     try {
+      // Validate identity data
+      if (!guestIdentity?.nama || !guestIdentity?.email || !guestIdentity?.nomor_telp || 
+          !guestIdentity?.jenis_kelamin || !guestIdentity?.tanggal_lahir || !guestIdentity?.alamat ||
+          !guestIdentity?.pendidikan_terakhir || !guestIdentity?.pekerjaan_utama || !guestIdentity?.jenis_layanan) {
+        alert('Mohon lengkapi semua data identitas responden');
+        return;
+      }
+
       // Convert responses to the format expected by the API
       const answers = responses.map(response => ({
         pertanyaan_id: response.pertanyaan_id,
@@ -179,6 +224,17 @@ export default function SurveyForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          identity: {
+            nama_lengkap: guestIdentity.nama,
+            jenis_kelamin: guestIdentity.jenis_kelamin,
+            tanggal_lahir: guestIdentity.tanggal_lahir,
+            alamat: guestIdentity.alamat,
+            email: guestIdentity.email,
+            nomor_telp: guestIdentity.nomor_telp,
+            pendidikan_terakhir: guestIdentity.pendidikan_terakhir,
+            pekerjaan_utama: guestIdentity.pekerjaan_utama,
+            jenis_layanan: guestIdentity.jenis_layanan
+          },
           answers,
           feedback: feedback.trim(),
         }),
@@ -190,6 +246,22 @@ export default function SurveyForm() {
         setSubmitted(true);
         setResponses([]);
         setFeedback('');
+        // Reset identity form
+        setGuestIdentity({
+          id: 1,
+          nama: '',
+          email: '',
+          nomor_telp: '',
+          tanggal_lahir: '',
+          jenis_kelamin: '',
+          alamat: '',
+          kecamatan: '',
+          kab_kota: '',
+          provinsi: '',
+          pendidikan_terakhir: '',
+          pekerjaan_utama: '',
+          jenis_layanan: ''
+        });
       } else {
         alert('Gagal mengirim survey: ' + (result.message || 'Unknown error'));
       }
@@ -229,6 +301,21 @@ export default function SurveyForm() {
             setSubmitted(false);
             setResponses([]);
             setFeedback('');
+            setGuestIdentity({
+              id: 1,
+              nama: '',
+              email: '',
+              nomor_telp: '',
+              tanggal_lahir: '',
+              jenis_kelamin: '',
+              alamat: '',
+              kecamatan: '',
+              kab_kota: '',
+              provinsi: '',
+              pendidikan_terakhir: '',
+              pekerjaan_utama: '',
+              jenis_layanan: ''
+            });
           }}
           className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
         >
@@ -348,8 +435,8 @@ export default function SurveyForm() {
                       }}
                     >
                       <option value="">Pilih jenis kelamin</option>
-                      <option value="Laki-laki">1. Laki-laki</option>
-                      <option value="Perempuan">2. Perempuan</option>
+                      <option value="Laki-laki">Laki-laki</option>
+                      <option value="Perempuan">Perempuan</option>
                     </select>
                     {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -429,12 +516,11 @@ export default function SurveyForm() {
                       }}
                     >
                       <option value="">Pilih pendidikan terakhir</option>
-                      <option value="SD/Sederajat">1. SD/Sederajat</option>
-                      <option value="SLTP">2. SLTP</option>
-                      <option value="SLTA">3. SLTA</option>
-                      <option value="Diploma (D-1, D-2, D-3)">4. Diploma (D-1, D-2, D-3)</option>
-                      <option value="Sarjana (S-1)">5. Sarjana (S-1)</option>
-                      <option value="Pasca Sarjana (S-2, S-3)">6. Pasca Sarjana (S-2, S-3)</option>
+                      {lookupData.educationLevels.map((education) => (
+                        <option key={education.id} value={education.pendidikan_terakhir}>
+                          {education.pendidikan_terakhir}
+                        </option>
+                      ))}
                     </select>
                     {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -471,14 +557,11 @@ export default function SurveyForm() {
                       }}
                     >
                       <option value="">Pilih pekerjaan utama</option>
-                      <option value="PNS / TNI / Polri">1. PNS / TNI / Polri</option>
-                      <option value="Pensiunan">2. Pensiunan</option>
-                      <option value="Pegawai Swasta">3. Pegawai Swasta</option>
-                      <option value="Wiraswasta">4. Wiraswasta</option>
-                      <option value="Buruh Tani/Bangunan">5. Buruh Tani/Bangunan</option>
-                      <option value="Pelajar/Mahasiswa">6. Pelajar/Mahasiswa</option>
-                      <option value="Tidak Bekerja">7. Tidak Bekerja</option>
-                      <option value="Lainnya, Sebutkan :">8. Lainnya, Sebutkan :</option>
+                      {lookupData.professions.map((profession) => (
+                        <option key={profession.id} value={profession.nama_profesi}>
+                          {profession.nama_profesi}
+                        </option>
+                      ))}
                     </select>
                     {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -515,26 +598,11 @@ export default function SurveyForm() {
                       }}
                     >
                       <option value="">Pilih jenis layanan</option>
-                      <option value="Akreditasi LPKS">1. Akreditasi LPKS</option>
-                      <option value="Uji Kompetensi">2. Uji Kompetensi</option>
-                      <option value="Pendaftaran Magang Jepang">3. Pendaftaran Magang Jepang</option>
-                      <option value="Rekomendasi LPKS yang akan Akreditasi">4. Rekomendasi LPKS yang akan Akreditasi</option>
-                      <option value="Layanan Informasi Program Magang Dalam dan Luar Negeri">5. Layanan Informasi Program Magang Dalam dan Luar Negeri</option>
-                      <option value="Konsultasi Perizinan P3MI">6. Konsultasi Perizinan P3MI</option>
-                      <option value="Konsultasi Perizinan TKA">7. Konsultasi Perizinan TKA</option>
-                      <option value="Konsultasi Perizinan LPTKS">8. Konsultasi Perizinan LPTKS</option>
-                      <option value="Informasi Pasar Kerja dan Bursa Kerja">9. Informasi Pasar Kerja dan Bursa Kerja</option>
-                      <option value="Pengesahan Peraturan Perusahaan">10. Pengesahan Peraturan Perusahaan</option>
-                      <option value="Pendaftaran Perjanjian Kerja Bersama">11. Pendaftaran Perjanjian Kerja Bersama</option>
-                      <option value="Konsultasi dan Rekomendasi Izin Perusahaan Penyedia Jasa Pekerja">12. Konsultasi dan Rekomendasi Izin Perusahaan Penyedia Jasa Pekerja</option>
-                      <option value="Mediasi Hubungan Industrial">13. Mediasi Hubungan Industrial</option>
-                      <option value="Konsultasi Hubungan Industrial">14. Konsultasi Hubungan Industrial</option>
-                      <option value="Wajib Lapor Ketenagakerjaan">15. Wajib Lapor Ketenagakerjaan</option>
-                      <option value="Pengesahan/Konsultasi Kebijakan Keselamatan Kerja & Perhitungan Klaim Jaminan Kecelakaan Kerja & LAHK (K3)">16. Pengesahan/Konsultasi Kebijakan Keselamatan Kerja & Perhitungan Klaim Jaminan Kecelakaan Kerja & LAHK (K3)</option>
-                      <option value="Penelitian Produk Layanan K3">17. Penelitian Produk Layanan K3</option>
-                      <option value="Penanganan Kasus Ketenagakerjaan">18. Penanganan Kasus Ketenagakerjaan</option>
-                      <option value="Penyidikan Tindak Pidana">19. Penyidikan Tindak Pidana</option>
-                      <option value="Pengesahan Permasalahan Tenaga Kerja">20. Pengesahan Permasalahan Tenaga Kerja</option>
+                      {lookupData.tujuanKunjungan.map((layanan) => (
+                        <option key={layanan.id} value={layanan.tujuan}>
+                          {layanan.tujuan}
+                        </option>
+                      ))}
                     </select>
                     {/* Dropdown arrow with animation */}
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -570,6 +638,11 @@ export default function SurveyForm() {
                       <div key={question.id} className="bg-gray-50 rounded-lg p-6">
                         <p className="text-gray-900 font-medium mb-4">
                           {question.pertanyaan}
+                          {(question.is_required === true || question.is_required === 1) ? (
+                            <span className="text-red-500 ml-1">*</span>
+                          ) : (
+                            <span className="text-gray-500 ml-2 text-sm">(Opsional)</span>
+                          )}
                         </p>
                         
                         {isTextQuestion ? (
@@ -584,7 +657,7 @@ export default function SurveyForm() {
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white text-gray-900 hover:bg-gray-50 focus:bg-white resize-none"
                               rows={4}
                               placeholder="Ketikkan jawaban Anda..."
-                              required
+                              required={question.is_required === true || question.is_required === 1}
                             />
                           </div>
                         ) : (
@@ -603,7 +676,7 @@ export default function SurveyForm() {
                               onMouseDown={() => handleDropdownMouseDown(`question-${question.id}`)}
                               onBlur={() => handleDropdownBlur(`question-${question.id}`)}
                               className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white text-gray-900 appearance-none hover:bg-gray-50 focus:bg-white"
-                              required
+                              required={question.is_required === true || question.is_required === 1}
                             >
                               <option value="">Pilih rating...</option>
                               {question.ratingOptions?.map((option) => {
@@ -651,9 +724,13 @@ export default function SurveyForm() {
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={submitting || responses.length === 0}
+              disabled={submitting || responses.length === 0 || !guestIdentity?.nama || !guestIdentity?.email || !guestIdentity?.nomor_telp || 
+                       !guestIdentity?.jenis_kelamin || !guestIdentity?.tanggal_lahir || !guestIdentity?.alamat ||
+                       !guestIdentity?.pendidikan_terakhir || !guestIdentity?.pekerjaan_utama || !guestIdentity?.jenis_layanan}
               className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-                submitting || responses.length === 0
+                submitting || responses.length === 0 || !guestIdentity?.nama || !guestIdentity?.email || !guestIdentity?.nomor_telp || 
+                !guestIdentity?.jenis_kelamin || !guestIdentity?.tanggal_lahir || !guestIdentity?.alamat ||
+                !guestIdentity?.pendidikan_terakhir || !guestIdentity?.pekerjaan_utama || !guestIdentity?.jenis_layanan
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-green-600 hover:bg-green-700 text-white'
               }`}
@@ -669,9 +746,11 @@ export default function SurveyForm() {
             </button>
           </div>
 
-          {responses.length === 0 && questions.length > 0 && (
+          {(responses.length === 0 || !guestIdentity?.nama || !guestIdentity?.email || !guestIdentity?.nomor_telp || 
+            !guestIdentity?.jenis_kelamin || !guestIdentity?.tanggal_lahir || !guestIdentity?.alamat ||
+            !guestIdentity?.pendidikan_terakhir || !guestIdentity?.pekerjaan_utama || !guestIdentity?.jenis_layanan) && questions.length > 0 && (
             <p className="text-sm text-gray-500 text-center mt-4">
-              Silakan berikan penilaian pada setidaknya satu pertanyaan untuk dapat mengirim survey
+              Silakan lengkapi data identitas dan berikan penilaian pada setidaknya satu pertanyaan untuk dapat mengirim survey
             </p>
           )}
         </form>

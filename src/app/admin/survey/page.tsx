@@ -225,11 +225,14 @@ export default function AdminSurvey() {
     }
     
     try {
+      // Find the original question to preserve its baris value
+      const originalQuestion = questions.find(q => q.id === question.id);
+      
       // Create a request body that matches the API expectations
       const requestBody = {
         id: question.id,
-        urutan: question.urutan || 1,
-        baris: question.baris || 1,
+        urutan: originalQuestion?.urutan || question.urutan || 1,
+        baris: originalQuestion?.baris || question.baris || 1, // Preserve original baris
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
         is_aktif: question.status,
@@ -373,8 +376,8 @@ export default function AdminSurvey() {
           baris: question.baris || 1,
           pertanyaan: question.pertanyaan,
           tipe_pertanyaan: (question.tipe_pertanyaan === 'rating' || question.tipe_jawaban === 'rating') ? 'rating' : 'teks',
-          // Preserve the original status from the database
-          status: originalQuestion?.status !== undefined ? originalQuestion.status : true,
+          // Preserve the original status from the database - use is_aktif field
+          is_aktif: originalQuestion?.status !== undefined ? originalQuestion.status : true,
           jenis_rating_id: question.jenis_rating_id,
           is_required: question.is_required !== undefined ? question.is_required : true
         };
@@ -566,7 +569,7 @@ export default function AdminSurvey() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-base font-medium text-gray-900">
-                            {question.urutan}. {question.pertanyaan}
+                            {question.pertanyaan}
                           </h3>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             question.tipe_pertanyaan === 'rating' 

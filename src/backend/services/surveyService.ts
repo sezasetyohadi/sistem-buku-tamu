@@ -10,6 +10,18 @@ export interface RowWithQuestions {
   questions: QuestionWithRatingOptions[];
 }
 
+export interface SurveyIdentity {
+  nama_lengkap: string;
+  jenis_kelamin: 'Laki-laki' | 'Perempuan';
+  tanggal_lahir: string;
+  alamat: string;
+  email: string;
+  nomor_telp: string;
+  pendidikan_terakhir: string;
+  pekerjaan_utama: string;
+  jenis_layanan: string;
+}
+
 export interface SurveyAnswer {
   pertanyaan_id: number;
   jawaban: number | string;
@@ -29,6 +41,11 @@ export interface SurveyStatistics {
 
 export async function getAllQuestions(): Promise<SurveyQuestion[]> {
   return executeQuery<SurveyQuestion[]>(SURVEY_QUERIES.GET_ALL_QUESTIONS);
+}
+
+// Get only active questions (guest use - for display on survey pages)
+export async function getActiveQuestions(): Promise<SurveyQuestion[]> {
+  return executeQuery<SurveyQuestion[]>(SURVEY_QUERIES.GET_ACTIVE_QUESTIONS);
 }
 
 export async function getQuestionsByLayout(): Promise<RowWithQuestions[]> {
@@ -102,6 +119,100 @@ export async function getRatingTypes(type?: 'rating' | 'text'): Promise<RatingTy
 
 export async function getRatingOptions(ratingTypeId: number): Promise<RatingOption[]> {
   return executeQuery<RatingOption[]>(SURVEY_QUERIES.GET_RATING_OPTIONS_BY_TYPE, [ratingTypeId]);
+}
+
+export async function submitSurveyWithIdentity(
+  identity: SurveyIdentity, 
+  answers: { pertanyaan_id: number; jawaban: number | string }[], 
+  feedback?: string
+): Promise<void> {
+  // Use a transaction to ensure all data is saved consistently
+  await executeQuery('START TRANSACTION');
+  
+  try {
+    // First, insert the identity data and get the respondent ID
+    const identityResult = await executeQuery<any>(
+      `INSERT INTO jawaban_identitas_survei 
+       (nama_lengkap, jenis_kelamin, pendidikan_terakhir_id, profesi_id, instansi, email, nomor_telp, tanggal_lahir, alamat, jenis_layanan_id, saran, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        identity.nama_lengkap,
+        identity.jenis_kelamin,
+        // We need to get the IDs for foreign key relationships
+        await getPendidikanId(identity.pendidikan_terakhir),
+        await getProfesiId(identity.pekerjaan_utama),
+        null, // instansi can be null
+        identity.email,
+        identity.nomor_telp,
+        identity.tanggal_lahir,
+        identity.alamat,
+        await getTujuanKunjunganId(identity.jenis_layanan),
+        feedback || null
+      ]
+    );
+
+    const respondenId = identityResult.insertId;
+
+    // Then insert each survey answer
+    for (const answer of answers) {
+      await executeQuery(
+        `INSERT INTO jawaban_survei 
+         (responden_id, pertanyaan_id, jawaban_numerik, jawaban_text, created_at) 
+         VALUES (?, ?, ?, ?, NOW())`,
+        [
+          respondenId,
+          answer.pertanyaan_id,
+          typeof answer.jawaban === 'number' ? answer.jawaban : null,
+          typeof answer.jawaban === 'string' ? answer.jawaban : null
+        ]
+      );
+    }
+    
+    await executeQuery('COMMIT');
+  } catch (error) {
+    await executeQuery('ROLLBACK');
+    throw error;
+  }
+}
+
+// Helper functions to get IDs for foreign key relationships
+async function getPendidikanId(pendidikan: string): Promise<number | null> {
+  try {
+    const result = await executeQuery<{id: number}[]>(
+      'SELECT id FROM pendidikan_terakhir WHERE pendidikan_terakhir = ?',
+      [pendidikan]
+    );
+    return result.length > 0 ? result[0].id : null;
+  } catch (error) {
+    console.error('Error getting pendidikan ID:', error);
+    return null;
+  }
+}
+
+async function getProfesiId(profesi: string): Promise<number | null> {
+  try {
+    const result = await executeQuery<{id: number}[]>(
+      'SELECT id FROM profesi WHERE nama_profesi = ?',
+      [profesi]
+    );
+    return result.length > 0 ? result[0].id : null;
+  } catch (error) {
+    console.error('Error getting profesi ID:', error);
+    return null;
+  }
+}
+
+async function getTujuanKunjunganId(tujuan: string): Promise<number | null> {
+  try {
+    const result = await executeQuery<{id: number}[]>(
+      'SELECT id FROM tujuan_kunjungan WHERE tujuan = ?',
+      [tujuan]
+    );
+    return result.length > 0 ? result[0].id : null;
+  } catch (error) {
+    console.error('Error getting tujuan kunjungan ID:', error);
+    return null;
+  }
 }
 
 export async function submitSurveyAnswers(answers: SurveyAnswer[]): Promise<void> {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   getAllQuestions,
+  getActiveQuestions,
   getQuestionById,
   addQuestion,
   updateQuestion,
@@ -10,8 +11,11 @@ import { SurveyQuestion } from '@/backend/models/surveyModel';
 
 export async function GET(request: NextRequest) {
   try {
-    // Fetch all active survey questions with their options
-    const questions = await getAllQuestions();
+    const { searchParams } = new URL(request.url);
+    const forGuest = searchParams.get('for_guest') === 'true';
+    
+    // Fetch questions based on context
+    const questions = forGuest ? await getActiveQuestions() : await getAllQuestions();
     
     // For each question, fetch its options
     const questionsWithOptions = await Promise.all(questions.map(async (question: SurveyQuestion) => {

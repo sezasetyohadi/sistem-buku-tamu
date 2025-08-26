@@ -102,10 +102,20 @@ export default function SurveyQuestionModal({
         
         // Set default rating type if available and none is selected
         if (data.data.length > 0 && !questionData.jenis_rating_id) {
-          setQuestionData(prev => ({
-            ...prev,
-            jenis_rating_id: data.data[0].id
-          }));
+          // Find a rating type that matches the current question type
+          const matchingType = data.data.find((rt: RatingType) => rt.tipe === questionData.tipe_pertanyaan);
+          if (matchingType) {
+            setQuestionData(prev => ({
+              ...prev,
+              jenis_rating_id: matchingType.id
+            }));
+          } else if (data.data.length > 0) {
+            // Fallback to first available type
+            setQuestionData(prev => ({
+              ...prev,
+              jenis_rating_id: data.data[0].id
+            }));
+          }
         }
       }
     } catch (error) {
@@ -202,8 +212,8 @@ export default function SurveyQuestionModal({
                   setQuestionData({
                     ...questionData,
                     tipe_pertanyaan: newType,
-                    // If switching to text type, clear the rating type
-                    jenis_rating_id: newType === 'text' ? undefined : questionData.jenis_rating_id
+                    // Keep the rating type for both rating and text types
+                    // Only clear if no suitable rating type is available for the new type
                   });
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -213,8 +223,8 @@ export default function SurveyQuestionModal({
               </select>
             </div>
             
-            {/* Show jenis rating dropdown only for rating question types */}
-            {questionData.tipe_pertanyaan === 'rating' && (
+            {/* Show jenis rating dropdown for both rating and text question types */}
+            {(questionData.tipe_pertanyaan === 'rating') && (
               <div>
                 <label htmlFor="jenis_rating_id" className="block text-sm font-medium text-gray-700 mb-1">
                   Jenis Rating
@@ -234,7 +244,7 @@ export default function SurveyQuestionModal({
                   ) : ratingTypes.length === 0 ? (
                     <option>Tidak ada jenis rating</option>
                   ) : (
-                    ratingTypes.filter(type => type.tipe === 'rating').map(type => (
+                    ratingTypes.filter(type => type.tipe === questionData.tipe_pertanyaan).map(type => (
                       <option key={type.id} value={type.id}>
                         {type.nama_rating}
                       </option>
@@ -246,7 +256,7 @@ export default function SurveyQuestionModal({
           </div>
 
 {/* Tambah Jenis Jawaban di bawah grid (tetap tampil meski sudah diklik) */}
-{questionData.tipe_pertanyaan === 'rating' && (
+{(questionData.tipe_pertanyaan === 'rating' || questionData.tipe_pertanyaan === 'text') && (
   <div className="mt-4">
     {/* Render semua extraAnswers */}
     <div className="space-y-4">
@@ -297,7 +307,7 @@ export default function SurveyQuestionModal({
                     <option>Tidak ada jenis rating</option>
                   ) : (
                     ratingTypes
-                      .filter(type => type.tipe === 'rating')
+                      .filter(type => type.tipe === ans.tipe)
                       .map(type => (
                         <option key={type.id} value={type.id}>
                           {type.nama_rating}

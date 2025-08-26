@@ -68,6 +68,22 @@ export const SURVEY_QUERIES = {
     ORDER BY ps.baris
   `,
   
+  // Get only active questions for guest pages
+  GET_ACTIVE_QUESTIONS: `
+    SELECT 
+      ps.id, ps.baris, ps.pertanyaan, 
+      CASE 
+        WHEN pjr.jenis_rating_id = 3 THEN 'teks'
+        ELSE 'rating'
+      END as tipe_jawaban,
+      ps.is_aktif, ps.created_at, pjr.jenis_rating_id,
+      pjr.is_required, pjr.urutan
+    FROM pertanyaan_survei ps
+    LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
+    WHERE ps.is_aktif = 1
+    ORDER BY ps.baris
+  `,
+  
   // Get a specific question by ID
   GET_QUESTION_BY_ID: `
     SELECT 

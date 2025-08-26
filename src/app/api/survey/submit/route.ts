@@ -1,37 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { submitSurveyAnswers } from '@/backend/services/surveyService';
+import { submitSurveyWithIdentity } from '@/backend/services/surveyService';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Validate that answers exist and are an array
-    if (!body.answers || !Array.isArray(body.answers) || body.answers.length === 0) {
+    // Validate that identity and answers exist
+    if (!body.identity) {
       return NextResponse.json(
-        { success: false, message: 'Invalid survey answers format' },
+        { success: false, message: 'Identity data is required' },
         { status: 400 }
       );
     }
 
-    // Convert the answers to the format expected by the service
-    const formattedAnswers = body.answers.map((answer: any) => ({
-      pertanyaan_id: answer.pertanyaan_id,
-      jawaban: answer.rating,
-      nama_lengkap: 'Anonymous', // Default since we don't have user info in this context
-      email: 'anonymous@example.com', // Default email
-      tanggal_kunjungan: new Date().toISOString().split('T')[0], // Today's date
-      saran: body.feedback || null
-    }));
+    if (!body.answers || !Array.isArray(body.answers) || body.answers.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Survey answers are required' },
+        { status: 400 }
+      );
+    }
 
-    // Submit all answers
-    await submitSurveyAnswers(formattedAnswers);
+    // Submit identity and answers
+    await submitSurveyWithIdentity(body.identity, body.answers, body.feedback);
     
     return NextResponse.json({
       success: true,
-      message: 'Survey answers submitted successfully'
+      message: 'Survey submitted successfully'
     });
   } catch (error: any) {
-    console.error('Error submitting survey answers:', error);
+    console.error('Error submitting survey:', error);
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
