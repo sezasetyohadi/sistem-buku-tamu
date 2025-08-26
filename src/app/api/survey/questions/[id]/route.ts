@@ -7,17 +7,32 @@ import {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = await params;
+    const questionId = parseInt(id);
     const body = await request.json();
-    const { pertanyaan, tipe_pertanyaan, urutan, status } = body;
+    const { 
+      pertanyaan, 
+      tipe_pertanyaan, 
+      is_aktif, // <-- tambahkan ini
+      baris, 
+      jenis_rating_id,
+      is_required = true
+    } = body;
     
-    // Default section_id = 1 if not provided
-    const sectionId = 1;
-    
-    await updateQuestion(questionId, sectionId, urutan, pertanyaan, tipe_pertanyaan, status);
+    // Update the question with all new parameters (removed kolom parameter)
+    await updateQuestion(
+      questionId, 
+      baris || 1, 
+      pertanyaan, 
+      tipe_pertanyaan, 
+      is_aktif, // <-- gunakan ini, bukan status
+      jenis_rating_id,
+      is_required
+    );
     
     return NextResponse.json({
       success: true,
@@ -26,7 +41,7 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating survey question:', error);
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: `Error updating question: ${error.message}` },
       { status: 500 }
     );
   }
@@ -34,10 +49,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = await params;
+    const questionId = parseInt(id);
     
     await deleteQuestion(questionId);
     
@@ -56,10 +73,12 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = await params;
+    const questionId = parseInt(id);
     
     const question = await getQuestionById(questionId);
     

@@ -8,6 +8,8 @@ interface SurveyQuestion {
   pertanyaan: string;
   section_id: number;
   section_nama?: string;
+  tipe_jawaban?: 'rating' | 'teks';
+  tipe_pertanyaan?: 'rating' | 'text';
   ratingOptions?: RatingOption[];
 }
 
@@ -22,7 +24,7 @@ interface RatingOption {
 
 interface SurveyResponse {
   pertanyaan_id: number;
-  rating: number;
+  jawaban?: number | string;
 }
 
 interface GuestIdentity {
@@ -136,11 +138,26 @@ export default function SurveyForm() {
       if (existing) {
         return prev.map(r => 
           r.pertanyaan_id === questionId 
-            ? { ...r, rating } 
+            ? { ...r, jawaban: rating } 
             : r
         );
       } else {
-        return [...prev, { pertanyaan_id: questionId, rating }];
+        return [...prev, { pertanyaan_id: questionId, jawaban: rating }];
+      }
+    });
+  };
+
+  const handleTextChange = (questionId: number, text: string) => {
+    setResponses(prev => {
+      const existing = prev.find(r => r.pertanyaan_id === questionId);
+      if (existing) {
+        return prev.map(r => 
+          r.pertanyaan_id === questionId 
+            ? { ...r, jawaban: text } 
+            : r
+        );
+      } else {
+        return [...prev, { pertanyaan_id: questionId, jawaban: text }];
       }
     });
   };
@@ -153,8 +170,7 @@ export default function SurveyForm() {
       // Convert responses to the format expected by the API
       const answers = responses.map(response => ({
         pertanyaan_id: response.pertanyaan_id,
-        rating_id: response.rating, // API expects rating_id
-        rating: response.rating
+        jawaban: response.jawaban
       }));
 
       const response = await fetch('/api/survey/submit', {
@@ -548,46 +564,67 @@ export default function SurveyForm() {
                 <div className="space-y-6">
                   {sectionQuestions.map((question) => {
                     const currentResponse = responses.find(r => r.pertanyaan_id === question.id);
+                    const isTextQuestion = question.tipe_jawaban === 'teks' || question.tipe_pertanyaan === 'text';
+                    
                     return (
                       <div key={question.id} className="bg-gray-50 rounded-lg p-6">
                         <p className="text-gray-900 font-medium mb-4">
                           {question.pertanyaan}
                         </p>
-                        <div className="relative">
-                          <select
-                            name={`question-${question.id}`}
-                            value={currentResponse?.rating || ''}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value) {
-                                handleRatingChange(question.id, parseInt(value));
-                                handleDropdownChange(`question-${question.id}`);
-                              }
-                            }}
-                            onMouseDown={() => handleDropdownMouseDown(`question-${question.id}`)}
-                            onBlur={() => handleDropdownBlur(`question-${question.id}`)}
-                            className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white text-gray-900 appearance-none hover:bg-gray-50 focus:bg-white"
-                            required
-                          >
-                            <option value="">Pilih rating...</option>
-                            {question.ratingOptions?.map((option) => {
-                              const ratingValue = option.nilai || option.urutan || 1;
-                              const ratingLabel = option.label || option.skala_rating || `Rating ${ratingValue}`;
-                              
-                              return (
-                                <option key={option.id} value={ratingValue}>
-                                  {ratingLabel}
-                                </option>
-                              );
-                            })}
-                          </select>
-                          {/* Dropdown arrow with animation */}
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns[`question-${question.id}`] ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
+                        
+                        {isTextQuestion ? (
+                          // Text Input for text-type questions
+                          <div className="relative">
+                            <textarea
+                              name={`question-${question.id}`}
+                              value={typeof currentResponse?.jawaban === 'string' ? currentResponse.jawaban : ''}
+                              onChange={(e) => {
+                                handleTextChange(question.id, e.target.value);
+                              }}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white text-gray-900 hover:bg-gray-50 focus:bg-white resize-none"
+                              rows={4}
+                              placeholder="Ketikkan jawaban Anda..."
+                              required
+                            />
                           </div>
-                        </div>
+                        ) : (
+                          // Dropdown for rating-type questions
+                          <div className="relative">
+                            <select
+                              name={`question-${question.id}`}
+                              value={typeof currentResponse?.jawaban === 'number' ? currentResponse.jawaban : ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value) {
+                                  handleRatingChange(question.id, parseInt(value));
+                                  handleDropdownChange(`question-${question.id}`);
+                                }
+                              }}
+                              onMouseDown={() => handleDropdownMouseDown(`question-${question.id}`)}
+                              onBlur={() => handleDropdownBlur(`question-${question.id}`)}
+                              className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white text-gray-900 appearance-none hover:bg-gray-50 focus:bg-white"
+                              required
+                            >
+                              <option value="">Pilih rating...</option>
+                              {question.ratingOptions?.map((option) => {
+                                const ratingValue = option.nilai || option.urutan || 1;
+                                const ratingLabel = option.label || option.skala_rating || `Rating ${ratingValue}`;
+                                
+                                return (
+                                  <option key={option.id} value={ratingValue}>
+                                    {ratingLabel}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                            {/* Dropdown arrow with animation */}
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                              <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns[`question-${question.id}`] ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

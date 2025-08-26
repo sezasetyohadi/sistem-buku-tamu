@@ -1,11 +1,12 @@
 import { executeQuery } from '../config/db';
-import { SURVEY_QUERIES, SurveyQuestion, SurveySection, RatingOption, RatingType } from '../models/surveyModel';
+import { SURVEY_QUERIES, SurveyQuestion, RatingOption, RatingType } from '../models/surveyModel';
 
 export interface QuestionWithRatingOptions extends SurveyQuestion {
   ratingOptions?: RatingOption[];
 }
 
-export interface SectionWithQuestions extends SurveySection {
+export interface RowWithQuestions {
+  row: number;
   questions: QuestionWithRatingOptions[];
 }
 
@@ -26,30 +27,25 @@ export interface SurveyStatistics {
   average_rating: number;
 }
 
-export async function getAllSections(): Promise<SurveySection[]> {
-  return executeQuery<SurveySection[]>(SURVEY_QUERIES.GET_ALL_SECTIONS);
-}
-
 export async function getAllQuestions(): Promise<SurveyQuestion[]> {
   return executeQuery<SurveyQuestion[]>(SURVEY_QUERIES.GET_ALL_QUESTIONS);
 }
 
-export async function getQuestionsBySection(): Promise<SectionWithQuestions[]> {
-  // Get all sections
-  const sections = await executeQuery<SurveySection[]>(SURVEY_QUERIES.GET_ALL_SECTIONS);
-  
-  // Get all questions organized by section
-  const questions = await executeQuery<any[]>(SURVEY_QUERIES.GET_ALL_QUESTIONS_BY_SECTION);
+export async function getQuestionsByLayout(): Promise<RowWithQuestions[]> {
+  // Get all questions organized by layout
+  const questions = await executeQuery<any[]>(SURVEY_QUERIES.GET_ALL_QUESTIONS_BY_LAYOUT);
   
   // Get all rating options
   const ratingOptions = await executeQuery<RatingOption[]>(SURVEY_QUERIES.GET_ALL_RATING_OPTIONS);
   
-  // Group questions by section
-  const sectionsWithQuestions: SectionWithQuestions[] = sections.map(section => {
-    const sectionQuestions = questions.filter(q => q.section_id === section.id);
+  // Group questions by rows
+  const uniqueRows = Array.from(new Set(questions.map(q => q.baris))).sort((a, b) => a - b);
+  
+  const rowsWithQuestions: RowWithQuestions[] = uniqueRows.map(rowNum => {
+    const rowQuestions = questions.filter(q => q.baris === rowNum);
     
     // Add rating options to questions if they are rating type
-    const questionsWithOptions = sectionQuestions.map(question => {
+    const questionsWithOptions = rowQuestions.map(question => {
       if (question.tipe_jawaban === 'rating' && question.jenis_rating_id) {
         // Get the rating options directly based on the question's jenis_rating_id from the database
         const options = ratingOptions.filter(o => o.jenis_rating_id === question.jenis_rating_id);
@@ -62,12 +58,12 @@ export async function getQuestionsBySection(): Promise<SectionWithQuestions[]> {
     });
     
     return {
-      ...section,
+      row: rowNum,
       questions: questionsWithOptions
     };
   });
   
-  return sectionsWithQuestions;
+  return rowsWithQuestions;
 }
 
 export async function getQuestionById(questionId: number): Promise<QuestionWithRatingOptions> {
@@ -94,7 +90,13 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
   return question;
 }
 
-export async function getRatingTypes(): Promise<RatingType[]> {
+export async function getRatingTypes(type?: 'rating' | 'text'): Promise<RatingType[]> {
+  // If a specific type is requested, use the filtered query
+  if (type) {
+    return executeQuery<RatingType[]>(SURVEY_QUERIES.GET_RATING_TYPES_BY_TYPE, [type]);
+  }
+  
+  // Otherwise, return all rating types
   return executeQuery<RatingType[]>(SURVEY_QUERIES.GET_ALL_RATING_TYPES);
 }
 
@@ -108,9 +110,6 @@ export async function submitSurveyAnswers(answers: SurveyAnswer[]): Promise<void
   
   try {
     for (const answer of answers) {
-      // Convert string answers to numeric for storage (for text questions)
-      const numericAnswer = typeof answer.jawaban === 'string' ? 0 : answer.jawaban;
-      
       await executeQuery(
         SURVEY_QUERIES.SUBMIT_ANSWER,
         [
@@ -118,7 +117,7 @@ export async function submitSurveyAnswers(answers: SurveyAnswer[]): Promise<void
           answer.email,
           answer.tanggal_kunjungan,
           answer.pertanyaan_id,
-          numericAnswer,
+          answer.jawaban,
           answer.saran || null
         ]
       );
@@ -143,34 +142,124 @@ export async function getSurveyResponsesByEmailAndDate(email: string, date: stri
   return executeQuery(SURVEY_QUERIES.GET_RESPONSES_BY_EMAIL_DATE, [email, date]);
 }
 
-export async function addSection(name: string, order: number): Promise<number> {
-  const result = await executeQuery<any>(SURVEY_QUERIES.ADD_SECTION, [name, order]);
-  return result.insertId;
+export async function getUniqueRespondents(): Promise<number> {
+  const query = `
+    SELECT COUNT(*) as unique_respondents 
+    FROM jawaban_identitas_survei
+  `;
+  
+  const result = await executeQuery<{ unique_respondents: number }[]>(query);
+  return result[0]?.unique_respondents || 0;
+}
+
+export async function getCompletionRate(): Promise<number> {
+  // For now, we'll simplify this to return 100% completion rate
+  // since we don't have detailed data on which questions were answered by each respondent in jawaban_identitas_survei
+  return 100;
+
+  // TODO: Implement proper completion rate calculation when the data structure is established
+  // This would require a new query that properly joins jawaban_identitas_survei with other relevant tables
 }
 
 export async function addQuestion(
-  sectionId: number,
-  order: number,
   question: string,
-  type: 'rating' | 'teks'
+  type: 'rating' | 'teks',
+  ratingTypeId?: number,
+  isRequired: boolean = true
 ): Promise<number> {
-  // If type is 'rating', use jenis_rating_id = 1 (Skala 5), else use jenis_rating_id = 3 (Text)
-  const jenisRatingId = type === 'rating' ? 1 : 3;
-  const result = await executeQuery<any>(SURVEY_QUERIES.ADD_QUESTION, [sectionId, order, question, jenisRatingId]);
-  return result.insertId;
+  // Start a transaction to ensure both inserts succeed or fail together
+  await executeQuery('START TRANSACTION');
+  
+  try {
+    // Get the next row number (max row + 1)
+    const maxRowResult = await executeQuery<{max_baris: number}[]>(SURVEY_QUERIES.GET_MAX_ROW);
+    const nextRow = maxRowResult[0].max_baris + 1;
+    
+    // Insert the question first
+    const questionResult = await executeQuery<any>(
+      SURVEY_QUERIES.ADD_QUESTION, 
+      [nextRow, question, 1]
+    );
+    
+    const questionId = questionResult.insertId;
+    
+    // If type is 'rating', use the provided rating type ID or default to 1 (Skala 5), 
+    // else use jenis_rating_id = 3 (Text)
+    const jenisRatingId = type === 'rating' ? (ratingTypeId || 1) : 3;
+    
+    // Default order for ratings: Skala 5 = 1, Skala 3 = 2, Text = 3
+    const urutan = jenisRatingId === 1 ? 1 : jenisRatingId === 2 ? 2 : 3;
+    
+    // Insert the rating association
+    await executeQuery(
+      SURVEY_QUERIES.ADD_QUESTION_RATING,
+      [questionId, jenisRatingId, urutan, isRequired ? 1 : 0]
+    );
+    
+    // Commit the transaction
+    await executeQuery('COMMIT');
+    
+    return questionId;
+  } catch (error) {
+    // Rollback in case of error
+    await executeQuery('ROLLBACK');
+    throw error;
+  }
 }
 
 export async function updateQuestion(
   id: number,
-  sectionId: number,
-  order: number,
+  baris: number,
   question: string,
   type: 'rating' | 'teks',
-  isActive: boolean
+  isActive: boolean,
+  ratingTypeId?: number,
+  isRequired: boolean = true
 ): Promise<void> {
-  // If type is 'rating', use jenis_rating_id = 1 (Skala 5), else use jenis_rating_id = 3 (Text)
-  const jenisRatingId = type === 'rating' ? 1 : 3;
-  await executeQuery(SURVEY_QUERIES.UPDATE_QUESTION, [sectionId, order, question, jenisRatingId, isActive ? 1 : 0, id]);
+  // Start a transaction to ensure both updates succeed or fail together
+  await executeQuery('START TRANSACTION');
+  
+  try {
+    // Update the question first
+    await executeQuery(
+      SURVEY_QUERIES.UPDATE_QUESTION, 
+      [baris, question, isActive ? 1 : 0, id]
+    );
+    
+    // If type is 'rating', use the provided rating type ID or default to 1 (Skala 5),
+    // else use jenis_rating_id = 3 (Text)
+    const jenisRatingId = type === 'rating' ? (ratingTypeId || 1) : 3;
+    
+    // Default order for ratings: Skala 5 = 1, Skala 3 = 2, Text = 3
+    const urutan = jenisRatingId === 1 ? 1 : jenisRatingId === 2 ? 2 : 3;
+    
+    // Check if rating association exists
+    const ratingAssociations = await executeQuery<any[]>(
+      SURVEY_QUERIES.GET_QUESTION_RATING,
+      [id]
+    );
+    
+    if (ratingAssociations.length > 0) {
+      // Update existing association
+      await executeQuery(
+        SURVEY_QUERIES.UPDATE_QUESTION_RATING,
+        [jenisRatingId, urutan, isRequired ? 1 : 0, id]
+      );
+    } else {
+      // Create new association if it doesn't exist
+      await executeQuery(
+        SURVEY_QUERIES.ADD_QUESTION_RATING,
+        [id, jenisRatingId, urutan, isRequired ? 1 : 0]
+      );
+    }
+    
+    // Commit the transaction
+    await executeQuery('COMMIT');
+  } catch (error) {
+    // Rollback in case of error
+    await executeQuery('ROLLBACK');
+    throw error;
+  }
 }
 
 export async function deleteQuestion(id: number): Promise<void> {

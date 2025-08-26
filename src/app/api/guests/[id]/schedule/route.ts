@@ -4,16 +4,17 @@ import { GUEST_QUERIES } from '@/backend/models/guestModel';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     // Validate request parameters
-    if (!params || !params.id) {
+    if (!id) {
       return NextResponse.json({ success: false, message: 'ID tamu tidak ditemukan' }, { status: 400 });
     }
     
     // Parse guest ID
-    const id = String(params.id);
     const guestId = parseInt(id, 10);
     if (isNaN(guestId)) {
       return NextResponse.json({ success: false, message: 'ID tamu tidak valid' }, { status: 400 });

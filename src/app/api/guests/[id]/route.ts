@@ -6,22 +6,23 @@ import {
 } from '@/backend/services/guestService';
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  }
+  }>
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const guestId = parseInt(id);
+    if (isNaN(guestId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid ID format' },
         { status: 400 }
       );
     }
-    
-    const guest = await getGuestById(id);
+
+    const guest = await getGuestById(guestId);
     if (!guest) {
       return NextResponse.json(
         { success: false, message: 'Guest not found' },
@@ -41,8 +42,9 @@ export async function GET(request: NextRequest, { params }: Params) {
 
 export async function PUT(request: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const guestId = parseInt(id);
+    if (isNaN(guestId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid ID format' },
         { status: 400 }
@@ -50,7 +52,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     }
     
     const body = await request.json();
-    const success = await updateGuest(id, body);
+    const success = await updateGuest(guestId, body);
     
     if (!success) {
       return NextResponse.json(
@@ -71,15 +73,16 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
 export async function DELETE(request: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const guestId = parseInt(id);
+    if (isNaN(guestId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid ID format' },
         { status: 400 }
       );
     }
     
-    const success = await deleteGuest(id);
+    const success = await deleteGuest(guestId);
     
     if (!success) {
       return NextResponse.json(
@@ -100,8 +103,9 @@ export async function DELETE(request: NextRequest, { params }: Params) {
 
 export async function PATCH(request: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const guestId = parseInt(id);
+    if (isNaN(guestId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid ID format' },
         { status: 400 }
@@ -111,7 +115,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const body = await request.json();
     
     // Update guest with the provided data
-    const success = await updateGuest(id, body);
+    const success = await updateGuest(guestId, body);
     
     if (!success) {
       return NextResponse.json(

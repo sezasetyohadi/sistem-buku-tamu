@@ -9,13 +9,13 @@ export interface DaftarTamu {
   nomor_telp?: string;
   alamat?: string;
   jenis_kelamin: 'Laki-laki' | 'Perempuan';
-  pendidikan_terakhir?: string;
-  profesi?: string;
+  pendidikan_terakhir_id?: number;
+  profesi_id?: number;
   asal_instansi?: string;
   keperluan?: string;
   bidang_tujuan_id?: number;
   bidang_tujuan?: string; // Nama bidang (Sekretariat, Bidang Pelatihan Kerja, dll)
-  catatan_tambahan?: string;
+  tujuan_kunjungan_id?: number;
   status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null; // datetime
   jadwal_dibuat?: string | null; // datetime
@@ -44,7 +44,11 @@ export interface JawabanSurvei {
 // Survey Question Types (sesuai tabel pertanyaan_survei)
 export interface PertanyaanSurvei {
   id?: number;
+  section_id?: number;
+  urutan?: number;
+  baris?: number;
   pertanyaan: string;
+  jenis_rating_id?: number;
   is_aktif?: boolean;
   created_at?: string;
 }

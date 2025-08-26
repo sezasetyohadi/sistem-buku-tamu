@@ -61,19 +61,29 @@ To run a specific seed:
 npm run migrate:single -- 01_admin_seed.seed.ts
 ```
 
-## Correct Migration Order
+## Correct Migration Order (Updated for Foreign Key Constraints)
 
+### Base Tables (No Dependencies)
 1. `01_create_admin_table.migration.ts` - Creates the admin table
 2. `02_create_bidang_tujuan_table.migration.ts` - Creates the bidang_tujuan table
-3. `03_create_daftar_tamu_table.migration.ts` - Creates the daftar_tamu table 
-4. `03c_create_section_survei_table.migration.ts` - Creates the section_survei table
-5. `04_create_rating_tables.migration.ts` - Creates jenis_rating and opsi_rating tables
-6. `05_create_survey_tables.migration.ts` - Creates pertanyaan_survei and jawaban_survei tables
-7. `06_create_pendidikan_terakhir_table.migration.ts` - Creates the pendidikan_terakhir table
-8. `07_create_pesan_email_table.migration.ts` - Creates the pesan_email table
-9. `08_create_profesi_table.migration.ts` - Creates the profesi table
-10. `09_create_tujuan_kunjungan_table.migration.ts` - Creates the tujuan_kunjungan table
-11. `10_create_memperoleh_informasi_table.migration.ts` - Creates the memperoleh_informasi table
+3. `03c_create_section_survei_table.migration.ts` - Creates the section_survei table
+4. `04_create_rating_tables.migration.ts` - Creates jenis_rating and opsi_rating tables
+5. `06_create_pendidikan_terakhir_table.migration.ts` - Creates the pendidikan_terakhir table
+6. `08_create_profesi_table.migration.ts` - Creates the profesi table
+7. `09_create_tujuan_kunjungan_table.migration.ts` - Creates the tujuan_kunjungan table
+8. `10_create_memperoleh_informasi_table.migration.ts` - Creates the memperoleh_informasi table
+
+### Tables with Dependencies
+9. `03_create_daftar_tamu_table.migration.ts` - Creates the daftar_tamu table (depends on bidang_tujuan)
+10. `05_create_survey_tables.migration.ts` - Creates pertanyaan_survei and jawaban_survei tables (depends on section_survei and jenis_rating)
+11. `07_create_pesan_email_table.migration.ts` - Creates the pesan_email table (depends on admin and daftar_tamu)
+12. `11_create_jawaban_informasi_tables.migration.ts` - Creates jawaban tables for information options
+
+### Additional Constraints and Updates
+13. `14_add_daftar_tamu_constraints.migration.ts` - Adds foreign keys after all referenced tables exist
+14. `12_update_survey_structure.migration.ts` - Adds baris/kolom fields to survey tables
+15. `13_create_login_security_tables.migration.ts` - Adds security features
+16. `15_create_tamu_token_table.migration.ts` - Adds guest token functionality
 
 ## Correct Seed Order
 

@@ -425,20 +425,16 @@ export async function getGuestStatistics(): Promise<any> {
 }
 
 export async function getSurveyStatistics(): Promise<any> {
-  const totalSurveysQuery = 'SELECT COUNT(*) as total FROM jawaban_survei';
-  const averageRatingQuery = 'SELECT AVG(jawaban) as average FROM jawaban_survei';
-  const ratingDistributionQuery = 'SELECT jawaban, COUNT(*) as count FROM jawaban_survei GROUP BY jawaban ORDER BY jawaban';
+  const totalSurveysQuery = 'SELECT COUNT(*) as total FROM jawaban_identitas_survei';
   
-  const [total, average, distribution] = await Promise.all([
-    executeQuery<any[]>(totalSurveysQuery),
-    executeQuery<any[]>(averageRatingQuery),
-    executeQuery<any[]>(ratingDistributionQuery)
-  ]);
-
+  // For now, we'll return default values for average rating and distribution
+  // since we need to properly implement the new schema
+  const total = await executeQuery<any[]>(totalSurveysQuery);
+  
   return {
     totalSurveys: total[0]?.total || 0,
-    averageRating: parseFloat(average[0]?.average || 0).toFixed(2),
-    ratingDistribution: distribution
+    averageRating: "0.00",
+    ratingDistribution: []
   };
 }
 

@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from "react";
 import SurveyQuestionModal from "@/components/admin/SurveyQuestionModal";
+import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import QuestionOrderModal from "@/components/admin/QuestionOrderModal";
 
 interface SurveyQuestion {
   id?: number;
   pertanyaan: string;
   tipe_pertanyaan: 'rating' | 'text';
-  urutan: number;
   status: boolean;
-  placeholder?: string;
   jenis_rating_id?: number;
+  is_required?: boolean;
+  urutan?: number;
+  baris?: number;
 }
 
 interface SurveyStatistics {
@@ -20,6 +23,7 @@ interface SurveyStatistics {
   textQuestions: number;
   totalResponses: number;
   averageRating: number;
+  completionRate: number;
   statistics: any[];
 }
 
@@ -29,6 +33,11 @@ export default function AdminSurvey() {
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
   const [activeTab, setActiveTab] = useState<'questions' | 'responses'>('questions');
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<SurveyQuestion | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const [statistics, setStatistics] = useState<SurveyStatistics>({
     totalQuestions: 0,
     activeQuestions: 0,
@@ -36,14 +45,14 @@ export default function AdminSurvey() {
     textQuestions: 0,
     totalResponses: 0,
     averageRating: 0,
+    completionRate: 0,
     statistics: []
   });
-  const [newQuestion, setNewQuestion] = useState({
+  const [newQuestion, setNewQuestion] = useState<SurveyQuestion>({
     pertanyaan: '',
-    tipe_pertanyaan: 'rating' as 'rating' | 'text',
-    urutan: 0,
+    tipe_pertanyaan: 'rating',
     status: true,
-    placeholder: ''
+    is_required: true
   });
 
   // Dummy survey responses
@@ -122,13 +131,29 @@ export default function AdminSurvey() {
           tipe_pertanyaan: q.tipe_jawaban === 'rating' ? 'rating' : 'text',
           urutan: q.urutan,
           status: q.is_aktif,
-          placeholder: q.placeholder || ''
+          jenis_rating_id: q.jenis_rating_id,
+          is_required: q.is_required
         }));
         
         setQuestions(mappedQuestions);
+        
+        // Calculate statistics from the questions
+        const totalQuestions = mappedQuestions.length;
+        const activeQuestions = mappedQuestions.filter(q => q.status).length;
+        const ratingQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'rating').length;
+        const textQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'text').length;
+        
+        // Update statistics with question counts
+        setStatistics(prev => ({
+          ...prev,
+          totalQuestions,
+          activeQuestions,
+          ratingQuestions,
+          textQuestions
+        }));
       }
       
-      // Fetch statistics data
+      // Fetch statistics data for response counts and ratings
       const statsResponse = await fetch('/api/survey/statistics');
       if (!statsResponse.ok) {
         throw new Error(`Error fetching statistics: ${statsResponse.statusText}`);
@@ -136,7 +161,13 @@ export default function AdminSurvey() {
       const statsData = await statsResponse.json();
       
       if (statsData.success && statsData.data) {
-        setStatistics(statsData.data);
+        // Merge response statistics with our question counts
+        setStatistics(prev => ({
+          ...prev,
+          totalResponses: statsData.data.totalResponses || 0,
+          averageRating: statsData.data.averageRating || 0,
+          statistics: statsData.data.statistics || []
+        }));
       }
     } catch (error) {
       console.error("Error fetching survey data:", error);
@@ -151,10 +182,10 @@ export default function AdminSurvey() {
       const requestBody = {
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan,
-        urutan: question.urutan || questions.length + 1,
         // Map our tipe_pertanyaan to the API's expected format
         tipe_jawaban: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
-        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined
+        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        is_required: question.is_required
       };
       
       const response = await fetch('/api/survey/questions', {
@@ -176,9 +207,8 @@ export default function AdminSurvey() {
       setNewQuestion({
         pertanyaan: '',
         tipe_pertanyaan: 'rating',
-        urutan: 0,
         status: true,
-        placeholder: ''
+        is_required: true
       });
       
       setShowAddQuestion(false);
@@ -198,11 +228,13 @@ export default function AdminSurvey() {
       // Create a request body that matches the API expectations
       const requestBody = {
         id: question.id,
-        section_id: 1, // Default section
-        urutan: question.urutan,
+        urutan: question.urutan || 1,
+        baris: question.baris || 1,
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
-        is_aktif: question.status
+        is_aktif: question.status,
+        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        is_required: question.is_required
       };
       
       const response = await fetch(`/api/survey/questions/${question.id}`, {
@@ -226,37 +258,146 @@ export default function AdminSurvey() {
     }
   };
 
-  const handleDeleteQuestion = async (id: number | undefined) => {
+  const openDeleteConfirmation = async (question: SurveyQuestion) => {
+    // If we have the full question details, use it
+    if (question.pertanyaan) {
+      setQuestionToDelete(question);
+      setDeleteConfirmationOpen(true);
+      return;
+    }
+    
+    // Otherwise fetch the question details first
+    try {
+      const response = await fetch(`/api/survey/questions/${question.id}`);
+      if (!response.ok) {
+        throw new Error(`Error fetching question: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      if (data.success && data.data) {
+        // Map from API format to our component format
+        const fullQuestion: SurveyQuestion = {
+          id: data.data.id,
+          pertanyaan: data.data.pertanyaan,
+          tipe_pertanyaan: data.data.tipe_jawaban === 'rating' ? 'rating' : 'text',
+          urutan: data.data.urutan,
+          status: data.data.is_aktif,
+          jenis_rating_id: data.data.jenis_rating_id,
+          is_required: data.data.is_required
+        };
+        
+        setQuestionToDelete(fullQuestion);
+      } else {
+        // Fallback if we can't get the details
+        setQuestionToDelete(question);
+      }
+    } catch (error) {
+      console.error("Error fetching question details:", error);
+      // Fallback to using the question we have
+      setQuestionToDelete(question);
+    } finally {
+      setDeleteConfirmationOpen(true);
+    }
+  };
+
+  const handleDeleteQuestion = async () => {
+    const id = questionToDelete?.id;
     if (!id) {
       console.error('Cannot delete question without ID');
       return;
     }
     
-    if (confirm('Apakah Anda yakin ingin menghapus pertanyaan ini?')) {
-      try {
-        const response = await fetch(`/api/survey/questions/${id}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error deleting question: ${response.statusText}`);
-        }
-        
-        // Refresh the data after successful deletion
-        await fetchSurveyData();
-      } catch (error) {
-        console.error('Error deleting question:', error);
-        alert('Gagal menghapus pertanyaan. Silakan coba lagi.');
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`/api/survey/questions/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error deleting question: ${response.statusText}`);
       }
+      
+      // Close modal
+      setDeleteConfirmationOpen(false);
+      setQuestionToDelete(null);
+      
+      // Refresh the data after successful deletion
+      await fetchSurveyData();
+    } catch (error) {
+      console.error('Error deleting question:', error);
+      alert('Gagal menghapus pertanyaan. Silakan coba lagi.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  // Fungsi untuk toggle status aktif/nonaktif
   const toggleQuestionStatus = async (question: SurveyQuestion) => {
     try {
-      const updatedQuestion = { ...question, status: !question.status };
-      await handleEditQuestion(updatedQuestion);
+      // Kirim request ke API untuk update status (pakai angka 1/0)
+      await fetch(`/api/survey/questions/${question.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...question,
+          is_aktif: question.status ? 0 : 1, // <-- ubah ke angka
+        }),
+      });
+
+      // Update state lokal agar UI langsung berubah
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === question.id ? { ...q, status: !q.status } : q
+        )
+      );
     } catch (error) {
-      console.error('Error toggling question status:', error);
+      alert('Gagal mengubah status pertanyaan');
+    }
+  };
+  
+  const handleSaveQuestionOrder = async (reorderedQuestions: any[]) => {
+    try {
+      setIsReordering(true);
+      
+      // Create a batch of update promises
+      const updatePromises = reorderedQuestions.map(question => {
+        if (!question.id) return Promise.resolve();
+        
+        // For order updates, only send the minimum required data to preserve existing status
+        // Find the original question to get its current status
+        const originalQuestion = questions.find(q => q.id === question.id);
+        
+        const requestBody = {
+          id: question.id,
+          urutan: question.urutan,
+          baris: question.baris || 1,
+          pertanyaan: question.pertanyaan,
+          tipe_pertanyaan: (question.tipe_pertanyaan === 'rating' || question.tipe_jawaban === 'rating') ? 'rating' : 'teks',
+          // Preserve the original status from the database
+          status: originalQuestion?.status !== undefined ? originalQuestion.status : true,
+          jenis_rating_id: question.jenis_rating_id,
+          is_required: question.is_required !== undefined ? question.is_required : true
+        };
+        
+        return fetch(`/api/survey/questions/${question.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+      });
+      
+      // Wait for all updates to complete
+      await Promise.all(updatePromises);
+      
+      // Refresh data
+      await fetchSurveyData();
+    } catch (error) {
+      console.error('Error saving question order:', error);
+      alert('Gagal menyimpan urutan pertanyaan. Silakan coba lagi.');
+    } finally {
+      setIsReordering(false);
     }
   };
 
@@ -293,12 +434,12 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm">Total Pertanyaan</p>
-                  <p className="text-2xl font-bold">{statistics.totalQuestions}</p>
+                  <p className="text-blue-100 text-sm">Total Responden</p>
+                  <p className="text-2xl font-bold">{statistics.totalResponses}</p>
                 </div>
                 <div className="bg-blue-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -307,12 +448,12 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm">Pertanyaan Aktif</p>
-                  <p className="text-2xl font-bold">{statistics.activeQuestions}</p>
+                  <p className="text-green-100 text-sm">Rata-rata Rating</p>
+                  <p className="text-2xl font-bold">{statistics.averageRating.toFixed(1)}</p>
                 </div>
                 <div className="bg-green-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 </div>
               </div>
@@ -321,12 +462,12 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm">Rating Questions</p>
-                  <p className="text-2xl font-bold">{statistics.ratingQuestions}</p>
+                  <p className="text-purple-100 text-sm">Tingkat Penyelesaian</p>
+                  <p className="text-2xl font-bold">{statistics.completionRate || 0}%</p>
                 </div>
                 <div className="bg-purple-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -335,8 +476,8 @@ export default function AdminSurvey() {
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm">Text Questions</p>
-                  <p className="text-2xl font-bold">{statistics.textQuestions}</p>
+                  <p className="text-orange-100 text-sm">Pertanyaan Aktif</p>
+                  <p className="text-2xl font-bold">{statistics.activeQuestions}/{statistics.totalQuestions}</p>
                 </div>
                 <div className="bg-orange-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -403,6 +544,19 @@ export default function AdminSurvey() {
                 </div>
               </div>
 
+              {/* Question management buttons */}
+              <div className="flex justify-end mb-4">
+                <button 
+                  onClick={() => setOrderModalOpen(true)}
+                  className="flex items-center bg-blue-100 text-blue-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+                  </svg>
+                  Edit Urutan
+                </button>
+              </div>
+
               {/* Questions List */}
               <div className="space-y-3">
                 {Array.isArray(questions) && questions.length > 0 ? (
@@ -449,7 +603,7 @@ export default function AdminSurvey() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDeleteQuestion(question.id)}
+                          onClick={() => openDeleteConfirmation(question)}
                           className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
                         >
                           Hapus
@@ -479,19 +633,17 @@ export default function AdminSurvey() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-blue-600">{statistics.totalResponses}</p>
-                    <p className="text-sm text-gray-600">Total Respon</p>
+                    <p className="text-sm text-gray-600">Total Responden</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">{statistics.averageRating}</p>
+                    <p className="text-2xl font-bold text-green-600">{statistics.averageRating.toFixed(1)}</p>
                     <p className="text-sm text-gray-600">Rata-rata Rating</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">
-                      {statistics.totalQuestions > 0 
-                        ? `${Math.round((statistics.totalResponses / statistics.totalQuestions) * 100)}%` 
-                        : '0%'}
+                      {statistics.completionRate}%
                     </p>
-                    <p className="text-sm text-gray-600">Tingkat Respon</p>
+                    <p className="text-sm text-gray-600">Tingkat Penyelesaian</p>
                   </div>
                 </div>
               </div>
@@ -541,12 +693,42 @@ export default function AdminSurvey() {
             </div>
           )}
 
-          {/* Survey Question Modal */}
+          {/* Question Modals */}
           <SurveyQuestionModal 
             isOpen={showAddQuestion} 
             onClose={() => setShowAddQuestion(false)}
             onAddQuestion={handleAddQuestion}
             initialQuestion={newQuestion}
+          />
+          
+          <SurveyQuestionModal 
+            isOpen={Boolean(editingQuestion)} 
+            onClose={() => setEditingQuestion(null)}
+            onAddQuestion={handleEditQuestion}
+            initialQuestion={editingQuestion || undefined}
+            isEditMode={true}
+          />
+
+          {/* Delete Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={deleteConfirmationOpen}
+            onClose={() => setDeleteConfirmationOpen(false)}
+            onConfirm={handleDeleteQuestion}
+            title="Konfirmasi Hapus Data"
+            message="Apakah Anda yakin ingin menghapus pertanyaan ini dari daftar?"
+            itemName={questionToDelete?.pertanyaan || "pertanyaan ini"}
+            confirmButtonText="Ya, Hapus Data"
+            cancelButtonText="Batal"
+            isLoading={isDeleting}
+          />
+          
+          {/* Question Order Modal */}
+          <QuestionOrderModal
+            isOpen={orderModalOpen}
+            onClose={() => setOrderModalOpen(false)}
+            onSaveOrder={handleSaveQuestionOrder}
+            questions={questions}
+            isLoading={isReordering}
           />
         </div>
       </div>
