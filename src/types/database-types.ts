@@ -47,7 +47,6 @@ export interface PertanyaanSurvei {
   section_id?: number;
   urutan?: number;
   baris?: number;
-  kolom?: number;
   pertanyaan: string;
   jenis_rating_id?: number;
   is_aktif?: boolean;

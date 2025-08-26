@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import Modal from "../ui/Modal";
-import { toast } from "react-hot-toast";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+import Modal from '@/components/ui/Modal';
 
 interface RatingType {
   id: number;
@@ -18,7 +20,6 @@ interface SurveyQuestion {
   is_required?: boolean;
   urutan?: number;
   baris?: number;
-  kolom?: number;
 }
 
 interface SurveyQuestionModalProps {

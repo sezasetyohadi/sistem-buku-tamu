@@ -110,9 +110,6 @@ export async function submitSurveyAnswers(answers: SurveyAnswer[]): Promise<void
   
   try {
     for (const answer of answers) {
-      // Convert string answers to numeric for storage (for text questions)
-      const numericAnswer = typeof answer.jawaban === 'string' ? 0 : answer.jawaban;
-      
       await executeQuery(
         SURVEY_QUERIES.SUBMIT_ANSWER,
         [
@@ -120,7 +117,7 @@ export async function submitSurveyAnswers(answers: SurveyAnswer[]): Promise<void
           answer.email,
           answer.tanggal_kunjungan,
           answer.pertanyaan_id,
-          numericAnswer,
+          answer.jawaban,
           answer.saran || null
         ]
       );
@@ -178,13 +175,10 @@ export async function addQuestion(
     const maxRowResult = await executeQuery<{max_baris: number}[]>(SURVEY_QUERIES.GET_MAX_ROW);
     const nextRow = maxRowResult[0].max_baris + 1;
     
-    // Always add to column 1
-    const column = 1;
-    
     // Insert the question first
     const questionResult = await executeQuery<any>(
       SURVEY_QUERIES.ADD_QUESTION, 
-      [nextRow, column, question, 1]
+      [nextRow, question, 1]
     );
     
     const questionId = questionResult.insertId;
@@ -216,7 +210,6 @@ export async function addQuestion(
 export async function updateQuestion(
   id: number,
   baris: number,
-  kolom: number,
   question: string,
   type: 'rating' | 'teks',
   isActive: boolean,
@@ -230,7 +223,7 @@ export async function updateQuestion(
     // Update the question first
     await executeQuery(
       SURVEY_QUERIES.UPDATE_QUESTION, 
-      [baris, kolom, question, isActive ? 1 : 0, id]
+      [baris, question, isActive ? 1 : 0, id]
     );
     
     // If type is 'rating', use the provided rating type ID or default to 1 (Skala 5),

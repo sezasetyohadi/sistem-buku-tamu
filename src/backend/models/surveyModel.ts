@@ -4,7 +4,6 @@
 export interface SurveyQuestion {
   id: number;
   baris: number;
-  kolom: number;
   pertanyaan: string;
   tipe_jawaban: 'rating' | 'teks';
   is_aktif: boolean;
@@ -32,7 +31,7 @@ export interface SurveyAnswer {
   email: string;
   tanggal_kunjungan: string;
   pertanyaan_id: number;
-  jawaban: number;
+  jawaban: number | string;
   created_at?: string;
   saran?: string;
 }
@@ -42,7 +41,7 @@ export const SURVEY_QUERIES = {
   // Get all questions organized by rows and columns (including inactive)
   GET_ALL_QUESTIONS_BY_LAYOUT: `
     SELECT 
-      ps.id, ps.baris, ps.kolom, ps.pertanyaan, 
+      ps.id, ps.baris, ps.pertanyaan, 
       CASE 
         WHEN pjr.jenis_rating_id = 3 THEN 'teks'
         ELSE 'rating'
@@ -51,13 +50,13 @@ export const SURVEY_QUERIES = {
       pjr.is_required, pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
-    ORDER BY ps.baris, ps.kolom
+    ORDER BY ps.baris
   `,
   
   // Get all questions (both active and inactive)
   GET_ALL_QUESTIONS: `
     SELECT 
-      ps.id, ps.baris, ps.kolom, ps.pertanyaan, 
+      ps.id, ps.baris, ps.pertanyaan, 
       CASE 
         WHEN pjr.jenis_rating_id = 3 THEN 'teks'
         ELSE 'rating'
@@ -66,13 +65,13 @@ export const SURVEY_QUERIES = {
       pjr.is_required, pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
-    ORDER BY ps.baris, ps.kolom
+    ORDER BY ps.baris
   `,
   
   // Get a specific question by ID
   GET_QUESTION_BY_ID: `
     SELECT 
-      ps.id, ps.baris, ps.kolom, ps.pertanyaan, 
+      ps.id, ps.baris, ps.pertanyaan, 
       CASE 
         WHEN pjr.jenis_rating_id = 3 THEN 'teks'
         ELSE 'rating'
@@ -142,7 +141,7 @@ export const SURVEY_QUERIES = {
     LEFT JOIN jawaban_survei js ON ps.id = js.pertanyaan_id
     WHERE (pjr.jenis_rating_id != 3 OR pjr.jenis_rating_id IS NULL)
     GROUP BY ps.id, ps.pertanyaan, pjr.jenis_rating_id
-    ORDER BY ps.baris, ps.kolom
+    ORDER BY ps.baris
   `,
   
   // Get all survey responses
@@ -175,13 +174,13 @@ export const SURVEY_QUERIES = {
     JOIN pertanyaan_survei ps ON js.pertanyaan_id = ps.id
     JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     WHERE js.email = ? AND js.tanggal_kunjungan = ?
-    ORDER BY ps.baris, ps.kolom
+    ORDER BY ps.baris
   `,
   
   // Add a new survey question
   ADD_QUESTION: `
-    INSERT INTO pertanyaan_survei (baris, kolom, pertanyaan, is_aktif)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO pertanyaan_survei (baris, pertanyaan, is_aktif)
+    VALUES (?, ?, ?)
   `,
   
   // Add question rating association
@@ -193,7 +192,7 @@ export const SURVEY_QUERIES = {
   // Update a survey question
   UPDATE_QUESTION: `
     UPDATE pertanyaan_survei
-    SET baris = ?, kolom = ?, pertanyaan = ?, is_aktif = ?
+    SET baris = ?, pertanyaan = ?, is_aktif = ?
     WHERE id = ?
   `,
   

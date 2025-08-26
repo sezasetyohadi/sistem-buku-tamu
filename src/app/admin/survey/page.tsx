@@ -14,7 +14,6 @@ interface SurveyQuestion {
   is_required?: boolean;
   urutan?: number;
   baris?: number;
-  kolom?: number;
 }
 
 interface SurveyStatistics {
@@ -231,7 +230,6 @@ export default function AdminSurvey() {
         id: question.id,
         urutan: question.urutan || 1,
         baris: question.baris || 1,
-        kolom: question.kolom || question.urutan || 1,
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
         is_aktif: question.status,
@@ -350,15 +348,20 @@ export default function AdminSurvey() {
       const updatePromises = reorderedQuestions.map(question => {
         if (!question.id) return Promise.resolve();
         
-        // Create a request body for each question's order update
+        // For order updates, only send the minimum required data to preserve existing status
+        // Find the original question to get its current status
+        const originalQuestion = questions.find(q => q.id === question.id);
+        
         const requestBody = {
           id: question.id,
           urutan: question.urutan,
           baris: question.baris || 1,
-          kolom: question.kolom || question.urutan,
           pertanyaan: question.pertanyaan,
           tipe_pertanyaan: (question.tipe_pertanyaan === 'rating' || question.tipe_jawaban === 'rating') ? 'rating' : 'teks',
-          is_aktif: question.status !== undefined ? question.status : question.is_aktif
+          // Preserve the original status from the database
+          status: originalQuestion?.status !== undefined ? originalQuestion.status : true,
+          jenis_rating_id: question.jenis_rating_id,
+          is_required: question.is_required !== undefined ? question.is_required : true
         };
         
         return fetch(`/api/survey/questions/${question.id}`, {

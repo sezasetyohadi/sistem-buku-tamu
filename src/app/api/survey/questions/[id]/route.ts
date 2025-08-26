@@ -19,16 +19,14 @@ export async function PUT(
       tipe_pertanyaan, 
       status, 
       baris, 
-      kolom, 
       jenis_rating_id,
       is_required = true
     } = body;
     
-    // Update the question with all new parameters
+    // Update the question with all new parameters (removed kolom parameter)
     await updateQuestion(
       questionId, 
       baris || 1, 
-      kolom || 1, 
       pertanyaan, 
       tipe_pertanyaan, 
       status, 
