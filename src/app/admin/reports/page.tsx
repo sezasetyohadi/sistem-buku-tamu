@@ -141,13 +141,16 @@ export default function AdminReportsAnalytics() {
       
       // Create canvas with the element's actual dimensions
       const canvas = await html2canvas(element, { 
-        scale: 2,
+        scale: 1,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         width: element.scrollWidth,
-        height: element.scrollHeight
+        height: element.scrollHeight,
+        foreignObjectRendering: false, // Faster rendering
+        imageTimeout: 15000,
+        removeContainer: true
       });
       
       // Restore original styles immediately
@@ -160,7 +163,7 @@ export default function AdminReportsAnalytics() {
         throw new Error(`Canvas has zero dimensions: ${canvas.width}x${canvas.height}`);
       }
       
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
       
       if (!imgData || imgData === 'data:,' || imgData.length < 100) {
         throw new Error('Failed to generate valid image data from canvas');
@@ -186,7 +189,7 @@ export default function AdminReportsAnalytics() {
         finalWidth = (canvas.width * finalHeight) / canvas.height;
       }
       
-      pdf.addImage(imgData, "PNG", 20, 20, finalWidth, finalHeight);
+      pdf.addImage(imgData, "JPEG", 20, 20, finalWidth, finalHeight);
       pdf.save("laporan-buku-tamu.pdf");
       
       alert('PDF berhasil diekspor!');

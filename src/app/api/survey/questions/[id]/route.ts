@@ -7,11 +7,11 @@ import {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Ensure params is properly resolved before accessing properties
-    const { id } = params;
+    const { id } = await params;
     const questionId = parseInt(id);
     const body = await request.json();
     const { 
@@ -49,11 +49,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Ensure params is properly resolved before accessing properties
-    const { id } = params;
+    const { id } = await params;
     const questionId = parseInt(id);
     
     await deleteQuestion(questionId);
@@ -73,11 +73,11 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Ensure params is properly resolved before accessing properties
-    const { id } = params;
+    const { id } = await params;
     const questionId = parseInt(id);
     
     const question = await getQuestionById(questionId);

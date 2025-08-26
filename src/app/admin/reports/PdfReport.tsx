@@ -145,7 +145,7 @@ const PdfReport = ({ data }: PdfReportProps) => {
       <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
         Tren Kunjungan (7 Hari Terakhir)
       </h3>
-      <div style={{ width: "100%", height: "200px", marginBottom: "25px", background: "#f9f9f9", border: "1px solid #ddd", borderRadius: "4px" }}>
+      <div style={{ width: "100%", height: "150px", marginBottom: "20px", background: "#f9f9f9", border: "1px solid #ddd", borderRadius: "4px" }}>
         {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 ? (
           <Line
             data={{
@@ -162,27 +162,37 @@ const PdfReport = ({ data }: PdfReportProps) => {
                   label: 'Kunjungan',
                   data: reportData.weeklyTrends.map((item: any) => item.visits),
                   borderColor: 'rgb(59, 130, 246)',
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  borderWidth: 2,
+                  backgroundColor: 'rgba(59, 130, 246, 0.05)', // Lighter background
+                  borderWidth: 1.5, // Thinner border
                   fill: true,
-                  tension: 0.4,
+                  tension: 0.2, // Less curve smoothing
                   pointBackgroundColor: 'rgb(59, 130, 246)',
                   pointBorderColor: '#ffffff',
-                  pointBorderWidth: 2,
-                  pointRadius: 4,
-                  pointHoverRadius: 6,
+                  pointBorderWidth: 1, // Thinner point border
+                  pointRadius: 2, // Smaller points
+                  pointHoverRadius: 3, // Smaller hover
                 },
               ],
             }}
             options={{
               responsive: true,
               maintainAspectRatio: false,
+              animation: false, // Disable animations for PDF
               plugins: {
                 legend: {
                   display: false,
                 },
                 tooltip: {
                   enabled: false, // Disable tooltips for PDF
+                },
+              },
+              elements: {
+                point: {
+                  radius: 2, // Smaller points
+                  hoverRadius: 2,
+                },
+                line: {
+                  borderWidth: 1, // Thinner lines
                 },
               },
               scales: {
@@ -193,19 +203,20 @@ const PdfReport = ({ data }: PdfReportProps) => {
                   ticks: {
                     color: '#374151',
                     font: {
-                      size: 10,
+                      size: 9, // Smaller font
                     },
                   },
                 },
                 y: {
                   beginAtZero: true,
                   grid: {
-                    color: 'rgba(0, 0, 0, 0.1)',
+                    color: 'rgba(0, 0, 0, 0.05)', // Lighter grid
+                    lineWidth: 0.5, // Thinner grid lines
                   },
                   ticks: {
                     color: '#374151',
                     font: {
-                      size: 10,
+                      size: 9, // Smaller font
                     },
                     stepSize: 1,
                   },
