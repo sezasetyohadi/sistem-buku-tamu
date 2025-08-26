@@ -1,6 +1,31 @@
 // Database Types sesuai dengan schema disnaker database
 // Filename: database-types.ts
 
+// Global type declarations for missing modules
+declare module 'estree' {
+  export interface Node {
+    type: string;
+    [key: string]: any;
+  }
+}
+
+declare module 'json-schema' {
+  export interface JSONSchema7 {
+    [key: string]: any;
+  }
+}
+
+declare module 'json5' {
+  export function parse(text: string): any;
+  export function stringify(value: any): string;
+}
+
+declare module 'trusted-types' {
+  export interface TrustedTypePolicy {
+    [key: string]: any;
+  }
+}
+
 // Guest Registration Types (sesuai tabel daftar_tamu)
 export interface DaftarTamu {
   id?: number;
