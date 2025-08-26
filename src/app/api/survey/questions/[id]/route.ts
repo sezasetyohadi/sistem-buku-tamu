@@ -17,7 +17,7 @@ export async function PUT(
     const { 
       pertanyaan, 
       tipe_pertanyaan, 
-      status, 
+      is_aktif, // <-- tambahkan ini
       baris, 
       jenis_rating_id,
       is_required = true
@@ -29,7 +29,7 @@ export async function PUT(
       baris || 1, 
       pertanyaan, 
       tipe_pertanyaan, 
-      status, 
+      is_aktif, // <-- gunakan ini, bukan status
       jenis_rating_id,
       is_required
     );
