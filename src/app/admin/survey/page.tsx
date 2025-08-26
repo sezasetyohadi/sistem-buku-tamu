@@ -336,13 +336,13 @@ export default function AdminSurvey() {
   // Fungsi untuk toggle status aktif/nonaktif
   const toggleQuestionStatus = async (question: SurveyQuestion) => {
     try {
-      // Kirim request ke API untuk update status
+      // Kirim request ke API untuk update status (pakai angka 1/0)
       await fetch(`/api/survey/questions/${question.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...question,
-          is_aktif: !question.status, // status baru
+          is_aktif: question.status ? 0 : 1, // <-- ubah ke angka
         }),
       });
 
