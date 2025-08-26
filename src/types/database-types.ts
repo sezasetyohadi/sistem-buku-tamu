@@ -16,7 +16,7 @@ export interface DaftarTamu {
   bidang_tujuan_id?: number;
   bidang_tujuan?: string; // Nama bidang (Sekretariat, Bidang Pelatihan Kerja, dll)
   tujuan_kunjungan_id?: number;
-  status?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
+  status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null; // datetime
   jadwal_dibuat?: string | null; // datetime
   waktu_checkin?: string | null; // datetime
@@ -104,7 +104,7 @@ export interface GuestFormData {
   file_upload?: string;
   cara_memperoleh?: number[]; // Array of IDs from memperoleh_informasi table
   cara_salinan?: number[]; // Array of IDs from mendapatkan_salinan table
-  status?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
+  status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null;
 }
 

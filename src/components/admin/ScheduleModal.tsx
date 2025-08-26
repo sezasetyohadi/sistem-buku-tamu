@@ -266,7 +266,7 @@ export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId, cu
                 value={date}
                 min={minDate}
                 onChange={(e) => setDate(e.target.value)}
-                className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base"
+                className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base text-gray-900 bg-white"
                 style={{ minHeight: '48px' }}
               />
             </div>
@@ -285,7 +285,7 @@ export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId, cu
                 onFocus={handleFocus}
                 placeholder="--"
                 maxLength={2}
-                className={`block w-24 border rounded-md py-3 text-center text-base ${
+                className={`block w-24 border rounded-md py-3 text-center text-base text-gray-900 bg-white ${
                   error && !hour ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                 }`}
                 style={{ minHeight: '48px' }}
@@ -300,7 +300,7 @@ export default function ScheduleModal({ isOpen, onClose, onSchedule, guestId, cu
                 onFocus={handleFocus}
                 placeholder="--"
                 maxLength={2}
-                className={`block w-24 border rounded-md py-3 text-center text-base ${
+                className={`block w-24 border rounded-md py-3 text-center text-base text-gray-900 bg-white ${
                   error && !minute ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                 }`}
                 style={{ minHeight: '48px' }}
