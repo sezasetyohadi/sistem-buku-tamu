@@ -48,7 +48,7 @@ export default function StatusPengajuanPage() {
 			setStatus(found);
 		} else {
 			setStatus(null);
-			setError("Token tidak ditemukan. Pastikan token sudah benar.");
+			setError("Nomor telepon tidak ditemukan. Pastikan nomor sudah benar.");
 		}
 	};
 
@@ -70,19 +70,19 @@ export default function StatusPengajuanPage() {
 					Status Pengajuan
 				</h1>
 				<p className="text-gray-700 text-center">
-					Masukkan token pengajuan Anda untuk melihat status.
+					Masukan nomor telepon pengajuan Anda untuk melihat status.
 				</p>
 			</div>
 
 			{!status && (
 				<div className="w-full bg-white rounded-xl shadow p-6 flex flex-col items-center">
 					<label className="block text-sm font-semibold text-gray-700 mb-2 text-center">
-						Token Pengajuan
+						Nomor Telepon Pengajuan
 					</label>
 					<input
 						type="text"
 						className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg text-center text-lg tracking-widest"
-						placeholder="Masukkan token di sini"
+						placeholder="Masukan nomor telepon di sini"
 						value={token}
 						onChange={(e) => setToken(e.target.value)}
 						maxLength={16}
