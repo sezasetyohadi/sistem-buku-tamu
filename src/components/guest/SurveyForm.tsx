@@ -6,12 +6,19 @@ import Card from '@/components/ui/Card';
 interface SurveyQuestion {
   id: number;
   pertanyaan: string;
-  section_id: number;
+  section_id?: number;
   section_nama?: string;
   tipe_jawaban?: 'rating' | 'teks';
   tipe_pertanyaan?: 'rating' | 'text';
-  ratingOptions?: RatingOption[];
+  ratingOptions?: any[]; // Changed to support grouped rating options
   is_required?: boolean | number;
+  multiple_rating_types?: { 
+    jenis_rating_id: number; 
+    is_required?: boolean; 
+    nama_rating?: string;
+    tipe?: string;
+    urutan?: number;
+  }[];
 }
 
 interface RatingOption {
@@ -25,6 +32,7 @@ interface RatingOption {
 
 interface SurveyResponse {
   pertanyaan_id: number;
+  rating_type_id?: number; // Add support for multiple rating types in one question
   jawaban?: number | string;
 }
 
@@ -167,34 +175,65 @@ export default function SurveyForm() {
     }
   };
 
-  const handleRatingChange = (questionId: number, rating: number) => {
+  const handleRatingChange = (questionId: number, rating: number, ratingTypeId?: number) => {
     if (isNaN(rating)) return; // Ignore invalid ratings
     
     setResponses(prev => {
-      const existing = prev.find(r => r.pertanyaan_id === questionId);
+      const responseKey = ratingTypeId ? `${questionId}-${ratingTypeId}` : questionId;
+      const existing = prev.find(r => {
+        if (ratingTypeId) {
+          return r.pertanyaan_id === questionId && r.rating_type_id === ratingTypeId;
+        }
+        return r.pertanyaan_id === questionId && !r.rating_type_id;
+      });
+      
       if (existing) {
-        return prev.map(r => 
-          r.pertanyaan_id === questionId 
+        return prev.map(r => {
+          if (ratingTypeId) {
+            return (r.pertanyaan_id === questionId && r.rating_type_id === ratingTypeId) 
+              ? { ...r, jawaban: rating } 
+              : r;
+          }
+          return (r.pertanyaan_id === questionId && !r.rating_type_id) 
             ? { ...r, jawaban: rating } 
-            : r
-        );
+            : r;
+        });
       } else {
-        return [...prev, { pertanyaan_id: questionId, jawaban: rating }];
+        return [...prev, { 
+          pertanyaan_id: questionId, 
+          rating_type_id: ratingTypeId,
+          jawaban: rating 
+        }];
       }
     });
   };
 
-  const handleTextChange = (questionId: number, text: string) => {
+  const handleTextChange = (questionId: number, text: string, ratingTypeId?: number) => {
     setResponses(prev => {
-      const existing = prev.find(r => r.pertanyaan_id === questionId);
+      const existing = prev.find(r => {
+        if (ratingTypeId) {
+          return r.pertanyaan_id === questionId && r.rating_type_id === ratingTypeId;
+        }
+        return r.pertanyaan_id === questionId && !r.rating_type_id;
+      });
+      
       if (existing) {
-        return prev.map(r => 
-          r.pertanyaan_id === questionId 
+        return prev.map(r => {
+          if (ratingTypeId) {
+            return (r.pertanyaan_id === questionId && r.rating_type_id === ratingTypeId) 
+              ? { ...r, jawaban: text } 
+              : r;
+          }
+          return (r.pertanyaan_id === questionId && !r.rating_type_id) 
             ? { ...r, jawaban: text } 
-            : r
-        );
+            : r;
+        });
       } else {
-        return [...prev, { pertanyaan_id: questionId, jawaban: text }];
+        return [...prev, { 
+          pertanyaan_id: questionId, 
+          rating_type_id: ratingTypeId,
+          jawaban: text 
+        }];
       }
     });
   };
@@ -631,8 +670,9 @@ export default function SurveyForm() {
                 </h3>
                 <div className="space-y-6">
                   {sectionQuestions.map((question) => {
-                    const currentResponse = responses.find(r => r.pertanyaan_id === question.id);
                     const isTextQuestion = question.tipe_jawaban === 'teks' || question.tipe_pertanyaan === 'text';
+                    const hasMultipleRatingTypes = question.ratingOptions && Array.isArray(question.ratingOptions) && 
+                      question.ratingOptions.length > 0 && question.ratingOptions[0].rating_type_id;
                     
                     return (
                       <div key={question.id} className="bg-gray-50 rounded-lg p-6">
@@ -650,7 +690,10 @@ export default function SurveyForm() {
                           <div className="relative">
                             <textarea
                               name={`question-${question.id}`}
-                              value={typeof currentResponse?.jawaban === 'string' ? currentResponse.jawaban : ''}
+                              value={(() => {
+                                const response = responses.find(r => r.pertanyaan_id === question.id && !r.rating_type_id);
+                                return typeof response?.jawaban === 'string' ? response.jawaban : '';
+                              })()}
                               onChange={(e) => {
                                 handleTextChange(question.id, e.target.value);
                               }}
@@ -660,12 +703,67 @@ export default function SurveyForm() {
                               required={question.is_required === true || question.is_required === 1}
                             />
                           </div>
+                        ) : hasMultipleRatingTypes ? (
+                          // Multiple Rating Types in one card
+                          <div className="space-y-4">
+                            {question.ratingOptions?.map((ratingGroup: any, groupIndex: number) => {
+                              const currentResponse = responses.find(r => 
+                                r.pertanyaan_id === question.id && r.rating_type_id === ratingGroup.rating_type_id
+                              );
+                              
+                              return (
+                                <div key={`${question.id}-rating-${ratingGroup.rating_type_id}`} className="border border-gray-200 rounded-lg p-4 bg-white">
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                                    {ratingGroup.rating_type_name}
+                                  </h4>
+                                  <div className="relative">
+                                    <select
+                                      name={`question-${question.id}-rating-${ratingGroup.rating_type_id}`}
+                                      value={typeof currentResponse?.jawaban === 'number' ? currentResponse.jawaban : ''}
+                                      onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value) {
+                                          handleRatingChange(question.id, parseInt(value), ratingGroup.rating_type_id);
+                                          handleDropdownChange(`question-${question.id}-rating-${ratingGroup.rating_type_id}`);
+                                        }
+                                      }}
+                                      onMouseDown={() => handleDropdownMouseDown(`question-${question.id}-rating-${ratingGroup.rating_type_id}`)}
+                                      onBlur={() => handleDropdownBlur(`question-${question.id}-rating-${ratingGroup.rating_type_id}`)}
+                                      className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3] bg-white text-gray-900 appearance-none hover:bg-gray-50 focus:bg-white"
+                                      required={question.is_required === true || question.is_required === 1}
+                                    >
+                                      <option value="">Pilih rating...</option>
+                                      {ratingGroup.options?.map((option: any) => {
+                                        const ratingValue = option.nilai || option.urutan_rating || 1;
+                                        const ratingLabel = option.label || option.skala_rating || `Rating ${ratingValue}`;
+                                        
+                                        return (
+                                          <option key={`${ratingGroup.rating_type_id}-${option.id}`} value={ratingValue}>
+                                            {ratingLabel}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                    {/* Dropdown arrow with animation */}
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                      <svg className={`w-5 h-5 text-gray-400 transition-all duration-200 transform ${focusedDropdowns[`question-${question.id}-rating-${ratingGroup.rating_type_id}`] ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         ) : (
-                          // Dropdown for rating-type questions
+                          // Single Rating Type (fallback for legacy questions)
                           <div className="relative">
                             <select
                               name={`question-${question.id}`}
-                              value={typeof currentResponse?.jawaban === 'number' ? currentResponse.jawaban : ''}
+                              value={(() => {
+                                const response = responses.find(r => r.pertanyaan_id === question.id && !r.rating_type_id);
+                                return typeof response?.jawaban === 'number' ? response.jawaban : '';
+                              })()}
                               onChange={(e) => {
                                 const value = e.target.value;
                                 if (value) {
@@ -679,7 +777,7 @@ export default function SurveyForm() {
                               required={question.is_required === true || question.is_required === 1}
                             >
                               <option value="">Pilih rating...</option>
-                              {question.ratingOptions?.map((option) => {
+                              {question.ratingOptions?.map((option: any) => {
                                 const ratingValue = option.nilai || option.urutan || 1;
                                 const ratingLabel = option.label || option.skala_rating || `Rating ${ratingValue}`;
                                 

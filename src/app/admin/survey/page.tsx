@@ -14,6 +14,7 @@ interface SurveyQuestion {
   is_required?: boolean;
   urutan?: number;
   baris?: number;
+  multiple_rating_types?: { jenis_rating_id: number; is_required?: boolean }[];
 }
 
 interface SurveyStatistics {
@@ -185,7 +186,8 @@ export default function AdminSurvey() {
         // Map our tipe_pertanyaan to the API's expected format
         tipe_jawaban: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
         jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
-        is_required: question.is_required
+        is_required: question.is_required,
+        multiple_rating_types: question.multiple_rating_types // Add support for multiple rating types
       };
       
       const response = await fetch('/api/survey/questions', {
@@ -237,7 +239,8 @@ export default function AdminSurvey() {
         tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
         is_aktif: question.status,
         jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
-        is_required: question.is_required
+        is_required: question.is_required,
+        multiple_rating_types: question.multiple_rating_types // Add support for multiple rating types
       };
       
       const response = await fetch(`/api/survey/questions/${question.id}`, {

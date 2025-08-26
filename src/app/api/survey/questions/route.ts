@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   getAllQuestions,
+  getAllQuestionsForAdmin,
   getActiveQuestions,
+  getActiveQuestionsForGuests,
   getQuestionById,
   addQuestion,
   updateQuestion,
@@ -15,17 +17,18 @@ export async function GET(request: NextRequest) {
     const forGuest = searchParams.get('for_guest') === 'true';
     
     // Fetch questions based on context
-    const questions = forGuest ? await getActiveQuestions() : await getAllQuestions();
-    
-    // For each question, fetch its options
-    const questionsWithOptions = await Promise.all(questions.map(async (question: SurveyQuestion) => {
-      const withOptions = await getQuestionById(question.id);
-      return withOptions;
-    }));
+    let questions;
+    if (forGuest) {
+      // Use special function for guests that groups multiple rating types
+      questions = await getActiveQuestionsForGuests();
+    } else {
+      // For admin, use the new function that prevents duplication
+      questions = await getAllQuestionsForAdmin();
+    }
     
     return NextResponse.json({
       success: true,
-      data: questionsWithOptions
+      data: questions
     });
   } catch (error: any) {
     console.error('Error fetching survey questions:', error);
@@ -44,15 +47,17 @@ export async function POST(request: NextRequest) {
       tipe_pertanyaan, 
       jenis_rating_id, 
       status = true,
-      is_required = true
+      is_required = true,
+      multiple_rating_types
     } = body;
     
-    // Add question with new parameters
+    // Add question with multiple rating types support
     const questionId = await addQuestion(
       pertanyaan, 
       tipe_pertanyaan,
       jenis_rating_id,
-      is_required
+      is_required,
+      multiple_rating_types
     );
     
     return NextResponse.json({

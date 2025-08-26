@@ -20,6 +20,13 @@ interface SurveyQuestion {
   is_required?: boolean;
   urutan?: number;
   baris?: number;
+  multiple_rating_types?: { 
+    jenis_rating_id: number; 
+    is_required?: boolean; 
+    nama_rating?: string;
+    tipe?: string;
+    urutan?: number;
+  }[];
 }
 
 interface SurveyQuestionModalProps {
@@ -66,6 +73,34 @@ export default function SurveyQuestionModal({
       setQuestionData({
         ...initialQuestion
       });
+      
+      // Load extra answers from multiple_rating_types if available
+      if (initialQuestion.multiple_rating_types && initialQuestion.multiple_rating_types.length > 0) {
+        // Sort rating types by urutan to maintain order
+        const sortedRatingTypes = [...initialQuestion.multiple_rating_types].sort((a, b) => (a.urutan || 0) - (b.urutan || 0));
+        
+        // Set the first rating type as the main one
+        if (sortedRatingTypes.length > 0) {
+          setQuestionData(prev => ({
+            ...prev,
+            jenis_rating_id: sortedRatingTypes[0].jenis_rating_id,
+            is_required: sortedRatingTypes[0].is_required
+          }));
+        }
+        
+        // If there are multiple rating types, set the rest as extraAnswers
+        if (sortedRatingTypes.length > 1) {
+          const extraTypes = sortedRatingTypes.slice(1).map(rt => ({
+            tipe: rt.tipe === 'text' ? 'text' as const : 'rating' as const,
+            jenis_rating_id: rt.jenis_rating_id
+          }));
+          setExtraAnswers(extraTypes);
+        } else {
+          setExtraAnswers([]);
+        }
+      } else {
+        setExtraAnswers([]);
+      }
     } else if (isOpen) {
       // Reset form when opened in add mode
       setQuestionData({
@@ -75,6 +110,7 @@ export default function SurveyQuestionModal({
         jenis_rating_id: undefined,
         is_required: true
       });
+      setExtraAnswers([]);
     }
   }, [initialQuestion, isOpen]);
 
@@ -136,8 +172,25 @@ export default function SurveyQuestionModal({
 
       setIsSubmitting(true);
       
+      // Prepare the question data with multiple rating types
+      const questionToSubmit = {
+        ...questionData,
+        multiple_rating_types: [
+          // Main rating type
+          { 
+            jenis_rating_id: questionData.jenis_rating_id!, 
+            is_required: questionData.is_required 
+          },
+          // Additional rating types from extraAnswers
+          ...extraAnswers.map(ans => ({
+            jenis_rating_id: ans.jenis_rating_id!,
+            is_required: true // Default to required for extra answers
+          }))
+        ].filter(item => item.jenis_rating_id) // Remove undefined values
+      };
+      
       // Call parent handler
-      await onAddQuestion(questionData);
+      await onAddQuestion(questionToSubmit);
       
       // Reset form if not in edit mode
       if (!isEditMode) {
@@ -148,6 +201,7 @@ export default function SurveyQuestionModal({
           jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined,
           is_required: true
         });
+        setExtraAnswers([]);
       }
       
       // Show success message

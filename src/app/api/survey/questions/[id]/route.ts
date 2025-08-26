@@ -20,7 +20,8 @@ export async function PUT(
       is_aktif, // <-- tambahkan ini
       baris, 
       jenis_rating_id,
-      is_required = true
+      is_required = true,
+      multiple_rating_types // Add support for multiple rating types
     } = body;
     
     // Update the question with all new parameters (removed kolom parameter)
@@ -31,7 +32,8 @@ export async function PUT(
       tipe_pertanyaan, 
       is_aktif, // <-- gunakan ini, bukan status
       jenis_rating_id,
-      is_required
+      is_required,
+      multiple_rating_types // Pass multiple rating types to service
     );
     
     return NextResponse.json({
