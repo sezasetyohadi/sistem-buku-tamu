@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/backend/config/db';
 import { getRatingTypes } from '@/backend/services/surveyService';
 
-// GET: Retrieve all rating types
+// GET: Retrieve rating types with optional filtering
 export async function GET(request: NextRequest) {
   try {
-    // Use the existing service function to get rating types
-    const ratingTypes = await getRatingTypes();
+    // Get the type parameter from the URL if present
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') as 'rating' | 'text' | null;
+    
+    // Use the existing service function to get rating types with optional filtering
+    const ratingTypes = await getRatingTypes(type || undefined);
     
     return NextResponse.json({
       success: true,

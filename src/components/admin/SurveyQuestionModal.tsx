@@ -4,7 +4,8 @@ import { toast } from "react-hot-toast";
 
 interface RatingType {
   id: number;
-  nama: string;
+  tipe: 'rating' | 'text';
+  nama_rating: string;
   deskripsi?: string;
 }
 
@@ -12,10 +13,12 @@ interface SurveyQuestion {
   id?: number;
   pertanyaan: string;
   tipe_pertanyaan: 'rating' | 'text';
-  urutan: number;
   status: boolean;
-  placeholder?: string;
   jenis_rating_id?: number;
+  is_required?: boolean;
+  urutan?: number;
+  baris?: number;
+  kolom?: number;
 }
 
 interface SurveyQuestionModalProps {
@@ -37,21 +40,24 @@ export default function SurveyQuestionModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ratingTypes, setRatingTypes] = useState<RatingType[]>([]);
   const [isLoadingRatingTypes, setIsLoadingRatingTypes] = useState(false);
+  const [showNewTypeDialog, setShowNewTypeDialog] = useState(false);
+  const [newTypeData, setNewTypeData] = useState({ type: 'rating', name: '' });
   const [questionData, setQuestionData] = useState<SurveyQuestion>({
     pertanyaan: '',
     tipe_pertanyaan: 'rating',
-    urutan: 0,
     status: true,
-    placeholder: '',
-    jenis_rating_id: undefined
+    jenis_rating_id: undefined,
+    is_required: true
   });
+  const [extraAnswers, setExtraAnswers] = useState<
+  { tipe: 'rating' | 'text'; jenis_rating_id?: number }[]>([]);
 
-  // Fetch rating types when modal is opened
+  // Fetch rating types when modal is opened or question type changes
   useEffect(() => {
     if (isOpen) {
-      fetchRatingTypes();
+      fetchRatingTypes(questionData.tipe_pertanyaan);
     }
-  }, [isOpen]);
+  }, [isOpen, questionData.tipe_pertanyaan]);
 
   // Set question data when initialQuestion changes or modal is opened
   useEffect(() => {
@@ -64,19 +70,25 @@ export default function SurveyQuestionModal({
       setQuestionData({
         pertanyaan: '',
         tipe_pertanyaan: 'rating',
-        urutan: 0,
         status: true,
-        placeholder: '',
-        jenis_rating_id: undefined
+        jenis_rating_id: undefined,
+        is_required: true
       });
     }
   }, [initialQuestion, isOpen]);
 
-  // Fetch rating types from API
-  const fetchRatingTypes = async () => {
+  // Fetch rating types from API with optional type filter
+  const fetchRatingTypes = async (type?: 'rating' | 'text') => {
     try {
       setIsLoadingRatingTypes(true);
-      const response = await fetch('/api/survey/rating-types');
+      
+      // Add type parameter to the URL if specified
+      let apiUrl = '/api/survey/rating-types';
+      if (type) {
+        apiUrl += `?type=${type}`;
+      }
+      
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         throw new Error('Failed to fetch rating types');
@@ -116,15 +128,22 @@ export default function SurveyQuestionModal({
       // Call parent handler
       await onAddQuestion(questionData);
       
-      // Reset form and close modal
-      setQuestionData({
-        pertanyaan: '',
-        tipe_pertanyaan: 'rating',
-        urutan: 0,
-        status: true,
-        placeholder: '',
-        jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined
-      });
+      // Reset form if not in edit mode
+      if (!isEditMode) {
+        setQuestionData({
+          pertanyaan: '',
+          tipe_pertanyaan: 'rating',
+          status: true,
+          jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined,
+          is_required: true
+        });
+      }
+      
+      // Show success message
+      toast.success(isEditMode 
+        ? 'Pertanyaan berhasil diperbarui!' 
+        : 'Pertanyaan berhasil ditambahkan!'
+      );
       
       onClose();
     } catch (error) {
@@ -133,6 +152,13 @@ export default function SurveyQuestionModal({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleAddExtraAnswer = () => {
+    setExtraAnswers([
+      ...extraAnswers,
+      { tipe: 'rating', jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined }
+    ]);
   };
 
   return (
@@ -165,15 +191,20 @@ export default function SurveyQuestionModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="tipe_pertanyaan" className="block text-sm font-medium text-gray-700 mb-1">
-                Tipe Pertanyaan
+                Tipe Jawaban
               </label>
               <select
                 id="tipe_pertanyaan"
                 value={questionData.tipe_pertanyaan}
-                onChange={(e) => setQuestionData({
-                  ...questionData,
-                  tipe_pertanyaan: e.target.value as 'rating' | 'text'
-                })}
+                onChange={(e) => {
+                  const newType = e.target.value as 'rating' | 'text';
+                  setQuestionData({
+                    ...questionData,
+                    tipe_pertanyaan: newType,
+                    // If switching to text type, clear the rating type
+                    jenis_rating_id: newType === 'text' ? undefined : questionData.jenis_rating_id
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="rating">Rating</option>
@@ -181,111 +212,163 @@ export default function SurveyQuestionModal({
               </select>
             </div>
             
-            {/* Show jenis rating dropdown for rating questions, urutan for text questions */}
-            <div>
-              {questionData.tipe_pertanyaan === 'rating' ? (
-                <>
-                  <label htmlFor="jenis_rating_id" className="block text-sm font-medium text-gray-700 mb-1">
-                    Jenis Rating
-                  </label>
-                  <select
-                    id="jenis_rating_id"
-                    value={questionData.jenis_rating_id || ''}
-                    onChange={(e) => setQuestionData({
-                      ...questionData,
-                      jenis_rating_id: parseInt(e.target.value) || undefined
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    disabled={isLoadingRatingTypes}
-                  >
-                    {isLoadingRatingTypes ? (
-                      <option>Loading...</option>
-                    ) : ratingTypes.length === 0 ? (
-                      <option>Tidak ada jenis rating</option>
-                    ) : (
-                      ratingTypes.map(type => (
+            {/* Show jenis rating dropdown only for rating question types */}
+            {questionData.tipe_pertanyaan === 'rating' && (
+              <div>
+                <label htmlFor="jenis_rating_id" className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenis Rating
+                </label>
+                <select
+                  id="jenis_rating_id"
+                  value={questionData.jenis_rating_id || ''}
+                  onChange={(e) => setQuestionData({
+                    ...questionData,
+                    jenis_rating_id: parseInt(e.target.value) || undefined
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isLoadingRatingTypes}
+                >
+                  {isLoadingRatingTypes ? (
+                    <option>Loading...</option>
+                  ) : ratingTypes.length === 0 ? (
+                    <option>Tidak ada jenis rating</option>
+                  ) : (
+                    ratingTypes.filter(type => type.tipe === 'rating').map(type => (
+                      <option key={type.id} value={type.id}>
+                        {type.nama_rating}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            )}
+          </div>
+
+{/* Tambah Jenis Jawaban di bawah grid (tetap tampil meski sudah diklik) */}
+{questionData.tipe_pertanyaan === 'rating' && (
+  <div className="mt-4">
+    {/* Render semua extraAnswers */}
+    <div className="space-y-4">
+      {extraAnswers.map((ans, idx) => (
+        <div key={idx} className="grid grid-cols-2 gap-4 items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipe Jawaban
+            </label>
+            <select
+              value={ans.tipe}
+              onChange={e => {
+                const tipe = e.target.value as 'rating' | 'text';
+                setExtraAnswers(list =>
+                  list.map((item, i) =>
+                    i === idx
+                      ? { ...item, tipe, jenis_rating_id: tipe === 'rating' ? ratingTypes[0]?.id : undefined }
+                      : item
+                  )
+                );
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="rating">Rating</option>
+              <option value="text">Text</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            {ans.tipe === 'rating' && (
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenis Rating
+                </label>
+                <select
+                  value={ans.jenis_rating_id || ''}
+                  onChange={e =>
+                    setExtraAnswers(list =>
+                      list.map((item, i) =>
+                        i === idx
+                          ? { ...item, jenis_rating_id: parseInt(e.target.value) || undefined }
+                          : item
+                      )
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {ratingTypes.length === 0 ? (
+                    <option>Tidak ada jenis rating</option>
+                  ) : (
+                    ratingTypes
+                      .filter(type => type.tipe === 'rating')
+                      .map(type => (
                         <option key={type.id} value={type.id}>
-                          {type.nama}
+                          {type.nama_rating}
                         </option>
                       ))
-                    )}
-                  </select>
-                </>
-              ) : (
-                <>
-                  <label htmlFor="urutan" className="block text-sm font-medium text-gray-700 mb-1">
-                    Urutan
-                  </label>
-                  <input
-                    type="number"
-                    id="urutan"
-                    min="1"
-                    value={questionData.urutan || ''}
-                    onChange={(e) => setQuestionData({
-                      ...questionData,
-                      urutan: parseInt(e.target.value) || 0
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Urutan pertanyaan"
-                  />
-                </>
-              )}
-            </div>
+                  )}
+                </select>
+              </div>
+            )}
+            {/* Tombol hapus */}
+            <button
+              type="button"
+              onClick={() =>
+                setExtraAnswers(list => list.filter((_, i) => i !== idx))
+              }
+              className="h-10 w-10 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 self-end"
+              title="Hapus"
+            >
+              &times;
+            </button>
           </div>
-          
-          {/* Common urutan field for both types */}
-          {questionData.tipe_pertanyaan === 'rating' && (
-            <div>
-              <label htmlFor="urutan" className="block text-sm font-medium text-gray-700 mb-1">
-                Urutan
-              </label>
-              <input
-                type="number"
-                id="urutan"
-                min="1"
-                value={questionData.urutan || ''}
-                onChange={(e) => setQuestionData({
-                  ...questionData,
-                  urutan: parseInt(e.target.value) || 0
-                })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Urutan pertanyaan"
-              />
-            </div>
-          )}
-          
-          {questionData.tipe_pertanyaan === 'text' && (
-            <div>
-              <label htmlFor="placeholder" className="block text-sm font-medium text-gray-700 mb-1">
-                Placeholder
-              </label>
-              <input
-                type="text"
-                id="placeholder"
-                value={questionData.placeholder || ''}
-                onChange={(e) => setQuestionData({
-                  ...questionData,
-                  placeholder: e.target.value
-                })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Placeholder untuk jawaban (opsional)"
-              />
-            </div>
-          )}
+        </div>
+      ))}
+    </div>
+    {/* Tombol selalu di paling bawah */}
+    <button
+      type="button"
+      onClick={handleAddExtraAnswer}
+      className="mt-4 w-full flex items-center justify-center px-3 py-2 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+    >
+      + Tambah Jenis Jawaban
+    </button>
+  </div>
+)}
 
-          <div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={questionData.status}
-                onChange={(e) => setQuestionData({
-                  ...questionData,
-                  status: e.target.checked
-                })}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="ml-2 text-sm text-gray-700">Aktifkan pertanyaan</span>
-            </label>
+
+          <div className="mt-4">
+            <div className="mb-3">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={questionData.status}
+                  onChange={(e) => setQuestionData({
+                    ...questionData,
+                    status: e.target.checked
+                  })}
+                  className="sr-only peer"
+                />
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <span className="ms-3 text-sm font-medium text-gray-700">
+                  Aktifkan pertanyaan
+                </span>
+              </label>
+            </div>
+            
+            <div>
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={questionData.is_required}
+                  onChange={(e) => setQuestionData({
+                    ...questionData,
+                    is_required: e.target.checked
+                  })}
+                  className="sr-only peer"
+                />
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <span className="ms-3 text-sm font-medium text-gray-700">
+                  Wajib diisi
+                </span>
+              </label>
+            </div>
           </div>
         </div>
         
@@ -305,7 +388,7 @@ export default function SurveyQuestionModal({
               isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
-            {isSubmitting ? 'Menyimpan...' : isEditMode ? 'Simpan' : 'Tambah Pertanyaan'}
+            {isSubmitting ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Tambah Pertanyaan'}
           </button>
         </div>
       </div>

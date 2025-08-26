@@ -10,14 +10,31 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = params;
+    const questionId = parseInt(id);
     const body = await request.json();
-    const { pertanyaan, tipe_pertanyaan, urutan, status } = body;
+    const { 
+      pertanyaan, 
+      tipe_pertanyaan, 
+      is_aktif, // <-- tambahkan ini
+      baris, 
+      kolom, 
+      jenis_rating_id,
+      is_required = true
+    } = body;
     
-    // Default section_id = 1 if not provided
-    const sectionId = 1;
-    
-    await updateQuestion(questionId, sectionId, urutan, pertanyaan, tipe_pertanyaan, status);
+    // Update the question with all new parameters
+    await updateQuestion(
+      questionId, 
+      baris || 1, 
+      kolom || 1, 
+      pertanyaan, 
+      tipe_pertanyaan, 
+      is_aktif, // <-- gunakan ini, bukan status
+      jenis_rating_id,
+      is_required
+    );
     
     return NextResponse.json({
       success: true,
@@ -26,7 +43,7 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating survey question:', error);
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: `Error updating question: ${error.message}` },
       { status: 500 }
     );
   }
@@ -37,7 +54,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = params;
+    const questionId = parseInt(id);
     
     await deleteQuestion(questionId);
     
@@ -59,7 +78,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    // Ensure params is properly resolved before accessing properties
+    const { id } = params;
+    const questionId = parseInt(id);
     
     const question = await getQuestionById(questionId);
     

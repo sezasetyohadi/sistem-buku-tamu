@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   getAllQuestions,
   getSurveyStatistics,
-  getSurveyResponses
+  getSurveyResponses,
+  getUniqueRespondents,
+  getCompletionRate
 } from '@/backend/services/surveyService';
 
 export async function GET(request: NextRequest) {
@@ -13,8 +15,11 @@ export async function GET(request: NextRequest) {
     // Fetch all questions to get total and active counts
     const questions = await getAllQuestions();
     
-    // Fetch all responses
-    const responses = await getSurveyResponses();
+    // Get unique respondents count
+    const uniqueRespondents = await getUniqueRespondents();
+    
+    // Get completion rate
+    const completionRate = await getCompletionRate();
     
     // Count the number of rating and text questions
     const ratingQuestions = questions.filter(q => q.tipe_jawaban === 'rating');
@@ -29,7 +34,8 @@ export async function GET(request: NextRequest) {
       activeQuestions: activeQuestions.length,
       ratingQuestions: ratingQuestions.length,
       textQuestions: textQuestions.length,
-      totalResponses: responses.length,
+      totalResponses: uniqueRespondents,
+      completionRate: completionRate,
       averageRating: calculateAverageRating(statistics),
       statistics: statistics
     };
