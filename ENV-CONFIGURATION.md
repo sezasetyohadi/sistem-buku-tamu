@@ -73,6 +73,13 @@ DB_NAME=disnaker
 DB_PORT=3306
 ```
 
+## 🔐 Token Configuration
+Konfigurasi untuk token dan keamanan:
+```bash
+# Digunakan untuk token cleanup task
+TOKEN_CLEANUP_KEY=your_secure_key_here
+```
+
 ## 🔄 Migration dari File Terpisah
 - `.env.admin` → Backup ke `.env.admin.backup`
 - `.env.guest` → Backup ke `.env.guest.backup`

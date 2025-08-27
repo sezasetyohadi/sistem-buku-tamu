@@ -59,6 +59,21 @@ export default function SurveyQuestionModal({
   });
   const [extraAnswers, setExtraAnswers] = useState<
   { tipe: 'rating' | 'text'; jenis_rating_id?: number }[]>([]);
+  
+  // Track which rating types are already selected
+  const [usedRatingIds, setUsedRatingIds] = useState<number[]>([]);
+  
+  // Update used rating IDs whenever question data or extra answers change
+  useEffect(() => {
+    const mainRatingId = questionData.jenis_rating_id;
+    const extraRatingIds = extraAnswers
+      .filter(ans => ans.tipe === 'rating' && ans.jenis_rating_id)
+      .map(ans => ans.jenis_rating_id as number);
+    
+    // Combine all used rating IDs
+    const allUsedIds = mainRatingId ? [mainRatingId, ...extraRatingIds] : extraRatingIds;
+    setUsedRatingIds(allUsedIds);
+  }, [questionData.jenis_rating_id, extraAnswers]);
 
   // Fetch rating types when modal is opened or question type changes
   useEffect(() => {
@@ -70,47 +85,55 @@ export default function SurveyQuestionModal({
   // Set question data when initialQuestion changes or modal is opened
   useEffect(() => {
     if (initialQuestion && isOpen) {
-      setQuestionData({
-        ...initialQuestion
-      });
-      
-      // Load extra answers from multiple_rating_types if available
-      if (initialQuestion.multiple_rating_types && initialQuestion.multiple_rating_types.length > 0) {
-        // Sort rating types by urutan to maintain order
-        const sortedRatingTypes = [...initialQuestion.multiple_rating_types].sort((a, b) => (a.urutan || 0) - (b.urutan || 0));
+      // First fetch rating types to have them available
+      fetchRatingTypes().then(() => {
+        setQuestionData({
+          ...initialQuestion
+        });
         
-        // Set the first rating type as the main one
-        if (sortedRatingTypes.length > 0) {
-          setQuestionData(prev => ({
-            ...prev,
-            jenis_rating_id: sortedRatingTypes[0].jenis_rating_id,
-            is_required: sortedRatingTypes[0].is_required
-          }));
-        }
-        
-        // If there are multiple rating types, set the rest as extraAnswers
-        if (sortedRatingTypes.length > 1) {
-          const extraTypes = sortedRatingTypes.slice(1).map(rt => ({
-            tipe: rt.tipe === 'text' ? 'text' as const : 'rating' as const,
-            jenis_rating_id: rt.jenis_rating_id
-          }));
-          setExtraAnswers(extraTypes);
+        // Load extra answers from multiple_rating_types if available
+        if (initialQuestion.multiple_rating_types && initialQuestion.multiple_rating_types.length > 0) {
+          // Sort rating types by urutan to maintain order
+          const sortedRatingTypes = [...initialQuestion.multiple_rating_types].sort((a, b) => (a.urutan || 0) - (b.urutan || 0));
+          
+          // Set the first rating type as the main one
+          if (sortedRatingTypes.length > 0) {
+            setQuestionData(prev => ({
+              ...prev,
+              jenis_rating_id: sortedRatingTypes[0].jenis_rating_id,
+              is_required: sortedRatingTypes[0].is_required
+            }));
+          }
+          
+          // If there are multiple rating types, set the rest as extraAnswers
+          if (sortedRatingTypes.length > 1) {
+            const extraTypes = sortedRatingTypes.slice(1).map(rt => ({
+              tipe: rt.tipe === 'text' ? 'text' as const : 'rating' as const,
+              jenis_rating_id: rt.jenis_rating_id
+            }));
+            setExtraAnswers(extraTypes);
+          } else {
+            setExtraAnswers([]);
+          }
         } else {
           setExtraAnswers([]);
         }
-      } else {
-        setExtraAnswers([]);
-      }
+      });
     } else if (isOpen) {
       // Reset form when opened in add mode
-      setQuestionData({
-        pertanyaan: '',
-        tipe_pertanyaan: 'rating',
-        status: true,
-        jenis_rating_id: undefined,
-        is_required: true
+      fetchRatingTypes().then(() => {
+        // Get all rating types of type 'rating'
+        const ratingTypesOfTypeRating = ratingTypes.filter(rt => rt.tipe === 'rating');
+        
+        setQuestionData({
+          pertanyaan: '',
+          tipe_pertanyaan: 'rating',
+          status: true,
+          jenis_rating_id: ratingTypesOfTypeRating.length > 0 ? ratingTypesOfTypeRating[0].id : undefined,
+          is_required: true
+        });
+        setExtraAnswers([]);
       });
-      setExtraAnswers([]);
     }
   }, [initialQuestion, isOpen]);
 
@@ -160,6 +183,13 @@ export default function SurveyQuestionModal({
     } finally {
       setIsLoadingRatingTypes(false);
     }
+  };
+
+  // Get available rating types that aren't already used
+  const getAvailableRatingTypes = (type: 'rating' | 'text' = 'rating') => {
+    return ratingTypes.filter(rt => 
+      rt.tipe === type && !usedRatingIds.includes(rt.id)
+    );
   };
 
   const handleSubmit = async () => {
@@ -220,10 +250,32 @@ export default function SurveyQuestionModal({
   };
 
   const handleAddExtraAnswer = () => {
-    setExtraAnswers([
-      ...extraAnswers,
-      { tipe: 'rating', jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined }
-    ]);
+    // Check available rating types
+    const availableRatingTypes = getAvailableRatingTypes('rating');
+    
+    if (availableRatingTypes.length > 0) {
+      // If there are still available rating types, add a rating answer with the first available type
+      setExtraAnswers([
+        ...extraAnswers,
+        { tipe: 'rating', jenis_rating_id: availableRatingTypes[0].id }
+      ]);
+    } else {
+      // If all rating types are used, add a text answer
+      setExtraAnswers([
+        ...extraAnswers,
+        { tipe: 'text', jenis_rating_id: undefined }
+      ]);
+      
+      // Show info toast
+      toast.success('Semua jenis rating sudah digunakan. Menambahkan jawaban teks.', {
+        duration: 3000,
+        style: {
+          borderRadius: '10px',
+          background: '#FFD166',
+          color: '#333',
+        },
+      });
+    }
   };
 
   return (
@@ -263,11 +315,32 @@ export default function SurveyQuestionModal({
                 value={questionData.tipe_pertanyaan}
                 onChange={(e) => {
                   const newType = e.target.value as 'rating' | 'text';
-                  setQuestionData({
-                    ...questionData,
-                    tipe_pertanyaan: newType,
-                    // Keep the rating type for both rating and text types
-                    // Only clear if no suitable rating type is available for the new type
+                  
+                  // Fetch appropriate rating types for the new type
+                  fetchRatingTypes(newType);
+                  
+                  setQuestionData(prev => {
+                    // Create new question data with the new type
+                    const updated = {
+                      ...prev,
+                      tipe_pertanyaan: newType
+                    };
+                    
+                    // If switching to 'text' type, clear rating ID
+                    if (newType === 'text') {
+                      updated.jenis_rating_id = undefined;
+                    } else if (newType === 'rating') {
+                      // When switching to rating, find an available rating type
+                      const availableTypes = ratingTypes.filter(
+                        type => type.tipe === 'rating' && !usedRatingIds.includes(type.id)
+                      );
+                      
+                      if (availableTypes.length > 0) {
+                        updated.jenis_rating_id = availableTypes[0].id;
+                      }
+                    }
+                    
+                    return updated;
                   });
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -298,11 +371,23 @@ export default function SurveyQuestionModal({
                   ) : ratingTypes.length === 0 ? (
                     <option>Tidak ada jenis rating</option>
                   ) : (
-                    ratingTypes.filter(type => type.tipe === questionData.tipe_pertanyaan).map(type => (
-                      <option key={type.id} value={type.id}>
-                        {type.nama_rating}
-                      </option>
-                    ))
+                    // Show all rating types for main question, or filter out already used ones in extraAnswers
+                    ratingTypes
+                      .filter(type => {
+                        // Only show rating types of the right type
+                        if (type.tipe !== questionData.tipe_pertanyaan) return false;
+                        
+                        // If this is the currently selected option, always show it
+                        if (type.id === questionData.jenis_rating_id) return true;
+                        
+                        // Otherwise only show if not used in extraAnswers
+                        return !extraAnswers.some(ans => ans.jenis_rating_id === type.id);
+                      })
+                      .map(type => (
+                        <option key={type.id} value={type.id}>
+                          {type.nama_rating}
+                        </option>
+                      ))
                   )}
                 </select>
               </div>
@@ -325,11 +410,36 @@ export default function SurveyQuestionModal({
               onChange={e => {
                 const tipe = e.target.value as 'rating' | 'text';
                 setExtraAnswers(list =>
-                  list.map((item, i) =>
-                    i === idx
-                      ? { ...item, tipe, jenis_rating_id: tipe === 'rating' ? ratingTypes[0]?.id : undefined }
-                      : item
-                  )
+                  list.map((item, i) => {
+                    if (i !== idx) return item;
+                    
+                    // Get available rating types excluding the ones already used
+                    const availableTypes = ratingTypes.filter(rt => {
+                      if (rt.tipe !== tipe) return false;
+                      
+                      // Filter out types used in main question or other extra answers
+                      const otherExtraAnswerIds = extraAnswers
+                        .filter((_, j) => j !== idx)
+                        .map(ea => ea.jenis_rating_id);
+                      
+                      const usedIds = [
+                        questionData.jenis_rating_id,
+                        ...otherExtraAnswerIds
+                      ].filter(Boolean) as number[];
+                      
+                      return !usedIds.includes(rt.id);
+                    });
+                    
+                    // For text type, no rating ID is needed
+                    // For rating type, select the first available rating type if any
+                    return { 
+                      ...item, 
+                      tipe, 
+                      jenis_rating_id: tipe === 'rating' && availableTypes.length > 0 
+                        ? availableTypes[0]?.id 
+                        : undefined 
+                    };
+                  })
                 );
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -361,7 +471,23 @@ export default function SurveyQuestionModal({
                     <option>Tidak ada jenis rating</option>
                   ) : (
                     ratingTypes
-                      .filter(type => type.tipe === ans.tipe)
+                      .filter(type => {
+                        // Only show rating types of the right type
+                        if (type.tipe !== ans.tipe) return false;
+                        
+                        // If this is the currently selected option, always show it
+                        if (type.id === ans.jenis_rating_id) return true;
+                        
+                        // Filter out the main question's rating type
+                        if (type.id === questionData.jenis_rating_id) return false;
+                        
+                        // Filter out rating types used in other extra answers
+                        const otherExtraAnswerIds = extraAnswers
+                          .filter((_, i) => i !== idx) // exclude current answer
+                          .map(ea => ea.jenis_rating_id);
+                        
+                        return !otherExtraAnswerIds.includes(type.id);
+                      })
                       .map(type => (
                         <option key={type.id} value={type.id}>
                           {type.nama_rating}
@@ -374,9 +500,25 @@ export default function SurveyQuestionModal({
             {/* Tombol hapus */}
             <button
               type="button"
-              onClick={() =>
-                setExtraAnswers(list => list.filter((_, i) => i !== idx))
-              }
+              onClick={() => {
+                // When removing an answer, the rating becomes available again
+                setExtraAnswers(list => list.filter((_, i) => i !== idx));
+                
+                // Let the user know that the rating type is now available again
+                if (ans.tipe === 'rating' && ans.jenis_rating_id) {
+                  const removedType = ratingTypes.find(rt => rt.id === ans.jenis_rating_id);
+                  if (removedType) {
+                    toast.success(`Jenis rating "${removedType.nama_rating}" kembali tersedia`, {
+                      duration: 2000,
+                      style: {
+                        borderRadius: '10px',
+                        background: '#4CAF50',
+                        color: '#fff',
+                      },
+                    });
+                  }
+                }
+              }}
               className="h-10 w-10 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 self-end"
               title="Hapus"
             >

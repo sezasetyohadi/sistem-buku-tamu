@@ -29,6 +29,15 @@
 |--------|----------|-------------|
 | `GET` | `/api/lookup` | Mendapatkan data pendidikan dan profesi |
 
+### 🔐 Token Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/tokens` | Membuat token baru untuk tamu |
+| `GET` | `/api/tokens` | Mendapatkan token untuk tamu berdasarkan ID |
+| `POST` | `/api/tokens/verify` | Memverifikasi token |
+| `POST` | `/api/tokens/invalidate` | Menginvalidasi token |
+| `GET` | `/api/tokens/cleanup` | Membersihkan token yang sudah kadaluarsa |
+
 ---
 
 ## 📄 API Response Format
@@ -228,6 +237,101 @@
 
 ---
 
+## 🔐 Token API Details
+
+### POST /api/tokens
+**Request Body:**
+```json
+{
+  "tamuId": 123,
+  "tipe": "verifikasi", // or "reset"
+  "expiryHours": 24 // optional
+}
+```
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "tamu_id": 123,
+    "token": "3a7b4e8c21d5f9...",
+    "tipe": "verifikasi",
+    "expires_at": "2025-08-28T01:57:00.000Z",
+    "created_at": "2025-08-27T01:57:00.000Z"
+  },
+  "message": "Token created successfully"
+}
+```
+
+### GET /api/tokens?tamuId=123
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "tamu_id": 123,
+      "tipe": "verifikasi",
+      "expires_at": "2025-08-28T01:57:00.000Z",
+      "created_at": "2025-08-27T01:57:00.000Z"
+    }
+  ],
+  "message": "Tokens retrieved successfully"
+}
+```
+
+### POST /api/tokens/verify
+**Request Body:**
+```json
+{
+  "token": "3a7b4e8c21d5f9...",
+  "invalidate": true // optional, set to true to invalidate token after verification
+}
+```
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "tamuId": 123,
+    "tipe": "verifikasi",
+    "expires_at": "2025-08-28T01:57:00.000Z"
+  },
+  "message": "Token verified successfully"
+}
+```
+
+### POST /api/tokens/invalidate
+**Request Body:**
+```json
+{
+  "tokenId": 1
+}
+```
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Token invalidated successfully"
+}
+```
+
+### GET /api/tokens/cleanup?key=your_secure_key_here
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "deletedCount": 5
+  },
+  "message": "5 expired tokens cleaned up successfully"
+}
+```
+
+---
+
 ## 🗄️ Database Schema
 
 ### Tabel daftar_tamu
@@ -248,6 +352,19 @@ CREATE TABLE daftar_tamu (
   file_upload VARCHAR(255) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+### Tabel tamu_token
+```sql
+CREATE TABLE tamu_token (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tamu_id INT NOT NULL,
+  token VARCHAR(255) NOT NULL,
+  tipe ENUM('verifikasi','reset') NOT NULL DEFAULT 'verifikasi',
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (tamu_id) REFERENCES daftar_tamu(id) ON DELETE CASCADE
 );
 ```
 
@@ -315,6 +432,9 @@ DB_USER=root
 DB_PASSWORD=
 DB_NAME=disnaker
 DB_PORT=3306
+
+# Token Configuration
+TOKEN_CLEANUP_KEY=your_secure_key_here
 ```
 
 ---
@@ -356,6 +476,7 @@ DB_PORT=3306
 - ✅ **Lookup Data** - Dropdown data pendidikan & profesi
 - ✅ **CRUD Operations** - Create, Read, Update, Delete
 - ✅ **Search & Filter** - Pencarian dan filter data
+- ✅ **Token Management** - Sistem token untuk verifikasi tamu
 
 ---
 
@@ -366,3 +487,4 @@ DB_PORT=3306
 3. **Export Features** - Export ke Excel/PDF
 4. **Real-time Notifications** - Notifikasi real-time
 5. **Advanced Reports** - Laporan lanjutan
+6. **Email Notifications** - Notifikasi email dengan token

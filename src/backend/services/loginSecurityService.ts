@@ -42,7 +42,7 @@ export class LoginSecurityService {
 
     const user = (userRows as any[])[0];
     if (!user) {
-      throw new Error('User not found');
+      throw new Error('Username or password is incorrect');
     }
 
     // Check if account is currently locked

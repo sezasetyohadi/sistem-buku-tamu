@@ -38,7 +38,8 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
         <img
           src="https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
           alt="Status Pengajuan"
-          className="w-5 h-5"
+          className="w-4.5 h-4.5"
+          style={{ filter: isActive('/guest/status') ? 'invert(34%) sepia(98%) saturate(749%) hue-rotate(100deg) brightness(95%) contrast(92%)' : 'none' }}
         />
       )
     },
