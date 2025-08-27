@@ -29,6 +29,12 @@ const dummyStatus: Record<string, StatusItem> = {
 	},
 };
 
+// Dummy database untuk menyimpan token dan email
+const tokenEmails: Record<string, string> = {
+	ABC123: "user1@example.com",
+	XYZ789: "user2@example.com",
+};
+
 const statusColor: Record<StatusType, string> = {
 	Diproses: "bg-yellow-100 text-yellow-800",
 	Selesai: "bg-green-100 text-green-800",
@@ -39,6 +45,10 @@ export default function StatusPengajuanPage() {
 	const [token, setToken] = useState("");
 	const [status, setStatus] = useState<StatusItem | null>(null);
 	const [error, setError] = useState("");
+	const [email, setEmail] = useState("");
+	const [showForgotToken, setShowForgotToken] = useState(false);
+	const [forgotTokenMessage, setForgotTokenMessage] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleCheck = () => {
 		setError("");
@@ -48,7 +58,7 @@ export default function StatusPengajuanPage() {
 			setStatus(found);
 		} else {
 			setStatus(null);
-			setError("Nomor telepon tidak ditemukan. Pastikan nomor sudah benar.");
+			setError("Token tidak ditemukan. Pastikan token sudah benar.");
 		}
 	};
 
@@ -56,6 +66,42 @@ export default function StatusPengajuanPage() {
 		setToken("");
 		setStatus(null);
 		setError("");
+		setShowForgotToken(false);
+		setForgotTokenMessage("");
+		setEmail("");
+	};
+
+	const handleForgotToken = async () => {
+		if (!email.trim()) {
+			setForgotTokenMessage("Silakan masukkan email Anda");
+			return;
+		}
+
+		try {
+			setIsSubmitting(true);
+			setForgotTokenMessage("");
+
+			// Ganti dengan fetch ke API jika sudah ada backend
+			const response = await fetch("/api/forgot-token", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ email }),
+			});
+
+			const data = await response.json();
+
+			if (response.ok) {
+				setForgotTokenMessage(data.message || "Token telah dikirim ke email Anda");
+			} else {
+				setForgotTokenMessage(data.error || "Email tidak ditemukan");
+			}
+		} catch (err) {
+			setForgotTokenMessage("Terjadi kesalahan saat mengirim token");
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -70,19 +116,19 @@ export default function StatusPengajuanPage() {
 					Status Pengajuan
 				</h1>
 				<p className="text-gray-700 text-center">
-					Masukan nomor telepon pengajuan Anda untuk melihat status.
+					Masukan token pengajuan Anda untuk melihat status.
 				</p>
 			</div>
 
-			{!status && (
+			{!status && !showForgotToken && (
 				<div className="w-full bg-white rounded-xl shadow p-6 flex flex-col items-center">
 					<label className="block text-sm font-semibold text-gray-700 mb-2 text-center">
-						Nomor Telepon Pengajuan
+						Token Pengajuan
 					</label>
 					<input
 						type="text"
 						className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg text-center text-lg tracking-widest"
-						placeholder="Masukan nomor telepon di sini"
+						placeholder="Masukan token di sini"
 						value={token}
 						onChange={(e) => setToken(e.target.value)}
 						maxLength={16}
@@ -93,9 +139,49 @@ export default function StatusPengajuanPage() {
 					>
 						Cek Status
 					</button>
+					<button
+						onClick={() => setShowForgotToken(true)}
+						className="w-full mt-3 text-blue-600 text-sm hover:underline"
+					>
+						Lupa token?
+					</button>
 					{error && (
 						<div className="text-red-500 text-sm mt-3 text-center">
 							{error}
+						</div>
+					)}
+				</div>
+			)}
+
+			{!status && showForgotToken && (
+				<div className="w-full bg-white rounded-xl shadow p-6 flex flex-col items-center">
+					<h2 className="text-lg font-semibold text-gray-800 mb-4">Lupa Token?</h2>
+					<p className="text-gray-600 text-sm text-center mb-4">
+						Masukkan email yang terdaftar untuk menerima token Anda.
+					</p>
+					<input
+						type="email"
+						className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg"
+						placeholder="Email Anda"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+					/>
+					<button
+						onClick={handleForgotToken}
+						disabled={isSubmitting}
+						className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
+					>
+						{isSubmitting ? "Mengirim..." : "Kirim"}
+					</button>
+					<button
+						onClick={() => setShowForgotToken(false)}
+						className="w-full mt-3 text-gray-600 text-sm hover:underline"
+					>
+						Kembali
+					</button>
+					{forgotTokenMessage && (
+						<div className="text-sm mt-3 text-center p-3 rounded-lg bg-gray-100">
+							{forgotTokenMessage}
 						</div>
 					)}
 				</div>
