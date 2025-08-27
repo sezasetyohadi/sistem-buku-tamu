@@ -49,7 +49,7 @@ export default function SurveyQuestionModal({
   const [ratingTypes, setRatingTypes] = useState<RatingType[]>([]);
   const [isLoadingRatingTypes, setIsLoadingRatingTypes] = useState(false);
   const [showNewTypeDialog, setShowNewTypeDialog] = useState(false);
-  const [newTypeData, setNewTypeData] = useState({ type: 'rating', name: '' });
+  const [newTypeData, setNewTypeData] = useState({ name: '', options: [''] });
   const [questionData, setQuestionData] = useState<SurveyQuestion>({
     pertanyaan: '',
     tipe_pertanyaan: 'rating',
@@ -59,28 +59,14 @@ export default function SurveyQuestionModal({
   });
   const [extraAnswers, setExtraAnswers] = useState<
   { tipe: 'rating' | 'text'; jenis_rating_id?: number }[]>([]);
-  
-  // Track which rating types are already selected
-  const [usedRatingIds, setUsedRatingIds] = useState<number[]>([]);
-  
-  // Update used rating IDs whenever question data or extra answers change
-  useEffect(() => {
-    const mainRatingId = questionData.jenis_rating_id;
-    const extraRatingIds = extraAnswers
-      .filter(ans => ans.tipe === 'rating' && ans.jenis_rating_id)
-      .map(ans => ans.jenis_rating_id as number);
-    
-    // Combine all used rating IDs
-    const allUsedIds = mainRatingId ? [mainRatingId, ...extraRatingIds] : extraRatingIds;
-    setUsedRatingIds(allUsedIds);
-  }, [questionData.jenis_rating_id, extraAnswers]);
+  const [pendingExtraAnswerIdx, setPendingExtraAnswerIdx] = useState<number | null>(null);
 
   // Fetch rating types when modal is opened or question type changes
   useEffect(() => {
     if (isOpen) {
-      fetchRatingTypes(questionData.tipe_pertanyaan);
+      fetchRatingTypes();
     }
-  }, [isOpen, questionData.tipe_pertanyaan]);
+  }, [isOpen]);
 
   // Set question data when initialQuestion changes or modal is opened
   useEffect(() => {
@@ -137,45 +123,15 @@ export default function SurveyQuestionModal({
     }
   }, [initialQuestion, isOpen]);
 
-  // Fetch rating types from API with optional type filter
-  const fetchRatingTypes = async (type?: 'rating' | 'text') => {
+  const fetchRatingTypes = async () => {
     try {
       setIsLoadingRatingTypes(true);
-      
-      // Add type parameter to the URL if specified
-      let apiUrl = '/api/survey/rating-types';
-      if (type) {
-        apiUrl += `?type=${type}`;
-      }
-      
-      const response = await fetch(apiUrl);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch rating types');
-      }
-      
+      const response = await fetch('/api/survey/rating-types');
+      if (!response.ok) throw new Error('Failed to fetch rating types');
       const data = await response.json();
-      
       if (data.success && Array.isArray(data.data)) {
         setRatingTypes(data.data);
-        
-        // Set default rating type if available and none is selected
-        if (data.data.length > 0 && !questionData.jenis_rating_id) {
-          // Find a rating type that matches the current question type
-          const matchingType = data.data.find((rt: RatingType) => rt.tipe === questionData.tipe_pertanyaan);
-          if (matchingType) {
-            setQuestionData(prev => ({
-              ...prev,
-              jenis_rating_id: matchingType.id
-            }));
-          } else if (data.data.length > 0) {
-            // Fallback to first available type
-            setQuestionData(prev => ({
-              ...prev,
-              jenis_rating_id: data.data[0].id
-            }));
-          }
-        }
+        // Hapus kode auto-set jenis_rating_id di sini!
       }
     } catch (error) {
       console.error('Error fetching rating types:', error);
@@ -250,33 +206,35 @@ export default function SurveyQuestionModal({
   };
 
   const handleAddExtraAnswer = () => {
-    // Check available rating types
-    const availableRatingTypes = getAvailableRatingTypes('rating');
-    
-    if (availableRatingTypes.length > 0) {
-      // If there are still available rating types, add a rating answer with the first available type
+    // Cari rating yang belum dipakai
+    const usedIds = [
+      questionData.tipe_pertanyaan === 'rating' ? questionData.jenis_rating_id : null,
+      ...extraAnswers.filter(ans => ans.tipe === 'rating').map(ans => ans.jenis_rating_id)
+    ].filter(Boolean) as number[];
+
+    const availableRatings = ratingTypes.filter(
+      rt => rt.tipe === 'rating' && !usedIds.includes(rt.id)
+    );
+
+    if (availableRatings.length > 0) {
       setExtraAnswers([
         ...extraAnswers,
-        { tipe: 'rating', jenis_rating_id: availableRatingTypes[0].id }
+        { tipe: 'rating', jenis_rating_id: availableRatings[0].id }
       ]);
     } else {
-      // If all rating types are used, add a text answer
+      // Jika semua rating sudah dipakai, otomatis tambah tipe text
       setExtraAnswers([
         ...extraAnswers,
-        { tipe: 'text', jenis_rating_id: undefined }
+        { tipe: 'text' }
       ]);
-      
-      // Show info toast
-      toast.success('Semua jenis rating sudah digunakan. Menambahkan jawaban teks.', {
-        duration: 3000,
-        style: {
-          borderRadius: '10px',
-          background: '#FFD166',
-          color: '#333',
-        },
-      });
     }
   };
+
+  // Fungsi untuk mendapatkan id rating yang sudah dipakai
+  const usedRatingIds = [
+    questionData.tipe_pertanyaan === 'rating' ? questionData.jenis_rating_id : null,
+    ...extraAnswers.filter(ans => ans.tipe === 'rating').map(ans => ans.jenis_rating_id)
+  ].filter(Boolean) as number[];
 
   return (
     <Modal 
@@ -315,32 +273,11 @@ export default function SurveyQuestionModal({
                 value={questionData.tipe_pertanyaan}
                 onChange={(e) => {
                   const newType = e.target.value as 'rating' | 'text';
-                  
-                  // Fetch appropriate rating types for the new type
-                  fetchRatingTypes(newType);
-                  
-                  setQuestionData(prev => {
-                    // Create new question data with the new type
-                    const updated = {
-                      ...prev,
-                      tipe_pertanyaan: newType
-                    };
-                    
-                    // If switching to 'text' type, clear rating ID
-                    if (newType === 'text') {
-                      updated.jenis_rating_id = undefined;
-                    } else if (newType === 'rating') {
-                      // When switching to rating, find an available rating type
-                      const availableTypes = ratingTypes.filter(
-                        type => type.tipe === 'rating' && !usedRatingIds.includes(type.id)
-                      );
-                      
-                      if (availableTypes.length > 0) {
-                        updated.jenis_rating_id = availableTypes[0].id;
-                      }
-                    }
-                    
-                    return updated;
+                  setQuestionData({
+                    ...questionData,
+                    tipe_pertanyaan: newType,
+                    // Reset jenis_rating_id jika bukan rating
+                    jenis_rating_id: newType === 'rating' ? ratingTypes[0]?.id : undefined,
                   });
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -349,9 +286,9 @@ export default function SurveyQuestionModal({
                 <option value="text">Text</option>
               </select>
             </div>
-            
-            {/* Show jenis rating dropdown for both rating and text question types */}
-            {(questionData.tipe_pertanyaan === 'rating') && (
+
+            {/* Hanya tampil jika tipe_pertanyaan === 'rating' */}
+            {questionData.tipe_pertanyaan === 'rating' && (
               <div>
                 <label htmlFor="jenis_rating_id" className="block text-sm font-medium text-gray-700 mb-1">
                   Jenis Rating
@@ -359,42 +296,41 @@ export default function SurveyQuestionModal({
                 <select
                   id="jenis_rating_id"
                   value={questionData.jenis_rating_id || ''}
-                  onChange={(e) => setQuestionData({
-                    ...questionData,
-                    jenis_rating_id: parseInt(e.target.value) || undefined
-                  })}
+                  onChange={(e) => {
+                    if (e.target.value === 'add_new') {
+                      setShowNewTypeDialog(true);
+                      setPendingExtraAnswerIdx(null); // null artinya dropdown utama
+                    } else {
+                      setQuestionData({
+                        ...questionData,
+                        jenis_rating_id: parseInt(e.target.value) || undefined
+                      });
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={isLoadingRatingTypes}
                 >
+                  <option value="">Pilih Rating</option>
                   {isLoadingRatingTypes ? (
                     <option>Loading...</option>
                   ) : ratingTypes.length === 0 ? (
                     <option>Tidak ada jenis rating</option>
                   ) : (
-                    // Show all rating types for main question, or filter out already used ones in extraAnswers
                     ratingTypes
-                      .filter(type => {
-                        // Only show rating types of the right type
-                        if (type.tipe !== questionData.tipe_pertanyaan) return false;
-                        
-                        // If this is the currently selected option, always show it
-                        if (type.id === questionData.jenis_rating_id) return true;
-                        
-                        // Otherwise only show if not used in extraAnswers
-                        return !extraAnswers.some(ans => ans.jenis_rating_id === type.id);
-                      })
+                      .filter(type => type.tipe === questionData.tipe_pertanyaan)
                       .map(type => (
                         <option key={type.id} value={type.id}>
                           {type.nama_rating}
                         </option>
                       ))
                   )}
+                  <option value="add_new">Tambah Rating</option>
                 </select>
               </div>
             )}
           </div>
 
-{/* Tambah Jenis Jawaban di bawah grid (tetap tampil meski sudah diklik) */}
+{/* Tambah Jenis Jawaban di bawah grid */}
 {(questionData.tipe_pertanyaan === 'rating' || questionData.tipe_pertanyaan === 'text') && (
   <div className="mt-4">
     {/* Render semua extraAnswers */}
@@ -410,36 +346,11 @@ export default function SurveyQuestionModal({
               onChange={e => {
                 const tipe = e.target.value as 'rating' | 'text';
                 setExtraAnswers(list =>
-                  list.map((item, i) => {
-                    if (i !== idx) return item;
-                    
-                    // Get available rating types excluding the ones already used
-                    const availableTypes = ratingTypes.filter(rt => {
-                      if (rt.tipe !== tipe) return false;
-                      
-                      // Filter out types used in main question or other extra answers
-                      const otherExtraAnswerIds = extraAnswers
-                        .filter((_, j) => j !== idx)
-                        .map(ea => ea.jenis_rating_id);
-                      
-                      const usedIds = [
-                        questionData.jenis_rating_id,
-                        ...otherExtraAnswerIds
-                      ].filter(Boolean) as number[];
-                      
-                      return !usedIds.includes(rt.id);
-                    });
-                    
-                    // For text type, no rating ID is needed
-                    // For rating type, select the first available rating type if any
-                    return { 
-                      ...item, 
-                      tipe, 
-                      jenis_rating_id: tipe === 'rating' && availableTypes.length > 0 
-                        ? availableTypes[0]?.id 
-                        : undefined 
-                    };
-                  })
+                  list.map((item, i) =>
+                    i === idx
+                      ? { ...item, tipe, jenis_rating_id: undefined } // Perbaikan di sini
+                      : item
+                  )
                 );
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -449,6 +360,7 @@ export default function SurveyQuestionModal({
             </select>
           </div>
           <div className="flex gap-2">
+            {/* Hanya tampil jika ans.tipe === 'rating' */}
             {ans.tipe === 'rating' && (
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -456,44 +368,34 @@ export default function SurveyQuestionModal({
                 </label>
                 <select
                   value={ans.jenis_rating_id || ''}
-                  onChange={e =>
-                    setExtraAnswers(list =>
-                      list.map((item, i) =>
-                        i === idx
-                          ? { ...item, jenis_rating_id: parseInt(e.target.value) || undefined }
-                          : item
-                      )
-                    )
-                  }
+                  onChange={e => {
+                    if (e.target.value === 'add_new') {
+                      setShowNewTypeDialog(true);
+                      setPendingExtraAnswerIdx(idx); // untuk extraAnswers
+                    } else {
+                      setExtraAnswers(list =>
+                        list.map((item, i) =>
+                          i === idx
+                            ? { ...item, jenis_rating_id: parseInt(e.target.value) || undefined }
+                            : item
+                        )
+                      );
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {ratingTypes.length === 0 ? (
-                    <option>Tidak ada jenis rating</option>
-                  ) : (
-                    ratingTypes
-                      .filter(type => {
-                        // Only show rating types of the right type
-                        if (type.tipe !== ans.tipe) return false;
-                        
-                        // If this is the currently selected option, always show it
-                        if (type.id === ans.jenis_rating_id) return true;
-                        
-                        // Filter out the main question's rating type
-                        if (type.id === questionData.jenis_rating_id) return false;
-                        
-                        // Filter out rating types used in other extra answers
-                        const otherExtraAnswerIds = extraAnswers
-                          .filter((_, i) => i !== idx) // exclude current answer
-                          .map(ea => ea.jenis_rating_id);
-                        
-                        return !otherExtraAnswerIds.includes(type.id);
-                      })
-                      .map(type => (
-                        <option key={type.id} value={type.id}>
-                          {type.nama_rating}
-                        </option>
-                      ))
-                  )}
+                  <option value="">Pilih Rating</option>
+                  {ratingTypes
+                    .filter(type =>
+                      type.tipe === 'rating' &&
+                      (!usedRatingIds.includes(type.id) || type.id === ans.jenis_rating_id)
+                    )
+                    .map(type => (
+                      <option key={type.id} value={type.id}>
+                        {type.nama_rating}
+                      </option>
+                    ))}
+                  <option value="add_new">Tambah Rating</option>
                 </select>
               </div>
             )}
@@ -599,6 +501,120 @@ export default function SurveyQuestionModal({
           </button>
         </div>
       </div>
+
+      {/* Modal untuk menambah jenis rating baru */}
+      {showNewTypeDialog && (
+        <Modal isOpen={showNewTypeDialog} onClose={() => setShowNewTypeDialog(false)} title="Tambah Rating Baru" size="sm">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Judul Rating</label>
+              <input
+                type="text"
+                value={newTypeData.name}
+                onChange={e => setNewTypeData({ ...newTypeData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="Masukan Judul Rating"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Opsi Rating</label>
+              {newTypeData.options.map((opt, idx) => (
+                <div key={idx} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={e => setNewTypeData(data => ({
+                      ...data,
+                      options: data.options.map((o, i) => i === idx ? e.target.value : o)
+                    }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder={`Opsi ${idx + 1}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setNewTypeData(data => ({
+                      ...data,
+                      options: data.options.filter((_, i) => i !== idx)
+                    }))}
+                    className="px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                    disabled={newTypeData.options.length <= 1}
+                  >×</button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setNewTypeData(data => ({
+                  ...data,
+                  options: [...data.options, '']
+                }))}
+                className="mt-2 px-3 py-1 border border-blue-500 text-blue-600 rounded hover:bg-blue-50"
+              >+ Tambah Opsi</button>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowNewTypeDialog(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              >Batal</button>
+              <button
+                type="button"
+                onClick={async () => {
+                  // Validasi
+                  if (!newTypeData.name.trim()) {
+                    toast.error('Judul rating wajib diisi');
+                    return;
+                  }
+                  if (newTypeData.options.some(opt => !opt.trim())) {
+                    toast.error('Semua opsi rating wajib diisi');
+                    return;
+                  }
+                  // Simpan ke backend (atau local state jika belum ada backend)
+                  const res = await fetch('/api/survey/rating-types', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      nama_rating: newTypeData.name,
+                      tipe: 'rating',
+                      options: newTypeData.options
+                    })
+                  });
+                  const data = await res.json();
+                  if (data.success && data.data?.id) {
+                    // Tambahkan ke ratingTypes
+                    setRatingTypes(prev => [...prev, {
+                      id: data.data.id,
+                      tipe: 'rating',
+                      nama_rating: newTypeData.name
+                    }]);
+                    // Set ke dropdown yang sedang aktif
+                    if (pendingExtraAnswerIdx !== null) {
+                      setExtraAnswers(list =>
+                        list.map((item, i) =>
+                          i === pendingExtraAnswerIdx
+                            ? { ...item, jenis_rating_id: data.data.id }
+                            : item
+                        )
+                      );
+                      setPendingExtraAnswerIdx(null);
+                    } else {
+                      setQuestionData(prev => ({
+                        ...prev,
+                        jenis_rating_id: data.data.id
+                      }));
+                    }
+                    setShowNewTypeDialog(false);
+                    setNewTypeData({ name: '', options: [''] });
+                    toast.success('Jenis rating berhasil ditambahkan!');
+                  } else {
+                    toast.error('Gagal menambah jenis rating');
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >Simpan</button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Modal>
   );
 }
