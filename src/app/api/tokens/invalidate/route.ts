@@ -1,37 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { invalidateToken } from '@/backend/services/tokenService';
+import { deactivateToken, verifyToken } from '@/backend/services/tokenService';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Validate request
-    if (!body.tokenId) {
+    // Support deactivation by ID or token string
+    if (!body.tokenId && !body.token) {
       return NextResponse.json(
-        { success: false, message: 'Token ID is required' },
+        { success: false, message: 'Either token ID or token string is required' },
         { status: 400 }
       );
     }
     
-    // Invalidate the token
-    const result = await invalidateToken(body.tokenId);
+    let tokenId: number;
+    
+    // If token string is provided, find the token ID
+    if (body.token) {
+      const tokenData = await verifyToken(body.token);
+      if (!tokenData || !tokenData.id) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid or inactive token' },
+          { status: 404 }
+        );
+      }
+      tokenId = tokenData.id;
+    } else {
+      tokenId = body.tokenId;
+    }
+    
+    // Deactivate the token
+    const result = await deactivateToken(tokenId);
     
     if (!result) {
       return NextResponse.json(
-        { success: false, message: 'Failed to invalidate token' },
+        { success: false, message: 'Failed to deactivate token' },
         { status: 400 }
       );
     }
     
     return NextResponse.json({
       success: true,
-      message: 'Token invalidated successfully'
+      message: 'Token deactivated successfully'
     });
     
   } catch (error: any) {
-    console.error('Error invalidating token:', error);
+    console.error('Error deactivating token:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to invalidate token', error: error.message },
+      { success: false, message: 'Failed to deactivate token', error: error.message },
       { status: 500 }
     );
   }

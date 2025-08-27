@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cleanupExpiredTokens } from '@/backend/services/tokenService';
+import { cleanupOldTokens } from '@/backend/services/tokenService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,13 +14,17 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Run the cleanup
-    const deletedCount = await cleanupExpiredTokens();
+    // Get the number of days to keep tokens (default 30)
+    const days = request.nextUrl.searchParams.get('days');
+    const daysToKeep = days ? parseInt(days) : 30;
+    
+    // Run the cleanup of old inactive tokens
+    const deletedCount = await cleanupOldTokens(daysToKeep);
     
     return NextResponse.json({
       success: true,
-      data: { deletedCount },
-      message: `${deletedCount} expired tokens cleaned up successfully`
+      data: { deletedCount, daysKept: daysToKeep },
+      message: `${deletedCount} old inactive tokens cleaned up successfully`
     });
     
   } catch (error: any) {

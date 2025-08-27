@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, invalidateToken } from '@/backend/services/tokenService';
+import { verifyToken, deactivateToken, getTokenStatus } from '@/backend/services/tokenService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,22 +18,27 @@ export async function POST(request: NextRequest) {
     
     if (!tokenData) {
       return NextResponse.json(
-        { success: false, message: 'Invalid or expired token' },
+        { success: false, message: 'Invalid or inactive token' },
         { status: 400 }
       );
     }
     
-    // If invalidation is requested
-    if (body.invalidate) {
-      await invalidateToken(tokenData.id!);
+    // Get booking status
+    const status = await getTokenStatus(body.token);
+    
+    // If deactivation is requested
+    if (body.deactivate) {
+      await deactivateToken(tokenData.id!);
     }
     
     return NextResponse.json({
       success: true,
       data: {
+        token: tokenData.token,
         tamuId: tokenData.tamu_id,
-        tipe: tokenData.tipe,
-        expires_at: tokenData.expires_at
+        is_active: tokenData.is_active,
+        created_at: tokenData.created_at,
+        bookingStatus: status
       },
       message: 'Token verified successfully'
     });

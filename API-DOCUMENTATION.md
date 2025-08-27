@@ -32,11 +32,12 @@
 ### 🔐 Token Management
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/tokens` | Membuat token baru untuk tamu |
-| `GET` | `/api/tokens` | Mendapatkan token untuk tamu berdasarkan ID |
-| `POST` | `/api/tokens/verify` | Memverifikasi token |
-| `POST` | `/api/tokens/invalidate` | Menginvalidasi token |
-| `GET` | `/api/tokens/cleanup` | Membersihkan token yang sudah kadaluarsa |
+| `POST` | `/api/tokens` | Membuat token baru untuk cek status tamu |
+| `GET` | `/api/tokens?tamuId=123` | Mendapatkan token berdasarkan ID tamu |
+| `GET` | `/api/tokens?token=abcd1234` | Cek status kunjungan tamu dengan token |
+| `POST` | `/api/tokens/verify` | Memverifikasi token dan cek status kunjungan |
+| `POST` | `/api/tokens/invalidate` | Menonaktifkan token |
+| `GET` | `/api/tokens/cleanup` | Membersihkan token lama yang tidak aktif |
 
 ---
 
@@ -243,9 +244,7 @@
 **Request Body:**
 ```json
 {
-  "tamuId": 123,
-  "tipe": "verifikasi", // or "reset"
-  "expiryHours": 24 // optional
+  "tamuId": 123
 }
 ```
 **Response:**
@@ -256,11 +255,10 @@
     "id": 1,
     "tamu_id": 123,
     "token": "3a7b4e8c21d5f9...",
-    "tipe": "verifikasi",
-    "expires_at": "2025-08-28T01:57:00.000Z",
+    "is_active": true,
     "created_at": "2025-08-27T01:57:00.000Z"
   },
-  "message": "Token created successfully"
+  "message": "Booking status token created successfully"
 }
 ```
 
@@ -273,12 +271,37 @@
     {
       "id": 1,
       "tamu_id": 123,
-      "tipe": "verifikasi",
-      "expires_at": "2025-08-28T01:57:00.000Z",
+      "token": "3a7b4e8c21d5f9...",
+      "is_active": true,
       "created_at": "2025-08-27T01:57:00.000Z"
     }
   ],
-  "message": "Tokens retrieved successfully"
+  "message": "Booking tokens retrieved successfully"
+}
+```
+
+### GET /api/tokens?token=3a7b4e8c21d5f9...
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "tamuId": 123,
+    "status": "checked_in",
+    "details": {
+      "id": 123,
+      "nama": "John Doe",
+      "nomor_telp": "081234567890",
+      "email": "john@example.com",
+      "keperluan": "Konsultasi layanan",
+      "jadwal_checkin": "2025-08-27T10:00:00.000Z",
+      "waktu_checkin": "2025-08-27T10:05:22.000Z",
+      "waktu_checkout": null,
+      "status_kunjungan": "ongoing",
+      "bidang": "Bidang Pelatihan Kerja"
+    }
+  },
+  "message": "Booking status retrieved successfully"
 }
 ```
 
@@ -287,7 +310,7 @@
 ```json
 {
   "token": "3a7b4e8c21d5f9...",
-  "invalidate": true // optional, set to true to invalidate token after verification
+  "deactivate": true // optional, set to true to deactivate token after verification
 }
 ```
 **Response:**
@@ -295,9 +318,26 @@
 {
   "success": true,
   "data": {
+    "token": "3a7b4e8c21d5f9...",
     "tamuId": 123,
-    "tipe": "verifikasi",
-    "expires_at": "2025-08-28T01:57:00.000Z"
+    "is_active": true,
+    "created_at": "2025-08-27T01:57:00.000Z",
+    "bookingStatus": {
+      "tamuId": 123,
+      "status": "checked_in",
+      "details": {
+        "id": 123,
+        "nama": "John Doe",
+        "nomor_telp": "081234567890",
+        "email": "john@example.com",
+        "keperluan": "Konsultasi layanan",
+        "jadwal_checkin": "2025-08-27T10:00:00.000Z",
+        "waktu_checkin": "2025-08-27T10:05:22.000Z",
+        "waktu_checkout": null,
+        "status_kunjungan": "ongoing",
+        "bidang": "Bidang Pelatihan Kerja"
+      }
+    }
   },
   "message": "Token verified successfully"
 }
@@ -310,23 +350,30 @@
   "tokenId": 1
 }
 ```
+OR
+```json
+{
+  "token": "3a7b4e8c21d5f9..."
+}
+```
 **Response:**
 ```json
 {
   "success": true,
-  "message": "Token invalidated successfully"
+  "message": "Token deactivated successfully"
 }
 ```
 
-### GET /api/tokens/cleanup?key=your_secure_key_here
+### GET /api/tokens/cleanup?key=your_secure_key_here&days=30
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    "deletedCount": 5
+    "deletedCount": 5,
+    "daysKept": 30
   },
-  "message": "5 expired tokens cleaned up successfully"
+  "message": "5 old inactive tokens cleaned up successfully"
 }
 ```
 
@@ -361,9 +408,8 @@ CREATE TABLE tamu_token (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tamu_id INT NOT NULL,
   token VARCHAR(255) NOT NULL,
-  tipe ENUM('verifikasi','reset') NOT NULL DEFAULT 'verifikasi',
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (tamu_id) REFERENCES daftar_tamu(id) ON DELETE CASCADE
 );
 ```
@@ -433,7 +479,7 @@ DB_PASSWORD=
 DB_NAME=disnaker
 DB_PORT=3306
 
-# Token Configuration
+# Token Configuration (untuk pembersihan token lama)
 TOKEN_CLEANUP_KEY=your_secure_key_here
 ```
 
@@ -476,7 +522,7 @@ TOKEN_CLEANUP_KEY=your_secure_key_here
 - ✅ **Lookup Data** - Dropdown data pendidikan & profesi
 - ✅ **CRUD Operations** - Create, Read, Update, Delete
 - ✅ **Search & Filter** - Pencarian dan filter data
-- ✅ **Token Management** - Sistem token untuk verifikasi tamu
+- ✅ **Token Management** - Sistem token untuk cek status kunjungan tamu
 
 ---
 
@@ -487,4 +533,4 @@ TOKEN_CLEANUP_KEY=your_secure_key_here
 3. **Export Features** - Export ke Excel/PDF
 4. **Real-time Notifications** - Notifikasi real-time
 5. **Advanced Reports** - Laporan lanjutan
-6. **Email Notifications** - Notifikasi email dengan token
+6. **QR Code Integration** - QR Code untuk token status kunjungan
