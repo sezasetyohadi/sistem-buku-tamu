@@ -1,20 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { executeQuery } from '@/backend/config/db';
 
-// Dummy database untuk menyimpan token dan email
-const tokenDatabase: Record<string, string> = {
-  'ABC123': 'user1@example.com',
-  'XYZ789': 'user2@example.com',
-};
-
-// Reverse lookup untuk mencari token berdasarkan email
-const getTokenByEmail = (email: string): string | null => {
-  for (const [token, tokenEmail] of Object.entries(tokenDatabase)) {
-    if (tokenEmail === email) {
-      return token;
+// Fungsi untuk mencari token berdasarkan email
+const getTokenByEmail = async (email: string): Promise<string | null> => {
+  try {
+    // Cari tamu berdasarkan email
+    const guests = await executeQuery<any[]>(
+      `SELECT dt.id, dt.email FROM daftar_tamu dt WHERE dt.email = ? LIMIT 1`,
+      [email]
+    );
+    
+    if (!guests || guests.length === 0) {
+      return null;
     }
+    
+    const tamuId = guests[0].id;
+    
+    // Cari token aktif untuk tamu tersebut
+    const tokens = await executeQuery<any[]>(
+      `SELECT token FROM tamu_token WHERE tamu_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1`,
+      [tamuId]
+    );
+    
+    if (!tokens || tokens.length === 0) {
+      return null;
+    }
+    
+    return tokens[0].token;
+  } catch (error) {
+    console.error('Error getting token by email:', error);
+    return null;
   }
-  return null;
 };
 
 // Konfigurasi transporter nodemailer
@@ -24,9 +41,12 @@ const transporter = nodemailer.createTransport({
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: process.env.SMTP_SECURE === 'true',
   auth: {
-    user: process.env.SMTP_USER || 'your-email@gmail.com',
-    pass: process.env.SMTP_PASSWORD || 'your-app-password',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
   },
+  // Tambahkan opsi debug untuk membantu troubleshooting
+  logger: process.env.NODE_ENV !== 'production',
+  debug: process.env.NODE_ENV !== 'production',
 });
 
 export async function POST(request: NextRequest) {
@@ -41,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cari token berdasarkan email
-    const token = getTokenByEmail(email);
+    const token = await getTokenByEmail(email);
     
     if (!token) {
       return NextResponse.json(
@@ -72,11 +92,24 @@ export async function POST(request: NextRequest) {
       { success: true, message: 'Token telah dikirim ke email Anda' },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending token:', error);
+    
+    // Pesan error yang lebih spesifik berdasarkan jenis error
+    let errorMessage = 'Terjadi kesalahan saat mengirim token';
+    let statusCode = 500;
+    
+    if (error.code === 'EAUTH') {
+      errorMessage = 'Gagal autentikasi email. Silakan periksa konfigurasi SMTP di server.';
+    } else if (error.code === 'ESOCKET') {
+      errorMessage = 'Gagal terhubung ke server email. Silakan periksa koneksi internet atau konfigurasi SMTP.';
+    } else if (error.code === 'EENVELOPE') {
+      errorMessage = 'Alamat email tidak valid. Silakan periksa alamat email tujuan.';
+    }
+    
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat mengirim token' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: statusCode }
     );
   }
 }

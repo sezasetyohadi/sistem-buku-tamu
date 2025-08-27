@@ -81,7 +81,7 @@ export default function StatusPengajuanPage() {
 			setIsSubmitting(true);
 			setForgotTokenMessage("");
 
-			// Ganti dengan fetch ke API jika sudah ada backend
+			// Kirim permintaan ke API untuk mendapatkan token
 			const response = await fetch("/api/forgot-token", {
 				method: "POST",
 				headers: {
@@ -93,8 +93,12 @@ export default function StatusPengajuanPage() {
 			const data = await response.json();
 
 			if (response.ok) {
-				setForgotTokenMessage(data.message || "Token telah dikirim ke email Anda");
+				// Tampilkan alert bahwa token berhasil dikirim
+				alert("Token berhasil dikirimkan");
+				// Reset form dan kembali ke halaman input token
+				handleReset();
 			} else {
+				// Tampilkan pesan error yang lebih informatif dari server
 				setForgotTokenMessage(data.error || "Email tidak ditemukan");
 			}
 		} catch (err) {
@@ -180,10 +184,10 @@ export default function StatusPengajuanPage() {
 						Kembali
 					</button>
 					{forgotTokenMessage && (
-						<div className="text-sm mt-3 text-center p-3 rounded-lg bg-gray-100">
-							{forgotTokenMessage}
-						</div>
-					)}
+					<div className={`text-sm mt-3 text-center p-3 rounded-lg ${forgotTokenMessage.includes('berhasil') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+						{forgotTokenMessage}
+					</div>
+				)}
 				</div>
 			)}
 
