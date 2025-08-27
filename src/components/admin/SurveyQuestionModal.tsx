@@ -512,10 +512,50 @@ export default function SurveyQuestionModal({
               ))}
               <button
                 type="button"
-                onClick={() => setNewTypeData(data => ({
-                  ...data,
-                  options: [...data.options, '']
-                }))}
+                onClick={async () => {
+                  // Get the current rating type id (if available, only after rating type is created)
+                  // For new rating type, we don't have jenis_rating_id yet, so just add to local state
+                  if (!newTypeData.name.trim()) {
+                    toast.error('Isi judul rating terlebih dahulu sebelum menambah opsi!');
+                    return;
+                  }
+                  // If this is a new rating type (not yet saved), just add to local state
+                  if (!pendingExtraAnswerIdx && !ratingTypes.some(rt => rt.nama_rating === newTypeData.name)) {
+                    setNewTypeData(data => ({
+                      ...data,
+                      options: [...data.options, '']
+                    }));
+                    return;
+                  }
+                  // Otherwise, add to database
+                  // Find the jenis_rating_id for this rating type
+                  const ratingType = ratingTypes.find(rt => rt.nama_rating === newTypeData.name);
+                  if (!ratingType) {
+                    toast.error('Jenis rating belum tersimpan di database!');
+                    return;
+                  }
+                  // Determine next urutan_rating
+                  const urutan_rating = newTypeData.options.length + 1;
+                  const res = await fetch('/api/survey/rating-options', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      jenis_rating_id: ratingType.id,
+                      skala_rating: '', // You may want to prompt user for the new option value
+                      urutan_rating
+                    })
+                  });
+                  const data = await res.json();
+                  if (data.success && data.data?.id) {
+                    setNewTypeData(prev => ({
+                      ...prev,
+                      options: [...prev.options, ''] // You may want to use the value from user input
+                    }));
+                    toast.success('Opsi berhasil ditambahkan ke database!');
+                  } else {
+                    toast.error('Gagal menambah opsi ke database');
+                  }
+                }}
                 className="mt-2 px-3 py-1 border border-blue-500 text-blue-600 rounded hover:bg-blue-50"
               >+ Tambah Opsi</button>
             </div>
