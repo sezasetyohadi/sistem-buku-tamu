@@ -230,5 +230,17 @@ export const SURVEY_QUERIES = {
   DELETE_QUESTION: `
     DELETE FROM pertanyaan_survei
     WHERE id = ?
+  `,
+  
+  // Add a new rating type
+  ADD_RATING_TYPE: `
+    INSERT INTO jenis_rating (tipe, nama_rating)
+    VALUES (?, ?)
+  `,
+  
+  // Add a new rating option
+  ADD_RATING_OPTION: `
+    INSERT INTO opsi_rating (jenis_rating_id, skala_rating, urutan_rating)
+    VALUES (?, ?, ?)
   `
 };
