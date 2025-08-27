@@ -9,6 +9,7 @@ export default function Register() {
   const handleFormSubmit = async (data: any) => {
     setIsLoading(true);
     try {
+      // Step 1: Register the guest
       const response = await fetch('/api/guests', {
         method: 'POST',
         headers: {
@@ -20,14 +21,40 @@ export default function Register() {
       const result = await response.json();
 
       if (result.success) {
-        alert('Registrasi berhasil! Terima kasih telah mendaftar sebagai tamu DISNAKERTRANS Jawa Tengah.');
         console.log('Guest registered:', result.data);
+        
+        // Step 2: Create a token for the guest
+        const tokenResponse = await fetch('/api/tokens', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ tamuId: result.data.id }),
+        });
+        
+        const tokenResult = await tokenResponse.json();
+        
+        if (tokenResult.success) {
+          console.log('Token created:', tokenResult.data);
+          // Pass the token to the form component to display in notification
+          return {
+            success: true,
+            guestData: result.data,
+            tokenData: tokenResult.data
+          };
+        } else {
+          console.error('Token creation failed:', tokenResult.message);
+          alert(`Registrasi berhasil, tetapi pembuatan token gagal: ${tokenResult.message}`);
+          return { success: true, guestData: result.data, tokenData: null };
+        }
       } else {
         alert(`Registrasi gagal: ${result.message}`);
+        return { success: false };
       }
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
+      return { success: false };
     } finally {
       setIsLoading(false);
     }

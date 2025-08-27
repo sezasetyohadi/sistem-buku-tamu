@@ -4,13 +4,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import PrimaryButton from '../ui/PrimaryButton';
+import Card from '../ui/Card';
 import FormInput from '../ui/FormInput';
 import FormSelect from '../ui/FormSelect';
-import Card from '../ui/Card';
+import PrimaryButton from '../ui/PrimaryButton';
+import TokenModal from '../ui/TokenModal';
 
 interface GuestRegistrationFormProps {
-  onSubmit?: (data: any) => void;
+  onSubmit?: (data: any) => Promise<{success: boolean, guestData?: any, tokenData?: any}>;
   isLoading?: boolean;
   isInModal?: boolean; // New prop to indicate if the form is displayed in a modal
 }
@@ -51,17 +52,11 @@ export default function GuestRegistrationForm({
   const [memperolehOptions, setMemperolehOptions] = useState<Array<{id: number, nama_opsi: string}>>([]);
   const [salinanOptions, setSalinanOptions] = useState<Array<{id: number, nama_opsi: string}>>([]);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  const [showNotification, setShowNotification] = useState(false);
+  const [showTokenModal, setShowTokenModal] = useState(false);
+  const [token, setToken] = useState<string>('');
 
-  // Auto hide notification after 5 seconds
-  useEffect(() => {
-    if (showNotification) {
-      const timer = setTimeout(() => {
-        setShowNotification(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showNotification]);
+  // Token modal will only be hidden when user clicks close button
+  // No auto-hide functionality
 
   // Fetch options from API
   useEffect(() => {
@@ -247,7 +242,7 @@ export default function GuestRegistrationForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
@@ -278,10 +273,17 @@ export default function GuestRegistrationForm({
       };
       
       console.log('Sending data to API:', apiFormData);
-      onSubmit?.(apiFormData);
       
-      // Show success notification
-      setShowNotification(true);
+      if (onSubmit) {
+        const result = await onSubmit(apiFormData);
+        
+        if (result.success && result.tokenData) {
+          // Set token for display in modal
+          setToken(result.tokenData.token);
+          // Show token modal
+          setShowTokenModal(true);
+        }
+      }
       
       // Auto reset form setelah submit berhasil
       setFormData({
@@ -598,64 +600,12 @@ export default function GuestRegistrationForm({
         </form>
       </Card>
 
-    {/* Success Notification Toast */}
-    {showNotification && (
-      <div className="fixed top-4 right-4 z-50 transform transition-all duration-500 ease-in-out">
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl border border-green-400 min-w-80 max-w-md">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-lg">Registrasi Berhasil! 🎉</h4>
-                  <p className="text-green-50 text-sm mt-1">
-                    Selamat datang di DISNAKERTRANS Jawa Tengah
-                  </p>
-                  <p className="text-green-50 text-xs mt-1">
-                    Data Anda telah tersimpan dengan aman
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowNotification(false)}
-                  className="ml-3 text-white/80 hover:text-white transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Progress bar */}
-          <div className="mt-3 bg-white/20 rounded-full h-1 overflow-hidden">
-            <div 
-              className="h-full bg-white/60 rounded-full transition-all ease-linear"
-              style={{
-                width: '100%',
-                animation: 'progressBar 5s linear forwards'
-              }}
-            ></div>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Inline styles for animation */}
-    <style dangerouslySetInnerHTML={{
-      __html: `
-        @keyframes progressBar {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `
-    }} />
+    {/* Token Success Modal */}
+    <TokenModal 
+      isOpen={showTokenModal} 
+      onClose={() => setShowTokenModal(false)} 
+      token={token} 
+    />
     </>
   );
 }
