@@ -3,6 +3,7 @@ import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthGuard from "../../components/auth/AuthGuard";
+import { getAdminSessionData, clearAdminSessionAndRedirect } from "../../lib/utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,14 +15,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const [adminName, setAdminName] = React.useState<string>('Admin');
   const [adminInitial, setAdminInitial] = React.useState<string>('A');
+  const [adminProfilePicture, setAdminProfilePicture] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     // Get admin session data when component mounts
     const getAdminData = () => {
       try {
-        const adminSessionStr = localStorage.getItem('admin_session');
-        if (adminSessionStr) {
-          const adminSession = JSON.parse(adminSessionStr);
+        const adminSession = getAdminSessionData() as any;
+        if (adminSession) {
           if (adminSession.nama_lengkap) {
             // Get the first word of the full name
             const firstName = adminSession.nama_lengkap.split(' ')[0];
@@ -29,14 +30,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             // Get the first letter for the initial
             setAdminInitial(firstName.charAt(0).toUpperCase());
           }
+          if (adminSession.profile_picture) {
+            setAdminProfilePicture(adminSession.profile_picture);
+          }
         }
       } catch (error) {
         console.error('Error getting admin data:', error);
+        clearAdminSessionAndRedirect(router);
       }
     };
     
     getAdminData();
-  }, []);
+  }, [router]);
 
   // Don't apply layout to login page
   if (pathname === '/admin/login') {
@@ -211,9 +216,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
               {/* User Profile */}
               <Link href="/admin/profile" className="flex items-center space-x-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors duration-200 group">
-                <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200">
-                  <span className="text-sm font-medium text-white">{adminInitial}</span>
-                </div>
+                {adminProfilePicture ? (
+                  <img
+                    src={adminProfilePicture}
+                    alt="Profile"
+                    className="h-8 w-8 rounded-full object-cover ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200">
+                    <span className="text-sm font-medium text-white">{adminInitial}</span>
+                  </div>
+                )}
                 <span className="text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">{adminName}</span>
               </Link>
             </div>

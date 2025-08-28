@@ -43,7 +43,18 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
         if (adminSession && authCookie) {
           try {
-            const sessionData = JSON.parse(adminSession);
+            let sessionData;
+            try {
+              sessionData = JSON.parse(adminSession);
+            } catch (parseError) {
+              console.error('Error parsing admin session JSON in AuthGuard:', parseError);
+              // Clear corrupted session data
+              localStorage.removeItem('admin_session');
+              document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              setIsAuthenticated(false);
+              router.push('/admin/login');
+              return;
+            }
             
             // Check if session is not expired (24 hours or 7 days for remember me)
             const loginTime = new Date(sessionData.loginTime);

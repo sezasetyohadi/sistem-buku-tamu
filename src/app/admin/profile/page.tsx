@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getAdminSessionData, clearAdminSessionAndRedirect } from "../../../lib/utils";
 
 interface AdminProfile {
   id: number;
@@ -11,6 +12,7 @@ interface AdminProfile {
   role: string;
   created_at: string;
   is_super_admin: boolean;
+  profile_picture?: string | null;
 }
 
 export default function AdminProfile() {
@@ -25,6 +27,8 @@ export default function AdminProfile() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const router = useRouter();
@@ -36,19 +40,17 @@ export default function AdminProfile() {
         setIsLoading(true);
         
         // Get admin session from localStorage
-        const adminSession = localStorage.getItem('admin_session');
-        if (!adminSession) {
+        const sessionData = getAdminSessionData() as any;
+        if (!sessionData) {
           // Redirect to login if no session found
-          router.replace('/admin/login');
+          clearAdminSessionAndRedirect(router);
           return;
         }
-
-        // Parse admin session
-        const sessionData = JSON.parse(adminSession);
         
+        const adminSession = localStorage.getItem('admin_session');
         const response = await fetch('/api/admin/profile', {
           headers: {
-            'x-admin-session': adminSession
+            'x-admin-session': adminSession || ''
           }
         });
 
@@ -66,7 +68,8 @@ export default function AdminProfile() {
             nama_lengkap: data.admin.nama_lengkap || sessionData.nama_lengkap || 'Administrator',
             role: data.admin.is_super_admin ? 'Super Admin' : 'Admin',
             created_at: data.admin.created_at,
-            is_super_admin: data.admin.is_super_admin
+            is_super_admin: data.admin.is_super_admin,
+            profile_picture: data.admin.profile_picture
           });
 
           setEditForm({
@@ -85,7 +88,8 @@ export default function AdminProfile() {
             nama_lengkap: sessionData.nama_lengkap || 'Administrator',
             role: sessionData.is_super_admin ? 'Super Admin' : 'Admin',
             created_at: sessionData.loginTime || new Date().toISOString(),
-            is_super_admin: sessionData.is_super_admin
+            is_super_admin: sessionData.is_super_admin,
+            profile_picture: sessionData.profile_picture || null
           });
 
           setEditForm({
@@ -96,13 +100,12 @@ export default function AdminProfile() {
             confirmPassword: "",
           });
         }
-      } catch (error) {
-        console.error('Error fetching admin profile:', error);
-        // Try to get data from session as fallback
-        try {
-          const adminSession = localStorage.getItem('admin_session');
-          if (adminSession) {
-            const sessionData = JSON.parse(adminSession);
+              } catch (error) {
+          console.error('Error fetching admin profile:', error);
+          // Try to get data from session as fallback
+          try {
+            const sessionData = getAdminSessionData() as any;
+            if (sessionData) {
             setProfile({
               id: sessionData.id,
               username: sessionData.username,
@@ -110,7 +113,8 @@ export default function AdminProfile() {
               nama_lengkap: sessionData.nama_lengkap || 'Administrator',
               role: sessionData.is_super_admin ? 'Super Admin' : 'Admin',
               created_at: sessionData.loginTime || new Date().toISOString(),
-              is_super_admin: sessionData.is_super_admin
+              is_super_admin: sessionData.is_super_admin,
+              profile_picture: sessionData.profile_picture || null
             });
 
             setEditForm({
@@ -120,12 +124,12 @@ export default function AdminProfile() {
               newPassword: "",
               confirmPassword: "",
             });
-          } else {
-            router.replace('/admin/login');
+                      } else {
+              clearAdminSessionAndRedirect(router);
+            }
+          } catch (e) {
+            clearAdminSessionAndRedirect(router);
           }
-        } catch (e) {
-          router.replace('/admin/login');
-        }
       } finally {
         setIsLoading(false);
       }
@@ -163,6 +167,86 @@ export default function AdminProfile() {
     }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setMessage({ type: "error", text: "Format file tidak didukung. Gunakan JPEG, PNG, atau WebP" });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        setMessage({ type: "error", text: "Ukuran file terlalu besar. Maksimal 5MB" });
+        return;
+      }
+
+      setSelectedFile(file);
+      setMessage({ type: "", text: "" });
+    }
+  };
+
+  const handleUploadPicture = async () => {
+    if (!selectedFile) {
+      setMessage({ type: "error", text: "Pilih file terlebih dahulu" });
+      return;
+    }
+
+    setUploadingPicture(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const sessionData = getAdminSessionData() as any;
+      if (!sessionData) {
+        clearAdminSessionAndRedirect(router);
+        return;
+      }
+
+      const adminSession = localStorage.getItem('admin_session');
+      const formData = new FormData();
+      formData.append('profilePicture', selectedFile);
+
+      const response = await fetch('/api/admin/profile/upload-picture', {
+        method: 'POST',
+        headers: {
+          'x-admin-session': adminSession || ''
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage({ type: "success", text: "Foto profil berhasil diunggah!" });
+        setSelectedFile(null);
+        
+        // Update profile with new picture
+        if (profile) {
+          setProfile({
+            ...profile,
+            profile_picture: data.profilePicture
+          });
+        }
+
+        // Update session data
+        const currentSessionData = getAdminSessionData() as any;
+        if (currentSessionData) {
+          currentSessionData.profile_picture = data.profilePicture;
+          localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
+        }
+      } else {
+        setMessage({ type: "error", text: data.message || "Gagal mengunggah foto profil" });
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Gagal mengunggah foto profil. Silakan coba lagi." });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -190,28 +274,62 @@ export default function AdminProfile() {
         }
       }
 
-      // Simulate API call (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update profile
-      if (profile) {
-        setProfile({
-          ...profile,
-          nama_lengkap: editForm.fullName,
-          email: editForm.email,
-        });
+      const sessionData = getAdminSessionData() as any;
+      if (!sessionData) {
+        clearAdminSessionAndRedirect(router);
+        return;
       }
-
-      setMessage({ type: "success", text: "Profile berhasil diperbarui!" });
-      setIsEditing(false);
       
-      // Clear password fields
-      setEditForm(prev => ({
-        ...prev,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      }));
+      const adminSession = localStorage.getItem('admin_session');
+
+      // Call the actual API
+      const response = await fetch('/api/admin/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-session': adminSession
+        },
+        body: JSON.stringify({
+          fullName: editForm.fullName,
+          email: editForm.email,
+          currentPassword: editForm.currentPassword,
+          newPassword: editForm.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update profile with new data
+        if (profile) {
+          setProfile({
+            ...profile,
+            nama_lengkap: data.admin.nama_lengkap,
+            email: data.admin.email,
+          });
+        }
+
+        // Update session data
+        const currentSessionData = getAdminSessionData() as any;
+        if (currentSessionData) {
+          currentSessionData.nama_lengkap = data.admin.nama_lengkap;
+          currentSessionData.email = data.admin.email;
+          localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
+        }
+
+        setMessage({ type: "success", text: "Profile berhasil diperbarui!" });
+        setIsEditing(false);
+        
+        // Clear password fields
+        setEditForm(prev => ({
+          ...prev,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+      } else {
+        setMessage({ type: "error", text: data.message || "Gagal memperbarui profile" });
+      }
       
     } catch (error) {
       setMessage({ type: "error", text: "Gagal memperbarui profile. Silakan coba lagi." });
@@ -285,10 +403,39 @@ export default function AdminProfile() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="text-center">
                 {/* Profile Image */}
-                <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-red-100">
-                  <span className="text-2xl font-bold text-white">
-                    {profile ? getInitials(profile.nama_lengkap) : 'A'}
-                  </span>
+                <div className="relative w-24 h-24 mx-auto mb-4">
+                  {profile?.profile_picture ? (
+                    <img
+                      src={profile.profile_picture}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover ring-4 ring-red-100"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center ring-4 ring-red-100">
+                      <span className="text-2xl font-bold text-white">
+                        {profile ? getInitials(profile.nama_lengkap) : 'A'}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Upload Button */}
+                  <button
+                    onClick={() => document.getElementById('profilePictureInput')?.click()}
+                    className="absolute -bottom-1 -right-1 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-200 shadow-lg"
+                    title="Unggah foto profil"
+                  >
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </button>
+                  
+                  <input
+                    id="profilePictureInput"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                 </div>
                 
                 <h2 className="text-xl font-semibold text-gray-900 mb-1">
@@ -316,6 +463,45 @@ export default function AdminProfile() {
                       Bergabung: {profile ? formatDate(profile.created_at) : '-'}
                     </div>
                   </div>
+                  
+                  {/* File Upload Section */}
+                  {selectedFile && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-sm text-gray-700 truncate">{selectedFile.name}</span>
+                        </div>
+                        <button
+                          onClick={() => setSelectedFile(null)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <button
+                        onClick={handleUploadPicture}
+                        disabled={uploadingPicture}
+                        className="mt-2 w-full px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {uploadingPicture ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Mengunggah...
+                          </>
+                        ) : (
+                          'Unggah Foto'
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

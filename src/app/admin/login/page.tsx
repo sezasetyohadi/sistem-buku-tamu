@@ -25,7 +25,15 @@ export default function LoginPage() {
           .find(row => row.startsWith('admin_auth='));
 
         if (adminSession && authCookie) {
-          const sessionData = JSON.parse(adminSession);
+          try {
+            const sessionData = JSON.parse(adminSession);
+          } catch (parseError) {
+            console.error('Error parsing admin session JSON on login page:', parseError);
+            // Clear corrupted session data
+            localStorage.removeItem('admin_session');
+            document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            return;
+          }
           const loginTime = new Date(sessionData.loginTime);
           const now = new Date();
           const hoursDiff = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
