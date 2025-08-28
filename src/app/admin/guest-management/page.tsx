@@ -225,6 +225,8 @@ export default function AdminGuestsManagement() {
         { header: 'Instansi', key: 'asal_instansi', width: 30 },
         { header: 'Email', key: 'email', width: 30 },
         { header: 'No. Telepon', key: 'nomor_telp', width: 20 },
+        { header: 'Pendidikan Terakhir', key: 'pendidikan_terakhir', width: 20 },
+        { header: 'Profesi', key: 'profesi', width: 20 },
         { header: 'Keperluan', key: 'keperluan', width: 40 },
         { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
         { header: 'Waktu Daftar', key: 'waktu_dibuat', width: 20 },
@@ -242,6 +244,8 @@ export default function AdminGuestsManagement() {
           asal_instansi: guest.asal_instansi || '-',
           email: guest.email || '-',
           nomor_telp: guest.nomor_telp || '-',
+          pendidikan_terakhir: guest.pendidikan_terakhir || '-',
+          profesi_id: guest.profesi || '-',
           keperluan: guest.keperluan || '-',
           // Use empty string for dates initially
           waktu_checkin: '',

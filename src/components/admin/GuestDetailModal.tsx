@@ -294,12 +294,12 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
             
                          <div>
                <h4 className="text-sm font-medium text-gray-500">Pendidikan Terakhir</h4>
-               <p className="mt-1 text-gray-900">{guest.pendidikan_terakhir_id || 'Tidak tersedia'}</p>
+               <p className="mt-1 text-gray-900">{guest.pendidikan_terakhir || 'Tidak tersedia'}</p>
              </div>
              
              <div>
                <h4 className="text-sm font-medium text-gray-500">Profesi</h4>
-               <p className="mt-1 text-gray-900">{guest.profesi_id || 'Tidak tersedia'}</p>
+               <p className="mt-1 text-gray-900">{guest.profesi || 'Tidak tersedia'}</p>
              </div>
             
             <div>

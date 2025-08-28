@@ -34,8 +34,8 @@ export interface DaftarTamu {
   nomor_telp?: string;
   alamat?: string;
   jenis_kelamin: 'Laki-laki' | 'Perempuan';
-  pendidikan_terakhir_id?: number;
-  profesi_id?: number;
+  pendidikan_terakhir?: string;
+  profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
   bidang_tujuan_id?: number;
