@@ -197,27 +197,88 @@ export default function AdminGuestsManagement() {
         { header: 'No. Telepon', key: 'nomor_telp', width: 20 },
         { header: 'Keperluan', key: 'keperluan', width: 40 },
         { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
-        { header: 'Waktu Daftar', key: 'waktu_checkout', width: 20 },
+        { header: 'Waktu Daftar', key: 'waktu_dibuat', width: 20 },
       ];
       
-      // Format the date columns
-      const dateFormat = { numFmt: 'dd/mm/yyyy hh:mm' };
-      worksheet.getColumn('waktu_checkin').numFmt = dateFormat.numFmt;
-      worksheet.getColumn('waktu_checkout').numFmt = dateFormat.numFmt;
+      // We'll format dates manually for better control over the display
       
       // Add rows from filtered guests
+      let rowIndex = 2; // Start from row 2 (after header)
       filteredGuests.forEach(guest => {
-        worksheet.addRow({
+        // Create the row first
+        const row = worksheet.addRow({
           id: guest.id,
           nama: guest.nama,
           asal_instansi: guest.asal_instansi || '-',
           email: guest.email || '-',
           nomor_telp: guest.nomor_telp || '-',
           keperluan: guest.keperluan || '-',
-          waktu_checkin: guest.waktu_checkin ? new Date(guest.waktu_checkin) : '-',
-          waktu_checkout: guest.waktu_checkout ? new Date(guest.waktu_checkout) : '-'
+          // Use empty string for dates initially
+          waktu_checkin: '',
+          waktu_dibuat: ''
         });
+        
+        // Then set date values directly with proper formatting
+        if (guest.waktu_checkin) {
+          try {
+            // Parse the date string directly
+            const checkinDate = new Date(guest.waktu_checkin);
+            
+            if (!isNaN(checkinDate.getTime())) {
+              // Format the date as a string in the desired format
+              const day = String(checkinDate.getDate()).padStart(2, '0');
+              const month = String(checkinDate.getMonth() + 1).padStart(2, '0');
+              const year = checkinDate.getFullYear();
+              const hours = String(checkinDate.getHours()).padStart(2, '0');
+              const minutes = String(checkinDate.getMinutes()).padStart(2, '0');
+              const seconds = String(checkinDate.getSeconds()).padStart(2, '0');
+              
+              const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+              
+              // Set the cell value as a string with the formatted date
+              const cell = row.getCell('waktu_checkin');
+              cell.value = formattedDate;
+              
+              // For debugging
+              console.log('Checkin date formatted:', formattedDate);
+            }
+          } catch (e) {
+            console.error('Error parsing checkin date:', e);
+          }
+        }
+        
+        if (guest.waktu_dibuat) {
+          try {
+            // Parse the date string directly
+            const createdDate = new Date(guest.waktu_dibuat);
+            
+            if (!isNaN(createdDate.getTime())) {
+              // Format the date as a string in the desired format
+              const day = String(createdDate.getDate()).padStart(2, '0');
+              const month = String(createdDate.getMonth() + 1).padStart(2, '0');
+              const year = createdDate.getFullYear();
+              const hours = String(createdDate.getHours()).padStart(2, '0');
+              const minutes = String(createdDate.getMinutes()).padStart(2, '0');
+              const seconds = String(createdDate.getSeconds()).padStart(2, '0');
+              
+              const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+              
+              // Set the cell value as a string with the formatted date
+              const cell = row.getCell('waktu_dibuat');
+              cell.value = formattedDate;
+              
+              // For debugging
+              console.log('Created date formatted:', formattedDate);
+            }
+          } catch (e) {
+            console.error('Error parsing creation date:', e);
+          }
+        }
+        
+        rowIndex++;
       });
+      
+      // No need to apply date format to column headers as we're using formatted strings
       
       // Style the header row
       worksheet.getRow(1).font = { bold: true };
