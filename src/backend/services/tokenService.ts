@@ -97,11 +97,20 @@ export async function getTokenStatus(token: string): Promise<{ tamuId: number; s
         dt.nama, 
         dt.nomor_telp,
         dt.email,
+        dt.alamat,
+        dt.jenis_kelamin,
+        dt.pendidikan_terakhir,
+        dt.profesi,
+        dt.asal_instansi,
         dt.keperluan,
         dt.jadwal_checkin,
         dt.waktu_checkin,
         dt.waktu_checkout,
+        dt.waktu_dibuat,
+        dt.jadwal_dibuat,
+        dt.file_upload,
         dt.status_kunjungan,
+        dt.catatan_tambahan,
         b.bidang 
       FROM daftar_tamu dt 
       LEFT JOIN bidang_tujuan b ON dt.bidang_tujuan_id = b.id

@@ -1,70 +1,155 @@
 "use client";
 
 import { useState } from "react";
+import { format, parseISO } from 'date-fns';
 
-type StatusType = "Diproses" | "Selesai" | "Ditolak";
+// Tipe data untuk status kunjungan sesuai dengan database
+type GuestStatusType = "Menunggu" | "Terjadwal" | "Datang" | "Selesai";
 
-type StatusItem = {
+// Fungsi untuk memformat tanggal
+const formatDate = (dateString: string | null | undefined): string => {
+	if (!dateString) return 'Tidak tersedia';
+	try {
+		const date = parseISO(dateString);
+		return format(date, 'dd MMMM yyyy, HH:mm');
+	} catch (error) {
+		console.error('Error formatting date:', error);
+		return dateString;
+	}
+};
+
+// Tipe data untuk detail tamu yang akan ditampilkan
+type GuestDetail = {
 	id: number;
 	nama: string;
-	tanggal: string;
-	status: StatusType;
-	keterangan: string;
+	email?: string;
+	nomor_telp?: string;
+	alamat?: string;
+	jenis_kelamin: string;
+	pendidikan_terakhir?: string;
+	profesi?: string;
+	asal_instansi?: string;
+	keperluan?: string;
+	bidang_tujuan?: string;
+	status_kunjungan: GuestStatusType;
+	jadwal_checkin?: string | null;
+	waktu_checkin?: string | null;
+	waktu_checkout?: string | null;
+	waktu_dibuat?: string | null;
+	jadwal_dibuat?: string | null;
+	file_upload?: string | null;
+	catatan_tambahan?: string;
 };
 
-const dummyStatus: Record<string, StatusItem> = {
-	ABC123: {
-		id: 1,
-		nama: "Permohonan Informasi",
-		tanggal: "2025-08-20",
-		status: "Diproses",
-		keterangan: "Permohonan Anda sedang diproses oleh petugas.",
-	},
-	XYZ789: {
-		id: 2,
-		nama: "Permohonan Salinan",
-		tanggal: "2025-08-18",
-		status: "Selesai",
-		keterangan: "Salinan informasi sudah dapat diambil.",
-	},
-};
-
-// Dummy database untuk menyimpan token dan email
-const tokenEmails: Record<string, string> = {
-	ABC123: "user1@example.com",
-	XYZ789: "user2@example.com",
-};
-
-const statusColor: Record<StatusType, string> = {
-	Diproses: "bg-yellow-100 text-yellow-800",
+// Mapping warna untuk status kunjungan
+const statusColor: Record<GuestStatusType, string> = {
+	Menunggu: "bg-yellow-100 text-yellow-800",
+	Terjadwal: "bg-orange-100 text-orange-800",
+	Datang: "bg-blue-100 text-blue-800",
 	Selesai: "bg-green-100 text-green-800",
-	Ditolak: "bg-red-100 text-red-800",
 };
 
 export default function StatusPengajuanPage() {
 	const [token, setToken] = useState("");
-	const [status, setStatus] = useState<StatusItem | null>(null);
+	const [guestDetail, setGuestDetail] = useState<GuestDetail | null>(null);
 	const [error, setError] = useState("");
 	const [email, setEmail] = useState("");
 	const [showForgotToken, setShowForgotToken] = useState(false);
 	const [forgotTokenMessage, setForgotTokenMessage] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
-	const handleCheck = () => {
+	// Format tanggal untuk tampilan yang konsisten
+	const formatDate = (dateString?: string | null) => {
+		if (!dateString) return "Belum tersedia";
+		
+		try {
+			const date = new Date(dateString);
+			return new Intl.DateTimeFormat('id-ID', {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit'
+			}).format(date);
+		} catch (error) {
+			return "Format tanggal tidak valid";
+		}
+	};
+
+	const handleCheck = async () => {
+		if (!token.trim()) {
+			setError("Silakan masukkan token terlebih dahulu");
+			return;
+		}
+
 		setError("");
-		// Ganti dengan fetch ke API jika sudah ada backend
-		const found = dummyStatus[token.trim()];
-		if (found) {
-			setStatus(found);
-		} else {
-			setStatus(null);
-			setError("Token tidak ditemukan. Pastikan token sudah benar.");
+		setIsLoading(true);
+		
+		try {
+			// Fetch data tamu berdasarkan token menggunakan endpoint yang benar
+			const response = await fetch(`/api/tokens?token=${token.trim()}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			});
+			
+			const data = await response.json();
+			
+			if (response.ok && data.success && data.data.details) {
+				// Mapping status dari API ke GuestStatusType
+				const statusMapping: Record<string, GuestStatusType> = {
+					registered: "Menunggu",
+					scheduled: "Terjadwal",
+					checked_in: "Datang",
+					completed: "Selesai"
+				};
+				
+				// Mengambil detail tamu dari respons API
+				const details = data.data.details;
+				const apiStatus = data.data.status;
+				
+				// Membuat objek GuestDetail dari data API
+				const guestData: GuestDetail = {
+					id: details.id,
+					nama: details.nama,
+					email: details.email,
+					nomor_telp: details.nomor_telp,
+					alamat: details.alamat,
+					jenis_kelamin: details.jenis_kelamin,
+					pendidikan_terakhir: details.pendidikan_terakhir,
+					profesi: details.profesi,
+					asal_instansi: details.asal_instansi,
+					keperluan: details.keperluan,
+					bidang_tujuan: details.bidang,
+					status_kunjungan: statusMapping[apiStatus] || details.status_kunjungan,
+					jadwal_checkin: details.jadwal_checkin,
+					waktu_checkin: details.waktu_checkin,
+					waktu_checkout: details.waktu_checkout,
+					waktu_dibuat: details.waktu_dibuat,
+					jadwal_dibuat: details.jadwal_dibuat,
+					file_upload: details.file_upload,
+					catatan_tambahan: details.catatan_tambahan
+				};
+				
+				setGuestDetail(guestData);
+			} else {
+				setGuestDetail(null);
+				setError(data.message || "Token tidak ditemukan. Pastikan token sudah benar.");
+			}
+		} catch (err) {
+			console.error("Error fetching guest data:", err);
+			setGuestDetail(null);
+			setError("Terjadi kesalahan saat mengambil data. Silakan coba lagi.");
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
 	const handleReset = () => {
 		setToken("");
-		setStatus(null);
+		setGuestDetail(null);
 		setError("");
 		setShowForgotToken(false);
 		setForgotTokenMessage("");
@@ -109,7 +194,7 @@ export default function StatusPengajuanPage() {
 	};
 
 	return (
-		<div className="p-6 max-w-md mx-auto flex flex-col items-center">
+		<div className="p-6 max-w-2xl mx-auto flex flex-col items-center">
 			<div className="flex flex-col items-center mb-8">
 				<img
 					src="https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
@@ -124,40 +209,41 @@ export default function StatusPengajuanPage() {
 				</p>
 			</div>
 
-			{!status && !showForgotToken && (
-				<div className="w-full bg-white rounded-xl shadow p-6 flex flex-col items-center">
-					<label className="block text-sm font-semibold text-gray-700 mb-2 text-center">
-						Token Pengajuan
-					</label>
-					<input
-						type="text"
-						className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg text-center text-lg tracking-widest"
-						placeholder="Masukan token di sini"
-						value={token}
-						onChange={(e) => setToken(e.target.value)}
-						maxLength={16}
-					/>
-					<button
-						onClick={handleCheck}
-						className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-					>
-						Cek Status
-					</button>
-					<button
-						onClick={() => setShowForgotToken(true)}
-						className="w-full mt-3 text-blue-600 text-sm hover:underline"
-					>
-						Lupa token?
-					</button>
-					{error && (
-						<div className="text-red-500 text-sm mt-3 text-center">
-							{error}
-						</div>
-					)}
-				</div>
-			)}
+			{!guestDetail && !showForgotToken && (
+			<div className="w-full bg-white rounded-xl shadow p-6 flex flex-col items-center">
+				<label className="block text-sm font-semibold text-gray-700 mb-2 text-center">
+					Token Pengajuan
+				</label>
+				<input
+					type="text"
+					className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg text-center text-lg tracking-widest"
+					placeholder="Masukan token di sini"
+					value={token}
+					onChange={(e) => setToken(e.target.value)}
+					maxLength={16}
+				/>
+				<button
+					onClick={handleCheck}
+					disabled={isLoading}
+					className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
+				>
+					{isLoading ? "Mencari..." : "Cek Status"}
+				</button>
+				<button
+					onClick={() => setShowForgotToken(true)}
+					className="w-full mt-3 text-blue-600 text-sm hover:underline"
+				>
+					Lupa token?
+				</button>
+				{error && (
+					<div className="text-red-500 text-sm mt-3 text-center">
+						{error}
+					</div>
+				)}
+			</div>
+		)}
 
-			{!status && showForgotToken && (
+			{!guestDetail && showForgotToken && (
 				<div className="w-full bg-white rounded-xl shadow p-6 flex flex-col items-center">
 					<h2 className="text-lg font-semibold text-gray-800 mb-4">Lupa Token?</h2>
 					<p className="text-gray-600 text-sm text-center mb-4">
@@ -191,32 +277,123 @@ export default function StatusPengajuanPage() {
 				</div>
 			)}
 
-			{status && (
+			{guestDetail && (
 				<div className="w-full bg-white rounded-xl shadow p-6 mt-6">
-					<div className="flex items-center gap-3 mb-4">
-						<img
-							src="https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
-							alt="Status"
-							className="w-8 h-8"
-						/>
-						<div>
-							<div className="text-lg font-semibold text-gray-800">
-								{status.nama}
-							</div>
-							<div className="text-sm text-gray-500">
-								Tanggal: {status.tanggal}
+					{/* Header dengan avatar dan info dasar */}
+					<div className="flex items-center pb-4 border-b border-gray-200">
+						<div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+							<span className="text-lg font-bold text-red-600">
+								{guestDetail.nama.split(' ').map(n => n[0]).join('').toUpperCase()}
+							</span>
+						</div>
+						<div className="ml-4 flex-grow">
+							<div className="flex justify-between items-start">
+								<div>
+									<h3 className="text-xl font-semibold text-gray-900">{guestDetail.nama}</h3>
+									<div className="flex items-center mt-1">
+										<span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColor[guestDetail.status_kunjungan]}`}>
+											{guestDetail.status_kunjungan === 'Datang' ? 'Proses' : guestDetail.status_kunjungan}
+										</span>
+										<span className="ml-2 text-sm text-gray-500">ID: {guestDetail.id}</span>
+									</div>
+								</div>
+								{/* Tampilkan jadwal kunjungan */}
+								{guestDetail.jadwal_checkin && (
+									<div className="text-right">
+										<h4 className="text-sm font-medium text-gray-500">Jadwal Kunjungan</h4>
+										<p className="text-base font-medium text-blue-600">{formatDate(guestDetail.jadwal_checkin)}</p>
+									</div>
+								)}
 							</div>
 						</div>
 					</div>
-					<div
-						className={`inline-block mb-4 px-3 py-1 rounded-full text-sm font-medium ${statusColor[status.status]}`}
-					>
-						{status.status}
+
+					{/* Grid informasi dua kolom */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-4">
+						{/* Kolom kiri */}
+						<div className="space-y-4">
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Email</h4>
+								<p className="mt-1 text-gray-900">{guestDetail.email || 'Tidak tersedia'}</p>
+							</div>
+							
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Nomor Telepon</h4>
+								<p className="mt-1 text-gray-900">{guestDetail.nomor_telp || 'Tidak tersedia'}</p>
+							</div>
+							
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Jenis Kelamin</h4>
+								<p className="mt-1 text-gray-900">{guestDetail.jenis_kelamin}</p>
+							</div>
+							
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Pendidikan Terakhir</h4>
+								<p className="mt-1 text-gray-900">{guestDetail.pendidikan_terakhir || 'Tidak tersedia'}</p>
+							</div>
+						</div>
+						
+						{/* Kolom kanan */}
+						<div className="space-y-4">
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Profesi</h4>
+								<p className="mt-1 text-gray-900">{guestDetail.profesi || 'Tidak tersedia'}</p>
+							</div>
+							
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Asal Instansi</h4>
+								<p className="mt-1 text-gray-900">{guestDetail.asal_instansi || 'Tidak tersedia'}</p>
+							</div>
+							
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Alamat</h4>
+								<p className="mt-1 text-gray-900 whitespace-pre-wrap">{guestDetail.alamat || 'Tidak tersedia'}</p>
+							</div>
+						</div>
 					</div>
-					<div className="text-gray-700 mb-4">{status.keterangan}</div>
+					
+					{/* Bagian lebar penuh */}
+					<div className="pt-4 border-t border-gray-200 mt-4">
+						<div className="flex items-center">
+							<h4 className="text-sm font-medium text-gray-500">Keperluan</h4>
+						</div>
+						<div className="mt-2 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+							<p className="text-gray-900 whitespace-pre-wrap">{guestDetail.keperluan || 'Tidak tersedia'}</p>
+						</div>
+						
+						<div className="flex items-center mt-4">
+							<h4 className="text-sm font-medium text-gray-500">Bidang Dituju</h4>
+						</div>
+						<div className="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
+							<p className="text-gray-900">{guestDetail.bidang_tujuan || 'Tidak tersedia'}</p>
+						</div>
+
+						{/* Informasi Waktu */}
+						<div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div>
+								<h4 className="text-sm font-medium text-gray-500">Waktu Pendaftaran</h4>
+								<p className="mt-1 text-gray-900">{formatDate(guestDetail.waktu_dibuat)}</p>
+							</div>
+							
+							{guestDetail.waktu_checkin && (
+								<div>
+									<h4 className="text-sm font-medium text-gray-500">Waktu Kedatangan</h4>
+									<p className="mt-1 text-gray-900">{formatDate(guestDetail.waktu_checkin)}</p>
+								</div>
+							)}
+							
+							{guestDetail.waktu_checkout && (
+								<div>
+									<h4 className="text-sm font-medium text-gray-500">Waktu Selesai</h4>
+									<p className="mt-1 text-gray-900">{formatDate(guestDetail.waktu_checkout)}</p>
+								</div>
+							)}
+						</div>
+					</div>
+
 					<button
 						onClick={handleReset}
-						className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
+						className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition mt-6"
 					>
 						Kembali
 					</button>
