@@ -8,6 +8,7 @@ import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
 import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
 import { toast } from "react-hot-toast";
+import ExcelJS from 'exceljs';
 
 export default function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +32,7 @@ export default function AdminGuestsManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
   const [currentPage, setCurrentPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
   
   // Filter guests based on current filters
   const filteredGuests = useMemo(() => {
@@ -176,6 +178,92 @@ export default function AdminGuestsManagement() {
       alert('Terjadi kesalahan saat menambahkan tamu. Silakan coba lagi.');
     } finally {
       setIsFormSubmitting(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      // Create a new workbook
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Daftar Tamu');
+      
+      // Add headers
+      worksheet.columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'Nama', key: 'nama', width: 30 },
+        { header: 'Instansi', key: 'asal_instansi', width: 30 },
+        { header: 'Email', key: 'email', width: 30 },
+        { header: 'No. Telepon', key: 'nomor_telp', width: 20 },
+        { header: 'Keperluan', key: 'keperluan', width: 40 },
+        { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
+        { header: 'Waktu Daftar', key: 'waktu_checkout', width: 20 },
+      ];
+      
+      // Format the date columns
+      const dateFormat = { numFmt: 'dd/mm/yyyy hh:mm' };
+      worksheet.getColumn('waktu_checkin').numFmt = dateFormat.numFmt;
+      worksheet.getColumn('waktu_checkout').numFmt = dateFormat.numFmt;
+      
+      // Add rows from filtered guests
+      filteredGuests.forEach(guest => {
+        worksheet.addRow({
+          id: guest.id,
+          nama: guest.nama,
+          asal_instansi: guest.asal_instansi || '-',
+          email: guest.email || '-',
+          nomor_telp: guest.nomor_telp || '-',
+          keperluan: guest.keperluan || '-',
+          waktu_checkin: guest.waktu_checkin ? new Date(guest.waktu_checkin) : '-',
+          waktu_checkout: guest.waktu_checkout ? new Date(guest.waktu_checkout) : '-'
+        });
+      });
+      
+      // Style the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+      
+      // Center align all columns
+      worksheet.columns.forEach(column => {
+        column.alignment = { vertical: 'middle', horizontal: 'center' };
+      });
+      
+      // Apply alignment to all cells
+      worksheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell) => {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+      });
+      
+      // Generate the Excel file
+      const buffer = await workbook.xlsx.writeBuffer();
+      
+      // Create a blob from the buffer
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      // Create a download link and trigger the download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[\-:]/g, '').replace('T', '_').split('.')[0];
+      a.href = url;
+      a.download = `daftar_tamu_${timestamp}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Data berhasil diekspor ke Excel');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Gagal mengekspor data');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -332,11 +420,21 @@ export default function AdminGuestsManagement() {
           </svg>
           <span>Tambah Tamu</span>
         </button>
-        <button className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-          </svg>
-          <span>Export Data</span>
+        <button 
+          onClick={handleExportData}
+          disabled={isExporting}
+          className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
+          {isExporting ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+            </svg>
+          )}
+          <span>{isExporting ? "Mengekspor..." : "Export Data"}</span>
         </button>
         <button 
           onClick={handleRefresh}
@@ -711,7 +809,13 @@ export default function AdminGuestsManagement() {
         size="xl"
       >
         <GuestRegistrationForm 
-          onSubmit={handleGuestFormSubmit}
+          onSubmit={async (data) => {
+            const result = await handleGuestFormSubmit(data);
+            return {
+              success: true,
+              guestData: result
+            };
+          }}
           isLoading={isFormSubmitting}
           isInModal={true}
         />
