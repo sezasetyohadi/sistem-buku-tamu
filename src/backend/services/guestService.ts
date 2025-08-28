@@ -5,9 +5,10 @@ import { DaftarTamu, JawabanSurvei, GuestFormData, SurveyFormData, DatabaseResul
 // Guest Service untuk tabel daftar_tamu
 export async function getAllGuests(): Promise<DaftarTamu[]> {
   const query = `
-    SELECT t.*, b.bidang as bidang_tujuan 
+    SELECT t.*, b.bidang as bidang_tujuan, tt.token
     FROM daftar_tamu t
     LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
+    LEFT JOIN tamu_token tt ON t.id = tt.tamu_id AND tt.is_active = 1
     ORDER BY t.id DESC
   `;
   return executeQuery<DaftarTamu[]>(query);

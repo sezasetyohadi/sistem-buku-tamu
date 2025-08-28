@@ -90,13 +90,14 @@ export default function AdminGuestsManagement() {
         const searchLower = searchTerm.toLowerCase();
         
         // Check if any field contains the search term
-        // Including name, phone number, institution, email
+        // Including name, phone number, institution, email, token
         const matchesSearch = (
           (guest.nama && guest.nama.toLowerCase().includes(searchLower)) ||
           (guest.nomor_telp && guest.nomor_telp.toLowerCase().includes(searchLower)) ||
           (guest.asal_instansi && guest.asal_instansi.toLowerCase().includes(searchLower)) ||
           (guest.email && guest.email.toLowerCase().includes(searchLower)) ||
-          (guest.keperluan && guest.keperluan.toLowerCase().includes(searchLower))
+          (guest.keperluan && guest.keperluan.toLowerCase().includes(searchLower)) ||
+          (guest.token && guest.token.toLowerCase().includes(searchLower))
         );
         
         if (!matchesSearch) return false;
@@ -164,16 +165,45 @@ export default function AdminGuestsManagement() {
       const result = await response.json();
 
       if (result.success) {
-        alert('Tamu berhasil ditambahkan!');
-        setIsModalOpen(false);
         // Refresh the guest list
         await fetchData();
+        
+        // Show success message
+        toast.success('Tamu berhasil ditambahkan!');
+        
+        // Close modal if no token is returned (admin flow)
+        if (!result.data?.token) {
+          setIsModalOpen(false);
+        }
+        
+        // Return the expected structure for the form component
+        return {
+          success: true,
+          guestData: result.data?.guest,
+          tokenData: result.data?.token
+        };
       } else {
-        alert(`Gagal menambahkan tamu: ${result.message}`);
+        // Show error message
+        toast.error(`Gagal menambahkan tamu: ${result.message}`);
+        
+        // Return error structure
+        return {
+          success: false,
+          guestData: null,
+          tokenData: null
+        };
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Terjadi kesalahan saat menambahkan tamu. Silakan coba lagi.');
+      // Show error message
+      toast.error('Terjadi kesalahan saat menambahkan tamu. Silakan coba lagi.');
+      
+      // Return error structure
+      return {
+        success: false,
+        guestData: null,
+        tokenData: null
+      };
     } finally {
       setIsFormSubmitting(false);
     }
@@ -362,10 +392,10 @@ export default function AdminGuestsManagement() {
         <div className="p-4 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Cari nama, NIK, atau instansi..."
-                value={searchTerm}
+                             <input
+                 type="text"
+                 placeholder="Cari nama, NIK, instansi, atau token..."
+                 value={searchTerm}
                 onChange={(e) => {
                   const newSearchTerm = e.target.value;
                   setSearchTerm(newSearchTerm);
@@ -495,6 +525,7 @@ export default function AdminGuestsManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kedatangan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Token</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
@@ -553,17 +584,43 @@ export default function AdminGuestsManagement() {
                           : ""}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        guest.status_kunjungan === 'Datang' ? 'bg-blue-100 text-blue-800' :
-                        guest.status_kunjungan === 'Selesai' ? 'bg-green-100 text-green-800' :
-                        guest.status_kunjungan === 'Terjadwal' ? 'bg-orange-100 text-orange-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {guest.status_kunjungan === 'Datang' ? 'Proses' : guest.status_kunjungan || 'Menunggu'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                     <td className="px-6 py-4 whitespace-nowrap">
+                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                         guest.status_kunjungan === 'Datang' ? 'bg-blue-100 text-blue-800' :
+                         guest.status_kunjungan === 'Selesai' ? 'bg-green-100 text-green-800' :
+                         guest.status_kunjungan === 'Terjadwal' ? 'bg-orange-100 text-orange-800' :
+                         'bg-gray-100 text-gray-800'
+                       }`}>
+                         {guest.status_kunjungan === 'Datang' ? 'Proses' : guest.status_kunjungan || 'Menunggu'}
+                       </span>
+                     </td>
+                     <td className="px-6 py-4 whitespace-nowrap">
+                       <div className="text-sm text-gray-900">
+                         {guest.token ? (
+                           <div className="flex items-center space-x-2">
+                             <code className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono">
+                               {guest.token.substring(0, 8)}...
+                             </code>
+                             <button
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 navigator.clipboard.writeText(guest.token);
+                                 toast.success('Token berhasil disalin!');
+                               }}
+                               className="text-blue-600 hover:text-blue-800 p-1"
+                               title="Salin token"
+                             >
+                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                               </svg>
+                             </button>
+                           </div>
+                         ) : (
+                           <span className="text-gray-400 text-xs">-</span>
+                         )}
+                       </div>
+                     </td>
+                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button 
                           className="text-green-600 hover:text-green-900 p-1" 

@@ -50,6 +50,7 @@ export interface DaftarTamu {
   waktu_dibuat?: string; // datetime
   cara_memperoleh_informasi?: string[]; // Array of cara memperoleh informasi names
   cara_mendapatkan_salinan?: string[]; // Array of cara mendapatkan salinan names
+  token?: string; // Token for guest identification
 }
 
 // Survey Types (sesuai tabel jawaban_survei)
