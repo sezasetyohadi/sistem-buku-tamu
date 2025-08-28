@@ -594,32 +594,61 @@ export default function AdminGuestsManagement() {
                          {guest.status_kunjungan === 'Datang' ? 'Proses' : guest.status_kunjungan || 'Menunggu'}
                        </span>
                      </td>
-                     <td className="px-6 py-4 whitespace-nowrap">
-                       <div className="text-sm text-gray-900">
-                         {guest.token ? (
-                           <div className="flex items-center space-x-2">
-                             <code className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono">
-                               {guest.token.substring(0, 8)}...
-                             </code>
-                             <button
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 navigator.clipboard.writeText(guest.token);
-                                 toast.success('Token berhasil disalin!');
-                               }}
-                               className="text-blue-600 hover:text-blue-800 p-1"
-                               title="Salin token"
-                             >
+                                           <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {guest.token ? (
+                            <div className="flex items-center space-x-2">
+                              <code 
+                                className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono cursor-help"
+                                title={`Token lengkap: ${guest.token}`}
+                              >
+                                {guest.token.substring(0, 8)}...
+                              </code>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Fallback clipboard copy method
+                                  const copyToClipboard = async (text: string) => {
+                                    try {
+                                      if (navigator.clipboard && window.isSecureContext) {
+                                        // Use modern Clipboard API if available and in secure context
+                                        await navigator.clipboard.writeText(text);
+                                        toast.success('Token lengkap berhasil disalin!');
+                                      } else {
+                                        // Fallback for non-secure contexts
+                                        const textArea = document.createElement('textarea');
+                                        textArea.value = text;
+                                        textArea.style.position = 'fixed';
+                                        textArea.style.left = '-999999px';
+                                        textArea.style.top = '-999999px';
+                                        document.body.appendChild(textArea);
+                                        textArea.focus();
+                                        textArea.select();
+                                        document.execCommand('copy');
+                                        textArea.remove();
+                                        toast.success('Token lengkap berhasil disalin!');
+                                      }
+                                    } catch (err) {
+                                      console.error('Failed to copy token:', err);
+                                      toast.error('Gagal menyalin token');
+                                    }
+                                  };
+                                  
+                                  copyToClipboard(guest.token);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 p-1"
+                                title="Salin token lengkap"
+                              >
                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                </svg>
                              </button>
-                           </div>
-                         ) : (
-                           <span className="text-gray-400 text-xs">-</span>
-                         )}
-                       </div>
-                     </td>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs">-</span>
+                          )}
+                        </div>
+                      </td>
                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button 
