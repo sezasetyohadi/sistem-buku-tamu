@@ -128,7 +128,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
       setIsSubmitting(true);
       
       const response = await fetch(`/api/guests/${guest.id}/checkin`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         }
@@ -292,15 +292,15 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
               <p className="mt-1 text-gray-900">{guest.jenis_kelamin}</p>
             </div>
             
-            <div>
-              <h4 className="text-sm font-medium text-gray-500">Pendidikan Terakhir</h4>
-              <p className="mt-1 text-gray-900">{guest.pendidikan_terakhir || 'Tidak tersedia'}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-gray-500">Profesi</h4>
-              <p className="mt-1 text-gray-900">{guest.profesi || 'Tidak tersedia'}</p>
-            </div>
+                         <div>
+               <h4 className="text-sm font-medium text-gray-500">Pendidikan Terakhir</h4>
+               <p className="mt-1 text-gray-900">{guest.pendidikan_terakhir_id || 'Tidak tersedia'}</p>
+             </div>
+             
+             <div>
+               <h4 className="text-sm font-medium text-gray-500">Profesi</h4>
+               <p className="mt-1 text-gray-900">{guest.profesi_id || 'Tidak tersedia'}</p>
+             </div>
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">Asal Instansi</h4>
@@ -425,23 +425,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           </div>
         </div>
         
-        {guest.catatan_tambahan && (
-          <div className="pt-4">
-            <div className="flex items-center">
-              <h4 className="text-sm font-medium text-gray-500">Catatan Tambahan</h4>
-              <Tooltip content="Catatan atau informasi tambahan yang diberikan oleh tamu">
-                <span className="ml-1 cursor-help text-gray-400 hover:text-gray-600 flex items-center">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </span>
-              </Tooltip>
-            </div>
-            <div className="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-gray-900 whitespace-pre-wrap">{guest.catatan_tambahan}</p>
-            </div>
-          </div>
-        )}
+        
         
         {guest.file_upload && (
           <div>
