@@ -8,6 +8,7 @@ import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
 import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
 import { toast } from "react-hot-toast";
+import ExcelJS from 'exceljs';
 
 export default function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +32,7 @@ export default function AdminGuestsManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
   const [currentPage, setCurrentPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
   
   // Filter guests based on current filters
   const filteredGuests = useMemo(() => {
@@ -209,6 +211,153 @@ export default function AdminGuestsManagement() {
     }
   };
 
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      // Create a new workbook
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Daftar Tamu');
+      
+      // Add headers
+      worksheet.columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'Nama', key: 'nama', width: 30 },
+        { header: 'Instansi', key: 'asal_instansi', width: 30 },
+        { header: 'Email', key: 'email', width: 30 },
+        { header: 'No. Telepon', key: 'nomor_telp', width: 20 },
+        { header: 'Keperluan', key: 'keperluan', width: 40 },
+        { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
+        { header: 'Waktu Daftar', key: 'waktu_dibuat', width: 20 },
+      ];
+      
+      // We'll format dates manually for better control over the display
+      
+      // Add rows from filtered guests
+      let rowIndex = 2; // Start from row 2 (after header)
+      filteredGuests.forEach(guest => {
+        // Create the row first
+        const row = worksheet.addRow({
+          id: guest.id,
+          nama: guest.nama,
+          asal_instansi: guest.asal_instansi || '-',
+          email: guest.email || '-',
+          nomor_telp: guest.nomor_telp || '-',
+          keperluan: guest.keperluan || '-',
+          // Use empty string for dates initially
+          waktu_checkin: '',
+          waktu_dibuat: ''
+        });
+        
+        // Then set date values directly with proper formatting
+        if (guest.waktu_checkin) {
+          try {
+            // Parse the date string directly
+            const checkinDate = new Date(guest.waktu_checkin);
+            
+            if (!isNaN(checkinDate.getTime())) {
+              // Format the date as a string in the desired format
+              const day = String(checkinDate.getDate()).padStart(2, '0');
+              const month = String(checkinDate.getMonth() + 1).padStart(2, '0');
+              const year = checkinDate.getFullYear();
+              const hours = String(checkinDate.getHours()).padStart(2, '0');
+              const minutes = String(checkinDate.getMinutes()).padStart(2, '0');
+              const seconds = String(checkinDate.getSeconds()).padStart(2, '0');
+              
+              const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+              
+              // Set the cell value as a string with the formatted date
+              const cell = row.getCell('waktu_checkin');
+              cell.value = formattedDate;
+              
+              // For debugging
+              console.log('Checkin date formatted:', formattedDate);
+            }
+          } catch (e) {
+            console.error('Error parsing checkin date:', e);
+          }
+        }
+        
+        if (guest.waktu_dibuat) {
+          try {
+            // Parse the date string directly
+            const createdDate = new Date(guest.waktu_dibuat);
+            
+            if (!isNaN(createdDate.getTime())) {
+              // Format the date as a string in the desired format
+              const day = String(createdDate.getDate()).padStart(2, '0');
+              const month = String(createdDate.getMonth() + 1).padStart(2, '0');
+              const year = createdDate.getFullYear();
+              const hours = String(createdDate.getHours()).padStart(2, '0');
+              const minutes = String(createdDate.getMinutes()).padStart(2, '0');
+              const seconds = String(createdDate.getSeconds()).padStart(2, '0');
+              
+              const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+              
+              // Set the cell value as a string with the formatted date
+              const cell = row.getCell('waktu_dibuat');
+              cell.value = formattedDate;
+              
+              // For debugging
+              console.log('Created date formatted:', formattedDate);
+            }
+          } catch (e) {
+            console.error('Error parsing creation date:', e);
+          }
+        }
+        
+        rowIndex++;
+      });
+      
+      // No need to apply date format to column headers as we're using formatted strings
+      
+      // Style the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+      
+      // Center align all columns
+      worksheet.columns.forEach(column => {
+        column.alignment = { vertical: 'middle', horizontal: 'center' };
+      });
+      
+      // Apply alignment to all cells
+      worksheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell) => {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+      });
+      
+      // Generate the Excel file
+      const buffer = await workbook.xlsx.writeBuffer();
+      
+      // Create a blob from the buffer
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      // Create a download link and trigger the download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[\-:]/g, '').replace('T', '_').split('.')[0];
+      a.href = url;
+      a.download = `daftar_tamu_${timestamp}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Data berhasil diekspor ke Excel');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Gagal mengekspor data');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const fetchData = async () => {
     try {
       // Fetch statistics
@@ -362,11 +511,21 @@ export default function AdminGuestsManagement() {
           </svg>
           <span>Tambah Tamu</span>
         </button>
-        <button className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-          </svg>
-          <span>Export Data</span>
+        <button 
+          onClick={handleExportData}
+          disabled={isExporting}
+          className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
+          {isExporting ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+            </svg>
+          )}
+          <span>{isExporting ? "Mengekspor..." : "Export Data"}</span>
         </button>
         <button 
           onClick={handleRefresh}
@@ -797,7 +956,13 @@ export default function AdminGuestsManagement() {
         size="xl"
       >
         <GuestRegistrationForm 
-          onSubmit={handleGuestFormSubmit}
+          onSubmit={async (data) => {
+            const result = await handleGuestFormSubmit(data);
+            return {
+              success: true,
+              guestData: result
+            };
+          }}
           isLoading={isFormSubmitting}
           isInModal={true}
         />
