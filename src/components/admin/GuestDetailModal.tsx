@@ -172,7 +172,10 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          deactivateToken: true // Send flag to deactivate the token
+        })
       });
       
       const result = await response.json();
