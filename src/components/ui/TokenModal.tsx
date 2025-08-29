@@ -11,7 +11,7 @@ interface TokenModalProps {
 
 export default function TokenModal({ isOpen, onClose, token }: TokenModalProps) {
   // Format token to 14 digits
-  const formattedToken = token ? token.substring(0, 14) : '';
+  const formattedToken = token ? token.substring(0, 15) : '';
 
   return (
     <Modal
