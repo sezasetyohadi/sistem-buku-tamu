@@ -79,7 +79,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       )
     },
     {
-      name: 'Daftar Tamu',
+      name: 'Manajemen Tamu',
       path: '/admin/guest-management',
       icon: (
         <svg className="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -97,7 +97,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       )
     },
     {
-      name: 'Survey',
+      name: 'Manajemen Survei',
       path: '/admin/survey',
       icon: (
         <svg className="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">

@@ -440,7 +440,7 @@ export default function SurveyForm() {
                   </svg>
                   <input
                     type="tel"
-                    className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg" // ubah bg-gray-50 ke bg-white
                     value={guestIdentity?.nomor_telp || ''}
                     onChange={e => setGuestIdentity(prev => prev ? { ...prev, nomor_telp: e.target.value } : null)}
                     placeholder="Masukkan nomor telepon"
@@ -497,7 +497,7 @@ export default function SurveyForm() {
                   </svg>
                   <input
                     type="date"
-                    className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg" // ubah bg-gray-50 ke bg-white
                     value={guestIdentity?.tanggal_lahir || ''}
                     onChange={e => setGuestIdentity(prev => prev ? { ...prev, tanggal_lahir: e.target.value } : null)}
                     placeholder="Tanggal Lahir"
