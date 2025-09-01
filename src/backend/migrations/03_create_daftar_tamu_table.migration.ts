@@ -14,7 +14,7 @@ export async function up() {
       profesi_id int(11) DEFAULT NULL,
       asal_instansi varchar(100) DEFAULT NULL,
       keperluan text DEFAULT NULL,
-      status enum('Menunggu','Datang','Selesai','Terjadwal') DEFAULT 'Menunggu',
+      status_kunjungan enum('Menunggu','Datang','Selesai','Terjadwal') DEFAULT 'Menunggu',
       bidang_tujuan_id int(11) DEFAULT NULL,
       tujuan_kunjungan_id int(11) DEFAULT NULL,
       file_upload varchar(255) DEFAULT NULL,
@@ -39,7 +39,7 @@ export async function up() {
     FOR EACH ROW
     BEGIN
       IF NEW.jadwal_checkin IS NOT NULL AND OLD.jadwal_checkin IS NULL THEN
-        SET NEW.status = 'Terjadwal';
+        SET NEW.status_kunjungan = 'Terjadwal';
       END IF;
     END
   `);
@@ -49,7 +49,7 @@ export async function up() {
     FOR EACH ROW
     BEGIN
       IF NEW.waktu_checkin IS NOT NULL AND OLD.waktu_checkin IS NULL THEN
-        SET NEW.status = 'Datang';
+        SET NEW.status_kunjungan = 'Datang';
       END IF;
     END
   `);
@@ -59,7 +59,7 @@ export async function up() {
     FOR EACH ROW
     BEGIN
       IF NEW.waktu_checkout IS NOT NULL AND OLD.waktu_checkout IS NULL THEN
-        SET NEW.status = 'Selesai';
+        SET NEW.status_kunjungan = 'Selesai';
       END IF;
     END
   `);
