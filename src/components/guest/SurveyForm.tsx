@@ -175,8 +175,8 @@ export default function SurveyForm() {
     }
   };
 
-  const handleRatingChange = (questionId: number, rating: number, ratingTypeId?: number) => {
-    if (isNaN(rating)) return; // Ignore invalid ratings
+  const handleRatingChange = (questionId: number, optionId: number, ratingTypeId?: number) => {
+    if (isNaN(optionId)) return; // Ignore invalid options
     
     setResponses(prev => {
       const responseKey = ratingTypeId ? `${questionId}-${ratingTypeId}` : questionId;
@@ -191,18 +191,18 @@ export default function SurveyForm() {
         return prev.map(r => {
           if (ratingTypeId) {
             return (r.pertanyaan_id === questionId && r.rating_type_id === ratingTypeId) 
-              ? { ...r, jawaban: rating } 
+              ? { ...r, jawaban: optionId } // Store option ID instead of rating value
               : r;
           }
           return (r.pertanyaan_id === questionId && !r.rating_type_id) 
-            ? { ...r, jawaban: rating } 
+            ? { ...r, jawaban: optionId } // Store option ID instead of rating value
             : r;
         });
       } else {
         return [...prev, { 
           pertanyaan_id: questionId, 
           rating_type_id: ratingTypeId,
-          jawaban: rating 
+          jawaban: optionId // Store option ID instead of rating value
         }];
       }
     });
@@ -734,11 +734,11 @@ export default function SurveyForm() {
                                     >
                                       <option value="">Pilih rating...</option>
                                       {ratingGroup.options?.map((option: any) => {
-                                        const ratingValue = option.nilai || option.urutan_rating || 1;
-                                        const ratingLabel = option.label || option.skala_rating || `Rating ${ratingValue}`;
+                                        const optionId = option.id;
+                                        const ratingLabel = option.label || option.skala_rating;
                                         
                                         return (
-                                          <option key={`${ratingGroup.rating_type_id}-${option.id}`} value={ratingValue}>
+                                          <option key={`${ratingGroup.rating_type_id}-${option.id}`} value={optionId}>
                                             {ratingLabel}
                                           </option>
                                         );
@@ -778,11 +778,11 @@ export default function SurveyForm() {
                             >
                               <option value="">Pilih rating...</option>
                               {question.ratingOptions?.map((option: any) => {
-                                const ratingValue = option.nilai || option.urutan || 1;
-                                const ratingLabel = option.label || option.skala_rating || `Rating ${ratingValue}`;
+                                const optionId = option.id;
+                                const ratingLabel = option.label || option.skala_rating;
                                 
                                 return (
-                                  <option key={option.id} value={ratingValue}>
+                                  <option key={option.id} value={optionId}>
                                     {ratingLabel}
                                   </option>
                                 );

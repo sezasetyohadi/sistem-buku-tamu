@@ -23,7 +23,9 @@ export interface Guest {
   nomor_telp?: string;
   alamat?: string;
   jenis_kelamin: Gender;
+  pendidikan_terakhir_id?: number;
   pendidikan_terakhir?: string;
+  profesi_id?: number;
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
@@ -43,7 +45,9 @@ export interface GuestCreate {
   nomor_telp?: string;
   alamat?: string;
   jenis_kelamin: Gender;
+  pendidikan_terakhir_id?: number;
   pendidikan_terakhir?: string;
+  profesi_id?: number;
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
@@ -58,7 +62,9 @@ export interface GuestUpdate {
   nomor_telp?: string;
   alamat?: string;
   jenis_kelamin?: Gender;
+  pendidikan_terakhir_id?: number;
   pendidikan_terakhir?: string;
+  profesi_id?: number;
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;

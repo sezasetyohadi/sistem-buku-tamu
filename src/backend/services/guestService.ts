@@ -5,9 +5,15 @@ import { DaftarTamu, JawabanSurvei, GuestFormData, SurveyFormData, DatabaseResul
 // Guest Service untuk tabel daftar_tamu
 export async function getAllGuests(): Promise<DaftarTamu[]> {
   const query = `
-    SELECT t.*, b.bidang as bidang_tujuan, tt.token
+    SELECT t.*, 
+           b.bidang as bidang_tujuan, 
+           pt.pendidikan_terakhir,
+           p.nama_profesi as profesi,
+           tt.token
     FROM daftar_tamu t
     LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
+    LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
+    LEFT JOIN profesi p ON t.profesi_id = p.id
     LEFT JOIN tamu_token tt ON t.id = tt.tamu_id AND tt.is_active = 1
     ORDER BY t.id DESC
   `;
@@ -15,7 +21,17 @@ export async function getAllGuests(): Promise<DaftarTamu[]> {
 }
 
 export async function getGuestById(id: number): Promise<DaftarTamu | null> {
-  const query = 'SELECT * FROM daftar_tamu WHERE id = ?';
+  const query = `
+    SELECT t.*, 
+           b.bidang as bidang_tujuan, 
+           pt.pendidikan_terakhir,
+           p.nama_profesi as profesi
+    FROM daftar_tamu t
+    LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
+    LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
+    LEFT JOIN profesi p ON t.profesi_id = p.id
+    WHERE t.id = ?
+  `;
   const guests = await executeQuery<DaftarTamu[]>(query, [id]);
   return guests.length > 0 ? guests[0] : null;
 }
@@ -247,16 +263,27 @@ export async function deleteGuest(id: number): Promise<boolean> {
 
 export async function searchGuests(searchTerm: string): Promise<DaftarTamu[]> {
   const query = `
-    SELECT * FROM daftar_tamu 
-    WHERE nama LIKE ? 
-       OR email LIKE ? 
-       OR asal_instansi LIKE ? 
-       OR keperluan LIKE ?
-    ORDER BY waktu_dibuat DESC, id DESC
+    SELECT t.*, 
+           b.bidang as bidang_tujuan, 
+           pt.pendidikan_terakhir,
+           p.nama_profesi as profesi,
+           tt.token
+    FROM daftar_tamu t
+    LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
+    LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
+    LEFT JOIN profesi p ON t.profesi_id = p.id
+    LEFT JOIN tamu_token tt ON t.id = tt.tamu_id AND tt.is_active = 1
+    WHERE t.nama LIKE ? 
+       OR t.email LIKE ? 
+       OR t.asal_instansi LIKE ? 
+       OR t.keperluan LIKE ?
+       OR pt.pendidikan_terakhir LIKE ?
+       OR p.nama_profesi LIKE ?
+    ORDER BY t.waktu_dibuat DESC, t.id DESC
   `;
   
   const searchPattern = `%${searchTerm}%`;
-  const params = [searchPattern, searchPattern, searchPattern, searchPattern];
+  const params = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
   
   return executeQuery<DaftarTamu[]>(query, params);
 }

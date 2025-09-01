@@ -90,7 +90,7 @@ export async function getTokenStatus(token: string): Promise<{ tamuId: number; s
       return null;
     }
     
-    // Get guest booking status
+    // Get guest booking status with education and profession data
     const guestData = await executeQuery<any[]>(
       `SELECT 
         dt.id, 
@@ -99,8 +99,8 @@ export async function getTokenStatus(token: string): Promise<{ tamuId: number; s
         dt.email,
         dt.alamat,
         dt.jenis_kelamin,
-        dt.pendidikan_terakhir,
-        dt.profesi,
+        pt.pendidikan_terakhir,
+        p.nama_profesi as profesi,
         dt.asal_instansi,
         dt.keperluan,
         dt.jadwal_checkin,
@@ -114,6 +114,8 @@ export async function getTokenStatus(token: string): Promise<{ tamuId: number; s
         b.bidang 
       FROM daftar_tamu dt 
       LEFT JOIN bidang_tujuan b ON dt.bidang_tujuan_id = b.id
+      LEFT JOIN profesi p ON dt.profesi_id = p.id
+      LEFT JOIN pendidikan_terakhir pt ON dt.pendidikan_terakhir_id = pt.id
       WHERE dt.id = ?`,
       [tokenData.tamu_id]
     );

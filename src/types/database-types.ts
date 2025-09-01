@@ -15,10 +15,10 @@ declare module 'json-schema' {
   }
 }
 
-declare module 'json5' {
-  export function parse(text: string): any;
-  export function stringify(value: any): string;
-}
+//declare module 'json5' {
+  //export function parse(text: string): any;
+  //export function stringify(value: any): string;
+//}
 
 declare module 'trusted-types' {
   export interface TrustedTypePolicy {
@@ -34,8 +34,10 @@ export interface DaftarTamu {
   nomor_telp?: string;
   alamat?: string;
   jenis_kelamin: 'Laki-laki' | 'Perempuan';
-  pendidikan_terakhir?: string;
-  profesi?: string;
+  pendidikan_terakhir_id?: number;
+  pendidikan_terakhir?: string; // From JOIN with pendidikan_terakhir table
+  profesi_id?: number;
+  profesi?: string; // From JOIN with profesi table (nama_profesi)
   asal_instansi?: string;
   keperluan?: string;
   bidang_tujuan_id?: number;
@@ -48,6 +50,7 @@ export interface DaftarTamu {
   waktu_checkout?: string | null; // datetime
   file_upload?: string;
   waktu_dibuat?: string; // datetime
+  catatan_tambahan?: string;
   cara_memperoleh_informasi?: string[]; // Array of cara memperoleh informasi names
   cara_mendapatkan_salinan?: string[]; // Array of cara mendapatkan salinan names
   token?: string; // Token for guest identification
