@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get admin profile from database
-    const query = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, is_super_admin FROM admin WHERE id = ?';
+    const query = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, is_super_admin FROM admin WHERE id = ?';
     const result = await executeQuery<Admin[]>(query, [adminId]);
 
     if (!result || result.length === 0) {
@@ -168,16 +168,16 @@ export async function PUT(request: NextRequest) {
       const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
       // Update admin with password
-      const updateQuery = 'UPDATE admin SET nama_lengkap = ?, email = ?, password = ? WHERE id = ?';
+      const updateQuery = 'UPDATE admin SET nama_lengkap = ?, email = ?, password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
       await executeQuery(updateQuery, [fullName, email, hashedNewPassword, adminId]);
     } else {
       // Update admin without password
-      const updateQuery = 'UPDATE admin SET nama_lengkap = ?, email = ? WHERE id = ?';
+      const updateQuery = 'UPDATE admin SET nama_lengkap = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
       await executeQuery(updateQuery, [fullName, email, adminId]);
     }
 
     // Get updated admin data
-    const updatedAdminQuery = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, is_super_admin FROM admin WHERE id = ?';
+    const updatedAdminQuery = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, is_super_admin FROM admin WHERE id = ?';
     const updatedAdminResult = await executeQuery<Admin[]>(updatedAdminQuery, [adminId]);
     const updatedAdmin = updatedAdminResult[0];
 

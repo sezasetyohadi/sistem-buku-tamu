@@ -438,66 +438,66 @@ export default function AdminGuestsManagement() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 w-full min-h-full">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Manajemen Data Tamu</h1>
-        <p className="text-gray-600 mt-2">Kelola semua data tamu yang telah mendaftar dalam sistem</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manajemen Data Tamu</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-2">Kelola semua data tamu yang telah mendaftar dalam sistem</p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Tamu</p>
-              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Tamu</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Terjadwal Hari Ini</p>
-              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckIn}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Terjadwal Hari Ini</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckIn}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Selesai Hari Ini</p>
-              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckOut}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Selesai Hari Ini</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckOut}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Proses Hari Ini</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Proses Hari Ini</p>
               <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.currentlyVisiting}</p>
             </div>
           </div>
@@ -505,12 +505,12 @@ export default function AdminGuestsManagement() {
       </div>
 
       {/* Action Buttons - Pastel Version */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="flex flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-red-200 text-red-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-300 transition-colors flex items-center space-x-2"
+          className="bg-red-200 text-red-800 px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-red-300 transition-colors flex items-center space-x-2"
         >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
           <span>Tambah Tamu</span>
@@ -518,14 +518,14 @@ export default function AdminGuestsManagement() {
         <button 
           onClick={handleExportData}
           disabled={isExporting}
-          className="bg-green-200 text-green-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
+          className="bg-green-200 text-green-800 px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-2">
           {isExporting ? (
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : (
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
             </svg>
           )}
@@ -533,16 +533,16 @@ export default function AdminGuestsManagement() {
         </button>
         <button 
           onClick={handleRefresh}
-          className="bg-blue-200 text-blue-800 px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-300 transition-colors flex items-center space-x-2"
+          className="bg-blue-200 text-blue-800 px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-300 transition-colors flex items-center space-x-2"
           disabled={isLoading}
         >
           {isLoading ? (
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : (
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
             </svg>
           )}
@@ -551,8 +551,8 @@ export default function AdminGuestsManagement() {
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="p-4 border-b border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 sm:mb-8">
+        <div className="p-4 sm:p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
                              <input
@@ -569,7 +569,7 @@ export default function AdminGuestsManagement() {
                     handleRefresh();
                   }
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
               />
               {searchTerm && (
                 <button 
@@ -580,7 +580,7 @@ export default function AdminGuestsManagement() {
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   title="Hapus pencarian"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -592,7 +592,7 @@ export default function AdminGuestsManagement() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1); // Reset to first page on filter change
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              className="px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
               <option>Semua Status</option>
               <option>Menunggu</option>
@@ -606,7 +606,7 @@ export default function AdminGuestsManagement() {
                 setDateFilter(e.target.value);
                 setCurrentPage(1); // Reset to first page on filter change
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              className="px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
               <option>Hari Ini</option>
               <option>Minggu Ini</option>
@@ -620,13 +620,13 @@ export default function AdminGuestsManagement() {
 
       {/* Guests Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Daftar Tamu</h3>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Daftar Tamu</h3>
             
             {!isLoading && filteredGuests.length > 0 && (
               <div className="flex items-center">
-                <span className="text-sm text-gray-700 mr-2 whitespace-nowrap">
+                <span className="text-xs sm:text-sm text-gray-700 mr-2 whitespace-nowrap">
                   Tampilkan:
                 </span>
                 <select
@@ -636,7 +636,7 @@ export default function AdminGuestsManagement() {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1); // Reset to page 1 when changing items per page
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 w-24"
+                  className="px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 w-16 sm:w-24"
                   style={{ 
                     WebkitAppearance: 'none', 
                     MozAppearance: 'none',
@@ -655,24 +655,24 @@ export default function AdminGuestsManagement() {
         </div>
         
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-            <span className="ml-3 text-gray-600">Memuat data...</span>
+          <div className="flex justify-center items-center py-12 sm:py-20">
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-red-600"></div>
+            <span className="ml-3 text-sm sm:text-base text-gray-600">Memuat data...</span>
           </div>
         ) : guests.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex justify-center items-center w-24 h-24 bg-gray-100 rounded-full mb-4">
-              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-12 sm:py-20 px-4">
+            <div className="inline-flex justify-center items-center w-16 h-16 sm:w-24 sm:h-24 bg-gray-100 rounded-full mb-4">
+              <svg className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM18.5 12l2.25 2.25M18.5 16.5l2.25-2.25" />
               </svg>
             </div>
-            <h3 className="text-xl font-medium text-gray-700 mb-2">Tidak ada data tamu</h3>
-            <p className="text-gray-500 max-w-sm mx-auto">
+            <h3 className="text-lg sm:text-xl font-medium text-gray-700 mb-2">Tidak ada data tamu</h3>
+            <p className="text-sm sm:text-base text-gray-500 max-w-sm mx-auto">
               Belum ada tamu yang terdaftar. Data tamu akan muncul di sini setelah tamu melakukan registrasi atau Anda menambahkan tamu secara manual.
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="mt-6 bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center mx-auto"
+              className="mt-6 bg-red-600 text-white px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-red-700 transition-colors flex items-center mx-auto"
             >
               <span className="mr-2">+</span>
               <span>Tambah Tamu Baru</span>
@@ -680,16 +680,16 @@ export default function AdminGuestsManagement() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instansi</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kedatangan</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Token</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Instansi</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Tujuan</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Kedatangan</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Token</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -716,56 +716,62 @@ export default function AdminGuestsManagement() {
                       setIsDetailModalOpen(true);
                     }}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                          <span className="text-sm font-bold text-red-600">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs sm:text-sm font-bold text-red-600">
                             {guest.nama.split(' ').map(n => n[0]).join('').toUpperCase()}
                           </span>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{guest.nama}</div>
-                          <div className="text-sm text-gray-500">ID: {guest.id}</div>
+                        <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                          <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{guest.nama}</div>
+                          <div className="text-xs text-gray-500 sm:block hidden">ID: {guest.id}</div>
+                          <div className="text-xs text-gray-500 sm:hidden block">{guest.asal_instansi || guest.keperluan || "-"}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{guest.asal_instansi || "-"}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
+                      <div className="text-xs sm:text-sm text-gray-900 truncate">{guest.asal_instansi || "-"}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{guest.keperluan || "-"}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
+                      <div className="text-xs sm:text-sm text-gray-900 truncate">{guest.keperluan || "-"}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell">
+                      <div className="text-xs sm:text-sm text-gray-900">
                         {guest.waktu_checkin 
                           ? new Date(guest.waktu_checkin).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})
                           : "-"}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs text-gray-500">
                         {guest.waktu_checkin 
                           ? new Date(guest.waktu_checkin).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'})
                           : ""}
                       </div>
                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap">
-                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                       <span className={`inline-flex px-1 sm:px-2 py-1 text-xs font-semibold rounded-full ${
                          guest.status_kunjungan === 'Datang' ? 'bg-blue-100 text-blue-800' :
                          guest.status_kunjungan === 'Selesai' ? 'bg-green-100 text-green-800' :
                          guest.status_kunjungan === 'Terjadwal' ? 'bg-orange-100 text-orange-800' :
                          'bg-gray-100 text-gray-800'
                        }`}>
-                         {guest.status_kunjungan === 'Datang' ? 'Proses' : guest.status_kunjungan || 'Menunggu'}
+                         <span className="hidden sm:inline">{guest.status_kunjungan === 'Datang' ? 'Proses' : guest.status_kunjungan || 'Menunggu'}</span>
+                         <span className="sm:hidden">
+                           {guest.status_kunjungan === 'Datang' ? 'P' : 
+                            guest.status_kunjungan === 'Selesai' ? 'S' :
+                            guest.status_kunjungan === 'Terjadwal' ? 'T' : 'M'}
+                         </span>
                        </span>
                      </td>
-                                           <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
+                        <div className="text-xs sm:text-sm text-gray-900">
                           {guest.token ? (
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1 sm:space-x-2">
                               <code 
-                                className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono cursor-help"
+                                className="px-1 sm:px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono cursor-help"
                                 title={`Token lengkap: ${guest.token}`}
                               >
-                                {guest.token.substring(0, 8)}...
+                                {guest.token.substring(0, 6)}...
                               </code>
                               <button
                                 onClick={(e) => {
@@ -802,7 +808,7 @@ export default function AdminGuestsManagement() {
                                 className="text-blue-600 hover:text-blue-800 p-1"
                                 title="Salin token lengkap"
                               >
-                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                </svg>
                              </button>
@@ -812,8 +818,8 @@ export default function AdminGuestsManagement() {
                           )}
                         </div>
                       </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
+                      <div className="flex space-x-1 sm:space-x-2">
                         <button 
                           className="text-green-600 hover:text-green-900 p-1" 
                           title={guest.status_kunjungan === "Menunggu" ? "Jadwalkan" : 
@@ -840,7 +846,7 @@ export default function AdminGuestsManagement() {
                             }
                           }}
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                           </svg>
                         </button>
@@ -853,7 +859,7 @@ export default function AdminGuestsManagement() {
                             setIsDeleteDialogOpen(true);
                           }}
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
                           </svg>
                         </button>
@@ -868,23 +874,24 @@ export default function AdminGuestsManagement() {
         
         {/* Pagination */}
         {!isLoading && filteredGuests.length > 0 && (
-          <div className="bg-white px-6 py-3 border-t border-gray-200">
-            <div className="flex flex-wrap items-center justify-between">
-              <div className="text-sm text-gray-700 mb-2 sm:mb-0">
+          <div className="bg-white px-4 sm:px-6 py-3 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs sm:text-sm text-gray-700">
                 Menampilkan <span className="font-medium">{filteredGuests.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> sampai{' '}
                 <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredGuests.length)}</span> dari{' '}
                 <span className="font-medium">{filteredGuests.length}</span> hasil
               </div>
               
-              <div className="flex space-x-2">
+              <div className="flex space-x-1 sm:space-x-2">
                 <button 
-                  className={`px-3 py-1 text-sm border border-gray-300 rounded ${
+                  className={`px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded ${
                     currentPage === 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-gray-50'
                   }`}
                   onClick={() => currentPage > 1 && setCurrentPage(prev => prev - 1)}
                   disabled={currentPage === 1}
                 >
-                  Sebelumnya
+                  <span className="hidden sm:inline">Sebelumnya</span>
+                  <span className="sm:hidden">‹</span>
                 </button>
                 
                 {/* Generate page buttons */}
@@ -923,7 +930,7 @@ export default function AdminGuestsManagement() {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 text-sm ${
+                      className={`px-2 sm:px-3 py-1 text-xs sm:text-sm ${
                         pageNum === currentPage
                           ? 'bg-red-600 text-white'
                           : 'bg-white border border-gray-300 hover:bg-gray-50'
@@ -936,7 +943,7 @@ export default function AdminGuestsManagement() {
                 })}
                 
                 <button
-                  className={`px-3 py-1 text-sm border border-gray-300 rounded ${
+                  className={`px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded ${
                     currentPage >= totalPages 
                       ? 'bg-gray-100 cursor-not-allowed' 
                       : 'bg-white hover:bg-gray-50'
@@ -944,7 +951,8 @@ export default function AdminGuestsManagement() {
                   onClick={() => currentPage < totalPages && setCurrentPage(prev => prev + 1)}
                   disabled={currentPage >= totalPages}
                 >
-                  Selanjutnya
+                  <span className="hidden sm:inline">Selanjutnya</span>
+                  <span className="sm:hidden">›</span>
                 </button>
               </div>
             </div>

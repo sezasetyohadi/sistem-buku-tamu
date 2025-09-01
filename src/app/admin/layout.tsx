@@ -113,46 +113,46 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out
-        ${sidebarOpen ? 'w-64' : 'w-0 md:w-16'}
+        ${sidebarOpen ? 'w-56 sm:w-64' : 'w-0 md:w-12 xl:w-16'}
         md:relative md:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div className="h-full flex flex-col overflow-hidden">
           {/* Logo with Toggle Button */}
-          <div className={`flex items-center h-16 px-4 bg-white border-b border-gray-200 transition-all duration-300 ${
+          <div className={`flex items-center h-14 sm:h-16 px-3 sm:px-4 bg-white border-b border-gray-200 transition-all duration-300 ${
             sidebarOpen ? '' : 'md:px-2'
           }`}>
             <button
               type="button"
-              className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0 hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              className="w-7 h-7 sm:w-8 sm:h-8 bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0 hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               title="Toggle sidebar"
             >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className={`ml-3 text-lg font-semibold text-gray-800 transition-opacity duration-300 ${
+            <span className={`ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-800 transition-opacity duration-300 ${
               sidebarOpen ? 'opacity-100' : 'md:opacity-0 md:w-0 overflow-hidden'
             }`}>Admin Panel</span>
           </div>
           
           {/* Navigation */}
           <nav className={`flex-1 overflow-y-auto transition-all duration-300 ${
-            sidebarOpen ? 'mt-5 px-2' : 'md:mt-8 md:px-0'
+            sidebarOpen ? 'mt-4 sm:mt-5 px-2' : 'md:mt-6 xl:mt-8 md:px-0'
           }`}>
             <div className={`transition-all duration-300 ${
-              sidebarOpen ? 'space-y-1' : 'md:space-y-3'
+              sidebarOpen ? 'space-y-1' : 'md:space-y-2 xl:space-y-3'
             }`}>
               {menuItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
                   className={`
-                    group flex items-center text-sm font-medium transition-all duration-300
+                    group flex items-center text-xs sm:text-sm font-medium transition-all duration-300
                     ${sidebarOpen 
-                      ? 'px-3 py-2 mx-0 rounded-md' 
-                      : 'md:px-0 md:py-3 md:mx-2 md:justify-center md:rounded-lg py-2 px-3 mx-0 rounded-md'
+                      ? 'px-2 sm:px-3 py-2 mx-0 rounded-md' 
+                      : 'md:px-0 md:py-2 xl:py-3 md:mx-1 xl:mx-2 md:justify-center md:rounded-lg py-2 px-2 sm:px-3 mx-0 rounded-md'
                     }
                     ${isActive(item.path)
                       ? 'bg-red-50 text-red-700 border-r-2 border-red-600'
@@ -163,12 +163,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <span className={`flex-shrink-0 transition-all duration-300 ${
                     isActive(item.path) ? 'text-red-500' : 'text-gray-700 group-hover:text-gray-800'
                   } ${
-                    sidebarOpen ? 'w-5 h-5' : 'md:w-5 md:h-5 w-5 h-5'
+                    sidebarOpen ? 'w-4 h-4 sm:w-5 sm:h-5' : 'md:w-4 md:h-4 xl:w-5 xl:h-5 w-4 h-4 sm:w-5 sm:h-5'
                   }`}>
                     {item.icon}
                   </span>
                   {sidebarOpen && (
-                    <span className="ml-3 transition-opacity duration-300">
+                    <span className="ml-2 sm:ml-3 transition-opacity duration-300 truncate">
                       {item.name}
                     </span>
                   )}
@@ -178,12 +178,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </nav>
           
           {/* Logout */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-3 sm:p-4 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left"
+              className="flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left"
             >
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               {sidebarOpen && "Logout"}
@@ -203,25 +203,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Top header */}
-        <div className="flex-shrink-0 flex h-16 bg-white shadow-sm border-b border-gray-200 z-10">
-          <div className="flex-1 px-4 flex justify-end items-center min-w-0">
-            <div className="flex items-center space-x-4 flex-shrink-0">
+        <div className="flex-shrink-0 flex h-14 sm:h-16 bg-white shadow-sm border-b border-gray-200 z-10">
+          <div className="flex-1 px-3 sm:px-4 flex justify-end items-center min-w-0">
+            <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
               
 
               {/* User Profile */}
-              <Link href="/admin/profile" className="flex items-center space-x-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors duration-200 group">
+              <Link href="/admin/profile" className="flex items-center space-x-2 sm:space-x-3 hover:bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-colors duration-200 group">
                 {adminProfilePicture ? (
                   <img
                     src={adminProfilePicture}
                     alt="Profile"
-                    className="h-8 w-8 rounded-full object-cover ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200"
+                    className="h-6 w-6 sm:h-8 sm:w-8 rounded-full object-cover ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200"
                   />
                 ) : (
-                  <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200">
-                    <span className="text-sm font-medium text-white">{adminInitial}</span>
+                  <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200">
+                    <span className="text-xs sm:text-sm font-medium text-white">{adminInitial}</span>
                   </div>
                 )}
-                <span className="text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">{adminName}</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">{adminName}</span>
               </Link>
             </div>
           </div>
