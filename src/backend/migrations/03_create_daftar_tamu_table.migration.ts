@@ -33,34 +33,35 @@ export async function up() {
   `);
   
   // Create triggers for status updates
+  // Note: Using DELIMITER to handle trigger creation properly
   await executeQuery(`
-    CREATE TRIGGER IF NOT EXISTS set_terjadwal BEFORE UPDATE ON daftar_tamu
+    CREATE TRIGGER set_terjadwal BEFORE UPDATE ON daftar_tamu
     FOR EACH ROW
     BEGIN
       IF NEW.jadwal_checkin IS NOT NULL AND OLD.jadwal_checkin IS NULL THEN
         SET NEW.status = 'Terjadwal';
       END IF;
-    END;
+    END
   `);
   
   await executeQuery(`
-    CREATE TRIGGER IF NOT EXISTS set_datang BEFORE UPDATE ON daftar_tamu
+    CREATE TRIGGER set_datang BEFORE UPDATE ON daftar_tamu
     FOR EACH ROW
     BEGIN
       IF NEW.waktu_checkin IS NOT NULL AND OLD.waktu_checkin IS NULL THEN
         SET NEW.status = 'Datang';
       END IF;
-    END;
+    END
   `);
   
   await executeQuery(`
-    CREATE TRIGGER IF NOT EXISTS set_selesai BEFORE UPDATE ON daftar_tamu
+    CREATE TRIGGER set_selesai BEFORE UPDATE ON daftar_tamu
     FOR EACH ROW
     BEGIN
       IF NEW.waktu_checkout IS NOT NULL AND OLD.waktu_checkout IS NULL THEN
         SET NEW.status = 'Selesai';
       END IF;
-    END;
+    END
   `);
   
   console.log('Daftar Tamu table and triggers created successfully');

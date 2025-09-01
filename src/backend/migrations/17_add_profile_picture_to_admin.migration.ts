@@ -4,7 +4,7 @@ export async function up() {
   // Add profile_picture column to admin table
   await executeQuery(`
     ALTER TABLE admin 
-    ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL 
+    ADD COLUMN IF NOT EXISTS profile_picture VARCHAR(255) DEFAULT NULL 
     AFTER email;
   `);
   
