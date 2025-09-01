@@ -100,15 +100,15 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       ? tujuanKunjungan
       : formData.keperluan || 'Kunjungan umum';
     
-    // Insert query - Updated to match the actual table schema
+    // Insert query - Updated to match the actual table schema and include catatan_tambahan
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir_id, 
-       profesi_id, asal_instansi, keperluan, bidang_tujuan_id, status_kunjungan, file_upload) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
+       profesi_id, asal_instansi, keperluan, bidang_tujuan_id, catatan_tambahan, status_kunjungan, file_upload) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
     `;
     
-    // Parameter with all needed fields
+    // Parameter with all needed fields including catatan_tambahan
     const params = [
       formData.nama,
       formData.email,
@@ -120,6 +120,7 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       formData.asal_instansi || null,
       keperluan,
       formData.bidang_tujuan_id || null,
+      formData.catatan || null, // Save notes to catatan_tambahan column
       formData.file_upload || null
     ];
 
