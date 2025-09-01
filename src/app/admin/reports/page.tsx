@@ -79,13 +79,14 @@ export default function AdminReportsAnalytics() {
   const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('7'); // Default 7 days
   const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchReportsData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/reports');
+        const response = await fetch(`/api/reports?period=${selectedPeriod}`);
         const result = await response.json();
         
         if (result.success) {
@@ -102,7 +103,7 @@ export default function AdminReportsAnalytics() {
     };
 
     fetchReportsData();
-  }, []);
+  }, [selectedPeriod]);
 
   const handleExportPDF = async () => {
     if (!pdfRef.current) {
@@ -263,11 +264,15 @@ export default function AdminReportsAnalytics() {
               </p>
             </div>
             <div className="flex space-x-3">
-              <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>7 Hari Terakhir</option>
-                <option>30 Hari Terakhir</option>
-                <option>3 Bulan Terakhir</option>
-                <option>1 Tahun Terakhir</option>
+              <select 
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+              >
+                <option value="7">7 Hari Terakhir</option>
+                <option value="30">30 Hari Terakhir</option>
+                <option value="90">3 Bulan Terakhir</option>
+                <option value="365">1 Tahun Terakhir</option>
               </select>
               <button 
                 className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300"
@@ -390,7 +395,11 @@ export default function AdminReportsAnalytics() {
               <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586L14.586 7H12z" clipRule="evenodd" />
               </svg>
-              <h3 className="text-lg font-bold text-gray-800">Tren Kunjungan (7 Hari Terakhir)</h3>
+              <h3 className="text-lg font-bold text-gray-800">
+                Tren Kunjungan ({selectedPeriod === '7' ? '7 Hari Terakhir' : 
+                                 selectedPeriod === '30' ? '30 Hari Terakhir' :
+                                 selectedPeriod === '90' ? '3 Bulan Terakhir' : '1 Tahun Terakhir'})
+              </h3>
             </div>
             <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
               {data?.weeklyTrends && data.weeklyTrends.length > 0 ? (

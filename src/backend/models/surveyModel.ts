@@ -151,7 +151,13 @@ export const SURVEY_QUERIES = {
         ELSE 'rating'
       END as tipe_jawaban,
       COUNT(js.id) AS total_responses,
-      AVG(js.jawaban) AS average_rating
+      AVG(CASE 
+        WHEN js.jawaban IS NOT NULL THEN 
+          (SELECT urutan_rating 
+           FROM opsi_rating 
+           WHERE id = js.jawaban)
+        ELSE NULL 
+      END) AS average_rating
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     LEFT JOIN jawaban_survei js ON ps.id = js.pertanyaan_id

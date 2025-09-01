@@ -9,7 +9,7 @@ export default function Register() {
   const handleFormSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      // Step 1: Register the guest
+      // Register the guest (token is now created automatically by the API)
       const response = await fetch('/api/guests', {
         method: 'POST',
         headers: {
@@ -23,29 +23,21 @@ export default function Register() {
       if (result.success) {
         console.log('Guest registered:', result.data);
         
-        // Step 2: Create a token for the guest
-        const tokenResponse = await fetch('/api/tokens', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ tamuId: result.data.id }),
-        });
-        
-        const tokenResult = await tokenResponse.json();
-        
-        if (tokenResult.success) {
-          console.log('Token created:', tokenResult.data);
-          // Pass the token to the form component to display in notification
+        // Token is now included in the result.data from the API
+        if (result.data?.token) {
+          console.log('Token created automatically:', result.data.token);
           return {
             success: true,
             guestData: result.data,
-            tokenData: tokenResult.data
+            tokenData: result.data.token
           };
         } else {
-          console.error('Token creation failed:', tokenResult.message);
-          alert(`Registrasi berhasil, tetapi pembuatan token gagal: ${tokenResult.message}`);
-          return { success: true, guestData: result.data, tokenData: null };
+          console.warn('No token was created during registration');
+          return {
+            success: true,
+            guestData: result.data,
+            tokenData: null
+          };
         }
       } else {
         alert(`Registrasi gagal: ${result.message}`);

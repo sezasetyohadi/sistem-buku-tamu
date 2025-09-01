@@ -170,18 +170,21 @@ export default function AdminGuestsManagement() {
         // Refresh the guest list
         await fetchData();
         
-        // Show success message
-        toast.success('Tamu berhasil ditambahkan!');
-        
-        // Close modal if no token is returned (admin flow)
-        if (!result.data?.token) {
-          setIsModalOpen(false);
+        // Show success message with token info if available
+        if (result.data?.token) {
+          toast.success(`Tamu dan token berhasil ditambahkan!`);
+          //toast.success(`Tamu berhasil ditambahkan! Token: ${result.data.token.token}`);
+        } else {
+          toast.success('Tamu berhasil ditambahkan!');
         }
+        
+        // Always close modal for admin flow, but show token if created
+        setIsModalOpen(false);
         
         // Return the expected structure for the form component
         return {
           success: true,
-          guestData: result.data?.guest,
+          guestData: result.data,
           tokenData: result.data?.token
         };
       } else {
@@ -245,7 +248,7 @@ export default function AdminGuestsManagement() {
           email: guest.email || '-',
           nomor_telp: guest.nomor_telp || '-',
           pendidikan_terakhir: guest.pendidikan_terakhir || '-',
-          profesi_id: guest.profesi || '-',
+          profesi: guest.profesi || '-',
           keperluan: guest.keperluan || '-',
           // Use empty string for dates initially
           waktu_checkin: '',
@@ -345,7 +348,7 @@ export default function AdminGuestsManagement() {
       const a = document.createElement('a');
       const timestamp = new Date().toISOString().replace(/[\-:]/g, '').replace('T', '_').split('.')[0];
       a.href = url;
-      a.download = `daftar_tamu_${timestamp}.xlsx`;
+      a.download = `Data Tamu_${timestamp}.xlsx`;
       document.body.appendChild(a);
       a.click();
       

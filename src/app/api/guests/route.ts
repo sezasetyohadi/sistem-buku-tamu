@@ -3,6 +3,7 @@ import {
   getAllGuests, 
   createGuest
 } from '@/backend/services/guestService';
+import { createToken } from '@/backend/services/tokenService';
 import {
   getEducationOptions, 
   getProfessionOptions, 
@@ -74,10 +75,29 @@ export async function POST(request: NextRequest) {
 
     const guestId = await createGuest(guestData);
     
+    // Create token for the new guest
+    let tokenData = null;
+    try {
+      tokenData = await createToken(guestId);
+      console.log('Token created successfully for guest:', guestId, 'Token:', tokenData.token);
+    } catch (tokenError) {
+      console.error('Error creating token for guest:', guestId, tokenError);
+      // Continue without token if token creation fails
+    }
+    
     return NextResponse.json(
       { 
         success: true, 
-        data: { id: guestId, ...guestData },
+        data: { 
+          id: guestId,
+          ...guestData,
+          token: tokenData ? {
+            id: tokenData.id,
+            token: tokenData.token,
+            is_active: tokenData.is_active,
+            created_at: tokenData.created_at
+          } : null
+        },
         message: 'Tamu berhasil terdaftar'
       },
       { status: 201 }

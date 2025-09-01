@@ -1,11 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getReportsStatistics, getRecentActivities } from '@/backend/services/guestService';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const period = searchParams.get('period') || '7'; // Default 7 days
+    
     const [reportsData, recentActivities] = await Promise.all([
-      getReportsStatistics(),
-      getRecentActivities(5)
+      getReportsStatistics(parseInt(period)),
+      getRecentActivities(5, parseInt(period))
     ]);
 
     return NextResponse.json({ 
