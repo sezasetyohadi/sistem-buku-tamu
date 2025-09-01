@@ -206,13 +206,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex-shrink-0 flex h-16 bg-white shadow-sm border-b border-gray-200 z-10">
           <div className="flex-1 px-4 flex justify-end items-center min-w-0">
             <div className="flex items-center space-x-4 flex-shrink-0">
-              {/* Notifications */}
-              <button className="p-2 rounded-full text-gray-700 hover:text-gray-800 hover:bg-gray-100 relative transition-colors duration-200">
-                <span className="sr-only">View notifications</span>
-                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C13.1 2 14 2.9 14 4V5.08C16.39 5.57 18 7.54 18 10V16L20 18V19H4V18L6 16V10C6 7.54 7.61 5.57 10 5.08V4C10 2.9 10.9 2 12 2ZM10 21H14C14 22.1 13.1 23 12 23S10 22.1 10 21Z"/>
-                </svg>
-              </button>
+              
 
               {/* User Profile */}
               <Link href="/admin/profile" className="flex items-center space-x-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors duration-200 group">
