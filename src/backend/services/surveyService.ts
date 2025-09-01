@@ -339,22 +339,22 @@ export async function submitSurveyWithIdentity(
   await executeQuery('START TRANSACTION');
   
   try {
-    // First, insert the identity data and get the respondent ID
+    // First, insert the identity data using the correct column structure from disnaker.sql
     const identityResult = await executeQuery<any>(
       `INSERT INTO jawaban_identitas_survei 
-       (nama_lengkap, jenis_kelamin, pendidikan_terakhir_id, profesi_id, instansi, email, nomor_telp, tanggal_lahir, alamat, jenis_layanan_id, saran, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+       (nama_lengkap, tanggal_lahir, email, nomor_telepon, jenis_kelamin, alamat, 
+        pendidikan_terakhir_id, pekerjaan_utama_id, jenis_layanan_id, saran, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         identity.nama_lengkap,
-        identity.jenis_kelamin,
-        // We need to get the IDs for foreign key relationships
-        await getPendidikanId(identity.pendidikan_terakhir),
-        await getProfesiId(identity.pekerjaan_utama),
-        null, // instansi can be null
+        identity.tanggal_lahir, // Use tanggal_lahir directly instead of calculating age
         identity.email,
         identity.nomor_telp,
-        identity.tanggal_lahir,
+        identity.jenis_kelamin,
         identity.alamat,
+        // Get the IDs for foreign key relationships
+        await getPendidikanId(identity.pendidikan_terakhir),
+        await getProfesiId(identity.pekerjaan_utama),
         await getTujuanKunjunganId(identity.jenis_layanan),
         feedback || null
       ]
@@ -362,17 +362,16 @@ export async function submitSurveyWithIdentity(
 
     const respondenId = identityResult.insertId;
 
-    // Then insert each survey answer
+    // Then insert each survey answer using the correct jawaban_survei structure
     for (const answer of answers) {
       await executeQuery(
         `INSERT INTO jawaban_survei 
-         (responden_id, pertanyaan_id, jawaban_numerik, jawaban_text, created_at) 
-         VALUES (?, ?, ?, ?, NOW())`,
+         (responden_id, pertanyaan_id, jawaban, created_at) 
+         VALUES (?, ?, ?, NOW())`,
         [
           respondenId,
           answer.pertanyaan_id,
-          typeof answer.jawaban === 'number' ? answer.jawaban : null,
-          typeof answer.jawaban === 'string' ? answer.jawaban : null
+          answer.jawaban
         ]
       );
     }

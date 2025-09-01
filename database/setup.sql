@@ -95,16 +95,21 @@ CREATE TABLE IF NOT EXISTS pertanyaan_s_jenis_rating (
 -- Table for survey answers
 CREATE TABLE IF NOT EXISTS jawaban_survei (
   id int(11) NOT NULL AUTO_INCREMENT,
+  responden_id int(11) DEFAULT NULL,
   nama_lengkap varchar(100) NOT NULL,
   email varchar(100) NOT NULL,
   tanggal_kunjungan date NOT NULL,
   pertanyaan_id int(11) NOT NULL,
+  jawaban_numerik int(11) DEFAULT NULL,
+  jawaban_text text DEFAULT NULL,
   jawaban int(11) NOT NULL,
   created_at timestamp NOT NULL DEFAULT current_timestamp(),
   saran text DEFAULT NULL,
   PRIMARY KEY (id),
   KEY pertanyaan_id (pertanyaan_id),
-  CONSTRAINT jawaban_survei_ibfk_1 FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE
+  KEY fk_responden_survei (responden_id),
+  CONSTRAINT jawaban_survei_ibfk_1 FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE,
+  CONSTRAINT fk_responden_survei FOREIGN KEY (responden_id) REFERENCES jawaban_identitas_survei (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table for survey sections
@@ -140,15 +145,20 @@ CREATE TABLE IF NOT EXISTS jawaban_identitas_survei (
   nama_lengkap varchar(100) DEFAULT NULL,
   jenis_kelamin enum('Laki-laki','Perempuan') DEFAULT NULL,
   pendidikan_terakhir_id int(11) DEFAULT NULL,
-  profesi_id int(11) DEFAULT NULL,
-  instansi varchar(100) DEFAULT NULL,
+  pekerjaan_utama_id int(11) DEFAULT NULL,
+  email varchar(100) DEFAULT NULL,
+  nomor_telepon varchar(20) DEFAULT NULL,
+  tanggal_lahir date DEFAULT NULL,
+  alamat text DEFAULT NULL,
   jenis_layanan_id int(11) DEFAULT NULL,
   saran text DEFAULT NULL,
   created_at timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (id),
+  KEY fk_pendidikan_responden (pendidikan_terakhir_id),
+  KEY fk_profesi_responden (pekerjaan_utama_id),
   KEY fk_tujuan_responden (jenis_layanan_id),
   CONSTRAINT fk_pendidikan_responden FOREIGN KEY (pendidikan_terakhir_id) REFERENCES pendidikan_terakhir (id) ON DELETE SET NULL,
-  CONSTRAINT fk_profesi_responden FOREIGN KEY (profesi_id) REFERENCES profesi (id) ON DELETE SET NULL
+  CONSTRAINT fk_profesi_responden FOREIGN KEY (pekerjaan_utama_id) REFERENCES profesi (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table for education level
@@ -225,6 +235,46 @@ CREATE TABLE IF NOT EXISTS tamu_token (
   PRIMARY KEY (id),
   KEY fk_token_tamu (tamu_id),
   CONSTRAINT fk_token_tamu FOREIGN KEY (tamu_id) REFERENCES daftar_tamu (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table for memperoleh informasi options
+CREATE TABLE IF NOT EXISTS memperoleh_informasi (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  nama_opsi varchar(255) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table for mendapatkan salinan options
+CREATE TABLE IF NOT EXISTS mendapatkan_salinan (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  nama_opsi varchar(255) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table for jawaban memperoleh informasi
+CREATE TABLE IF NOT EXISTS jawaban_memperoleh_informasi (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  tamu_id int(11) NOT NULL,
+  cara_memperoleh_id int(11) NOT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY fk_jmi_tamu (tamu_id),
+  KEY cara_memperoleh_id (cara_memperoleh_id),
+  CONSTRAINT fk_jmi_tamu FOREIGN KEY (tamu_id) REFERENCES daftar_tamu (id) ON DELETE CASCADE,
+  CONSTRAINT fk_jmi_cara FOREIGN KEY (cara_memperoleh_id) REFERENCES memperoleh_informasi (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table for jawaban mendapatkan salinan
+CREATE TABLE IF NOT EXISTS jawaban_mendapatkan_salinan (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  tamu_id int(11) NOT NULL,
+  cara_salinan_id int(11) NOT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY fk_jms_tamu (tamu_id),
+  KEY cara_salinan_id (cara_salinan_id),
+  CONSTRAINT fk_jms_tamu FOREIGN KEY (tamu_id) REFERENCES daftar_tamu (id) ON DELETE CASCADE,
+  CONSTRAINT fk_jms_cara FOREIGN KEY (cara_salinan_id) REFERENCES mendapatkan_salinan (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table for memperoleh informasi options

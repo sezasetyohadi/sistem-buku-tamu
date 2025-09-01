@@ -56,61 +56,42 @@ export default function AdminSurvey() {
     is_required: true
   });
 
-  // Dummy survey responses
-  const dummyResponses = [
-    {
-      id: 1,
-      nama: "Budi Santoso",
-      email: "budi.santoso@email.com",
-      tanggal: "2025-08-13",
-      waktu: "14:30",
-      responses: {
-        "Bagaimana penilaian Anda terhadap pelayanan yang diberikan oleh petugas?": 5,
-        "Bagaimana penilaian Anda terhadap kecepatan pelayanan?": 4,
-        "Bagaimana penilaian Anda terhadap kejelasan informasi yang diberikan?": 5,
-        "Bagaimana penilaian Anda terhadap fasilitas yang tersedia?": 4,
-        "Bagaimana penilaian Anda secara keseluruhan terhadap layanan kami?": 5,
-        "Apakah ada saran atau kritik untuk perbaikan layanan kami?": "Pelayanan sudah sangat baik, hanya perlu penambahan kursi di ruang tunggu.",
-        "Apakah Anda akan merekomendasikan layanan kami kepada orang lain?": 5
-      }
-    },
-    {
-      id: 2,
-      nama: "Siti Nurhaliza",
-      email: "siti.nurhaliza@email.com",
-      tanggal: "2025-08-13",
-      waktu: "10:15",
-      responses: {
-        "Bagaimana penilaian Anda terhadap pelayanan yang diberikan oleh petugas?": 4,
-        "Bagaimana penilaian Anda terhadap kecepatan pelayanan?": 3,
-        "Bagaimana penilaian Anda terhadap kejelasan informasi yang diberikan?": 4,
-        "Bagaimana penilaian Anda terhadap fasilitas yang tersedia?": 4,
-        "Bagaimana penilaian Anda secara keseluruhan terhadap layanan kami?": 4,
-        "Apakah ada saran atau kritik untuk perbaikan layanan kami?": "Proses pelayanan bisa dipercepat lagi.",
-        "Apakah Anda akan merekomendasikan layanan kami kepada orang lain?": 4
-      }
-    },
-    {
-      id: 3,
-      nama: "Ahmad Wijaya",
-      email: "ahmad.wijaya@email.com",
-      tanggal: "2025-08-12",
-      waktu: "16:45",
-      responses: {
-        "Bagaimana penilaian Anda terhadap pelayanan yang diberikan oleh petugas?": 5,
-        "Bagaimana penilaian Anda terhadap kecepatan pelayanan?": 5,
-        "Bagaimana penilaian Anda terhadap kejelasan informasi yang diberikan?": 5,
-        "Bagaimana penilaian Anda terhadap fasilitas yang tersedia?": 5,
-        "Bagaimana penilaian Anda secara keseluruhan terhadap layanan kami?": 5,
-        "Apakah ada saran atau kritik untuk perbaikan layanan kami?": "Pelayanan sangat memuaskan, pertahankan kualitas ini!",
-        "Apakah Anda akan merekomendasikan layanan kami kepada orang lain?": 5
-      }
-    }
-  ];
+  // Real survey responses from database
+  const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
+  const [responsesLoading, setResponsesLoading] = useState(false);
 
   useEffect(() => {
     fetchSurveyData();
-  }, []);
+    if (activeTab === 'responses') {
+      fetchSurveyResponses();
+    }
+  }, [activeTab]);
+
+  // Function to fetch survey responses from database
+  const fetchSurveyResponses = async () => {
+    try {
+      setResponsesLoading(true);
+      const response = await fetch('/api/survey/responses');
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching responses: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        setSurveyResponses(data.data);
+      } else {
+        console.error('Invalid response format:', data);
+        setSurveyResponses([]);
+      }
+    } catch (error) {
+      console.error('Error fetching survey responses:', error);
+      setSurveyResponses([]);
+    } finally {
+      setResponsesLoading(false);
+    }
+  };
 
   // Function to fetch all survey data
   const fetchSurveyData = async () => {
@@ -508,14 +489,17 @@ export default function AdminSurvey() {
                 Kelola Pertanyaan
               </button>
               <button
-                onClick={() => setActiveTab('responses')}
+                onClick={() => {
+                  setActiveTab('responses');
+                  fetchSurveyResponses();
+                }}
                 className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'responses'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Lihat Respon Survey ({dummyResponses.length})
+                Lihat Respon Survei ({surveyResponses.length})
               </button>
             </nav>
           </div>
@@ -634,68 +618,102 @@ export default function AdminSurvey() {
           ) : (
             /* Survey Responses Tab */
             <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="text-sm font-medium text-gray-800 mb-2">Statistik Respon</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {responsesLoading ? (
+                <div className="flex items-center justify-center py-12">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">{statistics.totalResponses}</p>
-                    <p className="text-sm text-gray-600">Total Responden</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">{statistics.averageRating.toFixed(1)}</p>
-                    <p className="text-sm text-gray-600">Rata-rata Rating</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600">
-                      {statistics.completionRate}%
-                    </p>
-                    <p className="text-sm text-gray-600">Tingkat Penyelesaian</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="text-gray-600">Memuat respon survei...</div>
                   </div>
                 </div>
-              </div>
-
-              {/* Response List */}
-              {dummyResponses.map((response, index) => (
-                <div key={response.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-sm transition-shadow">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{response.nama}</h3>
-                      <p className="text-sm text-gray-600">{response.email}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">{response.tanggal}</p>
-                      <p className="text-sm text-gray-500">{response.waktu}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {Object.entries(response.responses).map(([question, answer]) => (
-                      <div key={question} className="border-l-2 border-gray-200 pl-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">{question}</p>
-                        {typeof answer === 'number' ? (
-                          <div className="flex items-center space-x-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <svg
-                                key={star}
-                                className={`w-5 h-5 ${
-                                  star <= answer ? 'text-yellow-400' : 'text-gray-300'
-                                }`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
-                            <span className="ml-2 text-sm font-medium text-gray-600">({answer}/5)</span>
-                          </div>
-                        ) : (
-                          <p className="text-gray-600 bg-gray-50 rounded-md p-3">{answer}</p>
-                        )}
+              ) : (
+                <>
+                  {surveyResponses.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400 mb-3">
+                        <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                      <p className="text-gray-500">Belum ada respon survei</p>
+                      <p className="text-sm text-gray-400 mt-1">Respon akan muncul setelah tamu mengisi survei</p>
+                    </div>
+                  ) : (
+                    /* Response List */
+                    surveyResponses.map((response, index) => (
+                      <div key={response.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-sm transition-shadow">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-900">{response.nama_lengkap}</h3>
+                            <p className="text-sm text-gray-600">{response.email}</p>
+                            {response.nomor_telepon && (
+                              <p className="text-sm text-gray-500">Telepon: {response.nomor_telepon}</p>
+                            )}
+                            {response.tanggal_lahir && (
+                              <p className="text-sm text-gray-500">Tanggal Lahir: {response.tanggal_lahir}</p>
+                            )}
+                            {response.jenis_kelamin && (
+                              <p className="text-sm text-gray-500">Jenis Kelamin: {response.jenis_kelamin}</p>
+                            )}
+                            {response.pendidikan_terakhir && (
+                              <p className="text-sm text-gray-500">Pendidikan: {response.pendidikan_terakhir}</p>
+                            )}
+                            {response.nama_profesi && (
+                              <p className="text-sm text-gray-500">Profesi: {response.nama_profesi}</p>
+                            )}
+                            {response.jenis_layanan && (
+                              <p className="text-sm text-gray-500">Jenis Layanan: {response.jenis_layanan}</p>
+                            )}
+                            {response.alamat && (
+                              <p className="text-sm text-gray-500">Alamat: {response.alamat}</p>
+                            )}
+                            {response.tanggal_survei && (
+                              <p className="text-sm text-gray-500">Tanggal Survey: {response.tanggal_survei}</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-500">{response.tanggal}</p>
+                            <p className="text-sm text-gray-500">{response.waktu}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          {Object.entries(response.responses).map(([question, answer]) => (
+                            <div key={question} className="border-l-2 border-gray-200 pl-4">
+                              <p className="text-sm font-medium text-gray-700 mb-2">{question}</p>
+                              {typeof answer === 'number' ? (
+                                <div className="flex items-center space-x-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <svg
+                                      key={star}
+                                      className={`w-5 h-5 ${
+                                        star <= answer ? 'text-yellow-400' : 'text-gray-300'
+                                      }`}
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                  ))}
+                                  <span className="ml-2 text-sm font-medium text-gray-600">({answer}/5)</span>
+                                </div>
+                              ) : (
+                                <p className="text-gray-600 bg-gray-50 rounded-md p-3">{String(answer)}</p>
+                              )}
+                            </div>
+                          ))}
+                          
+                          {response.saran && (
+                            <div className="border-l-2 border-blue-200 pl-4 mt-4">
+                              <p className="text-sm font-medium text-gray-700 mb-2">Saran dan Masukan:</p>
+                              <p className="text-gray-600 bg-blue-50 rounded-md p-3">{response.saran}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </>
+              )}
             </div>
           )}
 
