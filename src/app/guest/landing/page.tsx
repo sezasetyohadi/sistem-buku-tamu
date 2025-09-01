@@ -110,10 +110,10 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-6 py-20 relative z-10 max-w-7xl">
           <div className="text-center">
-            {/* Logo Section with simple styling */}
-            <div className="flex justify-center mb-8">
+            {/* Logo Section with smaller spacing */}
+            <div className="flex justify-center mb-6">
               <div className="relative group">
-                <div className="relative w-28 h-32 bg-white/15 backdrop-blur-lg rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-4 hover:scale-105 transition-transform duration-500">
+                <div className="relative w-24 h-28 bg-white/15 backdrop-blur-lg rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-3 hover:scale-105 transition-transform duration-500">
                   <img 
                     src="/logo-jateng.svg" 
                     alt="Logo Provinsi Jawa Tengah" 
@@ -123,18 +123,18 @@ export default function LandingPage() {
               </div>
             </div>
             
-            {/* Simple welcome badge */}
-            <div className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-lg rounded-full text-sm font-bold mb-8 border border-green-400/30">
-              <span className="w-3 h-3 bg-green-400 rounded-full mr-4 inline-block"></span>
+            {/* Status badge with smaller spacing */}
+            <div className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-lg rounded-full text-sm font-bold mb-6 border border-green-400/30">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-3 inline-block"></span>
               <span className="bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
                 Sistem Online • Tersedia 24/7
               </span>
             </div>
             
-            {/* Enhanced typography with larger text for better readability */}
-            <div className="mb-12">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-tight tracking-tight">
-                <span className="inline-block hover:scale-110 transition-transform duration-500">
+            {/* Typography with compact spacing */}
+            <div className="mb-6">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight tracking-tight">
+                <span className="inline-block hover:scale-105 transition-transform duration-500">
                   Selamat Datang di
                 </span>
                 <br />
@@ -143,47 +143,47 @@ export default function LandingPage() {
                 </span>
               </h1>
               <div className="relative">
-                <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-blue-50 tracking-wide">
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-blue-50 tracking-wide">
                   Jawa Tengah
                 </h2>
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-gradient-to-r from-transparent via-orange-400 to-transparent rounded-full"></div>
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-32 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent rounded-full"></div>
               </div>
             </div>
             
-            <p className="text-xl md:text-2xl lg:text-3xl mb-16 text-blue-50 max-w-5xl mx-auto leading-relaxed font-medium">
+            <p className="text-base md:text-lg lg:text-xl mb-8 text-blue-50 max-w-3xl mx-auto leading-relaxed font-medium">
               Sistem Buku Tamu Digital - Daftarkan kunjungan Anda dengan mudah, 
               akses layanan ketenagakerjaan dan transmigrasi secara digital
             </p>
             
-            {/* Enhanced CTA buttons - Larger and more accessible */}
-            <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
+            {/* CTA buttons - Smaller, more proportional sizing */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
                 href="/guest/register"
-                className="group relative text-white font-bold py-8 px-16 rounded-2xl text-xl md:text-2xl transition-all duration-500 shadow-2xl transform hover:scale-105 hover:-translate-y-2 overflow-hidden min-w-[280px]"
+                className="group relative text-white font-bold py-4 px-8 rounded-xl text-base md:text-lg transition-all duration-500 shadow-xl transform hover:scale-105 hover:-translate-y-1 overflow-hidden min-w-[200px]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-100 group-hover:opacity-90"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute inset-0 animate-pulse bg-white/10"></div>
                 <span className="relative flex items-center justify-center z-10">
-                  <svg className="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
                   <span>Pendaftaran Tamu</span>
-                  <span className="ml-4 transform group-hover:translate-x-2 transition-transform duration-300 text-2xl">→</span>
+                  <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
               </Link>
               
               <Link
                 href="/guest/survey"
-                className="group relative bg-white/15 backdrop-blur-xl border-3 border-white/40 text-white hover:bg-white hover:text-purple-700 font-bold py-8 px-16 rounded-2xl text-xl md:text-2xl transition-all duration-500 shadow-xl hover:shadow-white/25 transform hover:scale-105 hover:-translate-y-1 overflow-hidden min-w-[280px]"
+                className="group relative bg-white/15 backdrop-blur-xl border-2 border-white/40 text-white hover:bg-white hover:text-purple-700 font-bold py-4 px-8 rounded-xl text-base md:text-lg transition-all duration-500 shadow-lg hover:shadow-white/25 transform hover:scale-105 hover:-translate-y-1 overflow-hidden min-w-[200px]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <span className="relative flex items-center justify-center z-10">
-                  <svg className="w-6 h-6 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   <span>Survey Kepuasan</span>
-                  <span className="ml-3 transform group-hover:translate-x-2 transition-transform duration-300">→</span>
+                  <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
               </Link>
             </div>
@@ -239,16 +239,16 @@ export default function LandingPage() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          {/* Section header - Enhanced for better readability */}
-          <div className="text-center mb-24 opacity-0 translate-y-4 transition-all duration-500 ease-out delay-50" data-fade="up">
-            <div className="inline-flex items-center px-8 py-4 rounded-full text-lg font-bold mb-8 bg-badge-orange">
-              <span className="mr-3">✨</span>
+          {/* Section header - More moderate sizing for better balance */}
+          <div className="text-center mb-20 opacity-0 translate-y-4 transition-all duration-500 ease-out delay-50" data-fade="up">
+            <div className="inline-flex items-center px-6 py-3 rounded-full text-base font-bold mb-6 bg-badge-orange">
+              <span className="mr-2">✨</span>
               Layanan Kami
             </div>
-            <h2 className="text-5xl md:text-6xl font-bold text-gray-800 mb-8">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-6">
               Pelayanan DISNAKERTRANS Jateng
             </h2>
-            <p className="text-2xl text-gray-800 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed">
               Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah melayani masyarakat dengan sistem digital yang modern dan terintegrasi
             </p>
           </div>
@@ -304,28 +304,28 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* CTA Section - Enhanced for better accessibility */}
+          {/* CTA Section - More balanced sizing */}
           <div className="text-center opacity-0 translate-y-4 transition-all duration-500 ease-out delay-250" data-fade="up">
-            <div className="rounded-3xl p-16 text-white relative overflow-hidden shadow-2xl bg-cta-gradient">
+            <div className="rounded-3xl p-12 text-white relative overflow-hidden shadow-2xl bg-cta-gradient">
               <div className="absolute inset-0 bg-black opacity-10"></div>
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
               <div className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rounded-full bg-decoration-orange"></div>
               
               <div className="relative z-10">
-                <h3 className="text-4xl md:text-5xl font-bold mb-8">Mulai Sekarang!</h3>
-                <p className="text-2xl text-blue-50 mb-12 max-w-4xl mx-auto leading-relaxed">
+                <h3 className="text-3xl md:text-4xl font-bold mb-6">Mulai Sekarang!</h3>
+                <p className="text-lg md:text-xl text-blue-50 mb-10 max-w-3xl mx-auto leading-relaxed">
                   Bergabunglah dengan ribuan pengguna yang telah merasakan kemudahan layanan digital kami
                 </p>
-                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
                     href="/guest/register"
-                    className="bg-white text-blue-600 font-bold py-6 px-12 rounded-2xl text-xl hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl min-w-[250px]"
+                    className="bg-white text-blue-600 font-bold py-4 px-10 rounded-2xl text-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl min-w-[200px]"
                   >
                     Daftar Sekarang
                   </Link>
                   <Link
                     href="/guest/survey"
-                    className="border-3 border-white text-white font-bold py-6 px-12 rounded-2xl text-xl hover:bg-white hover:text-blue-600 transition-all duration-300 transform hover:scale-105 min-w-[250px]"
+                    className="border-3 border-white text-white font-bold py-4 px-10 rounded-2xl text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 transform hover:scale-105 min-w-[200px]"
                   >
                     Isi Survey
                   </Link>
