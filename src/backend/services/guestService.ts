@@ -383,8 +383,8 @@ export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
   return result.insertId;
 }
 
-// Get Recent Activities for Dashboard (last 24 hours)
-export async function getRecentActivities(limit: number = 5): Promise<any[]> {
+// Get Recent Activities for Dashboard (configurable period)
+export async function getRecentActivities(limit: number = 5, periodDays: number = 1): Promise<any[]> {
   const query = `
     SELECT 
       id, 
@@ -394,7 +394,7 @@ export async function getRecentActivities(limit: number = 5): Promise<any[]> {
       status_kunjungan as tanggapan, 
       waktu_dibuat
     FROM daftar_tamu 
-    WHERE waktu_dibuat >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    WHERE waktu_dibuat >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
     ORDER BY waktu_dibuat DESC
     LIMIT ?
   `;
@@ -473,118 +473,144 @@ export async function getSurveyStatistics(): Promise<any> {
 }
 
 // Enhanced Reports Statistics
-export async function getReportsStatistics(): Promise<any> {
+export async function getReportsStatistics(periodDays: number = 7): Promise<any> {
   try {
-    // 1. Total visits with comparison to last month
+    // 1. Total visits for current period vs previous period
     const totalVisitsQuery = `
       SELECT 
-        COUNT(*) as current_total,
-        (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(DATE(DATE_SUB(NOW(), INTERVAL 1 MONTH)), INTERVAL -1 MONTH) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as last_month_total
-      FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+        (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as current_total,
+        (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as previous_total
     `;
 
-    // 2. Daily average with comparison to previous period
+    // 2. Daily average visitors (total registered guests / period days)
     const dailyAverageQuery = `
       SELECT 
-        ROUND(COUNT(*) / 30, 1) as daily_average,
-        (SELECT ROUND(COUNT(*) / 30, 1) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 2 MONTH) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as previous_average
+        ROUND(COUNT(*) / ${periodDays}, 1) as daily_average,
+        (SELECT ROUND(COUNT(*) / ${periodDays}, 1) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as previous_average
       FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
     `;
 
-    // 3. Average visit duration (estimated from check-in to check-out)
+    // 3. Average visit duration (check-in to check-out time)
     const avgDurationQuery = `
       SELECT 
-        AVG(TIMESTAMPDIFF(HOUR, waktu_checkin, waktu_checkout)) as avg_duration_hours
+        AVG(TIMESTAMPDIFF(MINUTE, waktu_checkin, waktu_checkout)) as avg_duration_minutes,
+        (SELECT AVG(TIMESTAMPDIFF(MINUTE, waktu_checkin, waktu_checkout)) FROM daftar_tamu WHERE waktu_checkout IS NOT NULL AND DATE(waktu_checkin) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_checkin) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as previous_avg_duration
       FROM daftar_tamu 
       WHERE waktu_checkout IS NOT NULL 
-      AND DATE(waktu_checkin) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+      AND DATE(waktu_checkin) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
     `;
 
-    // 4. Satisfaction rating from surveys
+    // 4. Satisfaction rating from surveys (average urutan_rating, max 4)
     const satisfactionQuery = `
       SELECT 
-        AVG(jawaban) as current_rating,
-        (SELECT AVG(jawaban) FROM jawaban_survei WHERE DATE(created_at) >= DATE_SUB(NOW(), INTERVAL 2 MONTH) AND DATE(created_at) < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as previous_rating
-      FROM jawaban_survei 
-      WHERE DATE(created_at) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+        AVG(or_current.urutan_rating) as current_rating,
+        COUNT(*) as total_responses,
+        (SELECT AVG(or_prev.urutan_rating) 
+         FROM jawaban_survei js_prev 
+         LEFT JOIN opsi_rating or_prev ON js_prev.jawaban = or_prev.id 
+         WHERE DATE(js_prev.created_at) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) 
+         AND DATE(js_prev.created_at) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as previous_rating
+      FROM jawaban_survei js_current
+      LEFT JOIN opsi_rating or_current ON js_current.jawaban = or_current.id
+      WHERE DATE(js_current.created_at) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
     `;
 
-    // 5. Weekly trends (last 7 days)
-    const weeklyTrendsQuery = `
+    // 5. Trends (visits per day for the period)
+    const trendsQuery = `
       SELECT 
         DATE(waktu_dibuat) as date,
         COUNT(*) as visits
       FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
       GROUP BY DATE(waktu_dibuat)
       ORDER BY date ASC
     `;
 
-    // 6. Service categories (based on keperluan field instead of tujuan_kunjungan join)
+    // 6. Service categories (based on keperluan field)
     const serviceCategoriesQuery = `
       SELECT 
         keperluan as category,
         COUNT(id) as count,
-        ROUND((COUNT(id) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH))), 1) as percentage
+        ROUND((COUNT(id) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY))), 1) as percentage
       FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
       AND keperluan IS NOT NULL AND keperluan != ''
       GROUP BY keperluan
       ORDER BY count DESC
       LIMIT 5
     `;
 
-    // 7. Top frequent visitors
+    // 7. Top frequent visitors within period (based on unique email with status "Datang" or "Selesai")
     const topVisitorsQuery = `
       SELECT 
-        nama,
-        asal_instansi,
-        COUNT(*) as visit_count
-      FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
-      GROUP BY nama, asal_instansi
-      HAVING visit_count > 1
-      ORDER BY visit_count DESC
+        dt.nama,
+        dt.asal_instansi,
+        COUNT(DISTINCT dt.email) as visit_count,
+        dt.email
+      FROM daftar_tamu dt
+      WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${Math.max(periodDays, 30)} DAY)
+      AND dt.status_kunjungan IN ('Datang', 'Selesai')
+      AND dt.email IS NOT NULL
+      GROUP BY dt.email, dt.nama, dt.asal_instansi
+      ORDER BY visit_count DESC, dt.waktu_dibuat DESC
       LIMIT 5
     `;
 
     const [
-      totalVisits, 
-      dailyAverage, 
-      avgDuration, 
-      satisfaction, 
-      weeklyTrends, 
-      serviceCategories, 
-      topVisitors
+      totalVisitsData, 
+      dailyAverageData, 
+      avgDurationData, 
+      satisfactionData, 
+      trendsData, 
+      serviceCategoriesData, 
+      topVisitorsData
     ] = await Promise.all([
       executeQuery<any[]>(totalVisitsQuery),
       executeQuery<any[]>(dailyAverageQuery),
       executeQuery<any[]>(avgDurationQuery),
       executeQuery<any[]>(satisfactionQuery),
-      executeQuery<any[]>(weeklyTrendsQuery),
+      executeQuery<any[]>(trendsQuery),
       executeQuery<any[]>(serviceCategoriesQuery),
       executeQuery<any[]>(topVisitorsQuery)
     ]);
 
-    // Calculate percentage changes
-    const currentTotal = totalVisits[0]?.current_total || 0;
-    const lastMonthTotal = totalVisits[0]?.last_month_total || 1;
-    const visitGrowthNum = ((currentTotal - lastMonthTotal) / lastMonthTotal * 100);
-    const visitGrowth = visitGrowthNum.toFixed(1);
+    // Debug logging to understand data types
+    console.log('Raw data from queries:', {
+      totalVisits: totalVisitsData[0],
+      dailyAverage: dailyAverageData[0],
+      avgDuration: avgDurationData[0],
+      satisfaction: satisfactionData[0]
+    });
 
-    const currentDailyAvg = dailyAverage[0]?.daily_average || 0;
-    const previousDailyAvg = dailyAverage[0]?.previous_average || 1;
-    const dailyGrowthNum = ((currentDailyAvg - previousDailyAvg) / previousDailyAvg * 100);
-    const dailyGrowth = dailyGrowthNum.toFixed(1);
+    // Calculate percentage changes - ensure proper number conversion
+    const currentTotal = parseInt(totalVisitsData[0]?.current_total) || 0;
+    const previousTotal = parseInt(totalVisitsData[0]?.previous_total) || 1;
+    const visitGrowthNum = previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal * 100) : 0;
+    const visitGrowthLabel = visitGrowthNum.toFixed(1);
 
-    const currentRating = satisfaction[0]?.current_rating || 0;
-    const previousRating = satisfaction[0]?.previous_rating || 0;
-    const ratingChangeNum = (currentRating - previousRating);
-    const ratingChange = ratingChangeNum.toFixed(1);
+    const currentDailyAvg = parseFloat(dailyAverageData[0]?.daily_average) || 0;
+    const previousDailyAvg = parseFloat(dailyAverageData[0]?.previous_average) || 1;
+    const dailyGrowthNum = previousDailyAvg > 0 ? ((currentDailyAvg - previousDailyAvg) / previousDailyAvg * 100) : 0;
+    const dailyGrowthLabel = dailyGrowthNum.toFixed(1);
 
-    const avgHours = avgDuration[0]?.avg_duration_hours || 0;
+    // Duration formatting (minutes to hours and minutes) - ensure proper number conversion
+    const avgMinutes = parseFloat(avgDurationData[0]?.avg_duration_minutes) || 0;
+    const previousAvgMinutes = parseFloat(avgDurationData[0]?.previous_avg_duration) || 0;
+    const avgHours = Math.floor(avgMinutes / 60);
+    const avgMins = Math.round(avgMinutes % 60);
+    const durationValue = avgMinutes > 0 ? `${avgHours}h ${avgMins}m` : '0h';
+    
+    const durationGrowthNum = previousAvgMinutes > 0 ? ((avgMinutes - previousAvgMinutes) / previousAvgMinutes * 100) : 0;
+    const durationGrowthLabel = durationGrowthNum.toFixed(1);
+
+    // Satisfaction rating - ensure proper number conversion (max rating = 4)
+    const currentRating = parseFloat(satisfactionData[0]?.current_rating) || 0;
+    const previousRating = parseFloat(satisfactionData[0]?.previous_rating) || 0;
+    const totalResponses = parseInt(satisfactionData[0]?.total_responses) || 0;
+    const ratingChangeNum = previousRating > 0 ? (currentRating - previousRating) : 0;
+    const ratingChangeLabel = ratingChangeNum.toFixed(1);
+    const satisfactionValue = currentRating > 0 ? `${currentRating.toFixed(1)}/4` : '0/4';
 
     return {
       // Key metrics for dashboard cards
@@ -592,33 +618,33 @@ export async function getReportsStatistics(): Promise<any> {
         totalVisits: {
           value: currentTotal,
           growth: visitGrowthNum,
-          label: visitGrowthNum > 0 ? `+${visitGrowth}% dari bulan lalu` : `${visitGrowth}% dari bulan lalu`
+          label: visitGrowthNum > 0 ? `+${visitGrowthLabel}% dari periode sebelumnya` : `${visitGrowthLabel}% dari periode sebelumnya`
         },
         dailyAverage: {
           value: currentDailyAvg,
           growth: dailyGrowthNum,
-          label: dailyGrowthNum > 0 ? `+${dailyGrowth}% dari periode lalu` : `${dailyGrowth}% dari periode lalu`
+          label: dailyGrowthNum > 0 ? `+${dailyGrowthLabel}% dari periode sebelumnya` : `${dailyGrowthLabel}% dari periode sebelumnya`
         },
         avgDuration: {
-          value: avgHours > 0 ? `${avgHours.toFixed(1)}h` : '2.4h',
-          growth: -5.2, // Placeholder - could be calculated if we track historical duration
-          label: '-5.2% durasi kunjungan'
+          value: durationValue,
+          growth: durationGrowthNum,
+          label: durationGrowthNum > 0 ? `+${durationGrowthLabel}% durasi kunjungan` : `${durationGrowthLabel}% durasi kunjungan`
         },
         satisfaction: {
-          value: currentRating > 0 ? `${currentRating.toFixed(1)}/5` : '4.8/5',
+          value: satisfactionValue,
           growth: ratingChangeNum,
-          label: ratingChangeNum > 0 ? `+${ratingChange} dari survei lalu` : `${ratingChange} dari survei lalu`
+          label: totalResponses > 0 ? (ratingChangeNum > 0 ? `+${ratingChangeLabel} dari periode sebelumnya` : `${ratingChangeLabel} dari periode sebelumnya`) : 'Belum ada data survei'
         }
       },
       
       // Chart data
-      weeklyTrends: weeklyTrends || [],
+      weeklyTrends: trendsData || [],
       
       // Service categories with percentages
-      serviceCategories: serviceCategories || [],
+      serviceCategories: serviceCategoriesData || [],
       
       // Top visitors
-      topVisitors: topVisitors || []
+      topVisitors: topVisitorsData || []
     };
 
   } catch (error) {
@@ -629,7 +655,7 @@ export async function getReportsStatistics(): Promise<any> {
         totalVisits: { value: 0, growth: 0, label: 'No data available' },
         dailyAverage: { value: 0, growth: 0, label: 'No data available' },
         avgDuration: { value: '0h', growth: 0, label: 'No data available' },
-        satisfaction: { value: '0/5', growth: 0, label: 'No data available' }
+        satisfaction: { value: '0/4', growth: 0, label: 'No data available' }
       },
       weeklyTrends: [],
       serviceCategories: [],
