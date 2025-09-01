@@ -84,12 +84,12 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       ? tujuanKunjungan
       : formData.keperluan || 'Kunjungan umum';
     
-    // Insert query - Updated to match the SQL schema from disnaker.sql
+    // Insert query - Updated to match the actual table schema
     const query = `
       INSERT INTO daftar_tamu 
-      (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir, 
-       profesi, asal_instansi, keperluan, bidang_tujuan_id, catatan_tambahan, status_kunjungan, file_upload) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
+      (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir_id, 
+       profesi_id, asal_instansi, keperluan, bidang_tujuan_id, status_kunjungan, file_upload) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
     `;
     
     // Parameter with all needed fields
@@ -99,12 +99,11 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       formData.nomor_telp || null,
       formData.alamat,
       formData.jenis_kelamin,
-      pendidikanTerakhir, // Use resolved education string
-      profesi, // Use resolved profession string
+      formData.pendidikan_terakhir_id || null, // Use the ID directly
+      formData.profesi_id || null, // Use the ID directly
       formData.asal_instansi || null,
       keperluan,
       formData.bidang_tujuan_id || null,
-      formData.catatan || null, // Add catatan_tambahan
       formData.file_upload || null
     ];
 
@@ -395,7 +394,13 @@ export async function getGuestStatistics(): Promise<any> {
   
   // Demographic statistics
   const genderStatsQuery = 'SELECT jenis_kelamin, COUNT(*) as count FROM daftar_tamu GROUP BY jenis_kelamin';
-  const educationStatsQuery = 'SELECT pendidikan_terakhir, COUNT(*) as count FROM daftar_tamu GROUP BY pendidikan_terakhir ORDER BY count DESC';
+  const educationStatsQuery = `
+    SELECT pt.pendidikan_terakhir, COUNT(*) as count 
+    FROM daftar_tamu dt 
+    LEFT JOIN pendidikan_terakhir pt ON dt.pendidikan_terakhir_id = pt.id 
+    GROUP BY pt.pendidikan_terakhir 
+    ORDER BY count DESC
+  `;
   
   const [total, today, thisMonth, todayCheckIn, todayCheckOut, currentlyVisiting, gender, education] = await Promise.all([
     executeQuery<any[]>(totalGuestsQuery),
