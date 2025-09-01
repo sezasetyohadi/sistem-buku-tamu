@@ -13,8 +13,8 @@ async function main() {
       '08_create_profesi_table.migration.ts',
       '09_create_tujuan_kunjungan_table.migration.ts',
       '10_create_memperoleh_informasi_table.migration.ts',
-      // Tables with dependencies
-      '03_create_daftar_tamu_table.migration.ts', // Depends on bidang_tujuan
+      // Tables with dependencies (after all referenced tables exist)
+      '03_create_daftar_tamu_table.migration.ts', // Depends on bidang_tujuan, pendidikan_terakhir, profesi, tujuan_kunjungan
       '05_create_survey_tables.migration.ts',     // Depends on section_survei and jenis_rating
       '07_create_pesan_email_table.migration.ts', // Depends on admin and daftar_tamu
       '11_create_jawaban_informasi_tables.migration.ts', // Depends on daftar_tamu
@@ -22,8 +22,11 @@ async function main() {
       '14_add_daftar_tamu_constraints.migration.ts',
       // Updates and feature additions
       '12_update_survey_structure.migration.ts',
-      '13_create_login_security_tables.migration.ts',
-      '15_create_tamu_token_table.migration.ts'
+      '15_create_tamu_token_table.migration.ts',
+      '16_update_jawaban_identitas_survei.migration.ts',
+      '17_add_profile_picture_to_admin.migration.ts',
+      '18_add_updated_at_to_admin.migration.ts',
+      '19_create_login_security_tables.migration.ts'
     ];
 
     console.log('Starting migrations in specified order...');

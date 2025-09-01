@@ -6,8 +6,8 @@ export async function up() {
   // Step 1: Add new columns to pertanyaan_survei
   await executeQuery(`
     ALTER TABLE pertanyaan_survei 
-    ADD COLUMN baris INT DEFAULT 1,
-    ADD COLUMN kolom INT DEFAULT 1
+    ADD COLUMN IF NOT EXISTS baris INT DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS kolom INT DEFAULT 1
   `);
   
   console.log('Added baris and kolom fields to pertanyaan_survei table');
@@ -19,10 +19,8 @@ export async function up() {
   `);
   
   // Step 3: Update data in jenis_rating
-  await executeQuery(`
-    UPDATE jenis_rating SET tipe = 'rating' WHERE id IN (1, 2);
-    UPDATE jenis_rating SET tipe = 'text' WHERE id = 3;
-  `);
+  await executeQuery(`UPDATE jenis_rating SET tipe = 'rating' WHERE id IN (1, 2)`);
+  await executeQuery(`UPDATE jenis_rating SET tipe = 'text' WHERE id = 3`);
   
   console.log('Updated jenis_rating table with tipe field');
   
@@ -44,26 +42,32 @@ export async function up() {
   
   console.log('Created pertanyaan_s_jenis_rating table');
   
-  // Step 5: Populate pertanyaan_s_jenis_rating with data from pertanyaan_survei
-  await executeQuery(`
-    INSERT INTO pertanyaan_s_jenis_rating (pertanyaan_id, jenis_rating_id, urutan, is_required)
-    SELECT id, jenis_rating_id, urutan, 1 FROM pertanyaan_survei 
-    WHERE jenis_rating_id IS NOT NULL
-    ON DUPLICATE KEY UPDATE jenis_rating_id = VALUES(jenis_rating_id), urutan = VALUES(urutan)
-  `);
-  
-  console.log('Populated pertanyaan_s_jenis_rating with data from pertanyaan_survei');
+  // Step 5: Populate pertanyaan_s_jenis_rating with data from pertanyaan_survei (if columns exist)
+  try {
+    await executeQuery(`
+      INSERT INTO pertanyaan_s_jenis_rating (pertanyaan_id, jenis_rating_id, urutan, is_required)
+      SELECT id, jenis_rating_id, urutan, 1 FROM pertanyaan_survei 
+      WHERE jenis_rating_id IS NOT NULL
+      ON DUPLICATE KEY UPDATE jenis_rating_id = VALUES(jenis_rating_id), urutan = VALUES(urutan)
+    `);
+    console.log('Populated pertanyaan_s_jenis_rating with data from pertanyaan_survei');
+  } catch (error: any) {
+    console.log('Note: Could not populate pertanyaan_s_jenis_rating - source columns may not exist yet');
+  }
   
   // Step 6: Populate baris and kolom fields in pertanyaan_survei
-  await executeQuery(`
-    UPDATE pertanyaan_survei 
-    SET 
-      baris = COALESCE(section_id, 1),
-      kolom = COALESCE(urutan, 1)
-    WHERE 1=1
-  `);
-  
-  console.log('Populated baris and kolom fields from section_id and urutan values');
+  try {
+    await executeQuery(`
+      UPDATE pertanyaan_survei 
+      SET 
+        baris = COALESCE(section_id, 1),
+        kolom = COALESCE(urutan, 1)
+      WHERE 1=1
+    `);
+    console.log('Populated baris and kolom fields from section_id and urutan values');
+  } catch (error: any) {
+    console.log('Note: Could not populate baris/kolom - source columns may not exist yet');
+  }
   
   console.log('Migration completed successfully');
 }
