@@ -94,7 +94,7 @@ export default function SurveyQuestionModal({
           // If there are multiple rating types, set the rest as extraAnswers
           if (sortedRatingTypes.length > 1) {
             const extraTypes = sortedRatingTypes.slice(1).map(rt => ({
-              tipe: rt.tipe === 'text' ? 'text' as const : 'rating' as const,
+              tipe: 'rating' as const,
               jenis_rating_id: rt.jenis_rating_id
             }));
             setExtraAnswers(extraTypes);
@@ -208,8 +208,8 @@ export default function SurveyQuestionModal({
   const handleAddExtraAnswer = () => {
     // Cari rating yang belum dipakai
     const usedIds = [
-      questionData.tipe_pertanyaan === 'rating' ? questionData.jenis_rating_id : null,
-      ...extraAnswers.filter(ans => ans.tipe === 'rating').map(ans => ans.jenis_rating_id)
+      questionData.jenis_rating_id,
+      ...extraAnswers.map(ans => ans.jenis_rating_id)
     ].filter(Boolean) as number[];
 
     const availableRatings = ratingTypes.filter(
@@ -222,18 +222,14 @@ export default function SurveyQuestionModal({
         { tipe: 'rating', jenis_rating_id: availableRatings[0].id }
       ]);
     } else {
-      // Jika semua rating sudah dipakai, otomatis tambah tipe text
-      setExtraAnswers([
-        ...extraAnswers,
-        { tipe: 'text' }
-      ]);
+      toast.error('Semua jenis rating sudah digunakan');
     }
   };
 
   // Fungsi untuk mendapatkan id rating yang sudah dipakai
   const usedRatingIds = [
-    questionData.tipe_pertanyaan === 'rating' ? questionData.jenis_rating_id : null,
-    ...extraAnswers.filter(ans => ans.tipe === 'rating').map(ans => ans.jenis_rating_id)
+    questionData.jenis_rating_id,
+    ...extraAnswers.map(ans => ans.jenis_rating_id)
   ].filter(Boolean) as number[];
 
   return (
@@ -263,170 +259,115 @@ export default function SurveyQuestionModal({
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="tipe_pertanyaan" className="block text-sm font-medium text-gray-700 mb-1">
-                Tipe Jawaban
-              </label>
-              <select
-                id="tipe_pertanyaan"
-                value={questionData.tipe_pertanyaan}
-                onChange={(e) => {
-                  const newType = e.target.value as 'rating' | 'text';
+          <div>
+            <label htmlFor="jenis_rating_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Jenis Rating
+            </label>
+            <select
+              id="jenis_rating_id"
+              value={questionData.jenis_rating_id || ''}
+              onChange={(e) => {
+                if (e.target.value === 'add_new') {
+                  setShowNewTypeDialog(true);
+                  setPendingExtraAnswerIdx(null); // null artinya dropdown utama
+                } else {
                   setQuestionData({
                     ...questionData,
-                    tipe_pertanyaan: newType,
-                    // Reset jenis_rating_id jika bukan rating
-                    jenis_rating_id: newType === 'rating' ? ratingTypes[0]?.id : undefined,
+                    jenis_rating_id: parseInt(e.target.value) || undefined
                   });
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="rating">Rating</option>
-                <option value="text">Text</option>
-              </select>
-            </div>
-
-            {/* Hanya tampil jika tipe_pertanyaan === 'rating' */}
-            {questionData.tipe_pertanyaan === 'rating' && (
-              <div>
-                <label htmlFor="jenis_rating_id" className="block text-sm font-medium text-gray-700 mb-1">
-                  Jenis Rating
-                </label>
-                <select
-                  id="jenis_rating_id"
-                  value={questionData.jenis_rating_id || ''}
-                  onChange={(e) => {
-                    if (e.target.value === 'add_new') {
-                      setShowNewTypeDialog(true);
-                      setPendingExtraAnswerIdx(null); // null artinya dropdown utama
-                    } else {
-                      setQuestionData({
-                        ...questionData,
-                        jenis_rating_id: parseInt(e.target.value) || undefined
-                      });
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={isLoadingRatingTypes}
-                >
-                  <option value="">Pilih Rating</option>
-                  {isLoadingRatingTypes ? (
-                    <option>Loading...</option>
-                  ) : ratingTypes.length === 0 ? (
-                    <option>Tidak ada jenis rating</option>
-                  ) : (
-                    ratingTypes
-                      .filter(type => type.tipe === questionData.tipe_pertanyaan)
-                      .map(type => (
-                        <option key={type.id} value={type.id}>
-                          {type.nama_rating}
-                        </option>
-                      ))
-                  )}
-                  <option value="add_new">Tambah Rating</option>
-                </select>
-              </div>
-            )}
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={isLoadingRatingTypes}
+            >
+              <option value="">Pilih Rating</option>
+              {isLoadingRatingTypes ? (
+                <option>Loading...</option>
+              ) : ratingTypes.length === 0 ? (
+                <option>Tidak ada jenis rating</option>
+              ) : (
+                ratingTypes
+                  .filter(type => type.tipe === 'rating')
+                  .map(type => (
+                    <option key={type.id} value={type.id}>
+                      {type.nama_rating}
+                    </option>
+                  ))
+              )}
+              <option value="add_new">Tambah Rating</option>
+            </select>
           </div>
 
 {/* Tambah Jenis Jawaban di bawah grid */}
-{(questionData.tipe_pertanyaan === 'rating' || questionData.tipe_pertanyaan === 'text') && (
+{questionData.tipe_pertanyaan === 'rating' && (
   <div className="mt-4">
     {/* Render semua extraAnswers */}
     <div className="space-y-4">
       {extraAnswers.map((ans, idx) => (
-        <div key={idx} className="grid grid-cols-2 gap-4 items-end">
-          <div>
+        <div key={idx} className="flex gap-2 items-end">
+          <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipe Jawaban
+              Jenis Rating Tambahan
             </label>
             <select
-              value={ans.tipe}
+              value={ans.jenis_rating_id || ''}
               onChange={e => {
-                const tipe = e.target.value as 'rating' | 'text';
-                setExtraAnswers(list =>
-                  list.map((item, i) =>
-                    i === idx
-                      ? { ...item, tipe, jenis_rating_id: undefined } // Perbaikan di sini
-                      : item
-                  )
-                );
+                if (e.target.value === 'add_new') {
+                  setShowNewTypeDialog(true);
+                  setPendingExtraAnswerIdx(idx); // untuk extraAnswers
+                } else {
+                  setExtraAnswers(list =>
+                    list.map((item, i) =>
+                      i === idx
+                        ? { ...item, jenis_rating_id: parseInt(e.target.value) || undefined }
+                        : item
+                    )
+                  );
+                }
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="rating">Rating</option>
-              <option value="text">Text</option>
+              <option value="">Pilih Rating</option>
+              {ratingTypes
+                .filter(type =>
+                  type.tipe === 'rating' &&
+                  (!usedRatingIds.includes(type.id) || type.id === ans.jenis_rating_id)
+                )
+                .map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.nama_rating}
+                  </option>
+                ))}
+              <option value="add_new">Tambah Rating</option>
             </select>
           </div>
-          <div className="flex gap-2">
-            {/* Hanya tampil jika ans.tipe === 'rating' */}
-            {ans.tipe === 'rating' && (
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Jenis Rating
-                </label>
-                <select
-                  value={ans.jenis_rating_id || ''}
-                  onChange={e => {
-                    if (e.target.value === 'add_new') {
-                      setShowNewTypeDialog(true);
-                      setPendingExtraAnswerIdx(idx); // untuk extraAnswers
-                    } else {
-                      setExtraAnswers(list =>
-                        list.map((item, i) =>
-                          i === idx
-                            ? { ...item, jenis_rating_id: parseInt(e.target.value) || undefined }
-                            : item
-                        )
-                      );
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Pilih Rating</option>
-                  {ratingTypes
-                    .filter(type =>
-                      type.tipe === 'rating' &&
-                      (!usedRatingIds.includes(type.id) || type.id === ans.jenis_rating_id)
-                    )
-                    .map(type => (
-                      <option key={type.id} value={type.id}>
-                        {type.nama_rating}
-                      </option>
-                    ))}
-                  <option value="add_new">Tambah Rating</option>
-                </select>
-              </div>
-            )}
-            {/* Tombol hapus */}
-            <button
-              type="button"
-              onClick={() => {
-                // When removing an answer, the rating becomes available again
-                setExtraAnswers(list => list.filter((_, i) => i !== idx));
-                
-                // Let the user know that the rating type is now available again
-                if (ans.tipe === 'rating' && ans.jenis_rating_id) {
-                  const removedType = ratingTypes.find(rt => rt.id === ans.jenis_rating_id);
-                  if (removedType) {
-                    toast.success(`Jenis rating "${removedType.nama_rating}" kembali tersedia`, {
-                      duration: 2000,
-                      style: {
-                        borderRadius: '10px',
-                        background: '#4CAF50',
-                        color: '#fff',
-                      },
-                    });
-                  }
+          {/* Tombol hapus */}
+          <button
+            type="button"
+            onClick={() => {
+              // When removing an answer, the rating becomes available again
+              setExtraAnswers(list => list.filter((_, i) => i !== idx));
+              
+              // Let the user know that the rating type is now available again
+              if (ans.jenis_rating_id) {
+                const removedType = ratingTypes.find(rt => rt.id === ans.jenis_rating_id);
+                if (removedType) {
+                  toast.success(`Jenis rating "${removedType.nama_rating}" kembali tersedia`, {
+                    duration: 2000,
+                    style: {
+                      borderRadius: '10px',
+                      background: '#4CAF50',
+                      color: '#fff',
+                    },
+                  });
                 }
-              }}
-              className="h-10 w-10 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 self-end"
-              title="Hapus"
-            >
-              &times;
-            </button>
-          </div>
+              }
+            }}
+            className="h-10 w-10 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 self-end"
+            title="Hapus"
+          >
+            &times;
+          </button>
         </div>
       ))}
     </div>
@@ -436,7 +377,7 @@ export default function SurveyQuestionModal({
       onClick={handleAddExtraAnswer}
       className="mt-4 w-full flex items-center justify-center px-3 py-2 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
     >
-      + Tambah Jenis Jawaban
+      + Tambah Jenis Rating
     </button>
   </div>
 )}
