@@ -25,8 +25,9 @@ export default function LoginPage() {
           .find(row => row.startsWith('admin_auth='));
 
         if (adminSession && authCookie) {
+          let sessionData;
           try {
-            const sessionData = JSON.parse(adminSession);
+            sessionData = JSON.parse(adminSession);
           } catch (parseError) {
             console.error('Error parsing admin session JSON on login page:', parseError);
             // Clear corrupted session data

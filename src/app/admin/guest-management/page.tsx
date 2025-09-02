@@ -16,6 +16,7 @@ export default function AdminGuestsManagement() {
   const [dateFilter, setDateFilter] = useState("Semua Waktu");
   const [stats, setStats] = useState({
     totalGuests: 0,
+    todayGuests: 0,
     todayCheckIn: 0,
     todayCheckOut: 0,
     currentlyVisiting: 0
@@ -385,6 +386,7 @@ export default function AdminGuestsManagement() {
       if (statsData && statsData.success && statsData.data) {
         setStats({
           totalGuests: statsData.data.totalGuests || 0,
+          todayGuests: statsData.data.todayGuests || 0,
           todayCheckIn: statsData.data.todayCheckIn || 0,
           todayCheckOut: statsData.data.todayCheckOut || 0,
           currentlyVisiting: statsData.data.currentlyVisiting || 0
@@ -458,8 +460,8 @@ export default function AdminGuestsManagement() {
               </svg>
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Tamu</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Tamu Hari Ini</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayGuests}</p>
             </div>
           </div>
         </div>

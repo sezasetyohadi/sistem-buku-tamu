@@ -14,6 +14,7 @@ export async function GET() {
       data: {
         // Dashboard metrics for admin
         totalGuests: guestStats.totalGuests || 0,
+        todayGuests: guestStats.todayGuests || 0, // Add today's guests count
         todayCheckIn: guestStats.todayCheckIn || 0,
         todayCheckOut: guestStats.todayCheckOut || 0,
         currentlyVisiting: guestStats.currentlyVisiting || 0,

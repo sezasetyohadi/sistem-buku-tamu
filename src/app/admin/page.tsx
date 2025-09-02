@@ -6,6 +6,7 @@ import Link from "next/link";
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalGuests: 0,
+    todayGuests: 0,
     todayCheckIn: 0,
     todayCheckOut: 0,
     currentlyVisiting: 0,
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
         // Set stats with values from backend
         setStats({
           totalGuests: data.totalGuests || 0,
+          todayGuests: data.todayGuests || 0,
           // The backend calls "Terjadwal Hari Ini" as todayCheckIn
           todayCheckIn: data.todayCheckIn || 0,
           // The backend calls "Selesai Hari Ini" as todayCheckOut
@@ -130,8 +132,8 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div className="ml-3 sm:ml-4 xl:ml-5 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Tamu</p>
-              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Tamu Hari Ini</p>
+              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? "..." : stats.todayGuests}</p>
             </div>
           </div>
         </div>
