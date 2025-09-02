@@ -1,7 +1,8 @@
 import { executeQuery } from '../config/db';
 
 export async function up() {
-  // Create tujuan_kunjungan table
+  console.log('Creating tujuan_kunjungan table...');
+  
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS tujuan_kunjungan (
       id int(11) NOT NULL AUTO_INCREMENT,
@@ -10,10 +11,10 @@ export async function up() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
   `);
   
-  console.log('Tujuan Kunjungan table created successfully');
+  console.log('Tujuan kunjungan table created successfully');
 }
 
 export async function down() {
   await executeQuery(`DROP TABLE IF EXISTS tujuan_kunjungan;`);
-  console.log('Tujuan Kunjungan table dropped successfully');
+  console.log('Tujuan kunjungan table dropped successfully');
 }

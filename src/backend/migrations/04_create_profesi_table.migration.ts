@@ -1,7 +1,8 @@
 import { executeQuery } from '../config/db';
 
 export async function up() {
-  // Create profesi table
+  console.log('Creating profesi table...');
+  
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS profesi (
       id int(11) NOT NULL AUTO_INCREMENT,
