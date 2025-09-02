@@ -41,6 +41,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     };
     
     getAdminData();
+
+    // Listen for profile updates
+    const handleProfileUpdate = (event: CustomEvent) => {
+      const { profilePicture } = event.detail;
+      setAdminProfilePicture(profilePicture);
+    };
+
+    window.addEventListener('adminProfileUpdated', handleProfileUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('adminProfileUpdated', handleProfileUpdate as EventListener);
+    };
   }, [router]);
 
   // Don't apply layout to login page
