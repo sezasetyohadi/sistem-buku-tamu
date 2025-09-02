@@ -14,7 +14,6 @@ export async function GET() {
         jis.tanggal_lahir,
         jis.jenis_kelamin,
         jis.alamat,
-        jis.tanggal_survei,
         jis.created_at,
         DATE_FORMAT(jis.created_at, '%Y-%m-%d') as tanggal,
         DATE_FORMAT(jis.created_at, '%H:%i') as waktu,
