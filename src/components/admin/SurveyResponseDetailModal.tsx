@@ -42,6 +42,7 @@ interface QuestionDetail {
       urutan_rating: number;
     }>;
   }>;
+  responseValues?: number[];
 }
 
 interface SurveyResponseDetailModalProps {
@@ -79,12 +80,26 @@ export default function SurveyResponseDetailModal({
         return;
       }
 
+      // Fetch detailed answers from jawaban_survei table
+      const detailedAnswersResponse = await fetch(`/api/survey/responses/detail/${response.id}`);
+      const detailedAnswersData = await detailedAnswersResponse.json();
+      
+      if (!detailedAnswersData.success) {
+        console.error('Failed to fetch detailed answers:', detailedAnswersData.message);
+        return;
+      }
+
       // For each question that has a response, get its details and all rating types
       const questionTexts = Object.keys(response.responses);
       const questionDetailsPromises = questionTexts.map(async (questionText) => {
         // Find the question by matching the text
         const question = questionData.data.find((q: any) => q.pertanyaan === questionText);
         if (!question) return null;
+
+        // Find detailed answers for this question
+        const detailedAnswers = detailedAnswersData.data.filter(
+          (answer: any) => answer.pertanyaan_id === question.id
+        );
 
         // Get all rating types for this question
         const allRatingOptions = [];
@@ -108,6 +123,9 @@ export default function SurveyResponseDetailModal({
           }
         }
         
+        // Get response values from detailed answers
+        const responseValues = detailedAnswers.map((answer: any) => Number(answer.jawaban));
+        
         return {
           id: question.id,
           pertanyaan: question.pertanyaan,
@@ -115,7 +133,9 @@ export default function SurveyResponseDetailModal({
           jenis_rating_id: question.jenis_rating_id,
           nama_rating: question.nama_rating,
           multiple_rating_types: question.multiple_rating_types,
-          ratingOptions: allRatingOptions
+          ratingOptions: allRatingOptions,
+          // Use the response values from jawaban_survei table
+          responseValues: responseValues.length > 0 ? responseValues : [Number(response.responses[questionText])]
         };
       });
 
@@ -255,59 +275,42 @@ export default function SurveyResponseDetailModal({
                     {/* Rating Types */}
                     {questionDetail && questionDetail.ratingOptions && questionDetail.ratingOptions.length > 0 ? (
                       <div className="space-y-4">
-                        {questionDetail.ratingOptions.map((ratingType, ratingIndex) => (
-                          <div key={ratingIndex}>
-                            {/* Rating Type Name */}
-                            <div className="mb-3">
-                              <label className="block text-sm font-medium text-gray-700">
-                                {ratingType.rating_type_name}
-                              </label>
-                            </div>
+                        {/* Display only the selected answers in a simplified format */}
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                          {questionDetail.ratingOptions.map((ratingType, ratingIndex) => {
+                            // Get the response value for this rating type from jawaban_survei
+                            const responseValue = questionDetail.responseValues?.[ratingIndex];
+                            
+                            // Find the selected option for this rating type
+                            const selectedOption = ratingType.options?.find(option => {
+                              return responseValue === option.id;
+                            });
 
-                            {/* Rating Options Display */}
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <div className="space-y-2">
-                                {ratingType.options && ratingType.options.length > 0 ? (
-                                  ratingType.options.map((option) => {
-                                    // For now, we assume the answer applies to the first rating type only
-                                    // since we only store one answer per question currently
-                                    const isSelected = ratingIndex === 0 && Number(answer) === option.urutan_rating;
-                                    
-                                    return (
-                                      <div 
-                                        key={option.id} 
-                                        className={`flex items-center p-3 rounded-md border ${
-                                          isSelected 
-                                            ? 'border-blue-500 bg-blue-50' 
-                                            : 'border-gray-200 bg-white'
-                                        }`}
-                                      >
-                                        <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${
-                                          isSelected 
-                                            ? 'border-blue-500 bg-blue-500' 
-                                            : 'border-gray-300'
-                                        }`}>
-                                          {isSelected && (
-                                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                                          )}
-                                        </div>
-                                        <span className={`text-sm ${
-                                          isSelected ? 'text-blue-900 font-medium' : 'text-gray-700'
-                                        }`}>
-                                          {option.skala_rating}
-                                        </span>
-                                      </div>
-                                    );
-                                  })
-                                ) : (
-                                  <div className="text-sm text-gray-500">
-                                    Tidak ada opsi rating tersedia
-                                  </div>
-                                )}
+                            return (
+                              <div key={ratingIndex} className="mb-4">
+                                {/* Rating Type Name */}
+                                <div className="mb-2">
+                                  <label className="block text-sm font-medium text-gray-700">
+                                    {ratingType.rating_type_name}
+                                  </label>
+                                </div>
+                                
+                                {/* Selected Rating Display */}
+                                <div className="p-3 bg-gray-50 rounded-md">
+                                  {selectedOption ? (
+                                    <span className="text-sm font-medium text-gray-900">
+                                      {selectedOption.skala_rating}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-gray-500">
+                                      Tidak ada jawaban
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        ))}
+                            );
+                          })}
+                        </div>
                       </div>
                     ) : (
                       /* Text Answer Display */
