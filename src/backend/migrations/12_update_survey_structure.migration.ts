@@ -7,8 +7,7 @@ export async function up() {
   try {
     await executeQuery(`
       ALTER TABLE jawaban_identitas_survei 
-      MODIFY COLUMN asal_instansi varchar(255) DEFAULT NULL,
-      MODIFY COLUMN keperluan text DEFAULT NULL
+      MODIFY COLUMN asal_instansi varchar(255) DEFAULT NULL
     `);
     console.log('Updated jawaban_identitas_survei table structure');
   } catch (error: any) {
@@ -21,8 +20,8 @@ export async function up() {
   try {
     await executeQuery(`
       ALTER TABLE pertanyaan_survei 
-      MODIFY COLUMN teks_pertanyaan text NOT NULL,
-      MODIFY COLUMN tipe_jawaban enum('rating', 'text', 'pilihan_ganda') NOT NULL DEFAULT 'rating'
+      MODIFY COLUMN pertanyaan text NOT NULL,
+      MODIFY COLUMN tipe_input enum('rating', 'text', 'multiple_choice') NOT NULL DEFAULT 'rating'
     `);
     console.log('Updated pertanyaan_survei table structure');
   } catch (error: any) {
