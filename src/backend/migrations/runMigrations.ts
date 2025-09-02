@@ -1,6 +1,6 @@
 import migrationManager from './migrationManager';
 
-async function main() {
+export async function main() {
   try {
     // List of migrations in proper order to prevent foreign key constraints issues
     const migrationOrder = [
