@@ -13,6 +13,11 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isForgotPasswordLoading, setIsForgotPasswordLoading] = useState(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
+  const [forgotPasswordError, setForgotPasswordError] = useState("");
   const router = useRouter();
 
   // Check if already authenticated - redirect to admin dashboard
@@ -164,6 +169,57 @@ export default function LoginPage() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsForgotPasswordLoading(true);
+    setForgotPasswordError("");
+    setForgotPasswordMessage("");
+
+    // Validasi email
+    if (!forgotPasswordEmail.trim()) {
+      setForgotPasswordError("Email harus diisi");
+      setIsForgotPasswordLoading(false);
+      return;
+    }
+
+    // Validasi format email sederhana
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(forgotPasswordEmail)) {
+      setForgotPasswordError("Format email tidak valid");
+      setIsForgotPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setForgotPasswordMessage(result.message);
+        setForgotPasswordEmail("");
+        // Sembunyikan form forgot password setelah berhasil
+        setTimeout(() => {
+          setShowForgotPassword(false);
+          setForgotPasswordMessage("");
+        }, 5000);
+      } else {
+        setForgotPasswordError(result.message || 'Gagal mengirim email reset password');
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      setForgotPasswordError('Terjadi kesalahan saat mengirim email. Silakan coba lagi.');
+    } finally {
+      setIsForgotPasswordLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
@@ -218,7 +274,7 @@ export default function LoginPage() {
 
       {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-12 bg-gray-50">
-        <div className="max-w-md w-full mx-auto">
+        <div className="max-w-md w-full mx-auto relative">
           {/* Mobile Header */}
           <div className="lg:hidden text-center mb-8">
             <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -370,7 +426,145 @@ export default function LoginPage() {
                 </div>
               )}
             </button>
+
+            {/* Forgot Password Link */}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium underline transition-colors duration-200"
+                disabled={isLoading}
+              >
+                Lupa Password?
+              </button>
+            </div>
           </form>
+
+          {/* Forgot Password Overlay */}
+          {showForgotPassword && (
+            <div className="absolute inset-0 bg-white bg-opacity-95 backdrop-blur-sm flex flex-col justify-center z-20">
+              <div className="max-w-md w-full mx-auto px-8">
+                {/* Close Button */}
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotPasswordEmail("");
+                      setForgotPasswordError("");
+                      setForgotPasswordMessage("");
+                    }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+                    disabled={isForgotPasswordLoading}
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Reset Password Header */}
+                <div className="text-center lg:text-left mb-8">
+                  <h3 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h3>
+                  <p className="text-gray-600">Masukkan alamat email yang terdaftar. Kami akan mengirimkan link reset password ke email Anda.</p>
+                </div>
+
+                {/* Messages */}
+                {forgotPasswordMessage && (
+                  <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-md mb-6">
+                    <div className="flex">
+                      <svg className="w-5 h-5 text-green-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-green-700 text-sm">{forgotPasswordMessage}</p>
+                    </div>
+                  </div>
+                )}
+
+                {forgotPasswordError && (
+                  <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md mb-6">
+                    <div className="flex">
+                      <svg className="w-5 h-5 text-red-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-red-700 text-sm">{forgotPasswordError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reset Password Form */}
+                <form onSubmit={handleForgotPassword} className="space-y-6">
+                  <div>
+                    <label htmlFor="forgotEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        </svg>
+                      </div>
+                      <input
+                        type="email"
+                        id="forgotEmail"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                        required
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
+                        placeholder="contoh@email.com"
+                        disabled={isForgotPasswordLoading}
+                        style={{
+                          backgroundColor: '#ffffff !important',
+                          color: '#1f2937 !important',
+                          WebkitTextFillColor: '#1f2937 !important',
+                          WebkitBoxShadow: '0 0 0 1000px #ffffff inset !important',
+                          boxShadow: '0 0 0 1000px #ffffff inset !important',
+                          caretColor: '#1f2937 !important'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isForgotPasswordLoading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {isForgotPasswordLoading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Mengirim Reset Link...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Kirim Reset Link
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Back to Login Link */}
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordEmail("");
+                        setForgotPasswordError("");
+                        setForgotPasswordMessage("");
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium underline transition-colors duration-200"
+                      disabled={isForgotPasswordLoading}
+                    >
+                      Kembali ke Login
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

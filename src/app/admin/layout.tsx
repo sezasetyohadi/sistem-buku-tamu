@@ -42,10 +42,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     
     getAdminData();
 
-    // Listen for profile updates
+    // Listen for profile updates (both name and picture)
     const handleProfileUpdate = (event: CustomEvent) => {
-      const { profilePicture } = event.detail;
-      setAdminProfilePicture(profilePicture);
+      const { profilePicture, nama_lengkap } = event.detail;
+      
+      // Update profile picture
+      if (profilePicture !== undefined) {
+        setAdminProfilePicture(profilePicture);
+      }
+      
+      // Update name if provided
+      if (nama_lengkap) {
+        const firstName = nama_lengkap.split(' ')[0];
+        setAdminName(firstName);
+        setAdminInitial(firstName.charAt(0).toUpperCase());
+      }
     };
 
     window.addEventListener('adminProfileUpdated', handleProfileUpdate as EventListener);

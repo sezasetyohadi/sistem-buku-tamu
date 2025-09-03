@@ -535,6 +535,11 @@ export default function AdminProfile() {
           localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
         }
 
+        // Dispatch custom event to update header with new name
+        window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
+          detail: { nama_lengkap: data.admin.nama_lengkap } 
+        }));
+
         setMessage({ type: "success", text: "Profile berhasil diperbarui!" });
         setIsEditing(false);
         
@@ -563,6 +568,14 @@ export default function AdminProfile() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    });
+  };
+
+  const formatJoinDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -786,7 +799,7 @@ export default function AdminProfile() {
                         </svg>
                         Bergabung
                       </span>
-                      <span className="font-medium text-gray-900">{profile ? formatDate(profile.created_at) : '-'}</span>
+                      <span className="font-medium text-gray-900">{profile ? formatJoinDate(profile.created_at) : '-'}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600 flex items-center">
