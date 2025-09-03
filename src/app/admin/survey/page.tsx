@@ -6,6 +6,7 @@ import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import QuestionOrderModal from "@/components/admin/QuestionOrderModal";
 import SurveyResponseCard from "@/components/admin/SurveyResponseCard";
 import SurveyResponseDetailModal from "@/components/admin/SurveyResponseDetailModal";
+import ExportToExcelButton from "@/components/admin/ExportToExcelButton";
 
 interface SurveyQuestion {
   id?: number;
@@ -460,12 +461,19 @@ export default function AdminSurvey() {
               <h1 className="text-2xl font-semibold text-gray-800">Survey Management</h1>
               <p className="text-gray-600 mt-1">Kelola pertanyaan untuk survey tamu</p>
             </div>
-            <button
-              onClick={() => setShowAddQuestion(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
-            >
-              Tambah Pertanyaan
-            </button>
+            <div className="flex space-x-3">
+              <ExportToExcelButton 
+                url="/api/survey/export" 
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center"
+                buttonText="Ekspor Excel"
+              />
+              <button
+                onClick={() => setShowAddQuestion(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+              >
+                Tambah Pertanyaan
+              </button>
+            </div>
           </div>
 
           {/* Survey Statistics */}
