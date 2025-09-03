@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAdminSessionData, clearAdminSessionAndRedirect } from "../../../lib/utils";
+import PasswordInput from "../../../components/ui/PasswordInput";
 
 interface AdminProfile {
   id: number;
@@ -976,29 +977,25 @@ export default function AdminProfile() {
                     <div className="border-t border-gray-200 pt-6">
                       <h4 className="text-lg font-medium text-gray-900 mb-4">Ubah Password (Opsional)</h4>
                       <div className="space-y-4">
-                        <div>
-                          <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">Password Saat Ini</label>
-                          <input
-                            type="password"
-                            id="currentPassword"
-                            name="currentPassword"
-                            value={editForm.currentPassword}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
-                            placeholder="Masukkan password saat ini"
-                          />
-                        </div>
+                        <PasswordInput
+                          id="currentPassword"
+                          name="currentPassword"
+                          value={editForm.currentPassword}
+                          onChange={handleInputChange}
+                          label="Password Saat Ini"
+                          placeholder="Masukkan password saat ini"
+                          autoComplete="current-password"
+                        />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
-                            <input
-                              type="password"
+                            <PasswordInput
                               id="newPassword"
                               name="newPassword"
                               value={editForm.newPassword}
                               onChange={handleInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
+                              label="Password Baru"
                               placeholder="Masukkan password baru"
+                              autoComplete="new-password"
                             />
                             {showPasswordStrength && editForm.newPassword && (
                               <div className="mt-2 p-3 bg-gray-50 rounded-lg">
@@ -1028,18 +1025,15 @@ export default function AdminProfile() {
                               </div>
                             )}
                           </div>
-                          <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password</label>
-                            <input
-                              type="password"
-                              id="confirmPassword"
-                              name="confirmPassword"
-                              value={editForm.confirmPassword}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
-                              placeholder="Konfirmasi password baru"
-                            />
-                          </div>
+                          <PasswordInput
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            value={editForm.confirmPassword}
+                            onChange={handleInputChange}
+                            label="Konfirmasi Password"
+                            placeholder="Konfirmasi password baru"
+                            autoComplete="new-password"
+                          />
                         </div>
                       </div>
                     </div>
