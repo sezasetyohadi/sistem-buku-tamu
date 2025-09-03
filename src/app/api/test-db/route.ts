@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { testConnection, executeQuery } from '../../../backend/config/db';
-import bcrypt from 'bcrypt';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Testing database connection...');
+    
     // Test database connection
     const isConnected = await testConnection();
     
@@ -14,52 +15,48 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Test admin table query
-    try {
-      const adminCount = await executeQuery<Array<{count: number}>>(
-        'SELECT COUNT(*) as count FROM admin'
-      );
-      
-      // Get admin with masked password
-      const adminList = await executeQuery<Array<any>>(
-        'SELECT id, username, LEFT(password, 10) as password_preview, nama_lengkap, email, is_super_admin FROM admin'
-      );
+    console.log('Database connected, testing survey tables...');
 
-      // Test dummy123 password with bcrypt
-      const dummyPassword = 'dummy123';
+    // Test basic connection
+    const basicTest = await executeQuery('SELECT 1 as test');
+    console.log('Basic query result:', basicTest);
+    
+    // Test if pertanyaan_survei table exists and has data
+    const questionCount = await executeQuery(`
+      SELECT COUNT(*) as count FROM pertanyaan_survei
+    `);
+    console.log('pertanyaan_survei count:', questionCount);
+    
+    // Test if jawaban_identitas_survei table exists
+    const identityCount = await executeQuery(`
+      SELECT COUNT(*) as count FROM jawaban_identitas_survei
+    `);
+    console.log('jawaban_identitas_survei count:', identityCount);
+    
+    // Test the exact query used in getAllQuestionsForAdmin
+    const questionsTest = await executeQuery(`
+      SELECT DISTINCT
+        ps.id,
+        ps.baris,
+        ps.pertanyaan,
+        ps.is_aktif,
+        ps.created_at
+      FROM pertanyaan_survei ps
+      WHERE ps.is_aktif = 1
+      ORDER BY ps.baris ASC, ps.id ASC
+    `);
+    console.log('Questions test result:', questionsTest);
       
-      // Get the stored hash for dummy123 user
-      const admin = await executeQuery<Array<{id: number, username: string, password: string}>>(
-        'SELECT id, username, password FROM admin WHERE username = ?', 
-        ['dummy123']
-      );
-
-      // Check if admin exists
-      let passwordTestResult = { exists: false, matchesHash: false };
-      
-      if (admin && admin.length > 0) {
-        passwordTestResult.exists = true;
-        // Test if the password matches the hash
-        const isMatch = await bcrypt.compare(dummyPassword, admin[0].password);
-        passwordTestResult.matchesHash = isMatch;
+    return NextResponse.json({
+      success: true,
+      message: 'Database connection and survey tables test successful',
+      data: {
+        basicTest,
+        questionCount,
+        identityCount,
+        questionsTest
       }
-      
-      return NextResponse.json({
-        success: true,
-        message: 'Database connection successful',
-        data: {
-          adminCount: adminCount[0].count,
-          admins: adminList,
-          passwordTest: passwordTestResult
-        }
-      });
-    } catch (queryError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Database query failed',
-        error: String(queryError)
-      }, { status: 500 });
-    }
+    });
 
   } catch (error) {
     console.error('Database test error:', error);

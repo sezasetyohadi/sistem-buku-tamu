@@ -82,8 +82,18 @@ export default function AdminSurvey() {
 
   // Real survey responses from database
   const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
+  const [filteredResponses, setFilteredResponses] = useState<any[]>([]);
   const [responsesLoading, setResponsesLoading] = useState(false);
   const [responseCount, setResponseCount] = useState(0);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
+  const [educationFilter, setEducationFilter] = useState('');
+  const [serviceFilter, setServiceFilter] = useState('');
+  const [surveyDateFilter, setSurveyDateFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchSurveyData();
@@ -95,6 +105,120 @@ export default function AdminSurvey() {
       fetchSurveyResponses();
     }
   }, [activeTab]);
+
+  // Filter responses whenever search criteria change
+  useEffect(() => {
+    filterResponses();
+  }, [surveyResponses, searchTerm, emailFilter, genderFilter, educationFilter, serviceFilter, surveyDateFilter]);
+
+  // Function to filter responses based on search criteria
+  const filterResponses = () => {
+    let filtered = [...surveyResponses];
+
+    // Search by name
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(response =>
+        response.nama_lengkap?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by email
+    if (emailFilter.trim()) {
+      filtered = filtered.filter(response =>
+        response.email?.toLowerCase().includes(emailFilter.toLowerCase())
+      );
+    }
+
+    // Filter by gender
+    if (genderFilter) {
+      filtered = filtered.filter(response =>
+        response.jenis_kelamin === genderFilter
+      );
+    }
+
+    // Filter by education
+    if (educationFilter) {
+      filtered = filtered.filter(response =>
+        response.pendidikan_terakhir === educationFilter
+      );
+    }
+
+    // Filter by service type
+    if (serviceFilter) {
+      filtered = filtered.filter(response =>
+        response.jenis_layanan === serviceFilter
+      );
+    }
+
+    // Filter by survey date
+    if (surveyDateFilter) {
+      filtered = filtered.filter(response => {
+        const responseDate = new Date(response.created_at);
+        const filterDate = new Date(surveyDateFilter);
+        // Compare dates only (ignore time)
+        return responseDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    setFilteredResponses(filtered);
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setEmailFilter('');
+    setGenderFilter('');
+    setEducationFilter('');
+    setServiceFilter('');
+    setSurveyDateFilter('');
+  };
+
+  // Export filtered results to CSV
+  const exportToCSV = () => {
+    if (filteredResponses.length === 0) {
+      alert('Tidak ada data yang dapat diekspor');
+      return;
+    }
+
+    const headers = [
+      'Nama Lengkap',
+      'Email', 
+      'Jenis Kelamin',
+      'Tanggal Lahir',
+      'Alamat',
+      'Pendidikan Terakhir',
+      'Pekerjaan',
+      'Jenis Layanan',
+      'Tanggal Survey',
+      'Saran'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...filteredResponses.map(response => [
+        `"${response.nama_lengkap || ''}"`,
+        `"${response.email || ''}"`,
+        `"${response.jenis_kelamin || ''}"`,
+        `"${response.tanggal_lahir || ''}"`,
+        `"${response.alamat || ''}"`,
+        `"${response.pendidikan_terakhir || ''}"`,
+        `"${response.nama_profesi || ''}"`,
+        `"${response.jenis_layanan || ''}"`,
+        `"${new Date(response.created_at).toLocaleDateString('id-ID')}"`,
+        `"${response.saran || ''}"`,
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `survey-responses-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Function to fetch survey response count only
   const fetchResponseCount = async () => {
@@ -131,15 +255,18 @@ export default function AdminSurvey() {
       
       if (data.success && Array.isArray(data.data)) {
         setSurveyResponses(data.data);
+        setFilteredResponses(data.data); // Initialize filtered responses
         setResponseCount(data.data.length); // Update count when full responses are loaded
       } else {
         console.error('Invalid response format:', data);
         setSurveyResponses([]);
+        setFilteredResponses([]);
         setResponseCount(0);
       }
     } catch (error) {
       console.error('Error fetching survey responses:', error);
       setSurveyResponses([]);
+      setFilteredResponses([]);
       setResponseCount(0);
     } finally {
       setResponsesLoading(false);
@@ -559,7 +686,7 @@ export default function AdminSurvey() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Lihat Respon Survei ({responseCount})
+                Lihat Respon Survei ({filteredResponses?.length || responseCount})
               </button>
             </nav>
           </div>
@@ -687,6 +814,131 @@ export default function AdminSurvey() {
                 </div>
               ) : (
                 <>
+                  {/* Filter Section */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-gray-900">Filter Respon Survei</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">
+                          Menampilkan {filteredResponses.length} dari {surveyResponses.length} respon
+                        </span>
+                        <button
+                          onClick={exportToCSV}
+                          disabled={filteredResponses.length === 0}
+                          className="flex items-center px-3 py-2 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd"/>
+                          </svg>
+                          Export CSV
+                        </button>
+                        <button
+                          onClick={() => setShowFilters(!showFilters)}
+                          className="flex items-center px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                        >
+                          <svg className={`w-4 h-4 mr-1 transition-transform ${showFilters ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/>
+                          </svg>
+                          {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick Search */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cari Nama</label>
+                        <input
+                          type="text"
+                          placeholder="Ketik nama untuk mencari..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cari Email</label>
+                        <input
+                          type="text"
+                          placeholder="Ketik email untuk mencari..."
+                          value={emailFilter}
+                          onChange={(e) => setEmailFilter(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Advanced Filters */}
+                    {showFilters && (
+                      <div className="border-t border-gray-200 pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                            <select
+                              value={genderFilter}
+                              onChange={(e) => setGenderFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua</option>
+                              <option value="Laki-laki">Laki-laki</option>
+                              <option value="Perempuan">Perempuan</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Pendidikan</label>
+                            <select
+                              value={educationFilter}
+                              onChange={(e) => setEducationFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua</option>
+                              {[...new Set(surveyResponses.map(r => r.pendidikan_terakhir).filter(Boolean))].map(education => (
+                                <option key={education} value={education}>{education}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Layanan</label>
+                            <select
+                              value={serviceFilter}
+                              onChange={(e) => setServiceFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua</option>
+                              {[...new Set(surveyResponses.map(r => r.jenis_layanan).filter(Boolean))].map(service => (
+                                <option key={service} value={service}>{service}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Survey</label>
+                            <input
+                              type="date"
+                              value={surveyDateFilter}
+                              onChange={(e) => setSurveyDateFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div></div>
+                          <div>
+                            <button
+                              onClick={clearAllFilters}
+                              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                            >
+                              Reset Semua Filter
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {surveyResponses.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="text-gray-400 mb-3">
@@ -697,10 +949,20 @@ export default function AdminSurvey() {
                       <p className="text-gray-500">Belum ada respon survei</p>
                       <p className="text-sm text-gray-400 mt-1">Respon akan muncul setelah tamu mengisi survei</p>
                     </div>
+                  ) : filteredResponses.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400 mb-3">
+                        <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500">Tidak ada respon yang sesuai dengan filter</p>
+                      <p className="text-sm text-gray-400 mt-1">Coba ubah kriteria pencarian atau reset filter</p>
+                    </div>
                   ) : (
                     /* Response Cards */
                     <div className="space-y-4">
-                      {surveyResponses.map((response) => (
+                      {filteredResponses.map((response) => (
                         <SurveyResponseCard
                           key={response.id}
                           response={response}
