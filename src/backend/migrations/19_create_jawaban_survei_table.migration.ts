@@ -14,16 +14,16 @@ export async function up() {
       KEY pertanyaan_id (pertanyaan_id),
       KEY fk_responden (responden_id),
       KEY fk_opsi_rating (jawaban),
-      FOREIGN KEY (jawaban) REFERENCES opsi_rating(id),
-      FOREIGN KEY (responden_id) REFERENCES jawaban_identitas_survei(id),
-      FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei(id)
+      CONSTRAINT fk_opsi_rating FOREIGN KEY (jawaban) REFERENCES opsi_rating (id) ON DELETE NO ACTION ON UPDATE CASCADE,
+      CONSTRAINT fk_responden FOREIGN KEY (responden_id) REFERENCES jawaban_identitas_survei (id) ON DELETE CASCADE,
+      CONSTRAINT jawaban_survei_ibfk_1 FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
   `);
   
-  console.log('Jawaban survei table created successfully');
+  console.log('Jawaban_survei table created successfully');
 }
 
 export async function down() {
   await executeQuery(`DROP TABLE IF EXISTS jawaban_survei;`);
-  console.log('Jawaban survei table dropped successfully');
+  console.log('Jawaban_survei table dropped successfully');
 }

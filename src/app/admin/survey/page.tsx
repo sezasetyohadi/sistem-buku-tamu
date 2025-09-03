@@ -82,13 +82,39 @@ export default function AdminSurvey() {
   // Real survey responses from database
   const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
   const [responsesLoading, setResponsesLoading] = useState(false);
+  const [responseCount, setResponseCount] = useState(0);
 
   useEffect(() => {
     fetchSurveyData();
+    fetchResponseCount(); // Fetch response count on initial load
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'responses') {
       fetchSurveyResponses();
     }
   }, [activeTab]);
+
+  // Function to fetch survey response count only
+  const fetchResponseCount = async () => {
+    try {
+      const response = await fetch('/api/survey/responses');
+      if (!response.ok) {
+        throw new Error(`Error fetching responses: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        setResponseCount(data.data.length);
+      } else {
+        setResponseCount(0);
+      }
+    } catch (error) {
+      console.error('Error fetching response count:', error);
+      setResponseCount(0);
+    }
+  };
 
   // Function to fetch survey responses from database
   const fetchSurveyResponses = async () => {
@@ -104,13 +130,16 @@ export default function AdminSurvey() {
       
       if (data.success && Array.isArray(data.data)) {
         setSurveyResponses(data.data);
+        setResponseCount(data.data.length); // Update count when full responses are loaded
       } else {
         console.error('Invalid response format:', data);
         setSurveyResponses([]);
+        setResponseCount(0);
       }
     } catch (error) {
       console.error('Error fetching survey responses:', error);
       setSurveyResponses([]);
+      setResponseCount(0);
     } finally {
       setResponsesLoading(false);
     }
@@ -445,7 +474,7 @@ export default function AdminSurvey() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm">Total Responden</p>
-                  <p className="text-2xl font-bold">{statistics.totalResponses}</p>
+                  <p className="text-2xl font-bold">{responseCount}</p>
                 </div>
                 <div className="bg-blue-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -522,7 +551,7 @@ export default function AdminSurvey() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Lihat Respon Survei ({surveyResponses.length})
+                Lihat Respon Survei ({responseCount})
               </button>
             </nav>
           </div>

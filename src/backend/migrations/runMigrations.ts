@@ -10,27 +10,37 @@ export async function main() {
       '03_create_pendidikan_terakhir_table.migration.ts',
       '04_create_profesi_table.migration.ts',
       '05_create_tujuan_kunjungan_table.migration.ts',
-      '06_create_memperoleh_informasi_table.migration.ts',
-      '07_create_mendapatkan_salinan_table.migration.ts',
-      '08_create_section_survei_table.migration.ts',
       
       // Main entities (depend on lookup tables)
-      '09_create_daftar_tamu_table.migration.ts',      // Depends on bidang_tujuan, pendidikan_terakhir, profesi, tujuan_kunjungan
+      '06_create_daftar_tamu_table.migration.ts',      // Depends on bidang_tujuan, pendidikan_terakhir, profesi
+      '07_create_daftar_tamu_triggers.migration.ts',   // Triggers for daftar_tamu
+      
+      // Token and messaging tables
+      '08_create_tamu_token_table.migration.ts',       // Depends on daftar_tamu
+      '09_create_pesan_email_table.migration.ts',      // Depends on admin and daftar_tamu
+      
+      // Information handling tables
+      '10_create_memperoleh_informasi_table.migration.ts',
+      '11_create_mendapatkan_salinan_table.migration.ts',
+      '12_create_jawaban_memperoleh_informasi_table.migration.ts', // Depends on daftar_tamu, memperoleh_informasi
+      '13_create_jawaban_mendapatkan_salinan_table.migration.ts',  // Depends on daftar_tamu, mendapatkan_salinan
       
       // Rating system
-      '10_create_rating_tables.migration.ts',          // Creates jenis_rating and opsi_rating
+      '14_create_jenis_rating_table.migration.ts',
+      '15_create_opsi_rating_table.migration.ts',      // Depends on jenis_rating
       
       // Survey system
-      '11_create_pertanyaan_survei_table.migration.ts',
-      '12_create_pertanyaan_s_jenis_rating_table.migration.ts', // Depends on pertanyaan_survei and jenis_rating
-      '13_create_jawaban_identitas_survei_table.migration.ts',  // Depends on pendidikan_terakhir, profesi, tujuan_kunjungan
-      '14_create_jawaban_survei_table.migration.ts',           // Depends on jawaban_identitas_survei, pertanyaan_survei, opsi_rating
+      '16_create_pertanyaan_survei_table.migration.ts',
+      '17_create_pertanyaan_s_jenis_rating_table.migration.ts', // Depends on pertanyaan_survei and jenis_rating
+      '18_create_jawaban_identitas_survei_table.migration.ts',  // Depends on pendidikan_terakhir, profesi, tujuan_kunjungan
+      '19_create_jawaban_survei_table.migration.ts',           // Depends on jawaban_identitas_survei, pertanyaan_survei, opsi_rating
       
-      // Relationship tables
-      '15_create_jawaban_informasi_tables.migration.ts', // Depends on daftar_tamu, memperoleh_informasi, mendapatkan_salinan
+      // Security tables
+      '20_create_login_attempts_table.migration.ts',
+      '21_create_unlock_log_table.migration.ts',
       
-      // Security and messaging
-      '16_create_security_and_messaging_tables.migration.ts', // Depends on admin and daftar_tamu
+      // Default data
+      '22_insert_default_data.migration.ts',           // Insert default admin and survey data
     ];
 
     console.log('Starting migrations in specified order...');

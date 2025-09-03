@@ -8,20 +8,20 @@ export async function up() {
       id int(11) NOT NULL AUTO_INCREMENT,
       pertanyaan_id int(11) NOT NULL,
       jenis_rating_id int(11) NOT NULL,
-      urutan int(11) NULL DEFAULT 1,
-      is_required tinyint(1) NULL DEFAULT 1,
+      urutan int(11) DEFAULT 1,
+      is_required tinyint(1) DEFAULT 1,
       PRIMARY KEY (id),
       KEY fk_pjr_pertanyaan (pertanyaan_id),
       KEY fk_pjr_jenis (jenis_rating_id),
-      FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating(id),
-      FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei(id)
+      CONSTRAINT fk_pjr_jenis FOREIGN KEY (jenis_rating_id) REFERENCES jenis_rating (id) ON DELETE CASCADE,
+      CONSTRAINT fk_pjr_pertanyaan FOREIGN KEY (pertanyaan_id) REFERENCES pertanyaan_survei (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
   `);
   
-  console.log('Pertanyaan-jenis rating table created successfully');
+  console.log('Pertanyaan_s_jenis_rating table created successfully');
 }
 
 export async function down() {
   await executeQuery(`DROP TABLE IF EXISTS pertanyaan_s_jenis_rating;`);
-  console.log('Pertanyaan-jenis rating table dropped successfully');
+  console.log('Pertanyaan_s_jenis_rating table dropped successfully');
 }
