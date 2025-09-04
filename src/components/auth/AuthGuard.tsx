@@ -19,7 +19,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   useAdminIdleLogout(shouldEnableIdleDetection);
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
         // Always allow login page without authentication
         if (pathname === '/admin/login') {
@@ -28,69 +28,34 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           return;
         }
 
-        // For all other admin pages, check authentication
-        console.log('Checking authentication for:', pathname);
+        // For all other admin pages, check authentication via API
+        console.log('Checking JWT authentication for:', pathname);
         
-        // Check localStorage for admin session
-        const adminSession = localStorage.getItem('admin_session');
-        
-        // Check cookie for admin auth
-        const authCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('admin_auth='));
+        try {
+          const response = await fetch('/api/admin/me', {
+            method: 'GET',
+            credentials: 'include', // Include cookies
+          });
 
-        console.log('Auth check - Session exists:', !!adminSession, 'Cookie exists:', !!authCookie);
-
-        if (adminSession && authCookie) {
-          try {
-            let sessionData;
-            try {
-              sessionData = JSON.parse(adminSession);
-            } catch (parseError) {
-              console.error('Error parsing admin session JSON in AuthGuard:', parseError);
-              // Clear corrupted session data
-              localStorage.removeItem('admin_session');
-              document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-              setIsAuthenticated(false);
-              router.push('/admin/login');
-              return;
-            }
-            
-            // Check if session is not expired (24 hours or 7 days for remember me)
-            const loginTime = new Date(sessionData.loginTime);
-            const now = new Date();
-            const hoursDiff = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
-            
-            // Check remember me status for extended session
-            const sessionLimit = sessionData.rememberMe ? (7 * 24) : 24; // 7 days or 24 hours
-            
-            console.log('Session time check - Hours since login:', hoursDiff, 'Remember me:', sessionData.rememberMe, 'Limit:', sessionLimit);
-            
-            if (hoursDiff < sessionLimit) {
-              console.log('Authentication successful');
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              console.log('JWT authentication successful for user:', result.admin.username);
               setIsAuthenticated(true);
             } else {
-              console.log('Session expired, clearing data');
-              // Session expired, clear it
-              localStorage.removeItem('admin_session');
-              document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              console.log('JWT authentication failed:', result.message);
               setIsAuthenticated(false);
-              router.push('/admin/login');
+              router.replace('/admin/login');
             }
-          } catch (parseError) {
-            console.error('Session parse error:', parseError);
-            localStorage.removeItem('admin_session');
-            document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+          } else {
+            console.log('JWT authentication request failed with status:', response.status);
             setIsAuthenticated(false);
-            router.push('/admin/login');
-          }
-        } else {
-          console.log('No valid session found, redirecting to login');
-          setIsAuthenticated(false);
-          // Only redirect if not already on login page
-          if (pathname !== '/admin/login') {
             router.replace('/admin/login');
           }
+        } catch (fetchError) {
+          console.error('Error checking JWT authentication:', fetchError);
+          setIsAuthenticated(false);
+          router.replace('/admin/login');
         }
       } catch (error) {
         console.error('Auth check error:', error);

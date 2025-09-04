@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getAdminSessionData, clearAdminSessionAndRedirect } from "../../../lib/utils";
+import { getAdminData, getAdminSessionData, clearAdminSessionAndRedirect } from "../../../lib/utils";
 import PasswordInput from "../../../components/ui/PasswordInput";
 
 interface AdminProfile {

@@ -22,43 +22,24 @@ export default function LoginPage() {
 
   // Check if already authenticated - redirect to admin dashboard
   useEffect(() => {
-    const checkAuthAndRedirect = () => {
+    const checkAuthAndRedirect = async () => {
       try {
-        const adminSession = localStorage.getItem('admin_session');
-        const authCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('admin_auth='));
+        // Check if user is already authenticated by calling /api/admin/me
+        const response = await fetch('/api/admin/me', {
+          method: 'GET',
+          credentials: 'include', // Include cookies
+        });
 
-        if (adminSession && authCookie) {
-          let sessionData;
-          try {
-            sessionData = JSON.parse(adminSession);
-          } catch (parseError) {
-            console.error('Error parsing admin session JSON on login page:', parseError);
-            // Clear corrupted session data
-            localStorage.removeItem('admin_session');
-            document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            return;
-          }
-          const loginTime = new Date(sessionData.loginTime);
-          const now = new Date();
-          const hoursDiff = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
-          
-          if (hoursDiff < 24) {
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
             console.log('User already authenticated, redirecting to admin dashboard');
-            // Already authenticated, redirect to admin
             router.replace('/admin');
-          } else {
-            // Session expired, clear it
-            localStorage.removeItem('admin_session');
-            document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
           }
         }
       } catch (error) {
         console.error('Auth check error on login page:', error);
-        // Clear any corrupted session data
-        localStorage.removeItem('admin_session');
-        document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        // If there's an error, just stay on login page
       }
     };
 
@@ -120,30 +101,17 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        credentials: 'include', // Include cookies for JWT
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+          rememberMe: formData.rememberMe
+        }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        // Determine session duration based on remember me
-        const sessionDuration = formData.rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000; // 7 days or 24 hours
-        const cookieMaxAge = formData.rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60; // 7 days or 24 hours in seconds
-        
-        // Store admin session/token in localStorage
-        localStorage.setItem('admin_session', JSON.stringify({
-          id: result.admin.id,
-          username: result.admin.username,
-          nama_lengkap: result.admin.nama_lengkap,
-          email: result.admin.email,
-          loginTime: new Date().toISOString(),
-          rememberMe: formData.rememberMe,
-          expiresAt: new Date(Date.now() + sessionDuration).toISOString()
-        }));
-        
-        // Set auth cookie with appropriate duration
-        document.cookie = `admin_auth=true; path=/; max-age=${cookieMaxAge}`;
-        
         // Save credentials if Remember Me is checked
         if (formData.rememberMe) {
           localStorage.setItem('admin_remembered_credentials', JSON.stringify({
