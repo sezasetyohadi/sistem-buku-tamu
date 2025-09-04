@@ -16,7 +16,6 @@ export default function AdminGuestsManagement() {
   const [dateFilter, setDateFilter] = useState("Semua Waktu");
   const [stats, setStats] = useState({
     totalGuests: 0,
-    todayGuests: 0,
     todayCheckIn: 0,
     todayCheckOut: 0,
     currentlyVisiting: 0
@@ -231,6 +230,7 @@ export default function AdminGuestsManagement() {
         { header: 'No. Telepon', key: 'nomor_telp', width: 20 },
         { header: 'Pendidikan Terakhir', key: 'pendidikan_terakhir', width: 20 },
         { header: 'Profesi', key: 'profesi', width: 20 },
+        { header: 'Bidang Tujuan', key: 'bidang_tujuan', width: 25 },
         { header: 'Keperluan', key: 'keperluan', width: 40 },
         { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
         { header: 'Waktu Daftar', key: 'waktu_dibuat', width: 20 },
@@ -250,6 +250,7 @@ export default function AdminGuestsManagement() {
           nomor_telp: guest.nomor_telp || '-',
           pendidikan_terakhir: guest.pendidikan_terakhir || '-',
           profesi: guest.profesi || '-',
+          bidang_tujuan: guest.bidang_tujuan || '-',
           keperluan: guest.keperluan || '-',
           // Use empty string for dates initially
           waktu_checkin: '',
@@ -386,7 +387,6 @@ export default function AdminGuestsManagement() {
       if (statsData && statsData.success && statsData.data) {
         setStats({
           totalGuests: statsData.data.totalGuests || 0,
-          todayGuests: statsData.data.todayGuests || 0,
           todayCheckIn: statsData.data.todayCheckIn || 0,
           todayCheckOut: statsData.data.todayCheckOut || 0,
           currentlyVisiting: statsData.data.currentlyVisiting || 0
@@ -460,8 +460,8 @@ export default function AdminGuestsManagement() {
               </svg>
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Tamu Hari Ini</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.todayGuests}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Tamu</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
             </div>
           </div>
         </div>
