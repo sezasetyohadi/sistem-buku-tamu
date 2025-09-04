@@ -3,38 +3,28 @@ import { executeQuery } from '@/backend/config/db';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { verifyToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if admin is authenticated through cookie
-    const authCookie = request.cookies.get('admin_auth');
-
-    if (!authCookie) {
-      return NextResponse.json({
-        success: false,
-        message: 'Unauthorized access',
-      }, { status: 401 });
-    }
-
-    // Get admin ID from the session header
-    const adminSessionHeader = request.headers.get('x-admin-session');
+    // Get JWT token from cookie
+    const accessToken = request.cookies.get('admin_access_token')?.value;
     
-    if (!adminSessionHeader) {
+    if (!accessToken) {
       return NextResponse.json({
         success: false,
-        message: 'Admin session not found',
+        message: 'No access token provided',
       }, { status: 401 });
     }
 
-    let adminId;
-    try {
-      const adminSession = JSON.parse(adminSessionHeader);
-      adminId = adminSession.id;
-    } catch (error) {
+    // Verify JWT token
+    const payload = verifyToken(accessToken, 'admin-panel');
+    
+    if (!payload || payload.userType !== 'admin') {
       return NextResponse.json({
         success: false,
-        message: 'Invalid admin session format',
-      }, { status: 400 });
+        message: 'Invalid or expired token',
+      }, { status: 401 });
     }
 
     // Get form data
@@ -75,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop();
-    const fileName = `admin_${adminId}_${timestamp}.${fileExtension}`;
+    const fileName = `admin_${payload.userId}_${timestamp}.${fileExtension}`;
     const filePath = join(uploadsDir, fileName);
 
     // Convert file to buffer and save
@@ -86,7 +76,7 @@ export async function POST(request: NextRequest) {
     // Update admin profile with new picture URL
     const pictureUrl = `/uploads/profiles/${fileName}`;
     const updateQuery = 'UPDATE admin SET profile_picture = ? WHERE id = ?';
-    await executeQuery(updateQuery, [pictureUrl, adminId]);
+    await executeQuery(updateQuery, [pictureUrl, payload.userId]);
 
     return NextResponse.json({
       success: true,

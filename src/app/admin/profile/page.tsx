@@ -56,22 +56,26 @@ export default function AdminProfile() {
       try {
         setIsLoading(true);
         
-        // Get admin session from localStorage
-        const sessionData = getAdminSessionData() as any;
-        if (!sessionData) {
-          // Redirect to login if no session found
+        // Use JWT-based authentication check
+        const adminData = await getAdminData();
+        if (!adminData) {
+          // Redirect to login if not authenticated
           clearAdminSessionAndRedirect(router);
           return;
         }
         
-        const adminSession = localStorage.getItem('admin_session');
+        // Fetch profile data using JWT authentication (cookies automatically included)
         const response = await fetch('/api/admin/profile', {
-          headers: {
-            'x-admin-session': adminSession || ''
-          }
+          method: 'GET',
+          credentials: 'include' // Include JWT cookies
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired or invalid, redirect to login
+            clearAdminSessionAndRedirect(router);
+            return;
+          }
           throw new Error('Failed to fetch admin profile');
         }
 
@@ -81,8 +85,8 @@ export default function AdminProfile() {
           setProfile({
             id: data.admin.id,
             username: data.admin.username,
-            email: data.admin.email || sessionData.email || '',
-            nama_lengkap: data.admin.nama_lengkap || sessionData.nama_lengkap || 'Administrator',
+            email: data.admin.email || adminData.email || '',
+            nama_lengkap: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
             role: data.admin.is_super_admin ? 'Super Admin' : 'Admin',
             created_at: data.admin.created_at,
             is_super_admin: data.admin.is_super_admin,
@@ -90,19 +94,12 @@ export default function AdminProfile() {
           });
 
           setEditForm({
-            fullName: data.admin.nama_lengkap || sessionData.nama_lengkap || 'Administrator',
-            email: data.admin.email || sessionData.email || '',
+            fullName: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
+            email: data.admin.email || adminData.email || '',
             currentPassword: "",
             newPassword: "",
             confirmPassword: "",
           });
-
-          // Update session data with fresh profile picture
-          const currentSessionData = getAdminSessionData() as any;
-          if (currentSessionData) {
-            currentSessionData.profile_picture = data.admin.profile_picture;
-            localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
-          }
 
           // Dispatch event to update layout component
           window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
@@ -112,56 +109,30 @@ export default function AdminProfile() {
           // Set last modified date
           setLastModified(data.admin.updated_at || data.admin.created_at);
         } else {
-          // Use session data as fallback
+          // Use JWT admin data as fallback
           setProfile({
-            id: sessionData.id,
-            username: sessionData.username,
-            email: sessionData.email || '',
-            nama_lengkap: sessionData.nama_lengkap || 'Administrator',
-            role: sessionData.is_super_admin ? 'Super Admin' : 'Admin',
-            created_at: sessionData.loginTime || new Date().toISOString(),
-            is_super_admin: sessionData.is_super_admin,
-            profile_picture: sessionData.profile_picture || null
+            id: adminData.id,
+            username: adminData.username,
+            email: adminData.email || '',
+            nama_lengkap: adminData.nama_lengkap || 'Administrator',
+            role: adminData.is_super_admin ? 'Super Admin' : 'Admin',
+            created_at: adminData.created_at || new Date().toISOString(),
+            is_super_admin: adminData.is_super_admin,
+            profile_picture: adminData.profile_picture || null
           });
 
           setEditForm({
-            fullName: sessionData.nama_lengkap || 'Administrator',
-            email: sessionData.email || '',
+            fullName: adminData.nama_lengkap || 'Administrator',
+            email: adminData.email || '',
             currentPassword: "",
             newPassword: "",
             confirmPassword: "",
           });
         }
-              } catch (error) {
-          console.error('Error fetching admin profile:', error);
-          // Try to get data from session as fallback
-          try {
-            const sessionData = getAdminSessionData() as any;
-            if (sessionData) {
-            setProfile({
-              id: sessionData.id,
-              username: sessionData.username,
-              email: sessionData.email || '',
-              nama_lengkap: sessionData.nama_lengkap || 'Administrator',
-              role: sessionData.is_super_admin ? 'Super Admin' : 'Admin',
-              created_at: sessionData.loginTime || new Date().toISOString(),
-              is_super_admin: sessionData.is_super_admin,
-              profile_picture: sessionData.profile_picture || null
-            });
-
-            setEditForm({
-              fullName: sessionData.nama_lengkap || 'Administrator',
-              email: sessionData.email || '',
-              currentPassword: "",
-              newPassword: "",
-              confirmPassword: "",
-            });
-                      } else {
-              clearAdminSessionAndRedirect(router);
-            }
-          } catch (e) {
-            clearAdminSessionAndRedirect(router);
-          }
+      } catch (error) {
+        console.error('Error fetching admin profile:', error);
+        // If there's an error, redirect to login as JWT authentication failed
+        clearAdminSessionAndRedirect(router);
       } finally {
         setIsLoading(false);
       }
@@ -333,19 +304,25 @@ export default function AdminProfile() {
     setMessage({ type: "", text: "" });
 
     try {
-      const sessionData = getAdminSessionData() as any;
-      if (!sessionData) {
+      // Check JWT authentication
+      const adminData = await getAdminData();
+      if (!adminData) {
         clearAdminSessionAndRedirect(router);
         return;
       }
 
-      const adminSession = localStorage.getItem('admin_session');
       const response = await fetch('/api/admin/profile/delete-picture', {
         method: 'DELETE',
-        headers: {
-          'x-admin-session': adminSession || ''
-        }
+        credentials: 'include' // Include JWT cookies
       });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          clearAdminSessionAndRedirect(router);
+          return;
+        }
+        throw new Error('Failed to delete profile picture');
+      }
 
       const data = await response.json();
 
@@ -374,13 +351,6 @@ export default function AdminProfile() {
           });
         }
 
-        // Update session data
-        const currentSessionData = getAdminSessionData() as any;
-        if (currentSessionData) {
-          currentSessionData.profile_picture = null;
-          localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
-        }
-
         // Dispatch custom event to update header
         window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
           detail: { profilePicture: null } 
@@ -405,23 +375,29 @@ export default function AdminProfile() {
     setMessage({ type: "", text: "" });
 
     try {
-      const sessionData = getAdminSessionData() as any;
-      if (!sessionData) {
+      // Check JWT authentication
+      const adminData = await getAdminData();
+      if (!adminData) {
         clearAdminSessionAndRedirect(router);
         return;
       }
 
-      const adminSession = localStorage.getItem('admin_session');
       const formData = new FormData();
       formData.append('profilePicture', selectedFile);
 
       const response = await fetch('/api/admin/profile/upload-picture', {
         method: 'POST',
-        headers: {
-          'x-admin-session': adminSession || ''
-        },
+        credentials: 'include', // Include JWT cookies
         body: formData
       });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          clearAdminSessionAndRedirect(router);
+          return;
+        }
+        throw new Error('Failed to upload profile picture');
+      }
 
       const data = await response.json();
 
@@ -447,13 +423,6 @@ export default function AdminProfile() {
             ...profile,
             profile_picture: data.profilePicture
           });
-        }
-
-        // Update session data
-        const currentSessionData = getAdminSessionData() as any;
-        if (currentSessionData) {
-          currentSessionData.profile_picture = data.profilePicture;
-          localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
         }
 
         // Dispatch custom event to update header
@@ -505,21 +474,20 @@ export default function AdminProfile() {
         }
       }
 
-      const sessionData = getAdminSessionData() as any;
-      if (!sessionData) {
+      // Check JWT authentication
+      const adminData = await getAdminData();
+      if (!adminData) {
         clearAdminSessionAndRedirect(router);
         return;
       }
-      
-      const adminSession = localStorage.getItem('admin_session');
 
       // Call the actual API
       const response = await fetch('/api/admin/profile', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'x-admin-session': adminSession
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include JWT cookies
         body: JSON.stringify({
           fullName: editForm.fullName,
           email: editForm.email,
@@ -527,6 +495,14 @@ export default function AdminProfile() {
           newPassword: editForm.newPassword
         })
       });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          clearAdminSessionAndRedirect(router);
+          return;
+        }
+        throw new Error('Failed to update profile');
+      }
 
       const data = await response.json();
 
@@ -538,14 +514,6 @@ export default function AdminProfile() {
             nama_lengkap: data.admin.nama_lengkap,
             email: data.admin.email,
           });
-        }
-
-        // Update session data
-        const currentSessionData = getAdminSessionData() as any;
-        if (currentSessionData) {
-          currentSessionData.nama_lengkap = data.admin.nama_lengkap;
-          currentSessionData.email = data.admin.email;
-          localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
         }
 
         // Dispatch custom event to update header with new name
