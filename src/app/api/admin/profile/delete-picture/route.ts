@@ -2,43 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/backend/config/db';
 import fs from 'fs';
 import path from 'path';
+import { verifyToken } from '@/lib/jwt';
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Check if admin is authenticated through cookie
-    const authCookie = request.cookies.get('admin_auth');
-
-    if (!authCookie) {
-      return NextResponse.json({
-        success: false,
-        message: 'Unauthorized access',
-      }, { status: 401 });
-    }
-
-    // Get admin ID from the session header
-    const adminSessionHeader = request.headers.get('x-admin-session');
+    // Get JWT token from cookie
+    const accessToken = request.cookies.get('admin_access_token')?.value;
     
-    if (!adminSessionHeader) {
+    if (!accessToken) {
       return NextResponse.json({
         success: false,
-        message: 'Admin session not found',
+        message: 'No access token provided',
       }, { status: 401 });
     }
 
-    let adminId;
-    try {
-      const adminSession = JSON.parse(adminSessionHeader);
-      adminId = adminSession.id;
-    } catch (error) {
+    // Verify JWT token
+    const payload = verifyToken(accessToken, 'admin-panel');
+    
+    if (!payload || payload.userType !== 'admin') {
       return NextResponse.json({
         success: false,
-        message: 'Invalid admin session format',
-      }, { status: 400 });
+        message: 'Invalid or expired token',
+      }, { status: 401 });
     }
 
     // Get current profile picture path
     const getCurrentPictureQuery = 'SELECT profile_picture FROM admin WHERE id = ?';
-    const currentPictureResult = await executeQuery<any[]>(getCurrentPictureQuery, [adminId]);
+    const currentPictureResult = await executeQuery<any[]>(getCurrentPictureQuery, [payload.userId]);
     
     if (currentPictureResult && currentPictureResult.length > 0 && currentPictureResult[0].profile_picture) {
       const currentPicturePath = currentPictureResult[0].profile_picture;
@@ -60,7 +50,7 @@ export async function DELETE(request: NextRequest) {
 
     // Update database to remove profile picture
     const updateQuery = 'UPDATE admin SET profile_picture = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    await executeQuery(updateQuery, [adminId]);
+    await executeQuery(updateQuery, [payload.userId]);
 
     return NextResponse.json({
       success: true,

@@ -2,43 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/backend/config/db';
 import Admin from '@/backend/models/adminModel';
 import bcrypt from 'bcrypt';
+import { verifyToken } from '@/lib/jwt';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if admin is authenticated through cookie
-    const authCookie = request.cookies.get('admin_auth');
-
-    if (!authCookie) {
-      return NextResponse.json({
-        success: false,
-        message: 'Unauthorized access',
-      }, { status: 401 });
-    }
-
-    // Get admin ID from the session header
-    const adminSessionHeader = request.headers.get('x-admin-session');
+    // Get JWT token from cookie
+    const accessToken = request.cookies.get('admin_access_token')?.value;
     
-    if (!adminSessionHeader) {
+    if (!accessToken) {
       return NextResponse.json({
         success: false,
-        message: 'Admin session not found',
+        message: 'No access token provided',
       }, { status: 401 });
     }
 
-    let adminId;
-    try {
-      const adminSession = JSON.parse(adminSessionHeader);
-      adminId = adminSession.id;
-    } catch (error) {
+    // Verify JWT token
+    const payload = verifyToken(accessToken, 'admin-panel');
+    
+    if (!payload || payload.userType !== 'admin') {
       return NextResponse.json({
         success: false,
-        message: 'Invalid admin session format',
-      }, { status: 400 });
+        message: 'Invalid or expired token',
+      }, { status: 401 });
     }
 
     // Get admin profile from database
     const query = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, is_super_admin FROM admin WHERE id = ?';
-    const result = await executeQuery<Admin[]>(query, [adminId]);
+    const result = await executeQuery<Admin[]>(query, [payload.userId]);
 
     if (!result || result.length === 0) {
       return NextResponse.json({
@@ -73,35 +63,24 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Check if admin is authenticated through cookie
-    const authCookie = request.cookies.get('admin_auth');
-
-    if (!authCookie) {
-      return NextResponse.json({
-        success: false,
-        message: 'Unauthorized access',
-      }, { status: 401 });
-    }
-
-    // Get admin ID from the session header
-    const adminSessionHeader = request.headers.get('x-admin-session');
+    // Get JWT token from cookie
+    const accessToken = request.cookies.get('admin_access_token')?.value;
     
-    if (!adminSessionHeader) {
+    if (!accessToken) {
       return NextResponse.json({
         success: false,
-        message: 'Admin session not found',
+        message: 'No access token provided',
       }, { status: 401 });
     }
 
-    let adminId;
-    try {
-      const adminSession = JSON.parse(adminSessionHeader);
-      adminId = adminSession.id;
-    } catch (error) {
+    // Verify JWT token
+    const payload = verifyToken(accessToken, 'admin-panel');
+    
+    if (!payload || payload.userType !== 'admin') {
       return NextResponse.json({
         success: false,
-        message: 'Invalid admin session format',
-      }, { status: 400 });
+        message: 'Invalid or expired token',
+      }, { status: 401 });
     }
 
     // Get request body
@@ -127,7 +106,7 @@ export async function PUT(request: NextRequest) {
 
     // Get current admin data
     const currentAdminQuery = 'SELECT * FROM admin WHERE id = ?';
-    const currentAdminResult = await executeQuery<Admin[]>(currentAdminQuery, [adminId]);
+    const currentAdminResult = await executeQuery<Admin[]>(currentAdminQuery, [payload.userId]);
 
     if (!currentAdminResult || currentAdminResult.length === 0) {
       return NextResponse.json({
@@ -169,16 +148,16 @@ export async function PUT(request: NextRequest) {
 
       // Update admin with password
       const updateQuery = 'UPDATE admin SET nama_lengkap = ?, email = ?, password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-      await executeQuery(updateQuery, [fullName, email, hashedNewPassword, adminId]);
+      await executeQuery(updateQuery, [fullName, email, hashedNewPassword, payload.userId]);
     } else {
       // Update admin without password
       const updateQuery = 'UPDATE admin SET nama_lengkap = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-      await executeQuery(updateQuery, [fullName, email, adminId]);
+      await executeQuery(updateQuery, [fullName, email, payload.userId]);
     }
 
     // Get updated admin data
     const updatedAdminQuery = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, is_super_admin FROM admin WHERE id = ?';
-    const updatedAdminResult = await executeQuery<Admin[]>(updatedAdminQuery, [adminId]);
+    const updatedAdminResult = await executeQuery<Admin[]>(updatedAdminQuery, [payload.userId]);
     const updatedAdmin = updatedAdminResult[0];
 
     return NextResponse.json({
