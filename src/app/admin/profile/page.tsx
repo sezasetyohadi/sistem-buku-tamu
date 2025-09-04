@@ -97,6 +97,18 @@ export default function AdminProfile() {
             confirmPassword: "",
           });
 
+          // Update session data with fresh profile picture
+          const currentSessionData = getAdminSessionData() as any;
+          if (currentSessionData) {
+            currentSessionData.profile_picture = data.admin.profile_picture;
+            localStorage.setItem('admin_session', JSON.stringify(currentSessionData));
+          }
+
+          // Dispatch event to update layout component
+          window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
+            detail: { profilePicture: data.admin.profile_picture } 
+          }));
+
           // Set last modified date
           setLastModified(data.admin.updated_at || data.admin.created_at);
         } else {
