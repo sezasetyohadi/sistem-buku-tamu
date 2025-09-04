@@ -3,14 +3,21 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
+// Optimized font loading with display=swap and preload
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap", // Show fallback font until custom font loads
+  preload: true,
+  adjustFontFallback: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap", // Show fallback font until custom font loads
+  preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {

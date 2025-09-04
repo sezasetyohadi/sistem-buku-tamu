@@ -8,12 +8,22 @@ export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading time for smooth transition
-    const timer = setTimeout(() => {
+    // Check if the page has already been loaded before (for better UX)
+    const hasVisitedBefore = sessionStorage.getItem('hasVisitedLanding');
+    
+    if (hasVisitedBefore) {
+      // If returning, load faster
       setIsLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
+    } else {
+      // For first visit, show loading animation
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+        // Mark that we've visited
+        sessionStorage.setItem('hasVisitedLanding', 'true');
+      }, 1000); // Reduced from 1500ms to 1000ms
+      
+      return () => clearTimeout(timer);
+    }
   }, []);
   useEffect(() => {
     if (isLoading) return;
@@ -118,6 +128,7 @@ export default function LandingPage() {
                     src="/logo-jateng.svg" 
                     alt="Logo Provinsi Jawa Tengah" 
                     className="w-full h-full object-contain filter drop-shadow-xl"
+                    loading="lazy"
                   />
                 </div>
               </div>

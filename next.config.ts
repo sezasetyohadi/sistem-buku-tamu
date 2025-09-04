@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable lazy loading and code splitting optimizations
+  swcMinify: true,
+  reactStrictMode: true,
+  images: {
+    domains: ['localhost'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ['image/webp'],
+  },
+  experimental: {
+    optimizeCss: true, // Minify CSS
+    optimizePackageImports: ['react-icons', 'date-fns', 'lodash', 'recharts'],
+  },
   env: {
     APP_MODE: process.env.APP_MODE || 'full',
     ADMIN_PORT: process.env.ADMIN_PORT || '3001',

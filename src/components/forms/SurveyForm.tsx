@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import Card from '@/components/ui/Card';
 import { useSurveyData, useDropdownState } from '@/hooks/useSurveyForm';
 import { submitSurvey } from '@/lib/survey-api';
-import GuestIdentityForm from './GuestIdentityForm';
-import QuestionCard from '../guest/QuestionCard';
 import LoadingState from '../guest/LoadingState';
-import SubmissionSuccess from '../guest/SubmissionSuccess';
 import { SurveySubmission } from '@/types/survey-types';
+
+// Lazy loaded components
+const GuestIdentityForm = lazy(() => import('./GuestIdentityForm'));
+const QuestionCard = lazy(() => import('../guest/QuestionCard'));
+const SubmissionSuccess = lazy(() => import('../guest/SubmissionSuccess'));
 
 export default function SurveyForm() {
   // Use the custom hooks for state management
@@ -93,7 +95,11 @@ export default function SurveyForm() {
   }
 
   if (submitted) {
-    return <SubmissionSuccess resetForm={resetFormData} />;
+    return (
+      <Suspense fallback={<LoadingState />}>
+        <SubmissionSuccess resetForm={resetFormData} />
+      </Suspense>
+    );
   }
 
   return (
@@ -105,15 +111,21 @@ export default function SurveyForm() {
         </div>
 
         {/* IDENTITAS RESPONDEN Section */}
-        <GuestIdentityForm 
-          guestIdentity={guestIdentity}
-          lookupData={lookupData}
-          updateGuestIdentity={updateGuestIdentity}
-          focusedDropdowns={focusedDropdowns}
-          handleDropdownMouseDown={handleDropdownMouseDown}
-          handleDropdownBlur={handleDropdownBlur}
-          handleDropdownChange={handleDropdownChange}
-        />
+        <Suspense fallback={<div className="animate-pulse p-4 bg-gray-100 rounded-lg">
+          <div className="h-6 bg-gray-300 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+          <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+        </div>}>
+          <GuestIdentityForm 
+            guestIdentity={guestIdentity}
+            lookupData={lookupData}
+            updateGuestIdentity={updateGuestIdentity}
+            focusedDropdowns={focusedDropdowns}
+            handleDropdownMouseDown={handleDropdownMouseDown}
+            handleDropdownBlur={handleDropdownBlur}
+            handleDropdownChange={handleDropdownChange}
+          />
+        </Suspense>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Survey Questions */}
@@ -129,16 +141,26 @@ export default function SurveyForm() {
                 </h3>
                 <div className="space-y-6">
                   {sectionQuestions.map((question) => (
-                    <QuestionCard 
-                      key={question.id}
-                      question={question}
-                      onRatingChange={handleRatingChange}
-                      onTextChange={handleTextChange}
-                      focusedDropdowns={focusedDropdowns}
-                      handleDropdownMouseDown={handleDropdownMouseDown}
-                      handleDropdownBlur={handleDropdownBlur}
-                      handleDropdownChange={handleDropdownChange}
-                    />
+                    <Suspense key={question.id} fallback={
+                      <div className="animate-pulse p-4 bg-gray-100 rounded-lg">
+                        <div className="h-5 bg-gray-300 rounded w-3/4 mb-3"></div>
+                        <div className="flex space-x-2 justify-center">
+                          {[1,2,3,4,5].map(n => (
+                            <div key={n} className="h-8 w-8 bg-gray-300 rounded-full"></div>
+                          ))}
+                        </div>
+                      </div>
+                    }>
+                      <QuestionCard 
+                        question={question}
+                        onRatingChange={handleRatingChange}
+                        onTextChange={handleTextChange}
+                        focusedDropdowns={focusedDropdowns}
+                        handleDropdownMouseDown={handleDropdownMouseDown}
+                        handleDropdownBlur={handleDropdownBlur}
+                        handleDropdownChange={handleDropdownChange}
+                      />
+                    </Suspense>
                   ))}
                 </div>
               </div>
