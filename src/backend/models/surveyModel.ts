@@ -5,7 +5,6 @@ export interface SurveyQuestion {
   id: number;
   baris: number;
   pertanyaan: string;
-  tipe_jawaban: 'rating' | 'teks';
   is_aktif: boolean;
   created_at: string;
   jenis_rating_id?: number; // This will not be stored directly in pertanyaan_survei but in pertanyaan_s_jenis_rating
@@ -14,7 +13,6 @@ export interface SurveyQuestion {
 
 export interface RatingType {
   id: number;
-  tipe: 'rating' | 'text';
   nama_rating: string;
 }
 
@@ -107,16 +105,15 @@ export const SURVEY_QUERIES = {
   
   // Get all rating types (with optional type filter)
   GET_ALL_RATING_TYPES: `
-    SELECT id, tipe, nama_rating
+    SELECT id, nama_rating
     FROM jenis_rating
     ORDER BY id
   `,
   
-  // Get rating types by type (rating or text)
+  // Get rating types by type (rating or text) - tipe column no longer exists
   GET_RATING_TYPES_BY_TYPE: `
-    SELECT id, tipe, nama_rating
+    SELECT id, nama_rating
     FROM jenis_rating
-    WHERE tipe = ?
     ORDER BY id
   `,
   
@@ -240,8 +237,8 @@ export const SURVEY_QUERIES = {
   
   // Add a new rating type
   ADD_RATING_TYPE: `
-    INSERT INTO jenis_rating (tipe, nama_rating)
-    VALUES (?, ?)
+    INSERT INTO jenis_rating (nama_rating)
+    VALUES (?)
   `,
   
   // Add a new rating option

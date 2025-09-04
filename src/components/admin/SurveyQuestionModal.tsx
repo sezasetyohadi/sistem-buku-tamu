@@ -6,7 +6,6 @@ import Modal from '@/components/ui/Modal';
 
 interface RatingType {
   id: number;
-  tipe: 'rating' | 'text';
   nama_rating: string;
   deskripsi?: string;
 }
@@ -24,7 +23,6 @@ interface SurveyQuestion {
     jenis_rating_id: number; 
     is_required?: boolean; 
     nama_rating?: string;
-    tipe?: string;
     urutan?: number;
   }[];
 }
@@ -58,7 +56,7 @@ export default function SurveyQuestionModal({
     is_required: true
   });
   const [extraAnswers, setExtraAnswers] = useState<
-  { tipe: 'rating' | 'text'; jenis_rating_id?: number }[]>([]);
+  { jenis_rating_id?: number }[]>([]);
   const [pendingExtraAnswerIdx, setPendingExtraAnswerIdx] = useState<number | null>(null);
 
   // Fetch rating types when modal is opened or question type changes
@@ -94,7 +92,6 @@ export default function SurveyQuestionModal({
           // If there are multiple rating types, set the rest as extraAnswers
           if (sortedRatingTypes.length > 1) {
             const extraTypes = sortedRatingTypes.slice(1).map(rt => ({
-              tipe: 'rating' as const,
               jenis_rating_id: rt.jenis_rating_id
             }));
             setExtraAnswers(extraTypes);
@@ -108,14 +105,11 @@ export default function SurveyQuestionModal({
     } else if (isOpen) {
       // Reset form when opened in add mode
       fetchRatingTypes().then(() => {
-        // Get all rating types of type 'rating'
-        const ratingTypesOfTypeRating = ratingTypes.filter(rt => rt.tipe === 'rating');
-        
         setQuestionData({
           pertanyaan: '',
           tipe_pertanyaan: 'rating',
           status: true,
-          jenis_rating_id: ratingTypesOfTypeRating.length > 0 ? ratingTypesOfTypeRating[0].id : undefined,
+          jenis_rating_id: ratingTypes.length > 0 ? ratingTypes[0].id : undefined,
           is_required: true
         });
         setExtraAnswers([]);
@@ -142,10 +136,8 @@ export default function SurveyQuestionModal({
   };
 
   // Get available rating types that aren't already used
-  const getAvailableRatingTypes = (type: 'rating' | 'text' = 'rating') => {
-    return ratingTypes.filter(rt => 
-      rt.tipe === type && !usedRatingIds.includes(rt.id)
-    );
+  const getAvailableRatingTypes = () => {
+    return ratingTypes.filter(rt => !usedRatingIds.includes(rt.id));
   };
 
   const handleSubmit = async () => {
@@ -213,13 +205,13 @@ export default function SurveyQuestionModal({
     ].filter(Boolean) as number[];
 
     const availableRatings = ratingTypes.filter(
-      rt => rt.tipe === 'rating' && !usedIds.includes(rt.id)
+      rt => !usedIds.includes(rt.id)
     );
 
     if (availableRatings.length > 0) {
       setExtraAnswers([
         ...extraAnswers,
-        { tipe: 'rating', jenis_rating_id: availableRatings[0].id }
+        { jenis_rating_id: availableRatings[0].id }
       ]);
     } else {
       toast.error('Semua jenis rating sudah digunakan');
@@ -286,13 +278,11 @@ export default function SurveyQuestionModal({
               ) : ratingTypes.length === 0 ? (
                 <option>Tidak ada jenis rating</option>
               ) : (
-                ratingTypes
-                  .filter(type => type.tipe === 'rating')
-                  .map(type => (
-                    <option key={type.id} value={type.id}>
-                      {type.nama_rating}
-                    </option>
-                  ))
+                ratingTypes.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.nama_rating}
+                  </option>
+                ))
               )}
               <option value="add_new">Tambah Rating</option>
             </select>
@@ -330,7 +320,6 @@ export default function SurveyQuestionModal({
               <option value="">Pilih Rating</option>
               {ratingTypes
                 .filter(type =>
-                  type.tipe === 'rating' &&
                   (!usedRatingIds.includes(type.id) || type.id === ans.jenis_rating_id)
                 )
                 .map(type => (
@@ -555,7 +544,6 @@ export default function SurveyQuestionModal({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       nama_rating: newTypeData.name,
-                      tipe: 'rating',
                       options: newTypeData.options
                     })
                   });
@@ -564,7 +552,6 @@ export default function SurveyQuestionModal({
                     // Tambahkan ke ratingTypes
                     setRatingTypes(prev => [...prev, {
                       id: data.data.id,
-                      tipe: 'rating',
                       nama_rating: newTypeData.name
                     }]);
                     // Set ke dropdown yang sedang aktif

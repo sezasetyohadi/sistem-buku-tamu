@@ -11,7 +11,7 @@ import ExportToExcelButton from "@/components/admin/ExportToExcelButton";
 interface SurveyQuestion {
   id?: number;
   pertanyaan: string;
-  tipe_pertanyaan: 'rating' | 'text';
+  tipe_pertanyaan: 'rating';
   status: boolean;
   jenis_rating_id?: number;
   is_required?: boolean;
@@ -23,8 +23,6 @@ interface SurveyQuestion {
 interface SurveyStatistics {
   totalQuestions: number;
   activeQuestions: number;
-  ratingQuestions: number;
-  textQuestions: number;
   totalResponses: number;
   averageRating: number;
   completionRate: number;
@@ -68,8 +66,6 @@ export default function AdminSurvey() {
   const [statistics, setStatistics] = useState<SurveyStatistics>({
     totalQuestions: 0,
     activeQuestions: 0,
-    ratingQuestions: 0,
-    textQuestions: 0,
     totalResponses: 0,
     averageRating: 0,
     completionRate: 0,
@@ -79,7 +75,8 @@ export default function AdminSurvey() {
     pertanyaan: '',
     tipe_pertanyaan: 'rating',
     status: true,
-    is_required: true
+    is_required: true,
+    jenis_rating_id: 1 // Default rating type
   });
 
   // Real survey responses from database
@@ -330,7 +327,7 @@ export default function AdminSurvey() {
         const mappedQuestions: SurveyQuestion[] = questionsData.data.map((q: any) => ({
           id: q.id,
           pertanyaan: q.pertanyaan,
-          tipe_pertanyaan: q.tipe_jawaban === 'rating' ? 'rating' : 'text',
+          tipe_pertanyaan: 'rating',
           urutan: q.urutan,
           status: q.is_aktif,
           jenis_rating_id: q.jenis_rating_id,
@@ -342,16 +339,12 @@ export default function AdminSurvey() {
         // Calculate statistics from the questions
         const totalQuestions = mappedQuestions.length;
         const activeQuestions = mappedQuestions.filter(q => q.status).length;
-        const ratingQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'rating').length;
-        const textQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'text').length;
         
         // Update statistics with question counts
         setStatistics(prev => ({
           ...prev,
           totalQuestions,
-          activeQuestions,
-          ratingQuestions,
-          textQuestions
+          activeQuestions
         }));
       }
       
@@ -384,9 +377,9 @@ export default function AdminSurvey() {
       const requestBody = {
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan,
-        // Map our tipe_pertanyaan to the API's expected format
-        tipe_jawaban: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
-        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        // Since all questions are rating type
+        tipe_jawaban: 'rating',
+        jenis_rating_id: question.jenis_rating_id,
         is_required: question.is_required,
         multiple_rating_types: question.multiple_rating_types // Add support for multiple rating types
       };
@@ -411,7 +404,8 @@ export default function AdminSurvey() {
         pertanyaan: '',
         tipe_pertanyaan: 'rating',
         status: true,
-        is_required: true
+        is_required: true,
+        jenis_rating_id: 1 // Default rating type
       });
       
       setShowAddQuestion(false);
@@ -437,9 +431,9 @@ export default function AdminSurvey() {
         urutan: originalQuestion?.urutan || question.urutan || 1,
         baris: originalQuestion?.baris || question.baris || 1, // Preserve original baris
         pertanyaan: question.pertanyaan,
-        tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
+        tipe_pertanyaan: 'rating',
         is_aktif: question.status,
-        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        jenis_rating_id: question.jenis_rating_id,
         is_required: question.is_required,
         multiple_rating_types: question.multiple_rating_types // Add support for multiple rating types
       };
@@ -486,7 +480,7 @@ export default function AdminSurvey() {
         const fullQuestion: SurveyQuestion = {
           id: data.data.id,
           pertanyaan: data.data.pertanyaan,
-          tipe_pertanyaan: data.data.tipe_jawaban === 'rating' ? 'rating' : 'text',
+          tipe_pertanyaan: 'rating',
           urutan: data.data.urutan,
           status: data.data.is_aktif,
           jenis_rating_id: data.data.jenis_rating_id,
@@ -579,7 +573,7 @@ export default function AdminSurvey() {
           urutan: question.urutan,
           baris: question.baris || 1,
           pertanyaan: question.pertanyaan,
-          tipe_pertanyaan: (question.tipe_pertanyaan === 'rating' || question.tipe_jawaban === 'rating') ? 'rating' : 'teks',
+          tipe_pertanyaan: 'rating',
           // Preserve the original status from the database - use is_aktif field
           is_aktif: originalQuestion?.status !== undefined ? originalQuestion.status : true,
           jenis_rating_id: question.jenis_rating_id,
@@ -644,7 +638,7 @@ export default function AdminSurvey() {
           </div>
 
           {/* Survey Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -668,20 +662,6 @@ export default function AdminSurvey() {
                 <div className="bg-green-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm">Tingkat Penyelesaian</p>
-                  <p className="text-2xl font-bold">{statistics.completionRate || 0}%</p>
-                </div>
-                <div className="bg-purple-400 rounded-full p-3">
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -785,13 +765,7 @@ export default function AdminSurvey() {
                           <h3 className="text-base font-medium text-gray-900">
                             {question.pertanyaan}
                           </h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            question.tipe_pertanyaan === 'rating' 
-                              ? 'bg-blue-100 text-blue-700' 
-                              : 'bg-purple-100 text-purple-700'
-                          }`}>
-                            {question.tipe_pertanyaan === 'rating' ? 'Rating' : 'Text'}
-                          </span>
+
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`w-2 h-2 rounded-full ${
