@@ -4,13 +4,55 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Light theme variables */
+  --primary: #3D5DC3;
+  --secondary: #F29442;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text-primary: #171717;
+  --text-secondary: #4b5563;
+  --card-bg: #ffffff;
+  --card-hover: #f9fafb;
+
+  /* Transition settings */
+  --transition-duration: 200ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  /* Dark theme variables */
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #3b82f6;
+  --secondary: #f97316;
+  --success: #22c55e;
+  --warning: #eab308;
+  --error: #ef4444;
+  --surface: #1a1a1a;
+  --border: #333333;
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --card-bg: #1f1f1f;
+  --card-hover: #2a2a2a;
+}
+
+/* Apply smooth transitions to specific properties for theme switching */
+body, 
+input, 
+button, 
+select, 
+textarea, 
+a, 
+svg, 
+.transition-theme {
+  transition: 
+    background-color var(--transition-duration) ease-in-out,
+    color var(--transition-duration) ease-in-out,
+    border-color var(--transition-duration) ease-in-out,
+    box-shadow var(--transition-duration) ease-in-out;
 }
 
 body {

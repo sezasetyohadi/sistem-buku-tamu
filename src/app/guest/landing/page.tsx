@@ -139,7 +139,7 @@ export default function LandingPage() {
                 </span>
                 <br />
                 <span className="inline-block bg-gradient-to-r from-orange-300 via-orange-400 to-yellow-300 bg-clip-text text-transparent hover:from-yellow-300 hover:to-orange-400 transition-all duration-700 hover:scale-105 transform">
-                  DISNAKERTRANS
+                  Dinas Ketenagakerjaan dan Transmigrasi
                 </span>
               </h1>
               <div className="relative">

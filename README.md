@@ -46,30 +46,6 @@ Aplikasi ini menggunakan database MySQL dengan tabel-tabel berikut:
    npm install
    ```
 
-3. **Setup database**
-   - Buat database MySQL baru bernama `disnaker`
-   - Import file SQL yang disediakan atau
-   - Akses endpoint `/api/init` untuk membuat tabel otomatis
-
-4. **Konfigurasi .env**
-   - Buat file `.env.local` dengan isi:
-   ```
-   DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=your_password
-   DB_NAME=disnaker
-   DB_PORT=3306
-   ```
-
-5. **Menjalankan aplikasi**
-   ```
-   npm run dev
-   ```
-
-## Menginisialisasi Database
-
-Akses endpoint `/api/init` di browser untuk membuat tabel-tabel dan memasukkan data awal yang diperlukan oleh aplikasi.
-
 ## Teknologi yang Digunakan
 
 - Next.js 14
