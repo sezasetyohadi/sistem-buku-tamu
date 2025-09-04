@@ -47,6 +47,8 @@ interface SurveyResponse {
   jenis_layanan?: string;
   saran?: string;
   responses: { [key: string]: number | string };
+  kinerja_ratings?: { [key: string]: number };
+  kepentingan_ratings?: { [key: string]: number };
 }
 
 export default function AdminSurvey() {
@@ -93,6 +95,8 @@ export default function AdminSurvey() {
   const [educationFilter, setEducationFilter] = useState('');
   const [serviceFilter, setServiceFilter] = useState('');
   const [surveyDateFilter, setSurveyDateFilter] = useState('');
+  const [kinerjaRatingFilter, setKinerjaRatingFilter] = useState('');
+  const [kepentinganRatingFilter, setKepentinganRatingFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -109,7 +113,7 @@ export default function AdminSurvey() {
   // Filter responses whenever search criteria change
   useEffect(() => {
     filterResponses();
-  }, [surveyResponses, searchTerm, emailFilter, genderFilter, educationFilter, serviceFilter, surveyDateFilter]);
+  }, [surveyResponses, searchTerm, emailFilter, genderFilter, educationFilter, serviceFilter, surveyDateFilter, kinerjaRatingFilter, kepentinganRatingFilter]);
 
   // Function to filter responses based on search criteria
   const filterResponses = () => {
@@ -160,6 +164,36 @@ export default function AdminSurvey() {
       });
     }
 
+    // Filter by Kinerja rating
+    if (kinerjaRatingFilter) {
+      console.log('Filtering by Kinerja rating:', kinerjaRatingFilter);
+      filtered = filtered.filter(response => {
+        const kinerjaRatings = response.kinerja_ratings || {};
+        console.log(`Response ${response.id} (${response.nama_lengkap}) - Kinerja ratings:`, JSON.stringify(kinerjaRatings));
+        console.log(`Response ${response.id} - Kinerja rating values:`, Object.values(kinerjaRatings));
+        const hasMatch = Object.values(kinerjaRatings).some(rating => 
+          rating.toString() === kinerjaRatingFilter
+        );
+        console.log(`Response ${response.id} - Kinerja match:`, hasMatch);
+        return hasMatch;
+      });
+    }
+
+    // Filter by Kepentingan rating
+    if (kepentinganRatingFilter) {
+      console.log('Filtering by Kepentingan rating:', kepentinganRatingFilter);
+      filtered = filtered.filter(response => {
+        const kepentinganRatings = response.kepentingan_ratings || {};
+        console.log(`Response ${response.id} (${response.nama_lengkap}) - Kepentingan ratings:`, JSON.stringify(kepentinganRatings));
+        console.log(`Response ${response.id} - Kepentingan rating values:`, Object.values(kepentinganRatings));
+        const hasMatch = Object.values(kepentinganRatings).some(rating => 
+          rating.toString() === kepentinganRatingFilter
+        );
+        console.log(`Response ${response.id} - Kepentingan match:`, hasMatch);
+        return hasMatch;
+      });
+    }
+
     setFilteredResponses(filtered);
   };
 
@@ -171,6 +205,8 @@ export default function AdminSurvey() {
     setEducationFilter('');
     setServiceFilter('');
     setSurveyDateFilter('');
+    setKinerjaRatingFilter('');
+    setKepentinganRatingFilter('');
   };
 
   // Export filtered results to CSV
@@ -254,6 +290,10 @@ export default function AdminSurvey() {
       const data = await response.json();
       
       if (data.success && Array.isArray(data.data)) {
+        console.log('Survey responses received:', data.data.length);
+        if (data.data.length > 0) {
+          console.log('First response structure:', JSON.stringify(data.data[0], null, 2));
+        }
         setSurveyResponses(data.data);
         setFilteredResponses(data.data); // Initialize filtered responses
         setResponseCount(data.data.length); // Update count when full responses are loaded
@@ -924,12 +964,48 @@ export default function AdminSurvey() {
                           </div>
                         </div>
                         
-                        <div className="flex justify-between items-center">
-                          <div></div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Rating Kinerja
+                              <span className="text-xs text-gray-500 block">Filter berdasarkan rating kinerja/pelayanan</span>
+                            </label>
+                            <select
+                              value={kinerjaRatingFilter}
+                              onChange={(e) => setKinerjaRatingFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua Rating</option>
+                              <option value="1">1 - Tidak Sesuai</option>
+                              <option value="2">2 - Kurang Sesuai</option>
+                              <option value="3">3 - Sesuai</option>
+                              <option value="4">4 - Sangat Sesuai</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Rating Kepentingan
+                              <span className="text-xs text-gray-500 block">Filter berdasarkan tingkat kepentingan</span>
+                            </label>
+                            <select
+                              value={kepentinganRatingFilter}
+                              onChange={(e) => setKepentinganRatingFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua Rating</option>
+                              <option value="1">1 - Tidak Penting</option>
+                              <option value="2">2 - Kurang Penting</option>
+                              <option value="3">3 - Penting</option>
+                              <option value="4">4 - Sangat Penting</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Aksi</label>
                             <button
                               onClick={clearAllFilters}
-                              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                              className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
                             >
                               Reset Semua Filter
                             </button>

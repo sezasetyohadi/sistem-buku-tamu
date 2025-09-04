@@ -39,30 +39,70 @@ export async function GET() {
       responses.map(async (response) => {
         try {
           // Get survey answers for this respondent based on responden_id
+          // Need to join with opsi_rating to get the actual scale values instead of option IDs
           const answersQuery = `
             SELECT 
               js.pertanyaan_id,
               js.jawaban,
-              ps.pertanyaan
+              ps.pertanyaan,
+              pjr.jenis_rating_id,
+              pjr.urutan,
+              or_table.urutan_rating as scale_value
             FROM jawaban_survei js
             JOIN pertanyaan_survei ps ON js.pertanyaan_id = ps.id
+            JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
+            LEFT JOIN opsi_rating or_table ON js.jawaban = or_table.id
             WHERE js.responden_id = ?
-            ORDER BY ps.baris, ps.id
+            ORDER BY ps.baris, ps.id, pjr.urutan
           `;
           
           const answers = await executeQuery<any[]>(answersQuery, [
             response.id
           ]);
 
-          // Convert answers to object format for easier display
+          // Convert answers to object format for display (original format)
           const responsesObj: { [key: string]: number | string } = {};
+          // Also collect separated rating data for filtering using scale values
+          const kinerjaRatings: { [key: string]: number } = {};
+          const kepentinganRatings: { [key: string]: number } = {};
+          
+          // Group answers by question
+          const answersByQuestion = new Map();
           answers.forEach(answer => {
-            responsesObj[answer.pertanyaan] = answer.jawaban;
+            if (!answersByQuestion.has(answer.pertanyaan)) {
+              answersByQuestion.set(answer.pertanyaan, []);
+            }
+            answersByQuestion.get(answer.pertanyaan).push(answer);
           });
+
+          // Process each question's answers
+          answersByQuestion.forEach((questionAnswers, pertanyaan) => {
+            // Sort by urutan to ensure correct order
+            questionAnswers.sort((a: any, b: any) => a.urutan - b.urutan);
+            
+            // For display purposes, use the first answer (maintaining existing display)
+            if (questionAnswers.length > 0) {
+              responsesObj[pertanyaan] = questionAnswers[0].jawaban;
+            }
+            
+            // Extract separated ratings for filtering using scale values
+            questionAnswers.forEach((answer: any) => {
+              if (answer.jenis_rating_id === 4) { // Kinerja
+                kinerjaRatings[pertanyaan] = answer.scale_value || answer.jawaban;
+              } else if (answer.jenis_rating_id === 5) { // Kepentingan
+                kepentinganRatings[pertanyaan] = answer.scale_value || answer.jawaban;
+              }
+            });
+          });
+
+          console.log(`Response ${response.id} - Kinerja ratings:`, kinerjaRatings);
+          console.log(`Response ${response.id} - Kepentingan ratings:`, kepentinganRatings);
 
           return {
             ...response,
-            responses: responsesObj
+            responses: responsesObj,
+            kinerja_ratings: kinerjaRatings,
+            kepentingan_ratings: kepentinganRatings
           };
         } catch (answerError) {
           console.error(`Error fetching answers for response ${response.id}:`, answerError);
