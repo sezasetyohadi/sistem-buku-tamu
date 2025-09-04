@@ -6,7 +6,6 @@ export async function up() {
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS jenis_rating (
       id int(11) NOT NULL AUTO_INCREMENT,
-      tipe enum('rating','text') NOT NULL DEFAULT 'rating',
       nama_rating varchar(100) NOT NULL,
       PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -14,12 +13,12 @@ export async function up() {
   
   // Insert default data
   await executeQuery(`
-    INSERT IGNORE INTO jenis_rating (id, tipe, nama_rating) VALUES
-    (1, 'rating', 'Skala 5'),
-    (2, 'rating', 'Skala 3'),
-    (3, 'text', 'Text'),
-    (4, 'rating', 'Kinerja'),
-    (5, 'rating', 'Tingkat Kepentingan');
+    INSERT IGNORE INTO jenis_rating (id, nama_rating) VALUES
+    (1, 'Skala 5'),
+    (2, 'Skala 3'),
+    (3, 'Text'),
+    (4, 'Kinerja'),
+    (5, 'Tingkat Kepentingan');
   `);
   
   console.log('Jenis_rating table created successfully');
