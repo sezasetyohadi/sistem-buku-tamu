@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import { useSurveyData, useDropdownState } from '@/hooks/useSurveyForm';
 import { submitSurvey } from '@/lib/survey-api';
-import GuestIdentityForm from '../guest/GuestIdentityForm';
+import GuestIdentityForm from './GuestIdentityForm';
 import QuestionCard from '../guest/QuestionCard';
 import LoadingState from '../guest/LoadingState';
 import SubmissionSuccess from '../guest/SubmissionSuccess';

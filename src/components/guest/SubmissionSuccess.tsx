@@ -9,9 +9,6 @@ interface SubmissionSuccessProps {
 export default function SubmissionSuccess({ resetForm }: SubmissionSuccessProps) {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <span className="text-3xl">✅</span>
-      </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-4">
         Terima Kasih!
       </h2>
