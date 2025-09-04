@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { findByUsername, validatePassword } from '../../../../backend/services/adminService';
 import { LoginSecurityService } from '../../../../backend/services/loginSecurityService';
 import { getConnection } from '../../../../backend/config/db';
+import { generateAdminTokens } from '../../../../lib/jwt';
 
 export async function POST(request: NextRequest) {
   let connection;
   
   try {
-    const { username, password } = await request.json();
+    const { username, password, rememberMe } = await request.json();
 
     // Get client info for security tracking
     const forwarded = request.headers.get('x-forwarded-for');
@@ -122,14 +123,48 @@ export async function POST(request: NextRequest) {
       success: true
     });
 
-    // Return admin data (without password)
+    // Generate JWT tokens
+    const { accessToken, refreshToken } = generateAdminTokens({
+      userId: admin.id,
+      username: admin.username,
+      email: admin.email,
+      nama_lengkap: admin.nama_lengkap,
+      is_super_admin: admin.is_super_admin
+    });
+
+    // Create response with admin data (without password)
     const { password: _, ...adminData } = admin;
     
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Login berhasil',
       admin: adminData
     });
+
+    // Set secure httpOnly cookies
+    const isProduction = process.env.NODE_ENV === 'production';
+    const accessTokenMaxAge = 24 * 60 * 60; // 24 hours in seconds
+    const refreshTokenMaxAge = rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60; // 7 days or 24 hours
+
+    // Set access token cookie
+    response.cookies.set('admin_access_token', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: accessTokenMaxAge,
+      path: '/'
+    });
+
+    // Set refresh token cookie
+    response.cookies.set('admin_refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: refreshTokenMaxAge,
+      path: '/'
+    });
+
+    return response;
 
   } catch (error) {
     console.error('Login error:', error);

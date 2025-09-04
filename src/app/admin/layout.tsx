@@ -3,7 +3,7 @@ import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthGuard from "../../components/auth/AuthGuard";
-import { getAdminSessionData, clearAdminSessionAndRedirect } from "../../lib/utils";
+import { getAdminData, clearAdminSessionAndRedirect } from "../../lib/utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -19,28 +19,34 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   React.useEffect(() => {
     // Get admin session data when component mounts
-    const getAdminData = () => {
+    const fetchAdminData = async () => {
       try {
-        const adminSession = getAdminSessionData() as any;
-        if (adminSession) {
-          if (adminSession.nama_lengkap) {
+        const adminData = await getAdminData();
+        if (adminData) {
+          if (adminData.nama_lengkap) {
             // Get the first word of the full name
-            const firstName = adminSession.nama_lengkap.split(' ')[0];
+            const firstName = adminData.nama_lengkap.split(' ')[0];
             setAdminName(firstName);
             // Get the first letter for the initial
             setAdminInitial(firstName.charAt(0).toUpperCase());
           }
-          if (adminSession.profile_picture) {
-            setAdminProfilePicture(adminSession.profile_picture);
+          if (adminData.profile_picture) {
+            setAdminProfilePicture(adminData.profile_picture);
           }
+        } else {
+          // If no admin data, redirect to login
+          router.push('/admin/login');
         }
       } catch (error) {
         console.error('Error getting admin data:', error);
         clearAdminSessionAndRedirect(router);
       }
     };
-    
-    getAdminData();
+
+    // Only fetch admin data if not on login page
+    if (pathname !== '/admin/login') {
+      fetchAdminData();
+    }
 
     // Listen for profile updates (both name and picture)
     const handleProfileUpdate = (event: CustomEvent) => {
@@ -64,7 +70,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return () => {
       window.removeEventListener('adminProfileUpdated', handleProfileUpdate as EventListener);
     };
-  }, [router]);
+  }, [router, pathname]);
 
   // Don't apply layout to login page
   if (pathname === '/admin/login') {
@@ -72,12 +78,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   // Function to handle logout
-  const handleLogout = () => {
-    // Clear localStorage and cookies
-    localStorage.removeItem('admin_session');
-    document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+  const handleLogout = async () => {
+    try {
+      // Call logout API to clear JWT cookies
+      const response = await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        console.log('Logout successful');
+      } else {
+        console.error('Logout API failed, but proceeding with redirect');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
     
-    // Redirect to login page
+    // Redirect to login page regardless of API response
     router.push('/admin/login');
   };
 
