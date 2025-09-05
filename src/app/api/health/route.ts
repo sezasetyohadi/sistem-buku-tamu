@@ -1,37 +1,133 @@
 /**
- * Database Health Check API Endpoint
+ * API Health Check Endpoint
+ * Provides system health information using standardized response format
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { HealthCheckService } from '../../../lib/database-service';
 import { dbLogger } from '../../../lib/logger';
+import { withApiMiddleware } from '@/lib/api-middleware';
+import { HttpStatus } from '@/lib/api-response';
 
-export async function GET(request: NextRequest) {
+interface HealthCheckData {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: string;
+  uptime: number;
+  version: string;
+  environment: string;
+  services: {
+    database: {
+      status: 'connected' | 'disconnected' | 'error';
+      responseTime?: number;
+      activeConnections?: number;
+      error?: string;
+    };
+    api: {
+      status: 'operational' | 'degraded' | 'down';
+      responseTime: number;
+    };
+  };
+  system: {
+    nodeVersion: string;
+    platform: string;
+    memory: {
+      used: number;
+      total: number;
+      usage: string;
+    };
+  };
+}
+
+export const GET = withApiMiddleware(async (request, response, context) => {
+  const startTime = Date.now();
+  let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+  
+  // Test database connection using existing health check service
+  let dbStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
+  let dbResponseTime: number | undefined;
+  let dbError: string | undefined;
+  
   try {
     const healthCheck = await HealthCheckService.checkHealth();
+    
+    dbResponseTime = healthCheck.details.responseTime;
+    dbStatus = healthCheck.healthy ? 'connected' : 'error';
+    
+    if (!healthCheck.healthy) {
+      overallStatus = 'unhealthy';
+      dbError = 'Database connection failed';
+    } else if (dbResponseTime > 1000) {
+      overallStatus = 'degraded';
+    }
     
     dbLogger.info('Database health check performed', {
       healthy: healthCheck.healthy,
       responseTime: healthCheck.details.responseTime
     });
-
-    return NextResponse.json({
-      status: healthCheck.healthy ? 'healthy' : 'unhealthy',
-      timestamp: new Date().toISOString(),
-      ...healthCheck.details
-    }, {
-      status: healthCheck.healthy ? 200 : 503
-    });
-
-  } catch (error) {
-    dbLogger.error('Health check endpoint error:', error);
     
-    return NextResponse.json({
-      status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, {
-      status: 500
-    });
+  } catch (error: any) {
+    dbStatus = 'error';
+    dbError = error.message;
+    overallStatus = 'unhealthy';
+    
+    dbLogger.error('Health check error:', error);
   }
-}
+  
+  // Calculate API response time
+  const apiResponseTime = Date.now() - startTime;
+  
+  // Get system information
+  const memoryUsage = process.memoryUsage();
+  const uptime = process.uptime();
+  
+  const healthData: HealthCheckData = {
+    status: overallStatus,
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(uptime),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    services: {
+      database: {
+        status: dbStatus,
+        responseTime: dbResponseTime,
+        error: dbError,
+      },
+      api: {
+        status: apiResponseTime < 500 ? 'operational' : 'degraded',
+        responseTime: apiResponseTime,
+      },
+    },
+    system: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      memory: {
+        used: Math.round(memoryUsage.heapUsed / 1024 / 1024), // MB
+        total: Math.round(memoryUsage.heapTotal / 1024 / 1024), // MB
+        usage: `${Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100)}%`,
+      },
+    },
+  };
+  
+  // Determine HTTP status based on health
+  let httpStatus: number = HttpStatus.OK;
+  if (overallStatus === 'unhealthy') {
+    httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
+  }
+  
+  const message = {
+    healthy: 'All systems operational',
+    degraded: 'Some services experiencing issues',
+    unhealthy: 'Critical services unavailable',
+  }[overallStatus];
+  
+  return response.success(
+    healthData,
+    message,
+    httpStatus,
+    {
+      performance: {
+        executionTime: Date.now() - startTime,
+      },
+    }
+  );
+});

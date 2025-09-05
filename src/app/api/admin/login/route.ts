@@ -1,28 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { findByUsername, validatePassword } from '../../../../backend/services/adminService';
 import { LoginSecurityService } from '../../../../backend/services/loginSecurityService';
 import { getConnection } from '../../../../backend/config/db';
 import { generateAdminTokens } from '../../../../lib/jwt';
+import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
+import { ErrorCodes, HttpStatus } from '@/lib/api-response';
 
-export async function POST(request: NextRequest) {
+export const POST = withApiMiddleware(async (request, apiResponse, context) => {
   let connection;
   
   try {
-    const { username, password, rememberMe } = await request.json();
+    const { username, password, rememberMe } = await validateJsonBody(request);
 
     // Get client info for security tracking
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ipAddress = forwarded?.split(',')[0] || 
-                     request.headers.get('x-real-ip') || 
-                     '127.0.0.1';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const ipAddress = context.ipAddress;
+    const userAgent = context.userAgent;
 
     // Validate input
     if (!username || !password) {
-      return NextResponse.json({
-        success: false,
-        message: 'Username dan password harus diisi'
-      }, { status: 400 });
+      return apiResponse.error(
+        'Username dan password harus diisi',
+        HttpStatus.BAD_REQUEST,
+        ErrorCodes.MISSING_REQUIRED_FIELD
+      );
     }
 
     // Connect to database
@@ -32,30 +32,31 @@ export async function POST(request: NextRequest) {
     // Check if login is allowed (rate limiting/account locks)
     let securityStatus;
     try {
-      securityStatus = await securityService.checkLoginPermission(username, ipAddress);
+      securityStatus = await securityService.checkLoginPermission(username, ipAddress!);
     } catch (error: any) {
       // Log the blocked attempt
       await securityService.recordLoginAttempt({
         username,
-        ipAddress,
-        userAgent,
+        ipAddress: ipAddress!,
+        userAgent: userAgent!,
         success: false,
         failureReason: error.message
       });
       
-      return NextResponse.json({
-        success: false,
-        message: error.message,
-        blocked: true
-      }, { status: 429 });
+      return apiResponse.error(
+        error.message,
+        HttpStatus.TOO_MANY_REQUESTS,
+        ErrorCodes.RATE_LIMIT_EXCEEDED,
+        { blocked: true }
+      );
     }
 
     // Check if account is locked
     if (securityStatus.isLocked) {
       await securityService.recordLoginAttempt({
         username,
-        ipAddress,
-        userAgent,
+        ipAddress: ipAddress!,
+        userAgent: userAgent!,
         success: false,
         failureReason: 'Account locked'
       });
@@ -64,12 +65,12 @@ export async function POST(request: NextRequest) {
         ? Math.ceil((securityStatus.lockoutExpiresAt.getTime() - Date.now()) / 60000)
         : 0;
 
-      return NextResponse.json({
-        success: false,
-        message: `Account temporarily locked. Try again in ${lockExpiresIn} minutes.`,
-        locked: true,
-        lockExpiresIn
-      }, { status: 423 });
+      return apiResponse.error(
+        `Account temporarily locked. Try again in ${lockExpiresIn} minutes.`,
+        HttpStatus.FORBIDDEN,
+        ErrorCodes.FORBIDDEN,
+        { locked: true, lockExpiresIn }
+      );
     }
 
     // Apply progressive delay if needed
@@ -84,42 +85,44 @@ export async function POST(request: NextRequest) {
       // Record failed attempt
       await securityService.recordLoginAttempt({
         username,
-        ipAddress,
-        userAgent,
+        ipAddress: ipAddress!,
+        userAgent: userAgent!,
         success: false,
         failureReason: 'Invalid username'
       });
 
-      return NextResponse.json({
-        success: false,
-        message: 'Username atau password tidak valid'
-      }, { status: 401 });
+      return apiResponse.error(
+        'Username atau password tidak valid',
+        HttpStatus.UNAUTHORIZED,
+        ErrorCodes.INVALID_CREDENTIALS
+      );
     }
 
     // Validate password
     const isValidPassword = await validatePassword(password, admin.password);
-    
+        
     if (!isValidPassword) {
       // Record failed attempt
       await securityService.recordLoginAttempt({
         username,
-        ipAddress,
-        userAgent,
+        ipAddress: ipAddress!,
+        userAgent: userAgent!,
         success: false,
         failureReason: 'Invalid password'
       });
 
-      return NextResponse.json({
-        success: false,
-        message: 'Username atau password tidak valid'
-      }, { status: 401 });
+      return apiResponse.error(
+        'Username atau password tidak valid',
+        HttpStatus.UNAUTHORIZED,
+        ErrorCodes.INVALID_CREDENTIALS
+      );
     }
 
     // Login successful - record successful attempt
     await securityService.recordLoginAttempt({
       username,
-      ipAddress,
-      userAgent,
+      ipAddress: ipAddress!,
+      userAgent: userAgent!,
       success: true
     });
 
@@ -135,11 +138,10 @@ export async function POST(request: NextRequest) {
     // Create response with admin data (without password)
     const { password: _, ...adminData } = admin;
     
-    const response = NextResponse.json({
-      success: true,
-      message: 'Login berhasil',
-      admin: adminData
-    });
+    const response = apiResponse.success(
+      adminData,
+      'Login berhasil'
+    );
 
     // Set secure httpOnly cookies
     const isProduction = process.env.NODE_ENV === 'production';
@@ -166,16 +168,10 @@ export async function POST(request: NextRequest) {
 
     return response;
 
-  } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Terjadi kesalahan saat login'
-    }, { status: 500 });
   } finally {
     // Release database connection
     if (connection) {
       connection.release();
     }
   }
-}
+});
