@@ -11,6 +11,7 @@ import SurveyQuestionsList from "@/components/admin/SurveyQuestionsList";
 import SurveyResponsesList from "@/components/admin/SurveyResponsesList";
 import SurveyFilters from "@/components/admin/SurveyFilters";
 import { showToast } from "@/lib/toast";
+import { surveyLogger } from "@/lib/logger";
 
 interface SurveyQuestion {
   id?: number;
@@ -192,7 +193,7 @@ export default function AdminSurvey() {
         }
       }
     } catch (error) {
-      console.error('Error fetching response count:', error);
+      surveyLogger.error('Error fetching response count:', error);
     }
   };
 
@@ -210,7 +211,7 @@ export default function AdminSurvey() {
         }
       }
     } catch (error) {
-      console.error('Error fetching survey responses:', error);
+      surveyLogger.error('Error fetching survey responses:', error);
     } finally {
       setResponsesLoading(false);
     }
@@ -251,7 +252,7 @@ export default function AdminSurvey() {
         }
       }
     } catch (error) {
-      console.error('Error fetching survey data:', error);
+      surveyLogger.error('Error fetching survey data:', error);
     } finally {
       setLoading(false);
     }
@@ -282,7 +283,7 @@ export default function AdminSurvey() {
       await fetchSurveyData();
       setShowAddQuestion(false);
     } catch (error) {
-      console.error('Error adding question:', error);
+      surveyLogger.error('Error adding question:', error);
       showToast.error('Gagal menambahkan pertanyaan. Silakan coba lagi.');
     }
   };
@@ -318,7 +319,7 @@ export default function AdminSurvey() {
       await fetchSurveyData();
       setEditingQuestion(null);
     } catch (error) {
-      console.error('Error updating question:', error);
+      surveyLogger.error('Error updating question:', error);
       showToast.error('Gagal memperbarui pertanyaan. Silakan coba lagi.');
     }
   };
@@ -350,7 +351,7 @@ export default function AdminSurvey() {
         }
       }
     } catch (error) {
-      console.error("Error fetching question details:", error);
+      surveyLogger.error("Error fetching question details:", error);
       setQuestionToDelete(question);
     } finally {
       setDeleteConfirmationOpen(true);
@@ -375,7 +376,7 @@ export default function AdminSurvey() {
       setQuestionToDelete(null);
       await fetchSurveyData();
     } catch (error) {
-      console.error('Error deleting question:', error);
+      surveyLogger.error('Error deleting question:', error);
       showToast.error('Gagal menghapus pertanyaan. Silakan coba lagi.');
     } finally {
       setIsDeleting(false);
@@ -433,7 +434,7 @@ export default function AdminSurvey() {
       await Promise.all(updatePromises);
       await fetchSurveyData();
     } catch (error) {
-      console.error('Error saving question order:', error);
+      surveyLogger.error('Error saving question order:', error);
       showToast.error('Gagal menyimpan urutan pertanyaan. Silakan coba lagi.');
     } finally {
       setIsReordering(false);

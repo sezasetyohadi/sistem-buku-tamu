@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import SurveyQuestionModal from "@/components/admin/SurveyQuestionModal";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import { showToast } from "@/lib/toast";
+import { surveyLogger, safeLog } from "@/lib/logger";
 import QuestionOrderModal from "@/components/admin/QuestionOrderModal";
 import SurveyResponseCard from "@/components/admin/SurveyResponseCard";
 import SurveyResponseDetailModal from "@/components/admin/SurveyResponseDetailModal";
@@ -164,30 +165,30 @@ export default function AdminSurvey() {
 
     // Filter by Kinerja rating
     if (kinerjaRatingFilter) {
-      console.log('Filtering by Kinerja rating:', kinerjaRatingFilter);
+      surveyLogger.debug('Filtering by Kinerja rating:', kinerjaRatingFilter);
       filtered = filtered.filter(response => {
         const kinerjaRatings = response.kinerja_ratings || {};
-        console.log(`Response ${response.id} (${response.nama_lengkap}) - Kinerja ratings:`, JSON.stringify(kinerjaRatings));
-        console.log(`Response ${response.id} - Kinerja rating values:`, Object.values(kinerjaRatings));
+        safeLog.sensitive(`Response ${response.id} (${response.nama_lengkap}) - Kinerja ratings`, kinerjaRatings);
+        surveyLogger.debug(`Response ${response.id} - Kinerja rating values:`, Object.values(kinerjaRatings));
         const hasMatch = Object.values(kinerjaRatings).some(rating => 
           rating.toString() === kinerjaRatingFilter
         );
-        console.log(`Response ${response.id} - Kinerja match:`, hasMatch);
+        surveyLogger.debug(`Response ${response.id} - Kinerja match:`, hasMatch);
         return hasMatch;
       });
     }
 
     // Filter by Kepentingan rating
     if (kepentinganRatingFilter) {
-      console.log('Filtering by Kepentingan rating:', kepentinganRatingFilter);
+      surveyLogger.debug('Filtering by Kepentingan rating:', kepentinganRatingFilter);
       filtered = filtered.filter(response => {
         const kepentinganRatings = response.kepentingan_ratings || {};
-        console.log(`Response ${response.id} (${response.nama_lengkap}) - Kepentingan ratings:`, JSON.stringify(kepentinganRatings));
-        console.log(`Response ${response.id} - Kepentingan rating values:`, Object.values(kepentinganRatings));
+        safeLog.sensitive(`Response ${response.id} (${response.nama_lengkap}) - Kepentingan ratings`, kepentinganRatings);
+        surveyLogger.debug(`Response ${response.id} - Kepentingan rating values:`, Object.values(kepentinganRatings));
         const hasMatch = Object.values(kepentinganRatings).some(rating => 
           rating.toString() === kepentinganRatingFilter
         );
-        console.log(`Response ${response.id} - Kepentingan match:`, hasMatch);
+        surveyLogger.debug(`Response ${response.id} - Kepentingan match:`, hasMatch);
         return hasMatch;
       });
     }
@@ -288,9 +289,9 @@ export default function AdminSurvey() {
       const data = await response.json();
       
       if (data.success && Array.isArray(data.data)) {
-        console.log('Survey responses received:', data.data.length);
+        surveyLogger.info('Survey responses received:', data.data.length);
         if (data.data.length > 0) {
-          console.log('First response structure:', JSON.stringify(data.data[0], null, 2));
+          safeLog.sensitive('First response structure', data.data[0]);
         }
         setSurveyResponses(data.data);
         setFilteredResponses(data.data); // Initialize filtered responses

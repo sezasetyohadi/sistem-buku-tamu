@@ -8,6 +8,7 @@ import Card from '../ui/Card';
 import FormInput from '../ui/FormInput';
 import FormSelect from '../ui/FormSelect';
 import PrimaryButton from '../ui/PrimaryButton';
+import { guestLogger, safeLog } from '@/lib/logger';
 import TokenModal from '../ui/TokenModal';
 
 interface GuestRegistrationFormProps {
@@ -65,7 +66,7 @@ export default function GuestRegistrationForm({
         const response = await fetch('/api/lookup');
         const result = await response.json();
         
-        console.log('API lookup response:', result);
+        safeLog.api('GET', '/api/lookup');
         
         // Process profession options
         if (result.success && result.data?.professions) {
@@ -125,7 +126,7 @@ export default function GuestRegistrationForm({
           setSalinanOptions(result.data.mendapatkanSalinan);
         }
       } catch (error) {
-        console.error('Error fetching form options:', error);
+        guestLogger.error('Error fetching form options:', error);
       }
     };
 
@@ -272,7 +273,7 @@ export default function GuestRegistrationForm({
         cara_salinan: formData.cara_salinan // Send as array of numbers
       };
       
-      console.log('Sending data to API:', apiFormData);
+      safeLog.sensitive('Sending data to API', apiFormData);
       
       if (onSubmit) {
         const result = await onSubmit(apiFormData);

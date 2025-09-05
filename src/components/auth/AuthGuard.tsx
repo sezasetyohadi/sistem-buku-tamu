@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAdminIdleLogout } from '@/hooks/useIdleDetection';
+import { authLogger, safeLog } from '@/lib/logger';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         }
 
         // For all other admin pages, check authentication via API
-        console.log('Checking JWT authentication for:', pathname);
+        authLogger.debug('Checking JWT authentication for:', pathname);
         
         try {
           const response = await fetch('/api/admin/me', {
@@ -40,25 +41,25 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           if (response.ok) {
             const result = await response.json();
             if (result.success) {
-              console.log('JWT authentication successful for user:', result.admin.username);
+              safeLog.audit('JWT authentication successful', result.admin.username);
               setIsAuthenticated(true);
             } else {
-              console.log('JWT authentication failed:', result.message);
+              authLogger.debug('JWT authentication failed:', result.message);
               setIsAuthenticated(false);
               router.replace('/admin/login');
             }
           } else {
-            console.log('JWT authentication request failed with status:', response.status);
+            authLogger.debug('JWT authentication request failed with status:', response.status);
             setIsAuthenticated(false);
             router.replace('/admin/login');
           }
         } catch (fetchError) {
-          console.error('Error checking JWT authentication:', fetchError);
+          authLogger.error('Error checking JWT authentication:', fetchError);
           setIsAuthenticated(false);
           router.replace('/admin/login');
         }
       } catch (error) {
-        console.error('Auth check error:', error);
+        authLogger.error('Auth check error:', error);
         setIsAuthenticated(false);
         if (pathname !== '/admin/login') {
           router.replace('/admin/login');

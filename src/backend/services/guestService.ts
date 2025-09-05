@@ -1,6 +1,7 @@
 import { executeQuery } from '../config/db';
 import { DaftarTamu, JawabanSurvei, GuestFormData, SurveyFormData, DatabaseResult, 
          PertanyaanSurvei, OpsiJawaban, PendidikanTerakhir, Profesi, Admin } from '../../types/database-types';
+import { guestLogger, dbLogger, safeLog } from '../../lib/logger';
 
 // Guest Service untuk tabel daftar_tamu
 export async function getAllGuests(): Promise<DaftarTamu[]> {
@@ -37,7 +38,7 @@ export async function getGuestById(id: number): Promise<DaftarTamu | null> {
 }
 
 export async function createGuest(formData: GuestFormData): Promise<number> {
-  console.log('Received form data:', formData);
+  safeLog.sensitive('Received form data', formData);
 
   // Retrieve education and profession labels if IDs are provided
   let pendidikanTerakhir = null;
@@ -90,10 +91,10 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       }
     }
     
-    console.log('Resolved education:', pendidikanTerakhir);
-    console.log('Resolved profession:', profesi);
-    console.log('Resolved bidang tujuan:', bidangTujuan);
-    console.log('Resolved tujuan kunjungan:', tujuanKunjungan);
+    guestLogger.debug('Resolved education:', pendidikanTerakhir);
+    guestLogger.debug('Resolved profession:', profesi);
+    guestLogger.debug('Resolved bidang tujuan:', bidangTujuan);
+    guestLogger.debug('Resolved tujuan kunjungan:', tujuanKunjungan);
     
     // Set keperluan to tujuan_kunjungan if available, don't include catatan
     const keperluan = tujuanKunjungan 
@@ -126,22 +127,22 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
 
     const result = await executeQuery<any>(query, params);
     const tamuId = result.insertId;
-    console.log('Guest inserted with ID:', tamuId);
+    guestLogger.info('Guest inserted with ID:', tamuId);
     
     // Save checkbox answers if provided
     if (formData.cara_memperoleh && Array.isArray(formData.cara_memperoleh) && formData.cara_memperoleh.length > 0) {
-      console.log('Saving cara_memperoleh answers:', formData.cara_memperoleh);
+      guestLogger.debug('Saving cara_memperoleh answers:', formData.cara_memperoleh);
       await saveMemperolehInformasiAnswers(tamuId, formData.cara_memperoleh);
     }
     
     if (formData.cara_salinan && Array.isArray(formData.cara_salinan) && formData.cara_salinan.length > 0) {
-      console.log('Saving cara_salinan answers:', formData.cara_salinan);
+      guestLogger.debug('Saving cara_salinan answers:', formData.cara_salinan);
       await saveMendapatkanSalinanAnswers(tamuId, formData.cara_salinan);
     }
     
     return tamuId;
   } catch (error) {
-    console.error('Database error:', error);
+    dbLogger.error('Database error:', error);
     throw error;
   }
 }
@@ -159,7 +160,7 @@ export async function saveMemperolehInformasiAnswers(tamuId: number, answers: nu
     
     const tableCheck = await executeQuery<Array<{count: number}>>(checkTableQuery);
     if (tableCheck[0].count === 0) {
-      console.log('Table jawaban_memperoleh_informasi does not exist, skipping save');
+      guestLogger.debug('Table jawaban_memperoleh_informasi does not exist, skipping save');
       return;
     }
     
@@ -170,9 +171,9 @@ export async function saveMemperolehInformasiAnswers(tamuId: number, answers: nu
       `;
       await executeQuery(query, [tamuId, caraMemperolehId]);
     }
-    console.log('Memperoleh informasi answers saved:', answers);
+    guestLogger.debug('Memperoleh informasi answers saved:', answers);
   } catch (error) {
-    console.error('Error saving memperoleh informasi answers:', error);
+    guestLogger.error('Error saving memperoleh informasi answers:', error);
     throw error;
   }
 }
@@ -190,7 +191,7 @@ export async function saveMendapatkanSalinanAnswers(tamuId: number, answers: num
     
     const tableCheck = await executeQuery<Array<{count: number}>>(checkTableQuery);
     if (tableCheck[0].count === 0) {
-      console.log('Table jawaban_mendapatkan_salinan does not exist, skipping save');
+      guestLogger.debug('Table jawaban_mendapatkan_salinan does not exist, skipping save');
       return;
     }
     
@@ -201,9 +202,9 @@ export async function saveMendapatkanSalinanAnswers(tamuId: number, answers: num
       `;
       await executeQuery(query, [tamuId, caraSalinanId]);
     }
-    console.log('Mendapatkan salinan answers saved:', answers);
+    guestLogger.debug('Mendapatkan salinan answers saved:', answers);
   } catch (error) {
-    console.error('Error saving mendapatkan salinan answers:', error);
+    guestLogger.error('Error saving mendapatkan salinan answers:', error);
     throw error;
   }
 }
