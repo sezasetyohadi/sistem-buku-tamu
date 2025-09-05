@@ -16,7 +16,6 @@ export default function AdminGuestsManagement() {
   const [dateFilter, setDateFilter] = useState("Semua Waktu");
   const [stats, setStats] = useState({
     totalGuests: 0,
-    todayGuests: 0,
     todayCheckIn: 0,
     todayCheckOut: 0,
     currentlyVisiting: 0
@@ -231,6 +230,7 @@ export default function AdminGuestsManagement() {
         { header: 'No. Telepon', key: 'nomor_telp', width: 20 },
         { header: 'Pendidikan Terakhir', key: 'pendidikan_terakhir', width: 20 },
         { header: 'Profesi', key: 'profesi', width: 20 },
+        { header: 'Bidang Tujuan', key: 'bidang_tujuan', width: 25 },
         { header: 'Keperluan', key: 'keperluan', width: 40 },
         { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
         { header: 'Waktu Daftar', key: 'waktu_dibuat', width: 20 },
@@ -250,6 +250,7 @@ export default function AdminGuestsManagement() {
           nomor_telp: guest.nomor_telp || '-',
           pendidikan_terakhir: guest.pendidikan_terakhir || '-',
           profesi: guest.profesi || '-',
+          bidang_tujuan: guest.bidang_tujuan || '-',
           keperluan: guest.keperluan || '-',
           // Use empty string for dates initially
           waktu_checkin: '',
@@ -386,7 +387,6 @@ export default function AdminGuestsManagement() {
       if (statsData && statsData.success && statsData.data) {
         setStats({
           totalGuests: statsData.data.totalGuests || 0,
-          todayGuests: statsData.data.todayGuests || 0,
           todayCheckIn: statsData.data.todayCheckIn || 0,
           todayCheckOut: statsData.data.todayCheckOut || 0,
           currentlyVisiting: statsData.data.currentlyVisiting || 0
@@ -451,21 +451,21 @@ export default function AdminGuestsManagement() {
           <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2 leading-relaxed">Kelola semua data tamu yang telah mendaftar dalam sistem</p>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
-          <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200 min-w-0">
-            <div className="flex items-center">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
-                </svg>
-              </div>
-              <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Tamu Hari Ini</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? "..." : stats.todayGuests}</p>
-              </div>
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+              </svg>
+            </div>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Tamu</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
             </div>
           </div>
+        </div>
 
           <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200 min-w-0">
             <div className="flex items-center">
