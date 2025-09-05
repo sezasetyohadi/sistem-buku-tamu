@@ -2,6 +2,7 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { SectionErrorBoundary } from "../../components/error/ErrorBoundary";
 
 interface GuestLayoutProps {
   children: React.ReactNode;
@@ -148,7 +149,9 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">
-          {children}
+          <SectionErrorBoundary>
+            {children}
+          </SectionErrorBoundary>
         </main>
       </div>
     </div>

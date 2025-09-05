@@ -3,6 +3,7 @@ import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthGuard from "../../components/auth/AuthGuard";
+import { SectionErrorBoundary } from "../../components/error/ErrorBoundary";
 import { getAdminData, clearAdminSessionAndRedirect } from "../../lib/utils";
 
 interface AdminLayoutProps {
@@ -346,9 +347,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="min-h-full">
-            {children}
-          </div>
+          <SectionErrorBoundary>
+            <div className="min-h-full">
+              {children}
+            </div>
+          </SectionErrorBoundary>
         </main>
       </div>
     </div>
