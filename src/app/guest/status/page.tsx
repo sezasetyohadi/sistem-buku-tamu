@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { format, parseISO } from 'date-fns';
+import { showToast } from '@/lib/toast';
 
 // Tipe data untuk status kunjungan sesuai dengan database
 type GuestStatusType = "Menunggu" | "Terjadwal" | "Datang" | "Selesai";
@@ -178,8 +179,8 @@ export default function StatusPengajuanPage() {
 			const data = await response.json();
 
 			if (response.ok) {
-				// Tampilkan alert bahwa token berhasil dikirim
-				alert("Token berhasil dikirimkan");
+				// Tampilkan notifikasi bahwa token berhasil dikirim
+				showToast.success("Token berhasil dikirimkan");
 				// Reset form dan kembali ke halaman input token
 				handleReset();
 			} else {

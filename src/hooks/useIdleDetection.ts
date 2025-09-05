@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { showToast } from '@/lib/toast';
 
 interface UseIdleDetectionProps {
   timeout: number; // timeout in milliseconds
@@ -102,8 +103,8 @@ export function useAdminIdleLogout(enabled: boolean = true) {
       console.error('Error during idle logout API call:', error);
     }
     
-    // Show simple alert to user
-    alert('Sesi Anda telah berakhir karena tidak ada aktivitas selama 20 menit. Silakan login kembali.');
+    // Show session timeout notification to user
+    showToast.sessionTimeout('Sesi Anda telah berakhir karena tidak ada aktivitas selama 20 menit. Silakan login kembali.');
     
     // Redirect to login
     router.push('/admin/login');

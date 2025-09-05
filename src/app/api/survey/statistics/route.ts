@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
     const completionRate = await getCompletionRate();
     
     // Count the number of rating and text questions
-    const ratingQuestions = questions.filter(q => q.tipe_jawaban === 'rating');
-    const textQuestions = questions.filter(q => q.tipe_jawaban === 'teks');
+    const ratingQuestions = questions.filter(q => q.jenis_rating_id);
+    const textQuestions = questions.filter(q => !q.jenis_rating_id);
     
     // Count active questions
     const activeQuestions = questions.filter(q => q.is_aktif);

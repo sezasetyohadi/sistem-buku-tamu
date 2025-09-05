@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import PdfReport from './PdfReport';
+import { showToast } from '@/lib/toast';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -107,7 +108,7 @@ export default function AdminReportsAnalytics() {
 
   const handleExportPDF = async () => {
     if (!pdfRef.current) {
-      alert('PDF content not ready. Please try again.');
+      showToast.warning('PDF content not ready. Please try again.');
       return;
     }
     
@@ -193,12 +194,12 @@ export default function AdminReportsAnalytics() {
       pdf.addImage(imgData, "JPEG", 20, 20, finalWidth, finalHeight);
       pdf.save("laporan-buku-tamu.pdf");
       
-      alert('PDF berhasil diekspor!');
+      showToast.success('PDF berhasil diekspor!');
       
     } catch (error) {
       console.error('Error exporting PDF:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Gagal mengekspor PDF: ${errorMessage}`);
+      showToast.error(`Gagal mengekspor PDF: ${errorMessage}`);
     }
   };
 

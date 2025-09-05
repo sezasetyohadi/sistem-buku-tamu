@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { showToast } from '@/lib/toast';
 
 interface ExportButtonProps {
   url: string;
@@ -52,7 +53,7 @@ const ExportToExcelButton: React.FC<ExportButtonProps> = ({
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert('Failed to export data. Please try again.');
+      showToast.error('Failed to export data. Please try again.');
     } finally {
       setIsExporting(false);
     }

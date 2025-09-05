@@ -124,8 +124,16 @@ export default function LoginPage() {
         }
         
         console.log(`Login successful${formData.rememberMe ? ' (Remember Me enabled for 7 days)' : ' (24 hour session)'}, redirecting to admin dashboard`);
-        // Redirect to admin dashboard
-        router.replace('/admin');
+        
+        // Trigger a profile refresh in the layout after login
+        window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
+          detail: { forceRefresh: true } 
+        }));
+        
+        // Increased delay to ensure JWT cookies are properly set before redirect
+        setTimeout(() => {
+          router.replace('/admin');
+        }, 300);
       } else {
         setError(result.message || 'Login gagal');
       }

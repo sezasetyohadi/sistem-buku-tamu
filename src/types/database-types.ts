@@ -3,7 +3,7 @@
 
 // Global type declarations for missing modules
 declare module 'estree' {
-  export interface Node {
+  export interface EstreeNode {
     type: string;
     [key: string]: any;
   }

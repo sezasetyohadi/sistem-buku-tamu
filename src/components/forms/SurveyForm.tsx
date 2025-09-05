@@ -6,6 +6,7 @@ import { useSurveyData, useDropdownState } from '@/hooks/useSurveyForm';
 import { submitSurvey } from '@/lib/survey-api';
 import LoadingState from '../guest/LoadingState';
 import { SurveySubmission } from '@/types/survey-types';
+import { showToast } from '@/lib/toast';
 
 // Lazy loaded components
 const GuestIdentityForm = lazy(() => import('./GuestIdentityForm'));
@@ -48,7 +49,7 @@ export default function SurveyForm() {
     try {
       // Validate identity data
       if (!isFormValid()) {
-        alert('Mohon lengkapi semua data identitas responden');
+        showToast.validation('Mohon lengkapi semua data identitas responden');
         setSubmitting(false);
         return;
       }
@@ -80,11 +81,11 @@ export default function SurveyForm() {
       if (result.success) {
         setSubmitted(true);
       } else {
-        alert('Gagal mengirim survey: ' + (result.message || 'Unknown error'));
+        showToast.error('Gagal mengirim survey: ' + (result.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error submitting survey:', error);
-      alert('Terjadi kesalahan saat mengirim survey');
+      showToast.error('Terjadi kesalahan saat mengirim survey');
     } finally {
       setSubmitting(false);
     }

@@ -13,44 +13,113 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const pathname = usePathname();
   const router = useRouter();
-  const [adminName, setAdminName] = React.useState<string>('Admin');
-  const [adminInitial, setAdminInitial] = React.useState<string>('A');
+  const [adminName, setAdminName] = React.useState<string>('');
+  const [adminInitial, setAdminInitial] = React.useState<string>('');
   const [adminProfilePicture, setAdminProfilePicture] = React.useState<string | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
+  const [isProfileLoaded, setIsProfileLoaded] = React.useState(false);
 
   React.useEffect(() => {
     // Get admin session data when component mounts
-    const fetchAdminData = async () => {
+    const fetchAdminData = async (retryCount = 0) => {
       try {
+        setIsLoadingProfile(true);
+        console.log(`Admin Layout: Fetching admin data (attempt ${retryCount + 1})...`);
         const adminData = await getAdminData();
+        
         if (adminData) {
+          console.log('Admin Layout: Got admin data:', { 
+            nama_lengkap: adminData.nama_lengkap, 
+            username: adminData.username,
+            profile_picture: adminData.profile_picture 
+          });
+          
           if (adminData.nama_lengkap) {
             // Get the first word of the full name
             const firstName = adminData.nama_lengkap.split(' ')[0];
             setAdminName(firstName);
             // Get the first letter for the initial
             setAdminInitial(firstName.charAt(0).toUpperCase());
+          } else {
+            // Fallback to username if no full name
+            const displayName = adminData.username || 'Admin';
+            setAdminName(displayName);
+            setAdminInitial(displayName.charAt(0).toUpperCase());
           }
+          
           if (adminData.profile_picture) {
             setAdminProfilePicture(adminData.profile_picture);
           }
+          
+          setIsProfileLoaded(true);
+          console.log('Admin Layout: Profile loaded successfully');
         } else {
-          // If no admin data, redirect to login
-          router.push('/admin/login');
+          console.log(`Admin Layout: No admin data found (attempt ${retryCount + 1})`);
+          
+          // Retry up to 3 times with increasing delays (for JWT cookie timing issues)
+          if (retryCount < 2) {
+            const delay = (retryCount + 1) * 200; // 200ms, 400ms
+            console.log(`Admin Layout: Retrying in ${delay}ms...`);
+            setTimeout(() => {
+              fetchAdminData(retryCount + 1);
+            }, delay);
+            return; // Don't set loading to false yet
+          } else {
+            console.log('Admin Layout: Max retries reached, redirecting to login');
+            // If no admin data after retries, redirect to login
+            router.push('/admin/login');
+          }
         }
       } catch (error) {
-        console.error('Error getting admin data:', error);
-        clearAdminSessionAndRedirect(router);
+        console.error('Admin Layout: Error getting admin data:', error);
+        
+        // Retry on error too (might be network issue)
+        if (retryCount < 2) {
+          const delay = (retryCount + 1) * 200;
+          console.log(`Admin Layout: Error occurred, retrying in ${delay}ms...`);
+          setTimeout(() => {
+            fetchAdminData(retryCount + 1);
+          }, delay);
+          return;
+        } else {
+          console.log('Admin Layout: Max retries reached after error, clearing session');
+          clearAdminSessionAndRedirect(router);
+        }
+      } finally {
+        // Only set loading to false if we're not retrying
+        setIsLoadingProfile(false);
       }
     };
 
-    // Only fetch admin data if not on login page
+    // Reset profile state when pathname changes (especially coming from login)
     if (pathname !== '/admin/login') {
+      // Reset states to ensure fresh fetch
+      setIsProfileLoaded(false);
+      setIsLoadingProfile(true);
+      
+      console.log('Admin Layout: Entering admin area, pathname:', pathname);
+      
+      // Always fetch admin data when entering admin area
       fetchAdminData();
+    } else {
+      // On login page, reset all profile states
+      console.log('Admin Layout: On login page, resetting profile states');
+      setAdminName('');
+      setAdminInitial('');
+      setAdminProfilePicture(null);
+      setIsProfileLoaded(false);
+      setIsLoadingProfile(false);
     }
 
     // Listen for profile updates (both name and picture)
     const handleProfileUpdate = (event: CustomEvent) => {
-      const { profilePicture, nama_lengkap } = event.detail;
+      const { profilePicture, nama_lengkap, forceRefresh } = event.detail;
+      
+      // If forceRefresh is true, fetch fresh admin data
+      if (forceRefresh) {
+        fetchAdminData();
+        return;
+      }
       
       // Update profile picture
       if (profilePicture !== undefined) {
@@ -251,7 +320,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
               {/* User Profile */}
               <Link href="/admin/profile" className="flex items-center space-x-2 sm:space-x-3 hover:bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-colors duration-200 group">
-                {adminProfilePicture ? (
+                {isLoadingProfile ? (
+                  // Loading state
+                  <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-gray-300 animate-pulse flex items-center justify-center ring-2 ring-gray-100">
+                    <span className="text-xs sm:text-sm font-medium text-gray-500">...</span>
+                  </div>
+                ) : adminProfilePicture ? (
                   <img
                     src={adminProfilePicture}
                     alt="Profile"
@@ -259,10 +333,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   />
                 ) : (
                   <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-red-600 flex items-center justify-center ring-2 ring-red-100 group-hover:ring-red-200 transition-all duration-200">
-                    <span className="text-xs sm:text-sm font-medium text-white">{adminInitial}</span>
+                    <span className="text-xs sm:text-sm font-medium text-white">{adminInitial || 'A'}</span>
                   </div>
                 )}
-                <span className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">{adminName}</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900">
+                  {isLoadingProfile ? 'Loading...' : (adminName || 'Admin')}
+                </span>
               </Link>
             </div>
           </div>

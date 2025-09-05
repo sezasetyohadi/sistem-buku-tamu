@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import PrimaryButton from '../ui/PrimaryButton';
 import { formatDate } from '@/lib/utils';
+import { showToast } from '@/lib/toast';
 
 interface Guest {
   id: number;
@@ -63,7 +64,7 @@ export default function GuestDataTable() {
       }));
     } catch (error) {
       console.error('Error checking out guest:', error);
-      alert(error instanceof Error ? error.message : 'Failed to check out guest');
+      showToast.error(error instanceof Error ? error.message : 'Failed to check out guest');
     }
   };
   

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import GuestRegistrationForm from '../../../components/forms/GuestRegistrationForm';
+import { showToast } from '@/lib/toast';
 
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,12 +41,12 @@ export default function Register() {
           };
         }
       } else {
-        alert(`Registrasi gagal: ${result.message}`);
+        showToast.error(`Registrasi gagal: ${result.message}`);
         return { success: false };
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
+      showToast.error('Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
       return { success: false };
     } finally {
       setIsLoading(false);
