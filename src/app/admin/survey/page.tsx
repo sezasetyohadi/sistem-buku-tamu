@@ -11,7 +11,7 @@ import ExportToExcelButton from "@/components/admin/ExportToExcelButton";
 interface SurveyQuestion {
   id?: number;
   pertanyaan: string;
-  tipe_pertanyaan: 'rating' | 'text';
+  tipe_pertanyaan: 'rating';
   status: boolean;
   jenis_rating_id?: number;
   is_required?: boolean;
@@ -23,8 +23,6 @@ interface SurveyQuestion {
 interface SurveyStatistics {
   totalQuestions: number;
   activeQuestions: number;
-  ratingQuestions: number;
-  textQuestions: number;
   totalResponses: number;
   averageRating: number;
   completionRate: number;
@@ -47,6 +45,8 @@ interface SurveyResponse {
   jenis_layanan?: string;
   saran?: string;
   responses: { [key: string]: number | string };
+  kinerja_ratings?: { [key: string]: number };
+  kepentingan_ratings?: { [key: string]: number };
 }
 
 export default function AdminSurvey() {
@@ -66,8 +66,6 @@ export default function AdminSurvey() {
   const [statistics, setStatistics] = useState<SurveyStatistics>({
     totalQuestions: 0,
     activeQuestions: 0,
-    ratingQuestions: 0,
-    textQuestions: 0,
     totalResponses: 0,
     averageRating: 0,
     completionRate: 0,
@@ -77,13 +75,26 @@ export default function AdminSurvey() {
     pertanyaan: '',
     tipe_pertanyaan: 'rating',
     status: true,
-    is_required: true
+    is_required: true,
+    jenis_rating_id: 1 // Default rating type
   });
 
   // Real survey responses from database
   const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
+  const [filteredResponses, setFilteredResponses] = useState<any[]>([]);
   const [responsesLoading, setResponsesLoading] = useState(false);
   const [responseCount, setResponseCount] = useState(0);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
+  const [educationFilter, setEducationFilter] = useState('');
+  const [serviceFilter, setServiceFilter] = useState('');
+  const [surveyDateFilter, setSurveyDateFilter] = useState('');
+  const [kinerjaRatingFilter, setKinerjaRatingFilter] = useState('');
+  const [kepentinganRatingFilter, setKepentinganRatingFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchSurveyData();
@@ -95,6 +106,152 @@ export default function AdminSurvey() {
       fetchSurveyResponses();
     }
   }, [activeTab]);
+
+  // Filter responses whenever search criteria change
+  useEffect(() => {
+    filterResponses();
+  }, [surveyResponses, searchTerm, emailFilter, genderFilter, educationFilter, serviceFilter, surveyDateFilter, kinerjaRatingFilter, kepentinganRatingFilter]);
+
+  // Function to filter responses based on search criteria
+  const filterResponses = () => {
+    let filtered = [...surveyResponses];
+
+    // Search by name
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(response =>
+        response.nama_lengkap?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by email
+    if (emailFilter.trim()) {
+      filtered = filtered.filter(response =>
+        response.email?.toLowerCase().includes(emailFilter.toLowerCase())
+      );
+    }
+
+    // Filter by gender
+    if (genderFilter) {
+      filtered = filtered.filter(response =>
+        response.jenis_kelamin === genderFilter
+      );
+    }
+
+    // Filter by education
+    if (educationFilter) {
+      filtered = filtered.filter(response =>
+        response.pendidikan_terakhir === educationFilter
+      );
+    }
+
+    // Filter by service type
+    if (serviceFilter) {
+      filtered = filtered.filter(response =>
+        response.jenis_layanan === serviceFilter
+      );
+    }
+
+    // Filter by survey date
+    if (surveyDateFilter) {
+      filtered = filtered.filter(response => {
+        const responseDate = new Date(response.created_at);
+        const filterDate = new Date(surveyDateFilter);
+        // Compare dates only (ignore time)
+        return responseDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    // Filter by Kinerja rating
+    if (kinerjaRatingFilter) {
+      console.log('Filtering by Kinerja rating:', kinerjaRatingFilter);
+      filtered = filtered.filter(response => {
+        const kinerjaRatings = response.kinerja_ratings || {};
+        console.log(`Response ${response.id} (${response.nama_lengkap}) - Kinerja ratings:`, JSON.stringify(kinerjaRatings));
+        console.log(`Response ${response.id} - Kinerja rating values:`, Object.values(kinerjaRatings));
+        const hasMatch = Object.values(kinerjaRatings).some(rating => 
+          rating.toString() === kinerjaRatingFilter
+        );
+        console.log(`Response ${response.id} - Kinerja match:`, hasMatch);
+        return hasMatch;
+      });
+    }
+
+    // Filter by Kepentingan rating
+    if (kepentinganRatingFilter) {
+      console.log('Filtering by Kepentingan rating:', kepentinganRatingFilter);
+      filtered = filtered.filter(response => {
+        const kepentinganRatings = response.kepentingan_ratings || {};
+        console.log(`Response ${response.id} (${response.nama_lengkap}) - Kepentingan ratings:`, JSON.stringify(kepentinganRatings));
+        console.log(`Response ${response.id} - Kepentingan rating values:`, Object.values(kepentinganRatings));
+        const hasMatch = Object.values(kepentinganRatings).some(rating => 
+          rating.toString() === kepentinganRatingFilter
+        );
+        console.log(`Response ${response.id} - Kepentingan match:`, hasMatch);
+        return hasMatch;
+      });
+    }
+
+    setFilteredResponses(filtered);
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setEmailFilter('');
+    setGenderFilter('');
+    setEducationFilter('');
+    setServiceFilter('');
+    setSurveyDateFilter('');
+    setKinerjaRatingFilter('');
+    setKepentinganRatingFilter('');
+  };
+
+  // Export filtered results to CSV
+  const exportToCSV = () => {
+    if (filteredResponses.length === 0) {
+      alert('Tidak ada data yang dapat diekspor');
+      return;
+    }
+
+    const headers = [
+      'Nama Lengkap',
+      'Email', 
+      'Jenis Kelamin',
+      'Tanggal Lahir',
+      'Alamat',
+      'Pendidikan Terakhir',
+      'Pekerjaan',
+      'Jenis Layanan',
+      'Tanggal Survey',
+      'Saran'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...filteredResponses.map(response => [
+        `"${response.nama_lengkap || ''}"`,
+        `"${response.email || ''}"`,
+        `"${response.jenis_kelamin || ''}"`,
+        `"${response.tanggal_lahir || ''}"`,
+        `"${response.alamat || ''}"`,
+        `"${response.pendidikan_terakhir || ''}"`,
+        `"${response.nama_profesi || ''}"`,
+        `"${response.jenis_layanan || ''}"`,
+        `"${new Date(response.created_at).toLocaleDateString('id-ID')}"`,
+        `"${response.saran || ''}"`,
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `survey-responses-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Function to fetch survey response count only
   const fetchResponseCount = async () => {
@@ -130,16 +287,23 @@ export default function AdminSurvey() {
       const data = await response.json();
       
       if (data.success && Array.isArray(data.data)) {
+        console.log('Survey responses received:', data.data.length);
+        if (data.data.length > 0) {
+          console.log('First response structure:', JSON.stringify(data.data[0], null, 2));
+        }
         setSurveyResponses(data.data);
+        setFilteredResponses(data.data); // Initialize filtered responses
         setResponseCount(data.data.length); // Update count when full responses are loaded
       } else {
         console.error('Invalid response format:', data);
         setSurveyResponses([]);
+        setFilteredResponses([]);
         setResponseCount(0);
       }
     } catch (error) {
       console.error('Error fetching survey responses:', error);
       setSurveyResponses([]);
+      setFilteredResponses([]);
       setResponseCount(0);
     } finally {
       setResponsesLoading(false);
@@ -163,7 +327,7 @@ export default function AdminSurvey() {
         const mappedQuestions: SurveyQuestion[] = questionsData.data.map((q: any) => ({
           id: q.id,
           pertanyaan: q.pertanyaan,
-          tipe_pertanyaan: q.tipe_jawaban === 'rating' ? 'rating' : 'text',
+          tipe_pertanyaan: 'rating',
           urutan: q.urutan,
           status: q.is_aktif,
           jenis_rating_id: q.jenis_rating_id,
@@ -175,16 +339,12 @@ export default function AdminSurvey() {
         // Calculate statistics from the questions
         const totalQuestions = mappedQuestions.length;
         const activeQuestions = mappedQuestions.filter(q => q.status).length;
-        const ratingQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'rating').length;
-        const textQuestions = mappedQuestions.filter(q => q.tipe_pertanyaan === 'text').length;
         
         // Update statistics with question counts
         setStatistics(prev => ({
           ...prev,
           totalQuestions,
-          activeQuestions,
-          ratingQuestions,
-          textQuestions
+          activeQuestions
         }));
       }
       
@@ -217,9 +377,9 @@ export default function AdminSurvey() {
       const requestBody = {
         pertanyaan: question.pertanyaan,
         tipe_pertanyaan: question.tipe_pertanyaan,
-        // Map our tipe_pertanyaan to the API's expected format
-        tipe_jawaban: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
-        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        // Since all questions are rating type
+        tipe_jawaban: 'rating',
+        jenis_rating_id: question.jenis_rating_id,
         is_required: question.is_required,
         multiple_rating_types: question.multiple_rating_types // Add support for multiple rating types
       };
@@ -244,7 +404,8 @@ export default function AdminSurvey() {
         pertanyaan: '',
         tipe_pertanyaan: 'rating',
         status: true,
-        is_required: true
+        is_required: true,
+        jenis_rating_id: 1 // Default rating type
       });
       
       setShowAddQuestion(false);
@@ -270,9 +431,9 @@ export default function AdminSurvey() {
         urutan: originalQuestion?.urutan || question.urutan || 1,
         baris: originalQuestion?.baris || question.baris || 1, // Preserve original baris
         pertanyaan: question.pertanyaan,
-        tipe_pertanyaan: question.tipe_pertanyaan === 'rating' ? 'rating' : 'teks',
+        tipe_pertanyaan: 'rating',
         is_aktif: question.status,
-        jenis_rating_id: question.tipe_pertanyaan === 'rating' ? question.jenis_rating_id : undefined,
+        jenis_rating_id: question.jenis_rating_id,
         is_required: question.is_required,
         multiple_rating_types: question.multiple_rating_types // Add support for multiple rating types
       };
@@ -319,7 +480,7 @@ export default function AdminSurvey() {
         const fullQuestion: SurveyQuestion = {
           id: data.data.id,
           pertanyaan: data.data.pertanyaan,
-          tipe_pertanyaan: data.data.tipe_jawaban === 'rating' ? 'rating' : 'text',
+          tipe_pertanyaan: 'rating',
           urutan: data.data.urutan,
           status: data.data.is_aktif,
           jenis_rating_id: data.data.jenis_rating_id,
@@ -412,7 +573,7 @@ export default function AdminSurvey() {
           urutan: question.urutan,
           baris: question.baris || 1,
           pertanyaan: question.pertanyaan,
-          tipe_pertanyaan: (question.tipe_pertanyaan === 'rating' || question.tipe_jawaban === 'rating') ? 'rating' : 'teks',
+          tipe_pertanyaan: 'rating',
           // Preserve the original status from the database - use is_aktif field
           is_aktif: originalQuestion?.status !== undefined ? originalQuestion.status : true,
           jenis_rating_id: question.jenis_rating_id,
@@ -477,7 +638,7 @@ export default function AdminSurvey() {
           </div>
 
           {/* Survey Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -501,20 +662,6 @@ export default function AdminSurvey() {
                 <div className="bg-green-400 rounded-full p-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm">Tingkat Penyelesaian</p>
-                  <p className="text-2xl font-bold">{statistics.completionRate || 0}%</p>
-                </div>
-                <div className="bg-purple-400 rounded-full p-3">
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
@@ -559,7 +706,7 @@ export default function AdminSurvey() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Lihat Respon Survei ({responseCount})
+                Lihat Respon Survei ({filteredResponses?.length || responseCount})
               </button>
             </nav>
           </div>
@@ -618,13 +765,7 @@ export default function AdminSurvey() {
                           <h3 className="text-base font-medium text-gray-900">
                             {question.pertanyaan}
                           </h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            question.tipe_pertanyaan === 'rating' 
-                              ? 'bg-blue-100 text-blue-700' 
-                              : 'bg-purple-100 text-purple-700'
-                          }`}>
-                            {question.tipe_pertanyaan === 'rating' ? 'Rating' : 'Text'}
-                          </span>
+
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`w-2 h-2 rounded-full ${
@@ -687,6 +828,167 @@ export default function AdminSurvey() {
                 </div>
               ) : (
                 <>
+                  {/* Filter Section */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-gray-900">Filter Respon Survei</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">
+                          Menampilkan {filteredResponses.length} dari {surveyResponses.length} respon
+                        </span>
+                        <button
+                          onClick={exportToCSV}
+                          disabled={filteredResponses.length === 0}
+                          className="flex items-center px-3 py-2 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd"/>
+                          </svg>
+                          Export CSV
+                        </button>
+                        <button
+                          onClick={() => setShowFilters(!showFilters)}
+                          className="flex items-center px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                        >
+                          <svg className={`w-4 h-4 mr-1 transition-transform ${showFilters ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/>
+                          </svg>
+                          {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick Search */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cari Nama</label>
+                        <input
+                          type="text"
+                          placeholder="Ketik nama untuk mencari..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cari Email</label>
+                        <input
+                          type="text"
+                          placeholder="Ketik email untuk mencari..."
+                          value={emailFilter}
+                          onChange={(e) => setEmailFilter(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Advanced Filters */}
+                    {showFilters && (
+                      <div className="border-t border-gray-200 pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                            <select
+                              value={genderFilter}
+                              onChange={(e) => setGenderFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua</option>
+                              <option value="Laki-laki">Laki-laki</option>
+                              <option value="Perempuan">Perempuan</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Pendidikan</label>
+                            <select
+                              value={educationFilter}
+                              onChange={(e) => setEducationFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua</option>
+                              {[...new Set(surveyResponses.map(r => r.pendidikan_terakhir).filter(Boolean))].map(education => (
+                                <option key={education} value={education}>{education}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Layanan</label>
+                            <select
+                              value={serviceFilter}
+                              onChange={(e) => setServiceFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua</option>
+                              {[...new Set(surveyResponses.map(r => r.jenis_layanan).filter(Boolean))].map(service => (
+                                <option key={service} value={service}>{service}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Survey</label>
+                            <input
+                              type="date"
+                              value={surveyDateFilter}
+                              onChange={(e) => setSurveyDateFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Rating Kinerja
+                              <span className="text-xs text-gray-500 block">Filter berdasarkan rating kinerja/pelayanan</span>
+                            </label>
+                            <select
+                              value={kinerjaRatingFilter}
+                              onChange={(e) => setKinerjaRatingFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua Rating</option>
+                              <option value="1">1 - Tidak Sesuai</option>
+                              <option value="2">2 - Kurang Sesuai</option>
+                              <option value="3">3 - Sesuai</option>
+                              <option value="4">4 - Sangat Sesuai</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Rating Kepentingan
+                              <span className="text-xs text-gray-500 block">Filter berdasarkan tingkat kepentingan</span>
+                            </label>
+                            <select
+                              value={kepentinganRatingFilter}
+                              onChange={(e) => setKepentinganRatingFilter(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Semua Rating</option>
+                              <option value="1">1 - Tidak Penting</option>
+                              <option value="2">2 - Kurang Penting</option>
+                              <option value="3">3 - Penting</option>
+                              <option value="4">4 - Sangat Penting</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Aksi</label>
+                            <button
+                              onClick={clearAllFilters}
+                              className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                            >
+                              Reset Semua Filter
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {surveyResponses.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="text-gray-400 mb-3">
@@ -697,10 +999,20 @@ export default function AdminSurvey() {
                       <p className="text-gray-500">Belum ada respon survei</p>
                       <p className="text-sm text-gray-400 mt-1">Respon akan muncul setelah tamu mengisi survei</p>
                     </div>
+                  ) : filteredResponses.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400 mb-3">
+                        <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500">Tidak ada respon yang sesuai dengan filter</p>
+                      <p className="text-sm text-gray-400 mt-1">Coba ubah kriteria pencarian atau reset filter</p>
+                    </div>
                   ) : (
                     /* Response Cards */
                     <div className="space-y-4">
-                      {surveyResponses.map((response) => (
+                      {filteredResponses.map((response) => (
                         <SurveyResponseCard
                           key={response.id}
                           response={response}

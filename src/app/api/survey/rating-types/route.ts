@@ -2,14 +2,14 @@
 export const POST = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { nama_rating, tipe, options } = body;
-    if (!nama_rating || !tipe || !Array.isArray(options) || options.length === 0) {
+    const { nama_rating, options } = body;
+    if (!nama_rating || !Array.isArray(options) || options.length === 0) {
       return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
     }
     // Insert the new rating type
     const result = await executeQuery(
-      "INSERT INTO jenis_rating (tipe, nama_rating) VALUES (?, ?)",
-      [tipe, nama_rating]
+      "INSERT INTO jenis_rating (nama_rating) VALUES (?)",
+      [nama_rating]
     ) as { insertId: number };
     const jenis_rating_id = result.insertId;
     // Insert each option
@@ -20,7 +20,7 @@ export const POST = async (request: NextRequest) => {
         [jenis_rating_id, skala_rating, i + 1]
       );
     }
-    return NextResponse.json({ success: true, data: { id: jenis_rating_id, nama_rating, tipe } });
+    return NextResponse.json({ success: true, data: { id: jenis_rating_id, nama_rating } });
   } catch (error) {
     console.error('Error adding rating type:', error);
     return NextResponse.json({ success: false, message: 'Failed to add rating type' }, { status: 500 });

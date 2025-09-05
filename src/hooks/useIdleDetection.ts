@@ -89,12 +89,18 @@ export function useIdleDetection({ timeout, onIdle, enabled = true }: UseIdleDet
 export function useAdminIdleLogout(enabled: boolean = true) {
   const router = useRouter();
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
     console.log('Admin idle timeout - logging out after 20 minutes');
     
-    // Clear session data
-    localStorage.removeItem('admin_session');
-    document.cookie = 'admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    try {
+      // Call logout API to clear JWT cookies
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error during idle logout API call:', error);
+    }
     
     // Show simple alert to user
     alert('Sesi Anda telah berakhir karena tidak ada aktivitas selama 20 menit. Silakan login kembali.');

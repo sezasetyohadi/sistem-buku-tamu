@@ -7,7 +7,6 @@ export interface QuestionWithRatingOptions extends SurveyQuestion {
     jenis_rating_id: number; 
     is_required?: boolean; 
     nama_rating?: string;
-    tipe?: string;
     urutan?: number;
   }[];
 }
@@ -63,7 +62,7 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
   const questionsWithOptions = await Promise.all(questions.map(async (question) => {
     // Get all rating types associated with this question
     const questionRatingTypes = await executeQuery<any[]>(
-      `SELECT pjr.jenis_rating_id, pjr.urutan, pjr.is_required, jr.nama_rating, jr.tipe
+      `SELECT pjr.jenis_rating_id, pjr.urutan, pjr.is_required, jr.nama_rating
        FROM pertanyaan_s_jenis_rating pjr
        JOIN jenis_rating jr ON pjr.jenis_rating_id = jr.id
        WHERE pjr.pertanyaan_id = ? 
@@ -71,12 +70,8 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
       [question.id]
     );
 
-    // Determine question type based on rating types
+    // Since tipe field is removed, we default to rating type
     let tipe_jawaban = 'rating';
-    if (questionRatingTypes.length > 0) {
-      // If any rating type is 'text', then it's a text question
-      tipe_jawaban = questionRatingTypes.some(rt => rt.tipe === 'text') ? 'teks' : 'rating';
-    }
 
     // Get rating options if it's a rating question
     let ratingOptions: RatingOption[] = [];
@@ -95,7 +90,6 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
       jenis_rating_id: rt.jenis_rating_id,
       is_required: rt.is_required === 1,
       nama_rating: rt.nama_rating,
-      tipe: rt.tipe,
       urutan: rt.urutan
     }));
 
@@ -131,8 +125,7 @@ export async function getActiveQuestionsForGuests(): Promise<QuestionWithRatingO
     SELECT 
       ps.id, ps.baris, ps.pertanyaan, 
       ps.is_aktif, ps.created_at,
-      pjr.jenis_rating_id, pjr.is_required, pjr.urutan as rating_urutan,
-      jr.nama_rating, jr.tipe as rating_tipe
+      pjr.jenis_rating_id, pjr.is_required, pjr.urutan as rating_urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     LEFT JOIN jenis_rating jr ON pjr.jenis_rating_id = jr.id
@@ -150,7 +143,6 @@ export async function getActiveQuestionsForGuests(): Promise<QuestionWithRatingO
         id: row.id,
         baris: row.baris,
         pertanyaan: row.pertanyaan,
-        tipe_jawaban: row.rating_tipe === 'text' ? 'teks' : 'rating',
         is_aktif: row.is_aktif,
         created_at: row.created_at,
         jenis_rating_id: row.jenis_rating_id,
@@ -168,7 +160,6 @@ export async function getActiveQuestionsForGuests(): Promise<QuestionWithRatingO
         jenis_rating_id: row.jenis_rating_id,
         is_required: row.is_required === 1,
         nama_rating: row.nama_rating,
-        tipe: row.rating_tipe,
         urutan: row.rating_urutan
       });
     }
@@ -262,7 +253,7 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
   
   // Get all rating types associated with this question
   const questionRatingTypes = await executeQuery<any[]>(
-    `SELECT pjr.jenis_rating_id, pjr.urutan, pjr.is_required, jr.nama_rating, jr.tipe
+    `SELECT pjr.jenis_rating_id, pjr.urutan, pjr.is_required, jr.nama_rating
      FROM pertanyaan_s_jenis_rating pjr
      JOIN jenis_rating jr ON pjr.jenis_rating_id = jr.id
      WHERE pjr.pertanyaan_id = ? 
@@ -270,12 +261,8 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
     [questionId]
   );
 
-  // Determine question type based on rating types
+  // Since tipe field is removed, we default to rating type
   let tipe_jawaban = 'rating';
-  if (questionRatingTypes.length > 0) {
-    // If any rating type is 'text', then it's a text question
-    tipe_jawaban = questionRatingTypes.some(rt => rt.tipe === 'text') ? 'teks' : 'rating';
-  }
 
   // Get rating options if it's a rating question
   let ratingOptions: RatingOption[] = [];
@@ -294,7 +281,6 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
     jenis_rating_id: rt.jenis_rating_id,
     is_required: rt.is_required === 1,
     nama_rating: rt.nama_rating,
-    tipe: rt.tipe,
     urutan: rt.urutan
   }));
 
@@ -306,7 +292,6 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
     id: question.id,
     baris: question.baris,
     pertanyaan: question.pertanyaan,
-    tipe_jawaban: tipe_jawaban as 'rating' | 'teks',
     is_aktif: question.is_aktif,
     created_at: question.created_at,
     jenis_rating_id,
@@ -317,12 +302,7 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
 }
 
 export async function getRatingTypes(type?: 'rating' | 'text'): Promise<RatingType[]> {
-  // If a specific type is requested, use the filtered query
-  if (type) {
-    return executeQuery<RatingType[]>(SURVEY_QUERIES.GET_RATING_TYPES_BY_TYPE, [type]);
-  }
-  
-  // Otherwise, return all rating types
+  // The tipe field has been removed, so we always return all rating types
   return executeQuery<RatingType[]>(SURVEY_QUERIES.GET_ALL_RATING_TYPES);
 }
 
