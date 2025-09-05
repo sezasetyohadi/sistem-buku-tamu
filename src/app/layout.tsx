@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LoadingProvider } from "@/components/ui/LoadingState";
 import { PageErrorBoundary } from "@/components/error/ErrorBoundary";
 import "./globals.css";
 
@@ -40,10 +41,12 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased app-mode-${appMode}`}>
         <PageErrorBoundary>
           <AuthProvider>
-            <Toaster position="top-center" />
-            <div data-app-mode={appMode}>
-              {children}
-            </div>
+            <LoadingProvider>
+              <Toaster position="top-center" />
+              <div data-app-mode={appMode}>
+                {children}
+              </div>
+            </LoadingProvider>
           </AuthProvider>
         </PageErrorBoundary>
       </body>

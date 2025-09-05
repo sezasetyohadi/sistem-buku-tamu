@@ -10,6 +10,9 @@ import FormSelect from '../ui/FormSelect';
 import PrimaryButton from '../ui/PrimaryButton';
 import { guestLogger, safeLog } from '@/lib/logger';
 import TokenModal from '../ui/TokenModal';
+import { useApiCall, useMutation } from '@/hooks/useDataFetching';
+import { LoadingWrapper, useLoadingState } from '@/components/ui/LoadingState';
+import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
 
 interface GuestRegistrationFormProps {
   onSubmit?: (data: any) => Promise<{success: boolean, guestData?: any, tokenData?: any}>;
@@ -38,100 +41,118 @@ export default function GuestRegistrationForm({
     notes: ''
   });
 
-  const [professionOptions, setProfessionOptions] = useState<Array<{value: string, label: string}>>([
-    { value: '', label: 'Pilih profesi' }
-  ]);
-  const [educationOptions, setEducationOptions] = useState<Array<{value: string, label: string}>>([
-    { value: '', label: 'Pilih pendidikan terakhir' }
-  ]);
-  const [departmentOptions, setDepartmentOptions] = useState<Array<{value: string, label: string}>>([
-    { value: '', label: 'Pilih bidang tujuan' }
-  ]);
-  const [purposeOptions, setPurposeOptions] = useState<Array<{value: string, label: string}>>([
-    { value: '', label: 'Pilih tujuan kunjungan' }
-  ]);
-  const [memperolehOptions, setMemperolehOptions] = useState<Array<{id: number, nama_opsi: string}>>([]);
-  const [salinanOptions, setSalinanOptions] = useState<Array<{id: number, nama_opsi: string}>>([]);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [token, setToken] = useState<string>('');
 
+  // Use API hooks for loading form options
+  const {
+    data: formOptions,
+    loading: optionsLoading,
+    error: optionsError,
+  } = useApiCall<{
+    professions: Array<{id: number, nama_profesi: string}>;
+    educationLevels: Array<{id: number, pendidikan_terakhir: string}>;
+    bidangTujuan: Array<{id: number, bidang: string}>;
+    tujuanKunjungan: Array<{id: number, tujuan: string}>;
+    memperolehInformasi: Array<{id: number, nama_opsi: string}>;
+    mendapatkanSalinan: Array<{id: number, nama_opsi: string}>;
+  }>('/api/lookup', {
+    immediate: true,
+    loadingKey: 'form-options',
+  });
+
+  // Debug: Log the API response
+  React.useEffect(() => {
+    if (formOptions) {
+      console.log('Form options loaded:', formOptions);
+      console.log('Professions:', formOptions.professions);
+      console.log('Education levels:', formOptions.educationLevels);
+    }
+  }, [formOptions]);
+
+  // Use mutation hook for form submission
+  const { mutate: submitForm, loading: submitLoading } = useMutation(
+    async (formData: any) => {
+      if (onSubmit) {
+        return await onSubmit(formData);
+      }
+      throw new Error('No submit handler provided');
+    },
+    {
+      loadingKey: 'form-submit',
+    }
+  );
+
+  // Process options from API data using useMemo to ensure proper recalculation
+  const processedProfessionOptions = React.useMemo(() => [
+    { value: '', label: 'Pilih profesi' },
+    ...(formOptions?.professions?.map(p => ({
+      value: p.id.toString(),
+      label: p.nama_profesi
+    })) || [])
+  ], [formOptions?.professions]);
+
+  const processedEducationOptions = React.useMemo(() => [
+    { value: '', label: 'Pilih pendidikan terakhir' },
+    ...(formOptions?.educationLevels?.map(e => ({
+      value: e.id.toString(),
+      label: e.pendidikan_terakhir
+    })) || [])
+  ], [formOptions?.educationLevels]);
+
+  const processedDepartmentOptions = React.useMemo(() => [
+    { value: '', label: 'Pilih bidang tujuan' },
+    ...(formOptions?.bidangTujuan?.map(d => ({
+      value: d.id.toString(),
+      label: d.bidang
+    })) || [])
+  ], [formOptions?.bidangTujuan]);
+
+  const processedPurposeOptions = React.useMemo(() => [
+    { value: '', label: 'Pilih tujuan kunjungan' },
+    ...(formOptions?.tujuanKunjungan?.map(t => ({
+      value: t.id.toString(),
+      label: t.tujuan
+    })) || [])
+  ], [formOptions?.tujuanKunjungan]);
+
+  // Debug processed options
+  React.useEffect(() => {
+    console.log('Processed profession options:', processedProfessionOptions);
+    console.log('Processed education options:', processedEducationOptions);
+  }, [processedProfessionOptions, processedEducationOptions]);
+
+  const memperolehOptions = React.useMemo(() => 
+    formOptions?.memperolehInformasi || [], 
+    [formOptions?.memperolehInformasi]
+  );
+  
+  const salinanOptions = React.useMemo(() => 
+    formOptions?.mendapatkanSalinan || [], 
+    [formOptions?.mendapatkanSalinan]
+  );
+
   // Token modal will only be hidden when user clicks close button
   // No auto-hide functionality
 
-  // Fetch options from API
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const response = await fetch('/api/lookup');
-        const result = await response.json();
-        
-        safeLog.api('GET', '/api/lookup');
-        
-        // Process profession options
-        if (result.success && result.data?.professions) {
-          const options = [
-            { value: '', label: 'Pilih profesi' },
-            ...result.data.professions.map((p: { id: number, nama_profesi: string }) => ({
-              value: p.id.toString(),
-              label: p.nama_profesi
-            }))
-          ];
-          setProfessionOptions(options);
-        }
-        
-        // Process education options
-        if (result.success && result.data?.educationLevels) {
-          const options = [
-            { value: '', label: 'Pilih pendidikan terakhir' },
-            ...result.data.educationLevels.map((e: { id: number, pendidikan_terakhir: string }) => ({
-              value: e.id.toString(),
-              label: e.pendidikan_terakhir
-            }))
-          ];
-          setEducationOptions(options);
-        }
-        
-        // Process bidang tujuan options
-        if (result.success && result.data?.bidangTujuan) {
-          const options = [
-            { value: '', label: 'Pilih bidang tujuan' },
-            ...result.data.bidangTujuan.map((d: { id: number, bidang: string }) => ({
-              value: d.id.toString(),
-              label: d.bidang
-            }))
-          ];
-          setDepartmentOptions(options);
-        }
-        
-        // Process tujuan kunjungan options
-        if (result.success && result.data?.tujuanKunjungan) {
-          const options = [
-            { value: '', label: 'Pilih tujuan kunjungan' },
-            ...result.data.tujuanKunjungan.map((t: { id: number, tujuan: string }) => ({
-              value: t.id.toString(),
-              label: t.tujuan
-            }))
-          ];
-          setPurposeOptions(options);
-        }
-        
-        // Process memperoleh informasi options
-        if (result.success && result.data?.memperolehInformasi) {
-          setMemperolehOptions(result.data.memperolehInformasi);
-        }
-        
-        // Process mendapatkan salinan options
-        if (result.success && result.data?.mendapatkanSalinan) {
-          setSalinanOptions(result.data.mendapatkanSalinan);
-        }
-      } catch (error) {
-        guestLogger.error('Error fetching form options:', error);
-      }
-    };
-
-    fetchOptions();
-  }, []);
+  // Form submission mutation
+  const submitFormMutation = useMutation(async (data: any) => {
+    const response = await fetch('/api/guests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Submission failed');
+    }
+    
+    return response.json();
+  });
 
   const genderOptions = [
     { value: '', label: 'Pilih jenis kelamin' },
@@ -248,10 +269,10 @@ export default function GuestRegistrationForm({
     
     if (validateForm()) {
       // Resolve names from selected IDs
-      const selectedEducation = educationOptions.find(e => e.value === formData.education);
-      const selectedProfession = professionOptions.find(p => p.value === formData.profession);
-      const selectedPurpose = purposeOptions.find(p => p.value === formData.purpose);
-      const selectedDepartment = departmentOptions.find(d => d.value === formData.department);
+      const selectedEducation = processedEducationOptions.find(e => e.value === formData.education);
+      const selectedProfession = processedProfessionOptions.find(p => p.value === formData.profession);
+      const selectedPurpose = processedPurposeOptions.find(p => p.value === formData.purpose);
+      const selectedDepartment = processedDepartmentOptions.find(d => d.value === formData.department);
       
       // Transform data untuk sesuai dengan format API
       const apiFormData = {
@@ -263,64 +284,93 @@ export default function GuestRegistrationForm({
         pendidikan_terakhir_id: formData.education ? parseInt(formData.education) : undefined,
         profesi_id: formData.profession ? parseInt(formData.profession) : undefined,
         asal_instansi: formData.company,
-        // Use tujuan_kunjungan for keperluan field, notes will go in catatan_tambahan
         keperluan: undefined, // Let the backend set this based on tujuan_kunjungan_id
-        catatan: formData.notes, // Use notes for catatan_tambahan field only
+        catatan: formData.notes,
         bidang_tujuan_id: formData.department ? parseInt(formData.department) : undefined,
         tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined,
         status_kunjungan: 'Menunggu',
-        cara_memperoleh: formData.cara_memperoleh, // Send as array of numbers
-        cara_salinan: formData.cara_salinan // Send as array of numbers
+        cara_memperoleh: formData.cara_memperoleh,
+        cara_salinan: formData.cara_salinan
       };
       
       safeLog.sensitive('Sending data to API', apiFormData);
       
-      if (onSubmit) {
-        const result = await onSubmit(apiFormData);
+      try {
+        const result = await submitFormMutation.mutate(apiFormData);
         
-        if (result.success && result.tokenData) {
-          // Set token for display in modal
-          setToken(result.tokenData.token);
-          // Show token modal
+        if (result.success && result.token) {
+          setToken(result.token);
           setShowTokenModal(true);
+          
+          // Reset form
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            gender: '',
+            education: '',
+            profession: '',
+            company: '',
+            purpose: '',
+            department: '',
+            cara_memperoleh: [],
+            cara_salinan: [],
+            notes: ''
+          });
+          setErrors({});
         }
+        
+        if (onSubmit) {
+          await onSubmit(apiFormData);
+        }
+      } catch (error: any) {
+        guestLogger.error('Form submission error:', error);
+        setErrors({ submit: error.message || 'Terjadi kesalahan saat mengirim data' });
       }
-      
-      // Auto reset form setelah submit berhasil
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        gender: '',
-        education: '',
-        profession: '',
-        company: '',
-        purpose: '',
-        department: '',
-        cara_memperoleh: [],
-        cara_salinan: [],
-        notes: ''
-      });
-      setErrors({});
     }
   };
 
   return (
     <>
-      <Card 
-        variant={isInModal ? "default" : "elevated"} 
-        padding={isInModal ? "md" : "lg"}
-        className={isInModal ? "shadow-none border-0" : ""}
-      >
-        {!isInModal && (
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrasi Tamu</h2>
-            <p className="text-gray-800">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
+      <LoadingWrapper
+        isLoading={optionsLoading}
+        error={optionsError}
+        loadingComponent={<FormSkeleton />}
+        errorComponent={
+          <div className="text-center p-8">
+            <p className="text-red-600 mb-4">Gagal memuat form. Silakan coba lagi.</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Muat Ulang
+            </button>
           </div>
-        )}
+        }
+      >
+        <Card 
+          variant={isInModal ? "default" : "elevated"} 
+          padding={isInModal ? "md" : "lg"}
+          className={isInModal ? "shadow-none border-0" : ""}
+        >
+          {!isInModal && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrasi Tamu</h2>
+              <p className="text-gray-800">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className={`space-y-6 ${isInModal ? "overflow-y-visible" : ""}`}>
+          {/* Error Display */}
+          {(errors.submit || submitFormMutation.error) && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">
+                {errors.submit || submitFormMutation.error?.message || 'Terjadi kesalahan saat mengirim data'}
+              </p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className={`space-y-6 ${isInModal ? "overflow-y-visible" : ""}`}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormInput
             label="Nama Lengkap"
@@ -412,7 +462,7 @@ export default function GuestRegistrationForm({
             value={formData.profession}
             onChange={handleInputChange}
             error={errors.profession}
-            options={professionOptions}
+            options={processedProfessionOptions}
             required
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -427,7 +477,7 @@ export default function GuestRegistrationForm({
             value={formData.education}
             onChange={handleInputChange}
             error={errors.education}
-            options={educationOptions}
+            options={processedEducationOptions}
             required
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,7 +509,7 @@ export default function GuestRegistrationForm({
             value={formData.purpose}
             onChange={handleInputChange}
             error={errors.purpose}
-            options={purposeOptions}
+            options={processedPurposeOptions}
             required
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,7 +524,7 @@ export default function GuestRegistrationForm({
             value={formData.department}
             onChange={handleInputChange}
             error={errors.department}
-            options={departmentOptions}
+            options={processedDepartmentOptions}
             required
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -561,15 +611,16 @@ export default function GuestRegistrationForm({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
-          <PrimaryButton
+          <LoadingButton
             type="submit"
             variant="primary"
             size="lg"
-            isLoading={isLoading}
+            isLoading={submitFormMutation.loading}
+            loadingText="Sedang Memproses..."
             className="flex-1"
           >
-            {isLoading ? 'Sedang Memproses...' : 'Daftar Sekarang'}
-          </PrimaryButton>
+            Daftar Sekarang
+          </LoadingButton>
           
           <PrimaryButton
             type="button"
@@ -600,6 +651,7 @@ export default function GuestRegistrationForm({
         </div>
         </form>
       </Card>
+      </LoadingWrapper>
 
     {/* Token Success Modal */}
     <TokenModal 
