@@ -1,6 +1,6 @@
 /**
- * React Error Boundary Components
- * Provides graceful error handling and recovery for the application
+ * Enhanced React Error Boundary Components
+ * Provides graceful error handling and recovery for the application with comprehensive error reporting
  */
 
 'use client';
@@ -8,6 +8,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { showToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
+import { createError, ErrorType } from '@/lib/error-handler';
+import { errorRecovery } from '@/lib/error-recovery';
 
 // Error boundary state interface
 interface ErrorBoundaryState {
@@ -58,14 +60,40 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const { onError, showToast: showToastProp = true, level = 'component' } = this.props;
     
-    // Log the error
-    logger.error('Error Boundary caught an error:', {
-      error: error.message,
-      stack: error.stack,
+    // Enhanced error reporting with recovery system
+    const errorContext = {
       componentStack: errorInfo.componentStack,
+      stack: error.stack,
+      message: error.message,
+      name: error.name,
       level,
       errorId: this.state.errorId,
-    });
+      timestamp: new Date().toISOString()
+    };
+
+    // Create structured error
+    const structuredError = createError.ui(
+      error.message,
+      `${level}-error-boundary`
+    );
+
+    // Report error to recovery system
+    try {
+      // Send error report for analytics
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...structuredError,
+          context: errorContext
+        })
+      }).catch(e => logger.error('Failed to report error:', e));
+    } catch (reportError) {
+      logger.error('Error reporting failed:', reportError);
+    }
+
+    // Log detailed error information
+    logger.error('Error Boundary caught an error:', errorContext);
 
     // Update state with error info
     this.setState({
@@ -81,7 +109,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
     }
 
-    // Show toast notification for user feedback
+    // Show toast notification for user feedback with recovery guidance
     if (showToastProp) {
       const levelMessages = {
         page: 'Terjadi kesalahan pada halaman ini. Silakan muat ulang halaman.',

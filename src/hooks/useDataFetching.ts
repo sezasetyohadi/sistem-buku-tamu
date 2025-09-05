@@ -1,12 +1,15 @@
 /**
- * Data Fetching Hooks with Loading States
- * Provides reusable hooks for API calls with built-in loading, error, and caching
+ * Data Fetching Hooks with Enhanced Error Handling and Recovery
+ * Provides reusable hooks for API calls with built-in loading, error handling, recovery, and caching
  */
 
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLoadingState } from '@/components/ui/LoadingState';
+import { useErrorRecovery, RetryConfigs } from '@/lib/error-recovery';
+import { useApiClient } from '@/lib/api-interceptors';
+import { logger } from '@/lib/logger';
 
 /**
  * Generic API Response Type
@@ -244,31 +247,103 @@ export function useFetch<T>(
  */
 export function useApiCall<T>(
   url: string,
-  options: RequestInit & UseFetchOptions = {}
+  options: RequestInit & UseFetchOptions & {
+    enableRecovery?: boolean;
+    enableRetry?: boolean;
+  } = {}
 ) {
-  const { immediate, cache, cacheKey, cacheDuration, retryAttempts, retryDelay, loadingKey, ...fetchOptions } = options;
+  const { 
+    immediate, 
+    cache, 
+    cacheKey, 
+    cacheDuration, 
+    retryAttempts, 
+    retryDelay, 
+    loadingKey,
+    enableRecovery = true,
+    enableRetry = true,
+    ...fetchOptions 
+  } = options;
+
+  const apiClient = useApiClient();
 
   const fetchFn = useCallback(async (): Promise<T> => {
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...fetchOptions.headers,
-      },
-      ...fetchOptions,
-    });
+    try {
+      const method = fetchOptions.method || 'GET';
+      let response;
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (enableRecovery && enableRetry) {
+        // Use enhanced API client with error handling and recovery
+        switch (method.toUpperCase()) {
+          case 'GET':
+            response = await apiClient.get(url, {
+              headers: fetchOptions.headers as Record<string, string>,
+              retryConfig: { maxAttempts: retryAttempts || 3, delay: retryDelay || 1000 }
+            });
+            break;
+          case 'POST':
+            response = await apiClient.post(url, fetchOptions.body, {
+              headers: fetchOptions.headers as Record<string, string>,
+              retryConfig: { maxAttempts: retryAttempts || 2, delay: retryDelay || 500 }
+            });
+            break;
+          case 'PUT':
+            response = await apiClient.put(url, fetchOptions.body, {
+              headers: fetchOptions.headers as Record<string, string>,
+              retryConfig: { maxAttempts: retryAttempts || 2, delay: retryDelay || 500 }
+            });
+            break;
+          case 'DELETE':
+            response = await apiClient.delete(url, {
+              headers: fetchOptions.headers as Record<string, string>,
+              retryConfig: { maxAttempts: retryAttempts || 1, delay: retryDelay || 1000 }
+            });
+            break;
+          default:
+            throw new Error(`Unsupported method: ${method}`);
+        }
+
+        // Handle API response format
+        if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+          const apiResponse = response.data as ApiResponse<T>;
+          if (!apiResponse.success) {
+            throw new Error(apiResponse.message || 'API call failed');
+          }
+          return apiResponse.data as T;
+        }
+
+        return response.data as T;
+      } else {
+        // Fallback to standard fetch
+        const response = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...fetchOptions.headers,
+          },
+          ...fetchOptions,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: ApiResponse<T> = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || 'API call failed');
+        }
+
+        return data.data as T;
+      }
+    } catch (error) {
+      logger.error('API call failed:', {
+        url,
+        method: fetchOptions.method || 'GET',
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
     }
-
-    const data: ApiResponse<T> = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message || 'API call failed');
-    }
-
-    return data.data as T;
-  }, [url, fetchOptions]);
+  }, [url, fetchOptions, apiClient, enableRecovery, enableRetry, retryAttempts, retryDelay]);
 
   return useFetch(fetchFn, {
     immediate,
@@ -290,32 +365,64 @@ export function useMutation<TData, TVariables = any>(
     onSuccess?: (data: TData, variables: TVariables) => void;
     onError?: (error: Error, variables: TVariables) => void;
     loadingKey?: string;
+    enableRetry?: boolean;
+    enableRecovery?: boolean;
+    retryConfig?: {
+      maxAttempts: number;
+      delay: number;
+    };
   } = {}
 ) {
-  const { onSuccess, onError, loadingKey } = options;
+  const { 
+    onSuccess, 
+    onError, 
+    loadingKey, 
+    enableRetry = false,
+    enableRecovery = true,
+    retryConfig = RetryConfigs.api
+  } = options;
+  
   const [state, setState] = useState<{
     data: TData | null;
     loading: boolean;
     error: Error | null;
+    retryCount: number;
   }>({
     data: null,
     loading: false,
     error: null,
+    retryCount: 0,
   });
 
   const loadingState = loadingKey ? useLoadingState(loadingKey) : null;
+  const { handleWithRecovery, retryOperation } = useErrorRecovery();
 
   const mutate = useCallback(async (variables: TVariables): Promise<TData | null> => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       loadingState?.startLoading();
 
-      const result = await mutationFn(variables);
+      let result: TData;
+
+      if (enableRetry) {
+        // Use retry mechanism
+        result = await retryOperation(
+          () => mutationFn(variables),
+          retryConfig,
+          {
+            action: 'mutation',
+            component: loadingKey || 'unknown'
+          }
+        );
+      } else {
+        result = await mutationFn(variables);
+      }
 
       setState({
         data: result,
         loading: false,
         error: null,
+        retryCount: 0,
       });
 
       loadingState?.stopLoading();
@@ -324,23 +431,49 @@ export function useMutation<TData, TVariables = any>(
 
     } catch (error) {
       const err = error as Error;
+      
       setState(prev => ({
         ...prev,
         loading: false,
         error: err,
+        retryCount: prev.retryCount + 1,
       }));
 
       loadingState?.stopLoading();
+
+      // Enhanced error handling with recovery
+      if (enableRecovery) {
+        await handleWithRecovery(err, {
+          action: 'mutation',
+          component: loadingKey || 'unknown',
+          additionalData: { variables }
+        }, {
+          showRecoveryActions: true,
+          customRecoveryActions: [{
+            id: 'retry_mutation',
+            label: 'Coba Lagi',
+            description: 'Coba operasi sekali lagi',
+            action: async () => {
+              setState(prev => ({ ...prev, retryCount: 0 }));
+              await mutate(variables);
+            },
+            type: 'retry',
+            priority: 1
+          }]
+        });
+      }
+
       onError?.(err, variables);
       throw err;
     }
-  }, [mutationFn, onSuccess, onError, loadingState]);
+  }, [mutationFn, onSuccess, onError, loadingState, enableRetry, enableRecovery, retryConfig, handleWithRecovery, retryOperation, loadingKey]);
 
   const reset = useCallback(() => {
     setState({
       data: null,
       loading: false,
       error: null,
+      retryCount: 0,
     });
     loadingState?.stopLoading();
   }, [loadingState]);
