@@ -1,4 +1,5 @@
-import { executeQuery } from '../config/db';
+import { surveyService, database, legacyExecuteQuery as executeQuery } from '../../lib/database-service';
+import { dbLogger } from '../../lib/logger';
 import { SURVEY_QUERIES, SurveyQuestion, RatingOption, RatingType } from '../models/surveyModel';
 
 export interface QuestionWithRatingOptions extends SurveyQuestion {

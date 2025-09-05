@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable lazy loading and code splitting optimizations
-  swcMinify: true,
+  // SWC minification is enabled by default in Next.js 13+, no need to specify
   reactStrictMode: true,
   images: {
     domains: ['localhost'],
@@ -11,7 +10,7 @@ const nextConfig: NextConfig = {
     formats: ['image/webp'],
   },
   experimental: {
-    optimizeCss: true, // Minify CSS
+    optimizeCss: true, // Re-enable CSS optimization
     optimizePackageImports: ['react-icons', 'date-fns', 'lodash', 'recharts'],
   },
   env: {

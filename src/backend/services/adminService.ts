@@ -1,20 +1,19 @@
-import { executeQuery } from '../config/db';
+import { adminService } from '../../lib/database-service';
+import { dbLogger } from '../../lib/logger';
 import Admin from '../models/adminModel';
 import bcrypt from 'bcrypt';
 
 export async function findByUsername(username: string): Promise<Admin | null> {
-  const query = 'SELECT * FROM admin WHERE username = ? LIMIT 1';
-  
   try {
-    const results = await executeQuery<Admin[]>(query, [username]);
+    const result = await adminService.findByUsername(username);
     
-    if (results && results.length > 0) {
-      return results[0];
+    if (result.success && result.data && result.data.length > 0) {
+      return result.data[0] as Admin;
     }
     
     return null;
   } catch (error) {
-    console.error('Error finding admin by username:', error);
+    dbLogger.error('Error finding admin by username:', error);
     throw error;
   }
 }
@@ -23,7 +22,7 @@ export async function validatePassword(plainPassword: string, hashedPassword: st
   try {
     return await bcrypt.compare(plainPassword, hashedPassword);
   } catch (error) {
-    console.error('Error validating password:', error);
+    dbLogger.error('Error validating password:', error);
     throw error;
   }
 }
