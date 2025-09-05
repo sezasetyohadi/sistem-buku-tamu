@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 // Optimized font loading with display=swap and preload
@@ -36,10 +37,12 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <head />
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased app-mode-${appMode}`}>
-        <Toaster position="top-center" />
-        <div data-app-mode={appMode}>
-          {children}
-        </div>
+        <AuthProvider>
+          <Toaster position="top-center" />
+          <div data-app-mode={appMode}>
+            {children}
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
