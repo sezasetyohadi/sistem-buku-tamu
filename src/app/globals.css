@@ -49,10 +49,44 @@ a,
 svg, 
 .transition-theme {
   transition: 
-    background-color var(--transition-duration) ease-in-out,
-    color var(--transition-duration) ease-in-out,
-    border-color var(--transition-duration) ease-in-out,
-    box-shadow var(--transition-duration) ease-in-out;
+    background-color var(--transition-duration) ease,
+    color var(--transition-duration) ease,
+    border-color var(--transition-duration) ease,
+    fill var(--transition-duration) ease,
+    stroke var(--transition-duration) ease;
+}
+
+/* Custom scrollbar styles for better responsiveness */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Mobile scrollbar adjustments */
+@media (max-width: 640px) {
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
 }
 
 body {

@@ -312,7 +312,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0">
         {/* Top header */}
         <div className="flex-shrink-0 flex h-14 sm:h-16 bg-white shadow-sm border-b border-gray-200 z-10">
           <div className="flex-1 px-3 sm:px-4 flex justify-end items-center min-w-0">
@@ -346,9 +346,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+        <main className="flex-1 overflow-hidden bg-gray-50">
           <SectionErrorBoundary>
-            <div className="min-h-full">
+            <div className="h-full overflow-y-auto">
               {children}
             </div>
           </SectionErrorBoundary>
