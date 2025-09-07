@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken } from './src/lib/jwt';
+import { envValidator } from './src/lib/environment-validator';
 
 export function middleware(request: NextRequest) {
   const appMode = process.env.APP_MODE;
@@ -8,10 +9,21 @@ export function middleware(request: NextRequest) {
   
   console.log('Middleware - Path:', pathname, 'Mode:', appMode);
   
+  // Create response with security headers
+  const response = NextResponse.next();
+  
+  // Apply security headers to all responses
+  applySecurityHeaders(response, request);
+  
+  // HTTPS Enforcement for production
+  if (shouldEnforceHttps(request)) {
+    return enforceHttps(request);
+  }
+  
   // Always allow login page - no authentication required
   if (pathname === '/admin/login') {
     console.log('Allowing access to login page');
-    return NextResponse.next();
+    return response;
   }
   
   // Mode-specific routing
@@ -82,7 +94,55 @@ export function middleware(request: NextRequest) {
     }
   }
   
-  return NextResponse.next();
+  return response;
+}
+
+// Security Functions
+function shouldEnforceHttps(request: NextRequest): boolean {
+  try {
+    return envValidator.isHttpsEnforced() && request.nextUrl.protocol === 'http:';
+  } catch {
+    // If environment validation fails, don't enforce HTTPS to avoid breaking the app
+    return false;
+  }
+}
+
+function enforceHttps(request: NextRequest): NextResponse {
+  const httpsUrl = new URL(request.url);
+  httpsUrl.protocol = 'https:';
+  
+  return NextResponse.redirect(httpsUrl, {
+    status: 301, // Permanent redirect
+    headers: {
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
+    }
+  });
+}
+
+function applySecurityHeaders(response: NextResponse, request: NextRequest): void {
+  // Basic security headers
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  
+  // Content Security Policy
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js requires unsafe-inline/eval
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "frame-ancestors 'none'"
+  ].join('; ');
+  
+  response.headers.set('Content-Security-Policy', csp);
+
+  // HSTS Header for HTTPS connections
+  if (request.nextUrl.protocol === 'https:') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
 }
 
 function checkAdminAuthentication(request: NextRequest): boolean {

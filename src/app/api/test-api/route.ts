@@ -1,12 +1,58 @@
 /**
- * API Testing Endpoint
+ * API Testing Endpoint - SECURED
  * Test different response formats and error scenarios
+ * Requires admin authentication for security
  */
 
+import { NextRequest } from 'next/server';
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus, createPaginationMeta } from '@/lib/api-response';
+import { verifyToken } from '@/lib/jwt';
 
-export const GET = withApiMiddleware(async (request, response, context) => {
+// Security middleware for testing endpoints
+const withAdminAuth = (handler: Function) => {
+  return withApiMiddleware(async (request: NextRequest, response: any, context: any) => {
+    // Check for admin authentication
+    try {
+      const authHeader = request.headers.get('authorization');
+      const cookieToken = request.cookies.get('admin_access_token')?.value;
+      
+      const token = authHeader?.replace('Bearer ', '') || cookieToken;
+      
+      if (!token) {
+        return response.error(
+          'Authentication required for diagnostic endpoints',
+          HttpStatus.UNAUTHORIZED,
+          ErrorCodes.UNAUTHORIZED
+        );
+      }
+
+      const payload = verifyToken(token, 'admin-panel');
+      
+      if (!payload || payload.userType !== 'admin') {
+        return response.error(
+          'Admin access required for diagnostic endpoints',
+          HttpStatus.FORBIDDEN,
+          ErrorCodes.FORBIDDEN
+        );
+      }
+
+      // Add admin info to context
+      context.admin = payload;
+      
+      return handler(request, response, context);
+      
+    } catch (error) {
+      return response.error(
+        'Authentication verification failed',
+        HttpStatus.UNAUTHORIZED,
+        ErrorCodes.UNAUTHORIZED
+      );
+    }
+  });
+};
+
+export const GET = withAdminAuth(async (request, response, context) => {
   const url = new URL(request.url);
   const testType = url.searchParams.get('type') || 'success';
   

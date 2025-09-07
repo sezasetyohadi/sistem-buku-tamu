@@ -1,6 +1,7 @@
 /**
- * API Health Check Endpoint
+ * API Health Check Endpoint - SECURED
  * Provides system health information using standardized response format
+ * Requires admin authentication for detailed health data
  */
 
 import { NextRequest } from 'next/server';
@@ -8,10 +9,16 @@ import { HealthCheckService } from '../../../lib/database-service';
 import { dbLogger } from '../../../lib/logger';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { HttpStatus } from '@/lib/api-response';
+import { verifyToken } from '@/lib/jwt';
 
-interface HealthCheckData {
+// Basic health check interface (public)
+interface BasicHealthCheck {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
+}
+
+// Detailed health check interface (admin only)
+interface DetailedHealthCheck extends BasicHealthCheck {
   uptime: number;
   version: string;
   environment: string;
@@ -38,8 +45,47 @@ interface HealthCheckData {
   };
 }
 
+// Helper function to check admin authentication
+function checkAdminAuth(request: NextRequest): boolean {
+  try {
+    const authHeader = request.headers.get('authorization');
+    const cookieToken = request.cookies.get('admin_access_token')?.value;
+    
+    const token = authHeader?.replace('Bearer ', '') || cookieToken;
+    
+    if (!token) return false;
+
+    const payload = verifyToken(token, 'admin-panel');
+    return payload?.userType === 'admin';
+    
+  } catch {
+    return false;
+  }
+}
+
 export const GET = withApiMiddleware(async (request, response, context) => {
   const startTime = Date.now();
+  const isAdmin = checkAdminAuth(request);
+  
+  // For non-admin users, return basic health status only
+  if (!isAdmin) {
+    try {
+      const healthCheck = await HealthCheckService.checkHealth();
+      const basicStatus: BasicHealthCheck = {
+        status: healthCheck.healthy ? 'healthy' : 'unhealthy',
+        timestamp: new Date().toISOString()
+      };
+      
+      return response.success(basicStatus, 'Basic health check completed');
+    } catch {
+      return response.success({
+        status: 'unhealthy' as const,
+        timestamp: new Date().toISOString()
+      }, 'Basic health check completed');
+    }
+  }
+
+  // Full detailed health check for admin users
   let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
   
   // Test database connection using existing health check service
@@ -80,7 +126,7 @@ export const GET = withApiMiddleware(async (request, response, context) => {
   const memoryUsage = process.memoryUsage();
   const uptime = process.uptime();
   
-  const healthData: HealthCheckData = {
+  const healthData: DetailedHealthCheck = {
     status: overallStatus,
     timestamp: new Date().toISOString(),
     uptime: Math.floor(uptime),
