@@ -299,23 +299,35 @@ export class EnvironmentValidator {
 export const envValidator = EnvironmentValidator.getInstance();
 
 // Auto-validate on import in production or when explicitly requested
-if (process.env.NODE_ENV === 'production') {
-  try {
-    envValidator.validateEnvironment();
-    console.log('🔒 Production environment validated successfully');
-  } catch (error) {
-    console.error('🚨 Critical: Environment validation failed during startup');
-    console.error('   Application cannot start safely with current configuration');
-    console.error('   Error:', error);
-    process.exit(1);
-  }
-} else if (process.env.VALIDATE_ENV === 'true') {
-  try {
-    envValidator.validateEnvironment();
-    console.log('✅ Development environment validation passed');
-  } catch (error) {
-    console.warn('⚠️  Environment validation failed:', error);
-    console.warn('   Continuing in development mode...');
+// Note: process.exit() cannot be used in Edge Runtime (middleware)
+if (typeof process !== 'undefined' && process.env) {
+  const isEdgeRuntime = process.env.NEXT_RUNTIME === 'edge' || 
+                       typeof globalThis !== 'undefined' && 'EdgeRuntime' in globalThis;
+  
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      envValidator.validateEnvironment();
+      console.log('🔒 Production environment validated successfully');
+    } catch (error) {
+      console.error('🚨 Critical: Environment validation failed during startup');
+      console.error('   Application cannot start safely with current configuration');
+      console.error('   Error:', error);
+      
+      // Only exit in Node.js runtime, not Edge Runtime
+      if (!isEdgeRuntime && typeof process.exit === 'function') {
+        process.exit(1);
+      } else {
+        throw new Error('Environment validation failed - cannot start application');
+      }
+    }
+  } else if (process.env.VALIDATE_ENV === 'true') {
+    try {
+      envValidator.validateEnvironment();
+      console.log('✅ Development environment validation passed');
+    } catch (error) {
+      console.warn('⚠️  Environment validation failed:', error);
+      console.warn('   Continuing in development mode...');
+    }
   }
 }
 

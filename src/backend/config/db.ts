@@ -1,6 +1,8 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import type { PoolOptions } from 'mysql2/promise';
+import { dbLogger } from '@/lib/logger';
+import { DatabaseError } from '@/lib/error-handling';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -45,11 +47,13 @@ const slowQueryThreshold = Number(process.env.SLOW_QUERY_THRESHOLD) || 1000; // 
 // Query performance monitoring
 function logSlowQuery(query: string, duration: number, params?: any[]) {
   slowQueryCount++;
-  console.warn(`🐌 SLOW QUERY [${duration}ms]:`, {
-    query: query.substring(0, 200) + (query.length > 200 ? '...' : ''),
+  dbLogger.warn(`Slow Query Detected`, {
+    operation: 'SLOW_QUERY',
     duration,
-    params: params ? params.slice(0, 5) : [],
-    timestamp: new Date().toISOString()
+    metadata: {
+      query: query.substring(0, 200) + (query.length > 200 ? '...' : ''),
+      paramCount: params?.length || 0
+    }
   });
 }
 
@@ -57,10 +61,13 @@ function logSlowQuery(query: string, duration: number, params?: any[]) {
 export async function getConnection() {
   try {
     const connection = await pool.getConnection();
+    dbLogger.debug('Database connection acquired', { operation: 'GET_CONNECTION' });
     return connection;
   } catch (error) {
-    console.error('Error connecting to the database:', error);
-    throw error;
+    dbLogger.error('Failed to get database connection', {
+      operation: 'GET_CONNECTION_ERROR'
+    }, error instanceof Error ? error : new Error(String(error)));
+    throw new DatabaseError('Failed to connect to database', { error: String(error) });
   }
 }
 

@@ -17,6 +17,8 @@ import {
 import { GuestFormData } from '@/types/database-types';
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
+import { ValidationError, DatabaseError, handleDatabaseError } from '@/lib/error-handling';
+import { apiLogger } from '@/lib/logger';
 
 // Optimized GET with pagination and filtering
 export const GET = withApiMiddleware(async (request, response, context) => {
@@ -37,13 +39,46 @@ export const GET = withApiMiddleware(async (request, response, context) => {
     search: searchParams.get('search') || undefined
   };
 
-  // Use optimized paginated query for better performance
-  const result = await getGuestsPaginated(filters);
-  
-  return response.success(
-    result,
-    'Guests retrieved successfully'
-  );
+  try {
+    // Validate pagination parameters
+    if (filters.limit && (filters.limit < 1 || filters.limit > 100)) {
+      throw new ValidationError('Limit must be between 1 and 100', { limit: filters.limit });
+    }
+
+    if (filters.offset && filters.offset < 0) {
+      throw new ValidationError('Offset must be non-negative', { offset: filters.offset });
+    }
+
+    apiLogger.info('Retrieving guests with filters', { 
+      operation: 'GET_GUESTS',
+      metadata: filters 
+    });
+
+    // Use optimized paginated query for better performance
+    const result = await getGuestsPaginated(filters);
+    
+    apiLogger.info('Guests retrieved successfully', {
+      operation: 'GET_GUESTS_SUCCESS',
+      metadata: { total: result.total, page: result.page }
+    });
+    
+    return response.success(
+      result,
+      'Guests retrieved successfully'
+    );
+  } catch (error) {
+    apiLogger.error('Failed to retrieve guests', {
+      operation: 'GET_GUESTS_ERROR',
+      metadata: { appliedFilters: filters }
+    }, error instanceof Error ? error : new Error(String(error)));
+
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    
+    // Handle database errors
+    handleDatabaseError(error, 'guest retrieval', context.requestId);
+  }
 });
 
 export const POST = withApiMiddleware(async (request, response, context) => {

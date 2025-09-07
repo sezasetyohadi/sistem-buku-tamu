@@ -9,8 +9,11 @@ import GuestDetailModal from '@/components/admin/GuestDetailModal';
 import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
 import { toast } from "react-hot-toast";
 import ExcelJS from 'exceljs';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorMessage, LoadingSpinner, TableLoading } from '@/components/ui/loading-states';
+import { useErrorHandler, useFetch } from '@/hooks/useErrorHandling';
 
-export default function AdminGuestsManagement() {
+function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua Status");
   const [dateFilter, setDateFilter] = useState("Semua Waktu");
@@ -22,6 +25,7 @@ export default function AdminGuestsManagement() {
   });
   const [guests, setGuests] = useState<DaftarTamu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -369,6 +373,8 @@ export default function AdminGuestsManagement() {
 
   const fetchData = async () => {
     try {
+      setError(null); // Clear previous errors
+      
       // Fetch statistics
       const statsResponse = await fetch('/api/statistics');
       if (!statsResponse.ok) {
@@ -421,7 +427,21 @@ export default function AdminGuestsManagement() {
       }
       
       if (guestsData && guestsData.success) {
-        const guestsArray = guestsData.data || [];
+        const responseData = guestsData.data;
+        
+        // Handle new paginated structure from performance optimization
+        let guestsArray: any[] = [];
+        if (responseData && typeof responseData === 'object') {
+          // New paginated structure: { guests, total, page, limit }
+          if (Array.isArray(responseData.guests)) {
+            guestsArray = responseData.guests;
+          }
+          // Legacy structure: direct array
+          else if (Array.isArray(responseData)) {
+            guestsArray = responseData;
+          }
+        }
+        
         if (Array.isArray(guestsArray)) {
           // Map tanggapan to status_kunjungan if needed
           const mappedGuests = guestsArray.map(guest => {
@@ -434,11 +454,25 @@ export default function AdminGuestsManagement() {
         } else {
           console.error('Guests data is not an array:', guestsData.data);
           setGuests([]);
+          setError('Format data tidak valid dari server');
         }
+      } else {
+        setError('Gagal mengambil data tamu dari server');
       }
     } catch (error) {
       console.error("Error fetching data:", error);
       setGuests([]);
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          setError('Gagal terhubung ke server. Periksa koneksi internet Anda.');
+        } else if (error.message.includes('JSON')) {
+          setError('Server mengembalikan data yang tidak valid.');
+        } else {
+          setError(error.message || 'Terjadi kesalahan saat mengambil data');
+        }
+      } else {
+        setError('Terjadi kesalahan yang tidak diketahui');
+      }
     }
   };
 
@@ -450,6 +484,23 @@ export default function AdminGuestsManagement() {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">Manajemen Data Tamu</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2 leading-relaxed">Kelola semua data tamu yang telah mendaftar dalam sistem</p>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6">
+            <ErrorMessage
+              message={error}
+              type="error"
+              action={{
+                label: "Coba Lagi",
+                onClick: () => {
+                  setError(null);
+                  handleRefresh();
+                }
+              }}
+            />
+          </div>
+        )}
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -1050,5 +1101,14 @@ export default function AdminGuestsManagement() {
       )}
       </div>
     </div>
+  );
+}
+
+// Wrap component with error boundary
+export default function GuestManagementWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <AdminGuestsManagement />
+    </ErrorBoundary>
   );
 }

@@ -4,6 +4,8 @@
  */
 
 import { executeQuery, executeQueryCached, getDatabaseStats, getPoolStatus } from '../config/db';
+import { dbLogger } from '@/lib/logger';
+import { handleDatabaseError } from '@/lib/error-handling';
 
 export interface GuestQueryFilters {
   status?: string;
@@ -96,11 +98,21 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
   `;
 
   try {
+    dbLogger.debug('Executing paginated guest query', {
+      operation: 'GET_GUESTS_PAGINATED',
+      metadata: { limit, offset, whereConditions: whereConditions.length }
+    });
+
     // Execute both queries in parallel for better performance
     const [guests, countResult] = await Promise.all([
       executeQuery<GuestSummary[]>(guestsQuery, [...queryParams, limit, offset]),
       executeQuery<Array<{ total: number }>>(countQuery, queryParams)
     ]);
+
+    dbLogger.debug('Paginated guest query completed', {
+      operation: 'GET_GUESTS_PAGINATED_SUCCESS',
+      metadata: { resultCount: guests.length, total: countResult[0]?.total || 0 }
+    });
 
     return {
       guests,
@@ -109,8 +121,12 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
       limit
     };
   } catch (error) {
-    console.error('Error in getGuestsPaginated:', error);
-    throw error;
+    dbLogger.error('Error in getGuestsPaginated', {
+      operation: 'GET_GUESTS_PAGINATED_ERROR',
+      metadata: { limit, offset, queryParamsCount: queryParams.length }
+    }, error instanceof Error ? error : new Error(String(error)));
+    
+    handleDatabaseError(error, 'getGuestsPaginated');
   }
 }
 

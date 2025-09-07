@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/components/ui/LoadingState";
 import { PageErrorBoundary } from "@/components/error/ErrorBoundary";
+import "@/lib/global-error-handler"; // Initialize global error handling
 import "./globals.css";
 
 // Optimized font loading with display=swap and preload
