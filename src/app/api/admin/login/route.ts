@@ -5,29 +5,64 @@ import { getConnection } from '../../../../backend/config/db';
 import { generateAdminTokens } from '../../../../lib/jwt';
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
+import { 
+  validateAndSanitize,
+  ADMIN_LOGIN_SCHEMA,
+  SANITIZATION_CONFIGS
+} from '@/lib/validation';
+import { apiLogger } from '@/lib/logger';
 
 export const POST = withApiMiddleware(async (request, apiResponse, context) => {
   let connection;
   
   try {
-    const { username, password, rememberMe } = await validateJsonBody(request);
+    const body = await validateJsonBody(request);
+
+    // Validate and sanitize input data
+    const validation = validateAndSanitize(
+      body,
+      ADMIN_LOGIN_SCHEMA,
+      SANITIZATION_CONFIGS.ADMIN_LOGIN
+    );
+
+    if (!validation.isValid) {
+      apiLogger.warn('Admin login validation failed', {
+        operation: 'POST_ADMIN_LOGIN_VALIDATION_ERROR',
+        metadata: {
+          errors: validation.errors,
+          firstError: validation.firstError,
+          ipAddress: context.ipAddress
+        }
+      });
+
+      return apiResponse.error(
+        validation.firstError || 'Data login tidak valid',
+        HttpStatus.BAD_REQUEST,
+        ErrorCodes.VALIDATION_ERROR,
+        validation.errors
+      );
+    }
+
+    const { username, password } = validation.data;
+    const rememberMe = body.rememberMe; // This field is not validated as it's optional
 
     // Get client info for security tracking
     const ipAddress = context.ipAddress;
     const userAgent = context.userAgent;
 
-    // Validate input
-    if (!username || !password) {
-      return apiResponse.error(
-        'Username dan password harus diisi',
-        HttpStatus.BAD_REQUEST,
-        ErrorCodes.MISSING_REQUIRED_FIELD
-      );
-    }
-
     // Connect to database
     connection = await getConnection();
     const securityService = new LoginSecurityService(connection);
+
+    apiLogger.info('Admin login attempt', {
+      operation: 'POST_ADMIN_LOGIN_ATTEMPT',
+      metadata: {
+        username: username,
+        ipAddress: ipAddress,
+        userAgent: userAgent,
+        rememberMe: !!rememberMe
+      }
+    });
 
     // Check if login is allowed (rate limiting/account locks)
     let securityStatus;
@@ -41,6 +76,15 @@ export const POST = withApiMiddleware(async (request, apiResponse, context) => {
         userAgent: userAgent!,
         success: false,
         failureReason: error.message
+      });
+
+      apiLogger.warn('Admin login blocked by security service', {
+        operation: 'POST_ADMIN_LOGIN_BLOCKED',
+        metadata: {
+          username,
+          ipAddress,
+          reason: error.message
+        }
       });
       
       return apiResponse.error(

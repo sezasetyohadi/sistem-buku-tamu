@@ -1,9 +1,11 @@
 /**
  * Centralized Validation System
- * Provides schema-based validation with consistent error messages
+ * Provides schema-based validation with consistent error messages and sanitization
  */
 
 import { logger } from '@/lib/logger';
+import validator from 'validator';
+import { ValidationError } from '@/lib/error-handling';
 
 // Create validation logger
 const validationLogger = logger.scope('VALIDATION');
@@ -259,3 +261,505 @@ export function hasFieldError(errors: Record<string, string>, fieldName: string)
 export function getFieldError(errors: Record<string, string>, fieldName: string): string | undefined {
   return errors[fieldName];
 }
+
+// ================== SANITIZATION FUNCTIONS ==================
+
+/**
+ * Sanitization options interface
+ */
+export interface SanitizationOptions {
+  trim?: boolean;
+  escape?: boolean;
+  normalizeEmail?: boolean;
+  normalizeWhitespace?: boolean;
+  removeSpecialChars?: boolean;
+  maxLength?: number;
+  lowercase?: boolean;
+  uppercase?: boolean;
+}
+
+/**
+ * Sanitize a string value based on options
+ */
+export function sanitizeString(value: string, options: SanitizationOptions = {}): string {
+  let sanitized = value;
+
+  // Trim whitespace
+  if (options.trim !== false) {
+    sanitized = sanitized.trim();
+  }
+
+  // Normalize whitespace (replace multiple spaces with single space)
+  if (options.normalizeWhitespace) {
+    sanitized = sanitized.replace(/\s+/g, ' ');
+  }
+
+  // Convert case
+  if (options.lowercase) {
+    sanitized = sanitized.toLowerCase();
+  }
+  if (options.uppercase) {
+    sanitized = sanitized.toUpperCase();
+  }
+
+  // Remove special characters (keep only alphanumeric, spaces, and basic punctuation)
+  if (options.removeSpecialChars) {
+    sanitized = sanitized.replace(/[^\w\s.,!?-]/g, '');
+  }
+
+  // Escape HTML entities
+  if (options.escape) {
+    sanitized = validator.escape(sanitized);
+  }
+
+  // Limit length
+  if (options.maxLength && sanitized.length > options.maxLength) {
+    sanitized = sanitized.substring(0, options.maxLength);
+  }
+
+  return sanitized;
+}
+
+/**
+ * Sanitize email addresses
+ */
+export function sanitizeEmail(email: string, options: SanitizationOptions = {}): string {
+  let sanitized = email.trim().toLowerCase();
+
+  // Normalize email if requested
+  if (options.normalizeEmail) {
+    sanitized = validator.normalizeEmail(sanitized, {
+      gmail_lowercase: true,
+      gmail_remove_dots: false,
+      outlookdotcom_lowercase: true,
+      yahoo_lowercase: true,
+      icloud_lowercase: true
+    }) || sanitized;
+  }
+
+  return sanitized;
+}
+
+/**
+ * Sanitize phone numbers
+ */
+export function sanitizePhone(phone: string): string {
+  // Remove all non-numeric characters except +
+  let sanitized = phone.replace(/[^\d+]/g, '');
+  
+  // Convert Indonesian format
+  if (sanitized.startsWith('0')) {
+    sanitized = '+62' + sanitized.substring(1);
+  } else if (sanitized.startsWith('62') && !sanitized.startsWith('+62')) {
+    sanitized = '+' + sanitized;
+  } else if (!sanitized.startsWith('+') && sanitized.length > 8) {
+    sanitized = '+62' + sanitized;
+  }
+
+  return sanitized;
+}
+
+/**
+ * Sanitize a data object based on schema rules
+ */
+export function sanitizeData(
+  data: Record<string, any>, 
+  sanitizationRules: Record<string, SanitizationOptions>
+): Record<string, any> {
+  const sanitized: Record<string, any> = { ...data };
+
+  for (const [field, options] of Object.entries(sanitizationRules)) {
+    if (field in sanitized && typeof sanitized[field] === 'string') {
+      sanitized[field] = sanitizeString(sanitized[field], options);
+    }
+  }
+
+  validationLogger.debug('Data sanitization completed:', {
+    fieldsProcessed: Object.keys(sanitizationRules),
+    originalData: data,
+    sanitizedData: sanitized
+  });
+
+  return sanitized;
+}
+
+/**
+ * Comprehensive input sanitization for common use cases
+ */
+export const INPUT_SANITIZERS = {
+  // General text input
+  text: (value: string): string => sanitizeString(value, {
+    trim: true,
+    normalizeWhitespace: true,
+    escape: true
+  }),
+
+  // Name fields
+  name: (value: string): string => sanitizeString(value, {
+    trim: true,
+    normalizeWhitespace: true,
+    removeSpecialChars: true
+  }),
+
+  // Email fields
+  email: (value: string): string => sanitizeEmail(value, {
+    normalizeEmail: true
+  }),
+
+  // Phone fields
+  phone: (value: string): string => sanitizePhone(value),
+
+  // URL fields
+  url: (value: string): string => {
+    let sanitized = value.trim();
+    if (sanitized && !sanitized.startsWith('http://') && !sanitized.startsWith('https://')) {
+      sanitized = 'https://' + sanitized;
+    }
+    return sanitized;
+  },
+
+  // Textarea/description fields
+  description: (value: string): string => sanitizeString(value, {
+    trim: true,
+    normalizeWhitespace: true,
+    escape: true,
+    maxLength: 1000
+  }),
+
+  // Username fields
+  username: (value: string): string => sanitizeString(value, {
+    trim: true,
+    lowercase: true,
+    removeSpecialChars: true
+  }),
+
+  // Password fields (minimal sanitization)
+  password: (value: string): string => value.trim(),
+
+  // Numeric strings
+  numeric: (value: string): string => value.replace(/[^\d]/g, ''),
+
+  // Decimal strings
+  decimal: (value: string): string => value.replace(/[^\d.]/g, ''),
+} as const;
+
+/**
+ * Apply multiple sanitizers to data
+ */
+export function applySanitizers(
+  data: Record<string, any>,
+  sanitizers: Record<string, keyof typeof INPUT_SANITIZERS>
+): Record<string, any> {
+  const sanitized: Record<string, any> = { ...data };
+
+  for (const [field, sanitizerType] of Object.entries(sanitizers)) {
+    if (field in sanitized && typeof sanitized[field] === 'string') {
+      const sanitizer = INPUT_SANITIZERS[sanitizerType];
+      sanitized[field] = sanitizer(sanitized[field]);
+    }
+  }
+
+  return sanitized;
+}
+
+// ================== VALIDATION SCHEMAS ==================
+
+/**
+ * Guest Registration Schema
+ */
+export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
+  nama: {
+    required: true,
+    minLength: 2,
+    maxLength: 100,
+    pattern: VALIDATION_PATTERNS.NAME,
+    message: 'Nama harus berisi 2-100 karakter dan hanya huruf serta spasi'
+  },
+  email: {
+    required: true,
+    email: true,
+    maxLength: 255,
+    message: 'Email tidak valid atau terlalu panjang'
+  },
+  phone: {
+    required: true,
+    phone: true,
+    message: 'Nomor telepon tidak valid (contoh: 08123456789 atau +628123456789)'
+  },
+  bidang_tujuan_id: {
+    required: true,
+    integer: true,
+    min: 1,
+    message: 'Pilih bidang tujuan yang valid'
+  },
+  pendidikan_terakhir_id: {
+    required: true,
+    integer: true,
+    min: 1,
+    message: 'Pilih pendidikan terakhir yang valid'
+  },
+  profesi_id: {
+    required: true,
+    integer: true,
+    min: 1,
+    message: 'Pilih profesi yang valid'
+  },
+  tujuan_kunjungan_id: {
+    required: true,
+    integer: true,
+    min: 1,
+    message: 'Pilih tujuan kunjungan yang valid'
+  },
+  instansi: {
+    required: false,
+    maxLength: 255,
+    message: 'Nama instansi maksimal 255 karakter'
+  },
+  keterangan: {
+    required: false,
+    maxLength: 500,
+    message: 'Keterangan maksimal 500 karakter'
+  }
+};
+
+/**
+ * Admin Login Schema
+ */
+export const ADMIN_LOGIN_SCHEMA: ValidationSchema = {
+  username: {
+    required: true,
+    minLength: 3,
+    maxLength: 50,
+    pattern: VALIDATION_PATTERNS.USERNAME,
+    message: 'Username harus 3-50 karakter, hanya huruf, angka, dan underscore'
+  },
+  password: {
+    required: true,
+    minLength: 6,
+    message: 'Password minimal 6 karakter'
+  }
+};
+
+/**
+ * Survey Response Schema
+ */
+export const SURVEY_RESPONSE_SCHEMA: ValidationSchema = {
+  guest_id: {
+    required: true,
+    integer: true,
+    min: 1,
+    message: 'ID tamu tidak valid'
+  },
+  ratings: {
+    required: true,
+    custom: (value) => {
+      if (!value || typeof value !== 'object') {
+        return 'Rating harus berupa objek';
+      }
+      
+      // Check if all required rating questions are answered
+      const ratings = value as Record<string, number>;
+      const hasRatings = Object.keys(ratings).length > 0;
+      
+      if (!hasRatings) {
+        return 'Minimal satu rating harus diisi';
+      }
+
+      // Validate each rating value
+      for (const [questionId, rating] of Object.entries(ratings)) {
+        if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+          return `Rating untuk pertanyaan ${questionId} harus antara 1-5`;
+        }
+      }
+
+      return null;
+    }
+  },
+  informasi_ids: {
+    required: false,
+    custom: (value) => {
+      if (value && Array.isArray(value)) {
+        const ids = value as number[];
+        for (const id of ids) {
+          if (!Number.isInteger(id) || id < 1) {
+            return 'ID informasi tidak valid';
+          }
+        }
+      }
+      return null;
+    }
+  },
+  salinan_ids: {
+    required: false,
+    custom: (value) => {
+      if (value && Array.isArray(value)) {
+        const ids = value as number[];
+        for (const id of ids) {
+          if (!Number.isInteger(id) || id < 1) {
+            return 'ID salinan tidak valid';
+          }
+        }
+      }
+      return null;
+    }
+  }
+};
+
+/**
+ * Password Reset Schema
+ */
+export const PASSWORD_RESET_SCHEMA: ValidationSchema = {
+  token: {
+    required: true,
+    minLength: 10,
+    message: 'Token reset password tidak valid'
+  },
+  password: {
+    required: true,
+    minLength: 6,
+    maxLength: 128,
+    custom: (value) => {
+      if (typeof value !== 'string') return 'Password harus berupa text';
+      
+      const password = value as string;
+      
+      // Check for at least one uppercase letter
+      if (!/[A-Z]/.test(password)) {
+        return 'Password harus mengandung minimal satu huruf besar';
+      }
+      
+      // Check for at least one lowercase letter
+      if (!/[a-z]/.test(password)) {
+        return 'Password harus mengandung minimal satu huruf kecil';
+      }
+      
+      // Check for at least one number
+      if (!/\d/.test(password)) {
+        return 'Password harus mengandung minimal satu angka';
+      }
+      
+      return null;
+    }
+  },
+  confirmPassword: {
+    required: true,
+    custom: (value, data) => {
+      if (value !== data?.password) {
+        return 'Konfirmasi password tidak cocok';
+      }
+      return null;
+    }
+  }
+};
+
+/**
+ * Profile Update Schema
+ */
+export const PROFILE_UPDATE_SCHEMA: ValidationSchema = {
+  name: {
+    required: true,
+    minLength: 2,
+    maxLength: 100,
+    pattern: VALIDATION_PATTERNS.NAME,
+    message: 'Nama harus berisi 2-100 karakter dan hanya huruf serta spasi'
+  },
+  email: {
+    required: true,
+    email: true,
+    maxLength: 255,
+    message: 'Email tidak valid atau terlalu panjang'
+  },
+  currentPassword: {
+    required: false,
+    minLength: 6,
+    message: 'Password saat ini minimal 6 karakter'
+  },
+  newPassword: {
+    required: false,
+    minLength: 6,
+    maxLength: 128,
+    custom: (value, data) => {
+      // Only validate if currentPassword is provided
+      if (data?.currentPassword && !value) {
+        return 'Password baru wajib diisi jika mengubah password';
+      }
+      
+      if (value && typeof value === 'string') {
+        // Same strength validation as password reset
+        if (!/[A-Z]/.test(value)) {
+          return 'Password harus mengandung minimal satu huruf besar';
+        }
+        if (!/[a-z]/.test(value)) {
+          return 'Password harus mengandung minimal satu huruf kecil';
+        }
+        if (!/\d/.test(value)) {
+          return 'Password harus mengandung minimal satu angka';
+        }
+      }
+      
+      return null;
+    }
+  }
+};
+
+// ================== SANITIZATION CONFIGURATIONS ==================
+
+/**
+ * Sanitization configurations for different schemas
+ */
+export const SANITIZATION_CONFIGS = {
+  GUEST_REGISTRATION: {
+    nama: { trim: true, normalizeWhitespace: true, removeSpecialChars: true },
+    email: { trim: true, lowercase: true, normalizeEmail: true },
+    phone: { trim: true },
+    instansi: { trim: true, normalizeWhitespace: true, escape: true },
+    keterangan: { trim: true, normalizeWhitespace: true, escape: true, maxLength: 500 }
+  },
+  
+  ADMIN_LOGIN: {
+    username: { trim: true, lowercase: true },
+    password: { trim: true }
+  },
+  
+  PROFILE_UPDATE: {
+    name: { trim: true, normalizeWhitespace: true, removeSpecialChars: true },
+    email: { trim: true, lowercase: true, normalizeEmail: true },
+    currentPassword: { trim: true },
+    newPassword: { trim: true }
+  }
+} as const;
+
+/**
+ * Complete validation and sanitization function
+ */
+export function validateAndSanitize<T extends Record<string, any>>(
+  data: T,
+  schema: ValidationSchema,
+  sanitizationConfig?: Record<string, SanitizationOptions>
+): { isValid: boolean; data: T; errors: Record<string, string>; firstError?: string } {
+  // First sanitize the data
+  const sanitizedData = sanitizationConfig 
+    ? sanitizeData(data, sanitizationConfig) as T
+    : data;
+
+  // Then validate the sanitized data
+  const validationResult = validateSchema(sanitizedData, schema);
+
+  return {
+    isValid: validationResult.isValid,
+    data: sanitizedData,
+    errors: validationResult.errors,
+    firstError: validationResult.firstError
+  };
+}
+
+/**
+ * Pre-configured validators for common use cases
+ */
+export const VALIDATORS = {
+  guestRegistration: createValidator(GUEST_REGISTRATION_SCHEMA),
+  adminLogin: createValidator(ADMIN_LOGIN_SCHEMA),
+  surveyResponse: createValidator(SURVEY_RESPONSE_SCHEMA),
+  passwordReset: createValidator(PASSWORD_RESET_SCHEMA),
+  profileUpdate: createValidator(PROFILE_UPDATE_SCHEMA),
+} as const;

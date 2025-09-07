@@ -19,6 +19,11 @@ import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
 import { ValidationError, DatabaseError, handleDatabaseError } from '@/lib/error-handling';
 import { apiLogger } from '@/lib/logger';
+import { 
+  validateAndSanitize,
+  GUEST_REGISTRATION_SCHEMA,
+  SANITIZATION_CONFIGS
+} from '@/lib/validation';
 
 // Optimized GET with pagination and filtering
 export const GET = withApiMiddleware(async (request, response, context) => {
@@ -82,73 +87,122 @@ export const GET = withApiMiddleware(async (request, response, context) => {
 });
 
 export const POST = withApiMiddleware(async (request, response, context) => {
-  const body = await validateJsonBody(request);
-  
-  // Validasi field wajib
-  if (!body.nama) {
-    return response.error(
-      'Nama harus diisi',
-      HttpStatus.BAD_REQUEST,
-      ErrorCodes.MISSING_REQUIRED_FIELD,
-      undefined,
-      'nama'
-    );
-  }
-
-  // Validasi jenis kelamin harus enum yang benar
-  if (body.jenis_kelamin && !['Laki-laki', 'Perempuan'].includes(body.jenis_kelamin)) {
-    return response.error(
-      'Jenis kelamin harus "Laki-laki" atau "Perempuan"',
-      HttpStatus.BAD_REQUEST,
-      ErrorCodes.VALIDATION_ERROR,
-      undefined,
-      'jenis_kelamin'
-    );
-  }
-
-  // Pastikan data untuk guestFormData sesuai dengan struktur tabel daftar_tamu
-  const guestData: GuestFormData = {
-    nama: body.nama,
-    email: body.email || '',
-    nomor_telp: body.nomor_telp || undefined,
-    alamat: body.alamat || '',
-    jenis_kelamin: body.jenis_kelamin || 'Laki-laki',
-    pendidikan_terakhir_id: body.pendidikan_terakhir_id ? parseInt(body.pendidikan_terakhir_id) : undefined,
-    profesi_id: body.profesi_id ? parseInt(body.profesi_id) : undefined,
-    asal_instansi: body.asal_instansi || undefined,
-    keperluan: body.keperluan || 'Kunjungan umum',
-    catatan: body.catatan || undefined, // Add catatan_tambahan
-    bidang_tujuan_id: body.bidang_tujuan_id ? parseInt(body.bidang_tujuan_id) : undefined,
-    tujuan_kunjungan_id: body.tujuan_kunjungan_id ? parseInt(body.tujuan_kunjungan_id) : undefined,
-    file_upload: body.file_upload || undefined,
-    cara_memperoleh: body.cara_memperoleh || undefined, // Pass checkbox data
-    cara_salinan: body.cara_salinan || undefined // Pass checkbox data
-  };
-
-  const guestId = await createGuest(guestData);
-  
-  // Create token for the new guest
-  let tokenData = null;
   try {
-    tokenData = await createToken(guestId);
-  } catch (tokenError: any) {
-    // Continue without token if token creation fails - log but don't fail the request
-    context.requestId && console.warn(`Token creation failed for guest ${guestId}:`, tokenError.message);
+    const body = await validateJsonBody(request);
+    
+    // Validate and sanitize input data
+    const validation = validateAndSanitize(
+      body,
+      GUEST_REGISTRATION_SCHEMA,
+      SANITIZATION_CONFIGS.GUEST_REGISTRATION
+    );
+
+    if (!validation.isValid) {
+      apiLogger.warn('Guest registration validation failed', {
+        operation: 'POST_GUEST_VALIDATION_ERROR',
+        metadata: {
+          errors: validation.errors,
+          firstError: validation.firstError
+        }
+      });
+
+      return response.error(
+        validation.firstError || 'Data tidak valid',
+        HttpStatus.BAD_REQUEST,
+        ErrorCodes.VALIDATION_ERROR,
+        validation.errors
+      );
+    }
+
+    const sanitizedData = validation.data;
+
+    // Map sanitized data to GuestFormData structure
+    const guestData: GuestFormData = {
+      nama: sanitizedData.nama,
+      email: sanitizedData.email,
+      nomor_telp: sanitizedData.phone || undefined,
+      alamat: sanitizedData.alamat || '',
+      jenis_kelamin: sanitizedData.jenis_kelamin || 'Laki-laki',
+      pendidikan_terakhir_id: sanitizedData.pendidikan_terakhir_id,
+      profesi_id: sanitizedData.profesi_id,
+      asal_instansi: sanitizedData.instansi || undefined,
+      keperluan: sanitizedData.keterangan || 'Kunjungan umum',
+      catatan: sanitizedData.catatan || undefined,
+      bidang_tujuan_id: sanitizedData.bidang_tujuan_id,
+      tujuan_kunjungan_id: sanitizedData.tujuan_kunjungan_id,
+      file_upload: sanitizedData.file_upload || undefined,
+      cara_memperoleh: sanitizedData.cara_memperoleh || undefined,
+      cara_salinan: sanitizedData.cara_salinan || undefined
+    };
+
+    apiLogger.info('Creating new guest with validated data', {
+      operation: 'POST_GUEST_CREATE',
+      metadata: {
+        hasEmail: !!guestData.email,
+        hasPhone: !!guestData.nomor_telp,
+        bidangTujuan: guestData.bidang_tujuan_id,
+        profesi: guestData.profesi_id
+      }
+    });
+
+    const guestId = await createGuest(guestData);
+    
+    // Create token for the new guest
+    let tokenData = null;
+    try {
+      tokenData = await createToken(guestId);
+      
+      apiLogger.info('Token created successfully for guest', {
+        operation: 'POST_GUEST_TOKEN_CREATED',
+        metadata: { guestId, tokenId: tokenData.id }
+      });
+    } catch (tokenError: any) {
+      // Continue without token if token creation fails - log but don't fail the request
+      apiLogger.warn('Token creation failed for guest', {
+        operation: 'POST_GUEST_TOKEN_ERROR',
+        metadata: { guestId },
+        error: tokenError.message
+      });
+    }
+    
+    const responseData = { 
+      id: guestId,
+      ...guestData,
+      token: tokenData ? {
+        id: tokenData.id,
+        token: tokenData.token,
+        is_active: tokenData.is_active,
+        created_at: tokenData.created_at
+      } : null
+    };
+
+    apiLogger.info('Guest registration completed successfully', {
+      operation: 'POST_GUEST_SUCCESS',
+      metadata: { 
+        guestId, 
+        hasToken: !!tokenData,
+        validationPassed: true 
+      }
+    });
+    
+    return response.created(
+      responseData,
+      'Tamu berhasil terdaftar'
+    );
+  } catch (error) {
+    apiLogger.error('Guest registration failed', {
+      operation: 'POST_GUEST_ERROR',
+      metadata: { 
+        requestId: context.requestId,
+        hasBody: !!request.body
+      }
+    }, error instanceof Error ? error : new Error(String(error)));
+
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    
+    // Handle database errors
+    handleDatabaseError(error, 'guest creation', context.requestId);
   }
-  
-  const responseData = { 
-    id: guestId,
-    ...guestData,
-    token: tokenData ? {
-      id: tokenData.id,
-      token: tokenData.token,
-      is_active: tokenData.is_active,
-      created_at: tokenData.created_at
-    } : null
-  };
-  
-  return response.created(
-    responseData,
-    'Tamu berhasil terdaftar'
-  );
 });
