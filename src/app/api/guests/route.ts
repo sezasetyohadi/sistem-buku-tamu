@@ -3,6 +3,10 @@ import {
   getAllGuests, 
   createGuest
 } from '@/backend/services/guestService';
+import { 
+  getGuestsPaginated,
+  GuestQueryFilters 
+} from '@/backend/services/database-performance.service';
 import { createToken } from '@/backend/services/tokenService';
 import {
   getEducationOptions, 
@@ -14,14 +18,30 @@ import { GuestFormData } from '@/types/database-types';
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
 
-// No mock data - we'll use real data from the database
-
+// Optimized GET with pagination and filtering
 export const GET = withApiMiddleware(async (request, response, context) => {
-  // Tables are now handled by migrations
-  const guests = await getAllGuests();
+  const url = new URL(request.url);
+  const searchParams = url.searchParams;
+
+  // Extract query parameters for pagination and filtering
+  const filters: GuestQueryFilters = {
+    status: searchParams.get('status') || undefined,
+    dateFrom: searchParams.get('dateFrom') || undefined,
+    dateTo: searchParams.get('dateTo') || undefined,
+    bidangTujuan: searchParams.get('bidangTujuan') ? 
+      parseInt(searchParams.get('bidangTujuan')!) : undefined,
+    limit: searchParams.get('limit') ? 
+      Math.min(parseInt(searchParams.get('limit')!) || 20, 100) : 20, // Max 100 per page
+    offset: searchParams.get('offset') ? 
+      parseInt(searchParams.get('offset')!) || 0 : 0,
+    search: searchParams.get('search') || undefined
+  };
+
+  // Use optimized paginated query for better performance
+  const result = await getGuestsPaginated(filters);
   
   return response.success(
-    guests,
+    result,
     'Guests retrieved successfully'
   );
 });
