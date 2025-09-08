@@ -24,7 +24,7 @@ export interface GuestSummary {
   asal_instansi: string;
   status_kunjungan: string;
   waktu_dibuat: string;
-  bidang: string;
+  bidang_tujuan: string;
 }
 
 /**
@@ -82,7 +82,7 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
       dt.asal_instansi,
       dt.status_kunjungan,
       dt.waktu_dibuat,
-      bt.bidang
+      bt.bidang as bidang_tujuan
     FROM daftar_tamu dt
     LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
     ${whereClause}
@@ -253,7 +253,7 @@ export async function searchGuests(searchTerm: string, limit: number = 10): Prom
         dt.asal_instansi,
         dt.status_kunjungan,
         dt.waktu_dibuat,
-        bt.bidang
+        bt.bidang as bidang_tujuan
       FROM daftar_tamu dt
       LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
       WHERE 

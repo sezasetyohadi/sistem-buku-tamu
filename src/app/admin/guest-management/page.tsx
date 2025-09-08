@@ -737,7 +737,7 @@ function AdminGuestsManagement() {
             </div>
           ) : (
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <table className="w-full min-w-[800px]">
+              <table className="w-full min-w-[1000px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Tamu</th>
@@ -745,7 +745,7 @@ function AdminGuestsManagement() {
                     <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell min-w-[150px]">Tujuan</th>
                     <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell min-w-[120px]">Kedatangan</th>
                     <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">Status</th>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell min-w-[120px]">Token</th>
+                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">Token</th>
                     <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">Aksi</th>
                   </tr>
                 </thead>
@@ -791,7 +791,7 @@ function AdminGuestsManagement() {
                           <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.asal_instansi || "-"}</div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden md:table-cell">
-                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.keperluan || "-"}</div>
+                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.bidang_tujuan || "-"}</div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden lg:table-cell">
                           <div className="text-xs sm:text-sm text-gray-900">
@@ -820,7 +820,7 @@ function AdminGuestsManagement() {
                              </span>
                            </span>
                          </td>
-                                           <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden sm:table-cell">
+                          <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap">
                             <div className="text-xs sm:text-sm text-gray-900 max-w-[120px]">
                               {guest.token ? (
                                 <div className="flex items-center space-x-1">

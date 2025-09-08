@@ -60,11 +60,12 @@ export const GET = withApiMiddleware(async (request, response, context) => {
     });
 
     // Use optimized paginated query for better performance
-    const result = await getGuestsPaginated(filters);
+    // But return full guest data including tokens
+    const result = await getAllGuests();
     
     apiLogger.info('Guests retrieved successfully', {
       operation: 'GET_GUESTS_SUCCESS',
-      metadata: { total: result.total, page: result.page }
+      metadata: { total: result.length }
     });
     
     return response.success(
