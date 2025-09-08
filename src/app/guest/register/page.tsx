@@ -53,24 +53,24 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
-      <div className="py-12">
-        <div className="container mx-auto px-4">
+      <div className="py-4 sm:py-6 md:py-8 lg:py-12">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 max-w-full">
           {/* Header Section */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6 bg-badge-blue">
+          <div className="text-center mb-6 sm:mb-8 md:mb-12">
+            <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4 md:mb-6 bg-badge-blue">
               <span className="mr-2">👤</span>
               Formulir Pendaftaran
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-2 sm:mb-3 md:mb-4 px-2 sm:px-4">
               Formulir Pendaftaran Tamu
             </h1>
-            <p className="text-xl text-gray-800 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-800 max-w-2xl mx-auto px-3 sm:px-4 leading-relaxed">
               Silakan isi formulir di bawah ini untuk mendaftar sebagai tamu. Pastikan semua informasi yang Anda berikan adalah akurat.
             </p>
           </div>
 
           {/* Registration Form */}
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto px-1 sm:px-2 md:px-4">
             <GuestRegistrationForm 
               onSubmit={handleFormSubmit}
               isLoading={isLoading}
