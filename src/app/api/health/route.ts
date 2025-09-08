@@ -102,7 +102,7 @@ export const GET = withApiMiddleware(async (request, response, context) => {
     if (!healthCheck.healthy) {
       overallStatus = 'unhealthy';
       dbError = 'Database connection failed';
-    } else if (dbResponseTime > 1000) {
+    } else if (dbResponseTime && dbResponseTime > 1000) {
       overallStatus = 'degraded';
     }
     

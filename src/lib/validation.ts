@@ -42,7 +42,7 @@ export interface ValidationSchema {
 // Common validation patterns
 export const VALIDATION_PATTERNS = {
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  PHONE: /^(\+62|62|0)[0-9]{8,13}$/,
+  PHONE: /^(\+62|62|0)[0-9]{8,14}$/,
   NAME: /^[a-zA-Z\s]+$/,
   USERNAME: /^[a-zA-Z0-9_]+$/,
   URL: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/,
@@ -394,12 +394,8 @@ export const INPUT_SANITIZERS = {
     escape: true
   }),
 
-  // Name fields
-  name: (value: string): string => sanitizeString(value, {
-    trim: true,
-    normalizeWhitespace: true,
-    removeSpecialChars: true
-  }),
+  // Name fields (only letters and spaces)
+  name: (value: string): string => value.trim().replace(/[^a-zA-Z\s]/g, '').replace(/\s+/g, ' '),
 
   // Email fields
   email: (value: string): string => sanitizeEmail(value, {
@@ -470,10 +466,24 @@ export function applySanitizers(
 export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
   nama: {
     required: true,
-    minLength: 2,
+    minLength: 1,
     maxLength: 100,
-    pattern: VALIDATION_PATTERNS.NAME,
-    message: 'Nama harus berisi 2-100 karakter dan hanya huruf serta spasi'
+    custom: (value) => {
+      if (typeof value !== 'string') return 'Nama harus berupa text';
+      
+      // Sanitize the name: remove non-letters and normalize spaces
+      const sanitized = value.trim().replace(/[^a-zA-Z\s]/g, '').replace(/\s+/g, ' ');
+      
+      // Check if sanitized name is empty
+      if (!sanitized) return 'Nama harus berisi huruf';
+      
+      // Check length after sanitization
+      if (sanitized.length < 1) return 'Nama terlalu pendek';
+      if (sanitized.length > 100) return 'Nama terlalu panjang (maksimal 100 karakter)';
+      
+      return null;
+    },
+    message: 'Nama harus berisi 1-100 karakter dan hanya huruf serta spasi'
   },
   email: {
     required: true,
@@ -484,7 +494,22 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
   phone: {
     required: true,
     phone: true,
-    message: 'Nomor telepon tidak valid (contoh: 08123456789 atau +628123456789)'
+    message: 'Nomor telepon tidak valid (contoh: 08123456789 atau +6281234567890)'
+  },
+  alamat: {
+    required: true,
+    maxLength: 500,
+    message: 'Alamat harus diisi dan maksimal 500 karakter'
+  },
+  jenis_kelamin: {
+    required: true,
+    custom: (value) => {
+      if (value && !['Laki-laki', 'Perempuan'].includes(value)) {
+        return 'Jenis kelamin harus Laki-laki atau Perempuan';
+      }
+      return null;
+    },
+    message: 'Jenis kelamin harus dipilih'
   },
   bidang_tujuan_id: {
     required: true,
@@ -519,6 +544,34 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     required: false,
     maxLength: 500,
     message: 'Keterangan maksimal 500 karakter'
+  },
+  cara_memperoleh: {
+    required: true,
+    custom: (value) => {
+      if (!value || !Array.isArray(value) || value.length === 0) {
+        return 'Pilih minimal satu cara memperoleh informasi';
+      }
+      // Allow array of numbers (IDs)
+      if (!value.every(item => typeof item === 'number' && item > 0)) {
+        return 'Cara memperoleh informasi tidak valid';
+      }
+      return null;
+    },
+    message: 'Pilih minimal satu cara memperoleh informasi'
+  },
+  cara_salinan: {
+    required: true,
+    custom: (value) => {
+      if (!value || !Array.isArray(value) || value.length === 0) {
+        return 'Pilih minimal satu cara mendapatkan salinan informasi';
+      }
+      // Allow array of numbers (IDs)
+      if (!value.every(item => typeof item === 'number' && item > 0)) {
+        return 'Cara mendapatkan salinan tidak valid';
+      }
+      return null;
+    },
+    message: 'Pilih minimal satu cara mendapatkan salinan informasi'
   }
 };
 
@@ -709,9 +762,11 @@ export const PROFILE_UPDATE_SCHEMA: ValidationSchema = {
  */
 export const SANITIZATION_CONFIGS = {
   GUEST_REGISTRATION: {
-    nama: { trim: true, normalizeWhitespace: true, removeSpecialChars: true },
+    nama: { trim: true, normalizeWhitespace: true },
     email: { trim: true, lowercase: true, normalizeEmail: true },
     phone: { trim: true },
+    alamat: { trim: true, normalizeWhitespace: true, escape: true },
+    jenis_kelamin: { trim: true },
     instansi: { trim: true, normalizeWhitespace: true, escape: true },
     keterangan: { trim: true, normalizeWhitespace: true, escape: true, maxLength: 500 }
   },

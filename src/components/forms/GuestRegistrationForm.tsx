@@ -13,6 +13,7 @@ import TokenModal from '../ui/TokenModal';
 import { useApiCall, useMutation } from '@/hooks/useDataFetching';
 import { LoadingWrapper, useLoadingState } from '@/components/ui/LoadingState';
 import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
+import { showToast } from '@/lib/toast';
 
 interface GuestRegistrationFormProps {
   onSubmit?: (data: any) => Promise<{success: boolean, guestData?: any, tokenData?: any}>;
@@ -146,12 +147,18 @@ export default function GuestRegistrationForm({
       body: JSON.stringify(data),
     });
     
+    const responseData = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Submission failed');
+      // Check if despite the error, we got valid data (edge case handling)
+      if (responseData && responseData.success) {
+        console.warn('API returned error status but success data:', responseData);
+        return responseData;
+      }
+      throw new Error(responseData.message || 'Submission failed');
     }
     
-    return response.json();
+    return responseData;
   });
 
   const genderOptions = [
@@ -214,6 +221,8 @@ export default function GuestRegistrationForm({
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'Nomor telepon harus diisi';
+    } else if (!/^(\+62|62|0)[0-9]{8,14}$/.test(formData.phone)) {
+      newErrors.phone = 'Format nomor telepon tidak valid (contoh: 08123456789 atau +6281234567890)';
     }
 
     if (!formData.address.trim()) {
@@ -267,6 +276,12 @@ export default function GuestRegistrationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prevent multiple submissions
+    if (submitFormMutation.loading) {
+      console.log('Submission already in progress, preventing duplicate');
+      return;
+    }
+    
     if (validateForm()) {
       // Resolve names from selected IDs
       const selectedEducation = processedEducationOptions.find(e => e.value === formData.education);
@@ -278,29 +293,73 @@ export default function GuestRegistrationForm({
       const apiFormData = {
         nama: formData.name,
         email: formData.email,
-        nomor_telp: formData.phone,
+        phone: formData.phone,
         alamat: formData.address,
         jenis_kelamin: formData.gender,
         pendidikan_terakhir_id: formData.education ? parseInt(formData.education) : undefined,
         profesi_id: formData.profession ? parseInt(formData.profession) : undefined,
-        asal_instansi: formData.company,
-        keperluan: undefined, // Let the backend set this based on tujuan_kunjungan_id
-        catatan: formData.notes,
+        instansi: formData.company, // Changed from asal_instansi to instansi
+        keterangan: formData.notes, // Changed from catatan to keterangan  
         bidang_tujuan_id: formData.department ? parseInt(formData.department) : undefined,
         tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined,
-        status_kunjungan: 'Menunggu',
         cara_memperoleh: formData.cara_memperoleh,
         cara_salinan: formData.cara_salinan
       };
       
       safeLog.sensitive('Sending data to API', apiFormData);
       
+      console.log('[DEBUG] About to submit form, checking required fields:');
+      console.log('- nama:', apiFormData.nama);
+      console.log('- email:', apiFormData.email);
+      console.log('- phone:', apiFormData.phone);
+      console.log('- bidang_tujuan_id:', apiFormData.bidang_tujuan_id);
+      console.log('- pendidikan_terakhir_id:', apiFormData.pendidikan_terakhir_id);
+      console.log('- profesi_id:', apiFormData.profesi_id);
+      console.log('- tujuan_kunjungan_id:', apiFormData.tujuan_kunjungan_id);
+      
       try {
-        const result = await submitFormMutation.mutate(apiFormData);
+        let result;
         
-        if (result.success && result.token) {
-          setToken(result.token);
+        // If onSubmit prop is provided, use that instead of direct API call
+        if (onSubmit) {
+          console.log('[DEBUG] Using onSubmit prop for form submission');
+          result = await onSubmit(apiFormData);
+        } else {
+          console.log('[DEBUG] Using direct API call for form submission');
+          result = await submitFormMutation.mutate(apiFormData);
+        }
+        
+        console.log('API Response:', result); // Debug log
+        console.log('Response status success:', result.success);
+        console.log('Response data:', result.data);
+        
+        if (result.success && result.data?.token?.token) {
+          console.log('Token found, showing success modal');
+          setToken(result.data.token.token);
           setShowTokenModal(true);
+          showToast.success('Registrasi berhasil! Token Anda telah dibuat.');
+          
+          // Reset form
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            gender: '',
+            education: '',
+            profession: '',
+            company: '',
+            purpose: '',
+            department: '',
+            cara_memperoleh: [],
+            cara_salinan: [],
+            notes: ''
+          });
+          setErrors({});
+        } else if (result.success) {
+          // Registration successful but no token
+          console.warn('Registration successful but no token received');
+          showToast.success('Registrasi berhasil! Namun token tidak dapat dibuat.');
           
           // Reset form
           setFormData({
@@ -321,12 +380,19 @@ export default function GuestRegistrationForm({
           setErrors({});
         }
         
-        if (onSubmit) {
-          await onSubmit(apiFormData);
-        }
+        // Note: Removed the duplicate onSubmit call here since we're already using it above
       } catch (error: any) {
+        console.error('Form submission error details:', {
+          error: error.message,
+          stack: error.stack,
+          originalError: error
+        });
         guestLogger.error('Form submission error:', error);
         setErrors({ submit: error.message || 'Terjadi kesalahan saat mengirim data' });
+        
+        // Clear any success states if there was an error
+        setShowTokenModal(false);
+        setToken('');
       }
     }
   };

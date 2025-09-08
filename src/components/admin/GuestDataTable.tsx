@@ -68,7 +68,7 @@ export default function GuestDataTable() {
     <LoadingWrapper
       isLoading={isLoading}
       error={error}
-      isEmpty={guests.length === 0}
+      isEmpty={!guests || guests.length === 0}
       loadingComponent={
         <div className="container mx-auto p-4">
           <div className="flex justify-between items-center mb-6">
@@ -146,7 +146,7 @@ export default function GuestDataTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {guests.map((guest) => (
+              {guests && guests.map((guest) => (
                 <tr key={guest.id} className="hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-900">{guest.name}</td>
                   <td className="py-3 px-4 text-gray-900">{guest.email}</td>

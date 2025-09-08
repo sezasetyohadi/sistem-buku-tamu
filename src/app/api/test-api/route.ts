@@ -52,7 +52,7 @@ const withAdminAuth = (handler: Function) => {
   });
 };
 
-export const GET = withAdminAuth(async (request, response, context) => {
+export const GET = withAdminAuth(async (request: Request, response: any, context: any) => {
   const url = new URL(request.url);
   const testType = url.searchParams.get('type') || 'success';
   

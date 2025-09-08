@@ -217,20 +217,6 @@ export class ErrorRecoveryManager {
     
     if (actions.length === 0) return;
 
-    // Show recovery actions in toast with buttons
-    const actionButtons = actions.map(action => ({
-      label: action.label,
-      onClick: async () => {
-        try {
-          await action.action();
-          logger.info(`Recovery action executed: ${action.id}`);
-        } catch (actionError) {
-          logger.error(`Recovery action failed: ${action.id}`, actionError);
-          showToast.error('Aksi pemulihan gagal. Silakan coba lagi.');
-        }
-      }
-    }));
-
     // Custom toast with action buttons (simplified for now)
     showToast.error(`${error.message} - Tindakan pemulihan tersedia.`);
     

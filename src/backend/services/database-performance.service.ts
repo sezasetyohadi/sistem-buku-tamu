@@ -24,7 +24,10 @@ export interface GuestSummary {
   asal_instansi: string;
   status_kunjungan: string;
   waktu_dibuat: string;
+  waktu_checkin?: string;
+  keperluan?: string;
   bidang: string;
+  token?: string;
 }
 
 /**
@@ -66,14 +69,14 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
   }
 
   if (search) {
-    whereConditions.push('(dt.nama LIKE ? OR dt.email LIKE ? OR dt.asal_instansi LIKE ?)');
+    whereConditions.push('(dt.nama LIKE ? OR dt.email LIKE ? OR dt.asal_instansi LIKE ? OR tt.token LIKE ?)');
     const searchPattern = `%${search}%`;
-    queryParams.push(searchPattern, searchPattern, searchPattern);
+    queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
   }
 
   const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-  // Optimized query using proper indexes
+  // Optimized query using proper indexes and including token data
   const guestsQuery = `
     SELECT 
       dt.id,
@@ -82,9 +85,13 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
       dt.asal_instansi,
       dt.status_kunjungan,
       dt.waktu_dibuat,
-      bt.bidang
+      dt.waktu_checkin,
+      dt.keperluan,
+      bt.bidang,
+      tt.token
     FROM daftar_tamu dt
     LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
+    LEFT JOIN tamu_token tt ON dt.id = tt.tamu_id AND tt.is_active = 1
     ${whereClause}
     ORDER BY dt.waktu_dibuat DESC
     LIMIT ? OFFSET ?
@@ -253,30 +260,38 @@ export async function searchGuests(searchTerm: string, limit: number = 10): Prom
         dt.asal_instansi,
         dt.status_kunjungan,
         dt.waktu_dibuat,
-        bt.bidang
+        dt.waktu_checkin,
+        dt.keperluan,
+        bt.bidang,
+        tt.token
       FROM daftar_tamu dt
       LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
+      LEFT JOIN tamu_token tt ON dt.id = tt.tamu_id AND tt.is_active = 1
       WHERE 
         dt.nama LIKE ? OR 
         dt.email LIKE ? OR 
         dt.asal_instansi LIKE ? OR
-        dt.keperluan LIKE ?
+        dt.keperluan LIKE ? OR
+        tt.token LIKE ?
       ORDER BY 
         CASE 
           WHEN dt.nama LIKE ? THEN 1
           WHEN dt.email LIKE ? THEN 2
-          ELSE 3
+          WHEN tt.token LIKE ? THEN 3
+          ELSE 4
         END,
         dt.waktu_dibuat DESC
       LIMIT ?
       `,
       [
-        `%${searchTerm}%`,
-        `%${searchTerm}%`,
-        `%${searchTerm}%`,
-        `%${searchTerm}%`,
-        `${searchTerm}%`, // Exact match priority
-        `${searchTerm}%`, // Exact match priority
+        `%${searchTerm}%`, // nama LIKE
+        `%${searchTerm}%`, // email LIKE
+        `%${searchTerm}%`, // asal_instansi LIKE
+        `%${searchTerm}%`, // keperluan LIKE
+        `%${searchTerm}%`, // token LIKE
+        `${searchTerm}%`,  // nama exact match priority
+        `${searchTerm}%`,  // email exact match priority  
+        `${searchTerm}%`,  // token exact match priority
         limit
       ]
     );

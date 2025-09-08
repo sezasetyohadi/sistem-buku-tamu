@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import { DaftarTamu } from "@/types/database-types";
 import Modal from "@/components/ui/Modal";
 import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
@@ -10,7 +9,7 @@ import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
 import { toast } from "react-hot-toast";
 import ExcelJS from 'exceljs';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ErrorMessage, LoadingSpinner, TableLoading } from '@/components/ui/loading-states';
+import { ErrorMessage, TableLoading } from '@/components/ui/loading-states';
 import { useErrorHandler, useFetch } from '@/hooks/useErrorHandling';
 
 function AdminGuestsManagement() {
@@ -860,7 +859,11 @@ function AdminGuestsManagement() {
                                         }
                                       };
                                       
-                                      copyToClipboard(guest.token);
+                                      if (guest.token) {
+                                        copyToClipboard(guest.token);
+                                      } else {
+                                        toast.error('Token tidak tersedia');
+                                      }
                                     }}
                                     className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors flex-shrink-0"
                                     title="Salin token lengkap"

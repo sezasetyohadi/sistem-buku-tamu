@@ -90,6 +90,15 @@ export const POST = withApiMiddleware(async (request, response, context) => {
   try {
     const body = await validateJsonBody(request);
     
+    apiLogger.debug('POST /api/guests - Request received', {
+      operation: 'POST_GUEST_START',
+      metadata: {
+        requestId: context.requestId,
+        bodyKeys: Object.keys(body || {}),
+        hasBody: !!body
+      }
+    });
+    
     // Validate and sanitize input data
     const validation = validateAndSanitize(
       body,
@@ -101,8 +110,11 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       apiLogger.warn('Guest registration validation failed', {
         operation: 'POST_GUEST_VALIDATION_ERROR',
         metadata: {
+          requestId: context.requestId,
           errors: validation.errors,
-          firstError: validation.firstError
+          firstError: validation.firstError,
+          receivedFields: Object.keys(body || {}),
+          expectedFields: Object.keys(GUEST_REGISTRATION_SCHEMA)
         }
       });
 
@@ -127,7 +139,7 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       profesi_id: sanitizedData.profesi_id,
       asal_instansi: sanitizedData.instansi || undefined,
       keperluan: sanitizedData.keterangan || 'Kunjungan umum',
-      catatan: sanitizedData.catatan || undefined,
+      catatan: undefined, // Remove extra catatan field
       bidang_tujuan_id: sanitizedData.bidang_tujuan_id,
       tujuan_kunjungan_id: sanitizedData.tujuan_kunjungan_id,
       file_upload: sanitizedData.file_upload || undefined,

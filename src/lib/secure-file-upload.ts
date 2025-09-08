@@ -50,7 +50,8 @@ export class SecureFileUpload {
     }
 
     // Check MIME type
-    if (!UPLOAD_CONFIG.allowedTypes[file.type]) {
+    const allowedTypes = UPLOAD_CONFIG.allowedTypes as Record<string, string[]>;
+    if (!allowedTypes[file.type]) {
       return {
         isValid: false,
         error: `File type ${file.type} is not allowed`
@@ -59,7 +60,7 @@ export class SecureFileUpload {
 
     // Check file extension matches MIME type
     const fileExt = extname(file.name).toLowerCase();
-    const allowedExtensions = UPLOAD_CONFIG.allowedTypes[file.type];
+    const allowedExtensions = allowedTypes[file.type];
     
     if (!allowedExtensions.includes(fileExt)) {
       return {

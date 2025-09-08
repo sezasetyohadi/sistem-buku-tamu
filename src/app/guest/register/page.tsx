@@ -29,15 +29,13 @@ export default function Register() {
           console.log('Token created automatically:', result.data.token);
           return {
             success: true,
-            guestData: result.data,
-            tokenData: result.data.token
+            data: result.data  // Return the data structure as expected by the form
           };
         } else {
           console.warn('No token was created during registration');
           return {
             success: true,
-            guestData: result.data,
-            tokenData: null
+            data: result.data  // Return the data structure as expected by the form
           };
         }
       } else {

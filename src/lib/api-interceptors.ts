@@ -150,7 +150,7 @@ export class ApiClient {
     } catch (error) {
       clearTimeout(timeoutId);
       
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw createError.network('Request timeout', {
           url,
           method,
@@ -395,10 +395,11 @@ export function createEnhancedFetchFunction() {
       });
     } catch (error) {
       // Convert error back to fetch-compatible error
-      if (error.statusCode) {
-        const response = new Response(JSON.stringify({ error: error.message }), {
-          status: error.statusCode,
-          statusText: error.message
+      if (error && typeof error === 'object' && 'statusCode' in error && 'message' in error) {
+        const appError = error as { statusCode: number; message: string };
+        const response = new Response(JSON.stringify({ error: appError.message }), {
+          status: appError.statusCode,
+          statusText: appError.message
         });
         return response;
       }

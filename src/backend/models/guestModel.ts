@@ -1,21 +1,38 @@
 import { executeQuery } from "../config/db";
 import { RowDataPacket } from 'mysql2';
 
-// Enum untuk jenis kelamin
+/**
+ * Enum untuk jenis kelamin tamu
+ * @readonly
+ * @enum {string}
+ */
 export enum Gender {
+  /** Laki-laki */
   MALE = 'Laki-laki',
+  /** Perempuan */
   FEMALE = 'Perempuan'
 }
 
-// Enum untuk status kunjungan
+/**
+ * Enum untuk status kunjungan tamu
+ * @readonly
+ * @enum {string}
+ */
 export enum VisitStatus {
+  /** Menunggu - Tamu telah mendaftar tapi belum dijadwalkan */
   WAITING = 'Menunggu',
+  /** Terjadwal - Tamu sudah dijadwalkan untuk waktu tertentu */
   SCHEDULED = 'Terjadwal',
+  /** Datang - Tamu sudah check-in dan sedang berkunjung */
   ARRIVED = 'Datang',
+  /** Selesai - Tamu sudah check-out, kunjungan selesai */
   COMPLETED = 'Selesai'
 }
 
-// Guest model types based on the daftar_tamu table in disnaker.sql
+/**
+ * Interface untuk data tamu lengkap dari database
+ * Berdasarkan skema tabel daftar_tamu
+ */
 export interface Guest {
   id?: number;
   email?: string;
@@ -39,6 +56,10 @@ export interface Guest {
   waktu_dibuat?: Date;
 }
 
+/**
+ * Interface untuk membuat tamu baru
+ * Digunakan saat registrasi tamu
+ */
 export interface GuestCreate {
   nama: string;
   email?: string;
@@ -56,6 +77,10 @@ export interface GuestCreate {
   file_upload?: string;
 }
 
+/**
+ * Interface untuk update data tamu
+ * Semua field bersifat opsional untuk partial update
+ */
 export interface GuestUpdate {
   nama?: string;
   email?: string;
@@ -76,11 +101,17 @@ export interface GuestUpdate {
   file_upload?: string;
 }
 
-// Define result data interface
+/**
+ * Interface untuk hasil operasi database
+ * Standar response format untuk semua operasi CRUD
+ */
 export interface ResultData {
+  /** Status keberhasilan operasi */
   success: boolean;
+  /** Pesan hasil operasi */
   message: string;
-  data?: any;
+  /** Data hasil operasi (jika ada) */
+  data?: unknown;
 }
 
 // SQL queries for guests based on the disnaker.sql schema
@@ -125,7 +156,32 @@ export const GUEST_QUERIES = {
   GET_PROFESSION_OPTIONS: 'SELECT * FROM profesi ORDER BY id',
 };
 
-// Function to update guest check-in status
+/**
+ * Mengupdate status check-in tamu
+ * 
+ * @description Fungsi ini mengubah status tamu menjadi "Datang" dan mencatat waktu check-in.
+ * Digunakan ketika tamu tiba di lokasi dan melakukan check-in.
+ * 
+ * @param {number} guestId - ID unik tamu yang akan di-check-in
+ * @param {Date} checkInTime - Waktu check-in tamu
+ * 
+ * @returns {Promise<ResultData>} Promise yang resolve dengan hasil operasi
+ * - success: true jika berhasil, false jika gagal
+ * - message: Pesan hasil operasi
+ * - data: Data tamu yang telah diupdate (jika berhasil)
+ * 
+ * @throws {Error} Jika terjadi error database atau validasi
+ * 
+ * @example
+ * ```typescript
+ * const result = await updateGuestCheckIn(123, new Date());
+ * if (result.success) {
+ *   console.log('Check-in berhasil:', result.data);
+ * } else {
+ *   console.error('Check-in gagal:', result.message);
+ * }
+ * ```
+ */
 export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Promise<ResultData> {
   try {
     // Check if guest exists
@@ -138,8 +194,6 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
       };
     }
 
-    const guest = rows[0];
-    
     // Update the guest's check-in time and status
     await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkInTime, guestId]);
     
@@ -152,16 +206,42 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
       message: 'Tamu berhasil ditandai datang',
       data: updatedGuest
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error updating guest check-in:', error);
     return {
       success: false,
-      message: `Error updating check-in status: ${error.message}`,
+      message: `Error updating check-in status: ${errorMessage}`,
     };
   }
 }
 
-// Function to update guest check-out status
+/**
+ * Mengupdate status check-out tamu
+ * 
+ * @description Fungsi ini mengubah status tamu menjadi "Selesai" dan mencatat waktu check-out.
+ * Tamu harus dalam status "Datang" sebelum bisa di-check-out.
+ * 
+ * @param {number} guestId - ID unik tamu yang akan di-check-out
+ * @param {Date} checkOutTime - Waktu check-out tamu
+ * 
+ * @returns {Promise<ResultData>} Promise yang resolve dengan hasil operasi
+ * - success: true jika berhasil, false jika gagal
+ * - message: Pesan hasil operasi
+ * - data: Data tamu yang telah diupdate (jika berhasil)
+ * 
+ * @throws {Error} Jika terjadi error database atau validasi
+ * 
+ * @example
+ * ```typescript
+ * const result = await updateGuestCheckOut(123, new Date());
+ * if (result.success) {
+ *   console.log('Check-out berhasil:', result.data);
+ * } else {
+ *   console.error('Check-out gagal:', result.message);
+ * }
+ * ```
+ */
 export async function updateGuestCheckOut(guestId: number, checkOutTime: Date): Promise<ResultData> {
   try {
     // Check if guest exists
@@ -177,7 +257,7 @@ export async function updateGuestCheckOut(guestId: number, checkOutTime: Date): 
     const guest = rows[0];
     
     // Make sure guest has checked in before checking out
-    if (guest.status_kunjungan !== 'Datang') {
+    if (!guest || guest.status_kunjungan !== 'Datang') {
       return {
         success: false,
         message: 'Tamu harus dalam status "Datang" sebelum ditandai selesai',
@@ -196,11 +276,12 @@ export async function updateGuestCheckOut(guestId: number, checkOutTime: Date): 
       message: 'Kunjungan tamu berhasil ditandai selesai',
       data: updatedGuest
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error updating guest check-out:', error);
     return {
       success: false,
-      message: `Error updating check-out status: ${error.message}`,
+      message: `Error updating check-out status: ${errorMessage}`,
     };
   }
 }

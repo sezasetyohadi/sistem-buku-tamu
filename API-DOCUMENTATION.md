@@ -1,6 +1,90 @@
 # Sistem Buku Tamu - API Documentation
 
-## 📋 Daftar API Endpoints
+[![API Version](https://img.shields.io/badge/API%20Version-1.0.0-blue.svg)](https://github.com/your-repo/sistem-buku-tamu)
+[![Documentation Status](https://img.shields.io/badge/Docs-Up%20to%20Date-green.svg)](./API-DOCUMENTATION.md)
+
+> **Comprehensive API documentation for the Guest Book Management System**
+
+## Table of Contents
+
+- [� Getting Started](#-getting-started)
+- [🔐 Authentication](#-authentication)
+- [�📋 API Endpoints](#-api-endpoints)
+- [📊 Response Format](#-response-format)
+- [🔍 Error Codes](#-error-codes)
+- [📈 Rate Limiting](#-rate-limiting)
+- [🧪 Testing](#-testing)
+
+---
+
+## 🚀 Getting Started
+
+### Base URLs
+- **Admin Port:** `http://localhost:3001/api`
+- **Guest Port:** `http://localhost:3000/api`
+- **Production:** `https://your-domain.com/api`
+
+### Content Types
+All API endpoints accept and return JSON unless otherwise specified.
+
+**Request Headers:**
+```http
+Content-Type: application/json
+Accept: application/json
+```
+
+### API Versioning
+Current API version: **v1**
+
+All endpoints are prefixed with `/api/` followed by the resource name.
+
+---
+
+## 🔐 Authentication
+
+### Admin Authentication
+Admin endpoints require JWT token authentication.
+
+**Login to get token:**
+```http
+POST /api/admin/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "your_password"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "username": "admin",
+      "nama_lengkap": "Administrator",
+      "is_super_admin": true
+    },
+    "tokens": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expiresAt": "2024-12-20T10:30:00Z"
+    }
+  },
+  "message": "Login successful"
+}
+```
+
+**Using the token:**
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Guest Authentication
+Guest endpoints use token-based access for status checking.
+
+---
 
 ### 🧑‍💼 Guest Management
 | Method | Endpoint | Description |
