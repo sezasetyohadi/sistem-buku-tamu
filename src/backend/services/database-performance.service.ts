@@ -24,6 +24,7 @@ export interface GuestSummary {
   asal_instansi: string;
   status_kunjungan: string;
   waktu_dibuat: string;
+  bidang_tujuan: string;
   waktu_checkin?: string;
   keperluan?: string;
   bidang: string;
@@ -85,10 +86,7 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
       dt.asal_instansi,
       dt.status_kunjungan,
       dt.waktu_dibuat,
-      dt.waktu_checkin,
-      dt.keperluan,
-      bt.bidang,
-      tt.token
+      bt.bidang
     FROM daftar_tamu dt
     LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
     LEFT JOIN tamu_token tt ON dt.id = tt.tamu_id AND tt.is_active = 1
@@ -260,10 +258,7 @@ export async function searchGuests(searchTerm: string, limit: number = 10): Prom
         dt.asal_instansi,
         dt.status_kunjungan,
         dt.waktu_dibuat,
-        dt.waktu_checkin,
-        dt.keperluan,
-        bt.bidang,
-        tt.token
+        bt.bidang
       FROM daftar_tamu dt
       LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
       LEFT JOIN tamu_token tt ON dt.id = tt.tamu_id AND tt.is_active = 1
