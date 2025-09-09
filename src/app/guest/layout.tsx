@@ -9,7 +9,7 @@ interface GuestLayoutProps {
 }
 
 export default function GuestLayout({ children }: GuestLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [sidebarOpen, setSidebarOpen] = React.useState(true); // Keep default true for desktop
   const pathname = usePathname();
 
   // Skip layout for the main guest landing pages to make it full screen
@@ -60,9 +60,8 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
       {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out
-        ${sidebarOpen ? 'w-64' : 'w-0 md:w-16'}
         md:relative md:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0 md:w-16'}
       `}>
         <div className="h-full flex flex-col overflow-hidden">
           {/* Logo with Toggle Button */}
@@ -139,7 +138,24 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Top header */}
         <div className="flex-shrink-0 flex h-16 bg-white shadow-sm border-b border-gray-200 z-10">
-          <div className="flex-1 px-4 flex justify-end items-center min-w-0">
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <span className="sr-only">Open sidebar</span>
+            <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+          </button>
+          
+          <div className="flex-1 px-4 flex justify-between items-center min-w-0">
+            <h1 className="text-lg font-semibold text-gray-900 truncate">
+              {pathname.includes('/register') && 'Pendaftaran Tamu'}
+              {pathname.includes('/status') && 'Status Pengajuan'}
+              {pathname.includes('/survey') && 'Survey'}
+            </h1>
             <div className="flex items-center space-x-4 flex-shrink-0">
               {/* Notifications */}
               
@@ -148,7 +164,7 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <SectionErrorBoundary>
             {children}
           </SectionErrorBoundary>

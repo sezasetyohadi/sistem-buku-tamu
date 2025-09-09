@@ -195,7 +195,7 @@ export default function StatusPengajuanPage() {
 	};
 
 	return (
-		<div className="p-6 max-w-2xl mx-auto flex flex-col items-center relative">
+		<div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col items-center relative">
 			<div className="flex flex-col items-center mb-8">
 				<img
 					src="https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
@@ -300,7 +300,7 @@ export default function StatusPengajuanPage() {
 								</div>
 								{/* Tampilkan jadwal kunjungan */}
 								{guestDetail.jadwal_checkin && (
-									<div className="text-right">
+									<div className="text-right hidden sm:block">
 										<h4 className="text-sm font-medium text-gray-500">Jadwal Kunjungan</h4>
 										<p className="text-base font-medium text-blue-600">{formatDate(guestDetail.jadwal_checkin)}</p>
 									</div>
@@ -315,7 +315,7 @@ export default function StatusPengajuanPage() {
 						<div className="space-y-4">
 							<div>
 								<h4 className="text-sm font-medium text-gray-500">Email</h4>
-								<p className="mt-1 text-gray-900">{guestDetail.email || 'Tidak tersedia'}</p>
+								<p className="mt-1 text-gray-900 break-words">{guestDetail.email || 'Tidak tersedia'}</p>
 							</div>
 							
 							<div>

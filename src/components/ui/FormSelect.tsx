@@ -73,7 +73,7 @@ export default function FormSelect({
       <div className="relative">
         {/* Icon di sebelah kiri */}
         <div className={`
-          absolute left-4 top-1/2 transform -translate-y-1/2 z-10
+          absolute left-2.5 sm:left-4 top-1/2 transform -translate-y-1/2 z-10
           transition-colors duration-200 pointer-events-none
           ${error 
             ? 'text-red-400' 
@@ -88,7 +88,7 @@ export default function FormSelect({
         <select
           ref={selectRef}
           className={`
-            w-full pl-12 pr-12 py-3 text-black 
+            w-full max-w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 text-black 
             border border-gray-300 rounded-lg shadow-sm transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3]
             appearance-none cursor-pointer
@@ -97,7 +97,7 @@ export default function FormSelect({
             ${className}
           `}
           style={{
-            paddingLeft: '3rem',    /* 48px - space for icon */
+            paddingLeft: '2.5rem',    /* Mobile: 40px - space for icon */
             paddingRight: '3rem',   /* 48px - space for dropdown arrow */
             color: '#000000',
             backgroundColor: '#ffffff',

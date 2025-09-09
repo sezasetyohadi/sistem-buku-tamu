@@ -7,7 +7,7 @@ export default function Survey() {
   // No longer needed as SurveyForm handles its own submissions
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-full bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
       <div className="py-12">
         <div className="container mx-auto px-4">
           {/* Header Section */}

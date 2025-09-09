@@ -19,10 +19,10 @@ const CardVariants = {
 };
 
 const CardPadding = {
-  sm: 'p-4',
-  md: 'p-6',
-  lg: 'p-8',
-  xl: 'p-10'
+  sm: 'p-2 sm:p-3 md:p-4',
+  md: 'p-3 sm:p-4 md:p-6',
+  lg: 'p-4 sm:p-6 md:p-8',
+  xl: 'p-6 sm:p-8 md:p-10'
 };
 
 export function Card({ 
