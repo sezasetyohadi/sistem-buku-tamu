@@ -43,6 +43,7 @@ export interface DaftarTamu {
   bidang_tujuan_id?: number;
   bidang_tujuan?: string; // Nama bidang (Sekretariat, Bidang Pelatihan Kerja, dll)
   tujuan_kunjungan_id?: number;
+  asn_dituju?: string; // ASN yang dituju
   status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null; // datetime
   jadwal_dibuat?: string | null; // datetime

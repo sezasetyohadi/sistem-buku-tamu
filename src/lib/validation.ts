@@ -560,18 +560,20 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     message: 'Pilih minimal satu cara memperoleh informasi'
   },
   cara_salinan: {
-    required: true,
+    required: false, // Changed from true to false - moved to schedule step
     custom: (value) => {
-      if (!value || !Array.isArray(value) || value.length === 0) {
-        return 'Pilih minimal satu cara mendapatkan salinan informasi';
-      }
-      // Allow array of numbers (IDs)
-      if (!value.every(item => typeof item === 'number' && item > 0)) {
-        return 'Cara mendapatkan salinan tidak valid';
+      if (value) {
+        if (!Array.isArray(value)) {
+          return 'Format cara mendapatkan salinan informasi tidak valid';
+        }
+        // Allow array of numbers (IDs) when provided
+        if (!value.every(item => typeof item === 'number' && item > 0)) {
+          return 'Cara mendapatkan salinan tidak valid';
+        }
       }
       return null;
     },
-    message: 'Pilih minimal satu cara mendapatkan salinan informasi'
+    message: 'Format cara mendapatkan salinan informasi tidak valid'
   }
 };
 

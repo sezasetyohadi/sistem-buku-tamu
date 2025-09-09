@@ -77,7 +77,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     }
   };
   
-  const handleSchedule = async (scheduledDateTime: string) => {
+  const handleSchedule = async (scheduledDateTime: string, bidangTujuanId?: number, asnDituju?: string, caraSalinan?: number[]) => {
     try {
       setIsSubmitting(true);
       
@@ -86,10 +86,19 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ scheduledDateTime }),
+        body: JSON.stringify({ 
+          scheduledDateTime,
+          bidangTujuanId,
+          asnDituju,
+          caraSalinan
+        }),
       });
       
       const result = await response.json();
+      
+      // Debug: Log the API response
+      console.log('Schedule API response:', result);
+      console.log('cara_mendapatkan_salinan from API:', result.data?.cara_mendapatkan_salinan);
       
       if (!result.success) {
         throw new Error(result.message || 'Failed to schedule visit');
@@ -107,7 +116,11 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           ...guest,
           jadwal_checkin: result.data.scheduledDateTime,
           jadwal_dibuat: result.data.jadwal_dibuat,
-          status_kunjungan: result.data.status_kunjungan
+          status_kunjungan: result.data.status_kunjungan,
+          bidang_tujuan_id: result.data.bidang_tujuan_id,
+          bidang_tujuan: result.data.bidang_tujuan,
+          asn_dituju: result.data.asn_dituju,
+          cara_mendapatkan_salinan: result.data.cara_mendapatkan_salinan
         });
       }
       
@@ -260,20 +273,46 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
                   <span className="ml-2 text-sm text-gray-500">ID: {guest.id}</span>
                 </div>
               </div>
-              {/* Display different header based on guest status - Tetap menggunakan status internal "Datang" */}
-              {guest.status_kunjungan === "Datang" ? (
-                <div className="text-right">
-                  <h4 className="text-sm font-medium text-gray-500">Waktu Kedatangan</h4>
-                  <p className="text-base font-medium text-blue-600">{formatDate(guest.waktu_checkin)}</p>
-                </div>
-              ) : guest.jadwal_checkin && (
-                <div className="text-right">
-                  <h4 className="text-sm font-medium text-gray-500">Jadwal Kunjungan</h4>
-                  <p className="text-base font-medium text-blue-600">{formatDate(guest.jadwal_checkin)}</p>
-                </div>
-              )}
             </div>
           </div>
+        </div>
+        
+        {/* Scheduling and visit information container */}
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Jadwal Kunjungan</h4>
+              <p className="text-base font-medium text-blue-700">{formatDate(guest.jadwal_checkin)}</p>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Waktu Kedatangan</h4>
+              <p className="text-base font-medium text-blue-700">{formatDate(guest.waktu_checkin)}</p>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Bidang Dituju</h4>
+              <p className="text-base font-medium text-blue-700">{guest.bidang_tujuan || 'Belum ditetapkan'}</p>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Menemui (ASN)</h4>
+              <p className="text-base font-medium text-blue-700">{guest.asn_dituju || 'Tidak ditentukan'}</p>
+            </div>
+          </div>
+          
+          {guest.cara_mendapatkan_salinan && guest.cara_mendapatkan_salinan.length > 0 && (
+            <div className="mt-3 border-t border-blue-200 pt-3">
+              <h4 className="text-sm font-medium text-gray-500">Cara Mendapatkan Salinan</h4>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {guest.cara_mendapatkan_salinan.map((cara: string, index: number) => (
+                  <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {cara}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Two-column info grid */}
@@ -351,20 +390,6 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           <div className="mt-2 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
             <p className="text-gray-900 whitespace-pre-wrap">{guest.keperluan || 'Tidak tersedia'}</p>
           </div>
-          
-          <div className="flex items-center mt-4">
-            <h4 className="text-sm font-medium text-gray-500">Bidang Dituju</h4>
-            <Tooltip content="Departemen atau bidang yang akan dikunjungi oleh tamu">
-              <span className="ml-1 cursor-help text-gray-400 hover:text-gray-600 flex items-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
-            </Tooltip>
-          </div>
-          <div className="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <p className="text-gray-900">{guest.bidang_tujuan || 'Tidak tersedia'}</p>
-          </div>
         </div>
 
         {/* Information Access Methods */}
@@ -387,36 +412,6 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
                   guest.cara_memperoleh_informasi.map((cara: string, index: number) => (
                     <p key={index} className="flex items-center text-gray-900">
                       <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      {cara}
-                    </p>
-                  ))
-                ) : <p className="text-gray-500 italic">Tidak ada data</p>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4">
-          <div className="flex items-center">
-            <h4 className="text-sm font-medium text-gray-500">Cara Mendapatkan Salinan</h4>
-            <Tooltip content="Metode yang dipilih oleh tamu untuk mendapatkan salinan informasi atau dokumen">
-              <span className="ml-1 cursor-help text-gray-400 hover:text-gray-600 flex items-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
-            </Tooltip>
-          </div>
-          <div className="mt-2 p-4 bg-purple-50 rounded-lg border border-purple-100">
-            <div className="space-y-1">
-              {guest.cara_mendapatkan_salinan &&
-               Array.isArray(guest.cara_mendapatkan_salinan) && 
-               guest.cara_mendapatkan_salinan.length > 0 ? (
-                  guest.cara_mendapatkan_salinan.map((cara: string, index: number) => (
-                    <p key={index} className="flex items-center text-gray-900">
-                      <svg className="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       {cara}
@@ -526,6 +521,13 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           onSchedule={handleSchedule}
           guestId={guest.id || 0}
           currentSchedule={guest.jadwal_checkin || undefined}
+          currentBidangId={guest.bidang_tujuan_id}
+          currentAsnDituju={guest.asn_dituju}
+          currentCaraSalinan={guest.cara_mendapatkan_salinan?.map((cara: string) => {
+            // This is just a placeholder - in a real app, you'd need to map the text back to IDs
+            // This might need updating based on your actual implementation
+            return 0;
+          })}
           isEdit={guest.status_kunjungan === "Terjadwal"}
         />
       )}

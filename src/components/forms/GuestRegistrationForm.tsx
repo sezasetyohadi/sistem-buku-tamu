@@ -38,7 +38,6 @@ export default function GuestRegistrationForm({
     purpose: '',
     department: '',
     cara_memperoleh: [] as number[], // Changed to number array for IDs
-    cara_salinan: [] as number[], // Changed to number array for IDs
     notes: ''
   });
 
@@ -128,11 +127,7 @@ export default function GuestRegistrationForm({
     formOptions?.memperolehInformasi || [], 
     [formOptions?.memperolehInformasi]
   );
-  
-  const salinanOptions = React.useMemo(() => 
-    formOptions?.mendapatkanSalinan || [], 
-    [formOptions?.mendapatkanSalinan]
-  );
+  // Removed salinanOptions as it's moved to the Schedule Modal
 
   // Token modal will only be hidden when user clicks close button
   // No auto-hide functionality
@@ -170,7 +165,7 @@ export default function GuestRegistrationForm({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
-    if (type === 'checkbox' && (name === 'cara_memperoleh' || name === 'cara_salinan')) {
+    if (type === 'checkbox' && name === 'cara_memperoleh') {
       const checkbox = e.target as HTMLInputElement;
       const numericValue = parseInt(value); // Convert to number since we're storing IDs
       
@@ -254,20 +249,14 @@ export default function GuestRegistrationForm({
       newErrors.cara_memperoleh = 'Pilih minimal satu cara memperoleh informasi';
     }
 
-    // Wajib memilih minimal satu opsi pada Cara Mendapatkan Salinan Informasi
-    if (!formData.cara_salinan || formData.cara_salinan.length === 0) {
-      newErrors.cara_salinan = 'Pilih minimal satu cara mendapatkan salinan informasi';
-    }
+    // Cara mendapatkan salinan dipindah ke proses jadwalkan
 
     // Validate cara_memperoleh (minimal 1 harus dipilih)
     if (formData.cara_memperoleh.length === 0) {
       newErrors.cara_memperoleh = 'Minimal pilih satu cara memperoleh informasi';
     }
 
-    // Validate cara_salinan (minimal 1 harus dipilih)
-    if (formData.cara_salinan.length === 0) {
-      newErrors.cara_salinan = 'Minimal pilih satu cara mendapatkan salinan informasi';
-    }
+    // Cara mendapatkan salinan dipindah ke proses jadwalkan
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -302,8 +291,7 @@ export default function GuestRegistrationForm({
         keterangan: formData.notes, // Changed from catatan to keterangan  
         bidang_tujuan_id: formData.department ? parseInt(formData.department) : undefined,
         tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined,
-        cara_memperoleh: formData.cara_memperoleh,
-        cara_salinan: formData.cara_salinan
+        cara_memperoleh: formData.cara_memperoleh
       };
       
       safeLog.sensitive('Sending data to API', apiFormData);
@@ -352,7 +340,6 @@ export default function GuestRegistrationForm({
             purpose: '',
             department: '',
             cara_memperoleh: [],
-            cara_salinan: [],
             notes: ''
           });
           setErrors({});
@@ -374,7 +361,6 @@ export default function GuestRegistrationForm({
             purpose: '',
             department: '',
             cara_memperoleh: [],
-            cara_salinan: [],
             notes: ''
           });
           setErrors({});
@@ -631,36 +617,7 @@ export default function GuestRegistrationForm({
           )}
         </div>
 
-        {/* Cara Mendapatkan Salinan Informasi Section */}
-        <div className={`bg-blue-50 p-6 rounded-lg border ${errors.cara_salinan ? 'border-red-500' : 'border-blue-200'}`}>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">
-            Cara Mendapatkan Salinan Informasi <span className="text-red-500">*</span>
-          </h3>
-          <p className="text-xs text-gray-500 mb-4">Pilih minimal satu opsi</p>
-          <div className="space-y-3">
-            {salinanOptions.map((option) => (
-              <label key={option.id} className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="cara_salinan"
-                  value={option.id.toString()}
-                  checked={formData.cara_salinan.includes(option.id)}
-                  onChange={handleInputChange}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600"
-                  style={{
-                    backgroundImage: formData.cara_salinan.includes(option.id)
-                      ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                      : 'none'
-                  }}
-                />
-                <span className="text-sm text-gray-700">{option.nama_opsi}</span>
-              </label>
-            ))}
-          </div>
-          {errors.cara_salinan && (
-            <p className="text-red-500 text-sm mt-2">{errors.cara_salinan}</p>
-          )}
-        </div>
+        {/* Cara Mendapatkan Salinan Informasi Section removed - moved to schedule modal */}
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -706,7 +663,6 @@ export default function GuestRegistrationForm({
                 purpose: '',
                 department: '',
                 cara_memperoleh: [],
-                cara_salinan: [],
                 notes: ''
               });
               setErrors({});
