@@ -40,8 +40,6 @@ export interface DaftarTamu {
   profesi?: string; // From JOIN with profesi table (nama_profesi)
   asal_instansi?: string;
   keperluan?: string;
-  bidang_tujuan_id?: number;
-  bidang_tujuan?: string; // Nama bidang (Sekretariat, Bidang Pelatihan Kerja, dll)
   tujuan_kunjungan_id?: number;
   status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null; // datetime
@@ -126,7 +124,6 @@ export interface GuestFormData {
   pendidikan_terakhir_id?: number; // ID for pendidikan
   asal_instansi?: string;
   keperluan?: string;
-  bidang_tujuan_id?: number;
   tujuan_kunjungan_id?: number;
   catatan?: string; // For catatan_tambahan column
   file_upload?: string;

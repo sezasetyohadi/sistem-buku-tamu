@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { 
   getEducationOptions, 
   getProfessionOptions, 
-  getBidangTujuanOptions, 
   getTujuanKunjunganOptions,
   getMemperolehInformasiOptions,
   getMendapatkanSalinanOptions
@@ -12,10 +11,9 @@ export async function GET() {
   try {
     // Tables are now handled by migrations
     
-    const [educationLevels, professions, bidangTujuan, tujuanKunjungan, memperolehInformasi, mendapatkanSalinan] = await Promise.all([
+    const [educationLevels, professions, tujuanKunjungan, memperolehInformasi, mendapatkanSalinan] = await Promise.all([
       getEducationOptions(),
       getProfessionOptions(),
-      getBidangTujuanOptions(),
       getTujuanKunjunganOptions(),
       getMemperolehInformasiOptions(),
       getMendapatkanSalinanOptions()
@@ -26,7 +24,6 @@ export async function GET() {
       data: {
         educationLevels,
         professions,
-        bidangTujuan,
         tujuanKunjungan,
         memperolehInformasi,
         mendapatkanSalinan

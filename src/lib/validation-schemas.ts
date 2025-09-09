@@ -60,10 +60,6 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     minLength: 5,
     maxLength: 200,
     message: 'Keperluan wajib diisi minimal 5 karakter'
-  },
-  department: {
-    required: true,
-    message: 'Pilih bidang tujuan'
   }
 };
 

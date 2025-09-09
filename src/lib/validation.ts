@@ -511,12 +511,6 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     },
     message: 'Jenis kelamin harus dipilih'
   },
-  bidang_tujuan_id: {
-    required: true,
-    integer: true,
-    min: 1,
-    message: 'Pilih bidang tujuan yang valid'
-  },
   pendidikan_terakhir_id: {
     required: true,
     integer: true,

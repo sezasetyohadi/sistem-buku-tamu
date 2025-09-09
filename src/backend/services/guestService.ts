@@ -7,12 +7,10 @@ import { guestLogger, dbLogger, safeLog } from '../../lib/logger';
 export async function getAllGuests(): Promise<DaftarTamu[]> {
   const query = `
     SELECT t.*, 
-           b.bidang as bidang_tujuan, 
            pt.pendidikan_terakhir,
            p.nama_profesi as profesi,
            tt.token
     FROM daftar_tamu t
-    LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
     LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
     LEFT JOIN profesi p ON t.profesi_id = p.id
     LEFT JOIN tamu_token tt ON t.id = tt.tamu_id AND tt.is_active = 1
@@ -24,11 +22,9 @@ export async function getAllGuests(): Promise<DaftarTamu[]> {
 export async function getGuestById(id: number): Promise<DaftarTamu | null> {
   const query = `
     SELECT t.*, 
-           b.bidang as bidang_tujuan, 
            pt.pendidikan_terakhir,
            p.nama_profesi as profesi
     FROM daftar_tamu t
-    LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
     LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
     LEFT JOIN profesi p ON t.profesi_id = p.id
     WHERE t.id = ?
@@ -43,7 +39,6 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
   // Retrieve education and profession labels if IDs are provided
   let pendidikanTerakhir = null;
   let profesi = null;
-  let bidangTujuan = null;
   let tujuanKunjungan = null;
   
   try {
@@ -69,17 +64,6 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       }
     }
 
-    // Get bidang tujuan if ID is provided
-    if (formData.bidang_tujuan_id) {
-      const bidangResult = await executeQuery<Array<{ bidang: string }>>(
-        'SELECT bidang FROM bidang_tujuan WHERE id = ?',
-        [formData.bidang_tujuan_id]
-      );
-      if (bidangResult.length > 0) {
-        bidangTujuan = bidangResult[0].bidang;
-      }
-    }
-
     // Get tujuan kunjungan if ID is provided
     if (formData.tujuan_kunjungan_id) {
       const tujuanResult = await executeQuery<Array<{ tujuan: string }>>(
@@ -93,7 +77,6 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
     
     guestLogger.debug('Resolved education:', pendidikanTerakhir);
     guestLogger.debug('Resolved profession:', profesi);
-    guestLogger.debug('Resolved bidang tujuan:', bidangTujuan);
     guestLogger.debug('Resolved tujuan kunjungan:', tujuanKunjungan);
     
     // Set keperluan to tujuan_kunjungan if available, don't include catatan
@@ -105,8 +88,8 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir_id, 
-       profesi_id, asal_instansi, keperluan, bidang_tujuan_id, catatan_tambahan, status_kunjungan, file_upload) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
+       profesi_id, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
     `;
     
     // Parameter with all needed fields including catatan_tambahan
@@ -120,7 +103,6 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       formData.profesi_id || null, // Use the ID directly
       formData.asal_instansi || null,
       keperluan,
-      formData.bidang_tujuan_id || null,
       formData.catatan || null, // Save notes to catatan_tambahan column
       formData.file_upload || null
     ];
@@ -266,12 +248,10 @@ export async function deleteGuest(id: number): Promise<boolean> {
 export async function searchGuests(searchTerm: string): Promise<DaftarTamu[]> {
   const query = `
     SELECT t.*, 
-           b.bidang as bidang_tujuan, 
            pt.pendidikan_terakhir,
            p.nama_profesi as profesi,
            tt.token
     FROM daftar_tamu t
-    LEFT JOIN bidang_tujuan b ON t.bidang_tujuan_id = b.id
     LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
     LEFT JOIN profesi p ON t.profesi_id = p.id
     LEFT JOIN tamu_token tt ON t.id = tt.tamu_id AND tt.is_active = 1

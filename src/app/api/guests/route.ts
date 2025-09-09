@@ -11,7 +11,6 @@ import { createToken } from '@/backend/services/tokenService';
 import {
   getEducationOptions, 
   getProfessionOptions, 
-  getBidangTujuanOptions, 
   getTujuanKunjunganOptions 
 } from '@/backend/config/db';
 import { GuestFormData } from '@/types/database-types';
@@ -35,8 +34,6 @@ export const GET = withApiMiddleware(async (request, response, context) => {
     status: searchParams.get('status') || undefined,
     dateFrom: searchParams.get('dateFrom') || undefined,
     dateTo: searchParams.get('dateTo') || undefined,
-    bidangTujuan: searchParams.get('bidangTujuan') ? 
-      parseInt(searchParams.get('bidangTujuan')!) : undefined,
     limit: searchParams.get('limit') ? 
       Math.min(parseInt(searchParams.get('limit')!) || 20, 100) : 20, // Max 100 per page
     offset: searchParams.get('offset') ? 
@@ -141,7 +138,6 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       asal_instansi: sanitizedData.instansi || undefined,
       keperluan: sanitizedData.keterangan || 'Kunjungan umum',
       catatan: undefined, // Remove extra catatan field
-      bidang_tujuan_id: sanitizedData.bidang_tujuan_id,
       tujuan_kunjungan_id: sanitizedData.tujuan_kunjungan_id,
       file_upload: sanitizedData.file_upload || undefined,
       cara_memperoleh: sanitizedData.cara_memperoleh || undefined,
@@ -153,7 +149,6 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       metadata: {
         hasEmail: !!guestData.email,
         hasPhone: !!guestData.nomor_telp,
-        bidangTujuan: guestData.bidang_tujuan_id,
         profesi: guestData.profesi_id
       }
     });
