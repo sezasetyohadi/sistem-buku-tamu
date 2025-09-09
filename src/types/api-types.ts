@@ -149,7 +149,6 @@ export interface GuestRegistrationRequest {
   phone: string;
   alamat?: string;
   jenis_kelamin?: 'Laki-laki' | 'Perempuan';
-  bidang_tujuan_id: number;
   pendidikan_terakhir_id: number;
   profesi_id: number;
   tujuan_kunjungan_id: number;
@@ -182,7 +181,6 @@ export interface GuestResponse {
   tanggal_kunjungan: string;
   jam_datang?: string;
   jam_selesai?: string;
-  bidang_tujuan?: string;
   pendidikan_terakhir?: string;
   profesi?: string;
   tujuan_kunjungan?: string;
@@ -346,7 +344,6 @@ export interface SystemHealth {
  * Lookup data response
  */
 export interface LookupDataResponse {
-  bidangTujuan: LookupItem[];
   pendidikanTerakhir: LookupItem[];
   profesi: LookupItem[];
   tujuanKunjungan: LookupItem[];

@@ -110,10 +110,8 @@ export async function getTokenStatus(token: string): Promise<{ tamuId: number; s
         dt.jadwal_dibuat,
         dt.file_upload,
         dt.status_kunjungan,
-        dt.catatan_tambahan,
-        b.bidang 
+        dt.catatan_tambahan
       FROM daftar_tamu dt 
-      LEFT JOIN bidang_tujuan b ON dt.bidang_tujuan_id = b.id
       LEFT JOIN profesi p ON dt.profesi_id = p.id
       LEFT JOIN pendidikan_terakhir pt ON dt.pendidikan_terakhir_id = pt.id
       WHERE dt.id = ?`,

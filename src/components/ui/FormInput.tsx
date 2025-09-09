@@ -48,18 +48,18 @@ export default function FormInput({
       
       <div className="relative">
         {icon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-700">
+          <div className="absolute inset-y-0 left-0 pl-2.5 sm:pl-3 flex items-center pointer-events-none text-gray-700">
             {icon}
           </div>
         )}
         
         <input
           className={`
-            w-full px-4 py-3 text-black placeholder-black 
+            w-full max-w-full px-3 py-2.5 sm:px-4 sm:py-3 text-black placeholder-black 
             border rounded-lg shadow-sm transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-opacity-50
             ${inputVariant.border} ${inputVariant.ring}
-            ${icon ? 'pl-10' : ''}
+            ${icon ? 'pl-9 sm:pl-10' : ''}
             ${error ? 'bg-red-50' : 'bg-white hover:bg-gray-50 focus:bg-white'}
             ${className}
           `}

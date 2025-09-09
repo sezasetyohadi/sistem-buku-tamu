@@ -29,18 +29,6 @@ export async function GET(
       return NextResponse.json({ success: false, message: 'Tamu tidak ditemukan' }, { status: 404 });
     }
 
-    // Get bidang tujuan name
-    let bidangTujuan = null;
-    if (guest.bidang_tujuan_id) {
-      const bidangResult = await executeQuery<Array<{ bidang: string }>>(
-        'SELECT bidang FROM bidang_tujuan WHERE id = ?', 
-        [guest.bidang_tujuan_id]
-      );
-      if (bidangResult.length > 0) {
-        bidangTujuan = bidangResult[0].bidang;
-      }
-    }
-
     // Get cara memperoleh informasi selections
     let caraMendapatkanInformasi: string[] = [];
     try {
@@ -74,7 +62,6 @@ export async function GET(
     // Add the additional information to the guest object
     const guestWithDetails = {
       ...guest,
-      bidang_tujuan: bidangTujuan,
       cara_memperoleh_informasi: caraMendapatkanInformasi,
       cara_mendapatkan_salinan: caraSalinan
     };

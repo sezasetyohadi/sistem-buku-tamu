@@ -118,12 +118,12 @@ export default function LandingPage() {
           <div className="absolute bottom-32 right-1/3 w-32 h-32 bg-gradient-to-r from-pink-400 to-red-400 opacity-25 rounded-full blur-2xl"></div>
         </div>
         
-        <div className="container mx-auto px-6 py-20 relative z-10 max-w-7xl">
+        <div className="container mx-auto px-4 sm:px-6 py-20 relative z-10 max-w-7xl">
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
               <div className="relative group">
-                <div className="relative w-24 h-28 bg-white/15 backdrop-blur-lg rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-3 hover:scale-105 transition-transform duration-500">
+                <div className="relative w-20 h-24 sm:w-24 sm:h-28 bg-white/15 backdrop-blur-lg rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-2 sm:p-3 hover:scale-105 transition-transform duration-500">
                   <img 
                     src="/logo-jateng.svg" 
                     alt="Logo Provinsi Jawa Tengah" 
@@ -135,7 +135,7 @@ export default function LandingPage() {
             </div>
             
             {/* Status badge with smaller spacing */}
-            <div className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-lg rounded-full text-sm font-bold mb-6 border border-green-400/30">
+            <div className="inline-flex items-center px-4 py-2 sm:px-6 bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-lg rounded-full text-sm font-bold mb-6 border border-green-400/30">
               <span className="w-2 h-2 bg-green-400 rounded-full mr-3 inline-block"></span>
               <span className="bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
                 Sistem Online • Tersedia 24/7
@@ -144,7 +144,7 @@ export default function LandingPage() {
             
             {/* Typography with compact spacing */}
             <div className="mb-6">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight tracking-tight px-2">
                 <span className="inline-block hover:scale-105 transition-transform duration-500">
                   Selamat Datang di
                 </span>
@@ -154,23 +154,23 @@ export default function LandingPage() {
                 </span>
               </h1>
               <div className="relative">
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-blue-50 tracking-wide">
+                <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-blue-50 tracking-wide">
                   Jawa Tengah
                 </h2>
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-32 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent rounded-full"></div>
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-24 sm:w-32 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent rounded-full"></div>
               </div>
             </div>
             
-            <p className="text-base md:text-lg lg:text-xl mb-8 text-blue-50 max-w-3xl mx-auto leading-relaxed font-medium">
+            <p className="text-base sm:text-base md:text-lg lg:text-xl mb-8 text-blue-50 max-w-3xl mx-auto leading-relaxed font-medium px-4">
               Sistem Buku Tamu Digital - Daftarkan kunjungan Anda dengan mudah, 
               akses layanan ketenagakerjaan dan transmigrasi secara digital
             </p>
             
             {/* CTA buttons - Smaller, more proportional sizing */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
               <Link
                 href="/guest/register"
-                className="group relative text-white font-bold py-4 px-8 rounded-xl text-base md:text-lg transition-all duration-500 shadow-xl transform hover:scale-105 hover:-translate-y-1 overflow-hidden min-w-[200px]"
+                className="group relative text-white font-bold py-4 px-8 rounded-xl text-base md:text-lg transition-all duration-500 shadow-xl transform hover:scale-105 hover:-translate-y-1 overflow-hidden w-full sm:w-auto sm:min-w-[200px]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-100 group-hover:opacity-90"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

@@ -11,7 +11,6 @@ export interface GuestQueryFilters {
   status?: string;
   dateFrom?: string;
   dateTo?: string;
-  bidangTujuan?: number;
   limit?: number;
   offset?: number;
   search?: string;
@@ -26,7 +25,6 @@ export interface GuestSummary {
   waktu_dibuat: string;
   waktu_checkin?: string;
   keperluan?: string;
-  bidang: string;
   token?: string;
 }
 
@@ -43,7 +41,6 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
     status,
     dateFrom,
     dateTo,
-    bidangTujuan,
     limit = 20,
     offset = 0,
     search
@@ -63,11 +60,6 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
     queryParams.push(dateFrom, dateTo);
   }
 
-  if (bidangTujuan) {
-    whereConditions.push('dt.bidang_tujuan_id = ?');
-    queryParams.push(bidangTujuan);
-  }
-
   if (search) {
     whereConditions.push('(dt.nama LIKE ? OR dt.email LIKE ? OR dt.asal_instansi LIKE ? OR tt.token LIKE ?)');
     const searchPattern = `%${search}%`;
@@ -84,13 +76,8 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
       dt.email,
       dt.asal_instansi,
       dt.status_kunjungan,
-      dt.waktu_dibuat,
-      dt.waktu_checkin,
-      dt.keperluan,
-      bt.bidang,
-      tt.token
+      dt.waktu_dibuat
     FROM daftar_tamu dt
-    LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
     LEFT JOIN tamu_token tt ON dt.id = tt.tamu_id AND tt.is_active = 1
     ${whereClause}
     ORDER BY dt.waktu_dibuat DESC
@@ -260,12 +247,8 @@ export async function searchGuests(searchTerm: string, limit: number = 10): Prom
         dt.asal_instansi,
         dt.status_kunjungan,
         dt.waktu_dibuat,
-        dt.waktu_checkin,
-        dt.keperluan,
-        bt.bidang,
-        tt.token
+        dt.waktu_checkin
       FROM daftar_tamu dt
-      LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
       LEFT JOIN tamu_token tt ON dt.id = tt.tamu_id AND tt.is_active = 1
       WHERE 
         dt.nama LIKE ? OR 
