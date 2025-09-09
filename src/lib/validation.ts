@@ -530,10 +530,41 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     message: 'Pilih profesi yang valid'
   },
   tujuan_kunjungan_id: {
-    required: true,
+    required: false, // Made optional since it can be null when tujuan_kunjungan_lainnya is provided
     integer: true,
     min: 1,
+    custom: (value, allData) => {
+      // If tujuan_kunjungan_id is null/empty, tujuan_kunjungan_lainnya must be provided
+      if (!value || value === null) {
+        if (!allData?.tujuan_kunjungan_lainnya || allData.tujuan_kunjungan_lainnya.trim() === '') {
+          return 'Pilih tujuan kunjungan yang valid atau isi tujuan kunjungan lainnya';
+        }
+        return null; // Valid: null tujuan_kunjungan_id with tujuan_kunjungan_lainnya provided
+      }
+      // If tujuan_kunjungan_id is provided, validate it's a positive integer
+      if (typeof value !== 'number' || value < 1) {
+        return 'Pilih tujuan kunjungan yang valid';
+      }
+      return null;
+    },
     message: 'Pilih tujuan kunjungan yang valid'
+  },
+  tujuan_kunjungan_lainnya: {
+    required: false,
+    maxLength: 200,
+    custom: (value, allData) => {
+      // If tujuan_kunjungan_id is null, this field must be provided and non-empty
+      if (!allData?.tujuan_kunjungan_id || allData.tujuan_kunjungan_id === null) {
+        if (!value || value.trim() === '') {
+          return 'Tujuan kunjungan lainnya wajib diisi jika memilih "Lainnya"';
+        }
+        if (value.trim().length < 5) {
+          return 'Tujuan kunjungan lainnya minimal 5 karakter';
+        }
+      }
+      return null;
+    },
+    message: 'Tujuan kunjungan lainnya tidak valid'
   },
   instansi: {
     required: false,

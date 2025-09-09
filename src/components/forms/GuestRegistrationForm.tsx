@@ -35,6 +35,7 @@ export default function GuestRegistrationForm({
     education: '',
     profession: '',
     company: '',
+    department: '', // Add bidang tujuan field
     purpose: '',
     cara_memperoleh: [] as number[], // Changed to number array for IDs
     cara_salinan: [] as number[], // Changed to number array for IDs
@@ -53,6 +54,7 @@ export default function GuestRegistrationForm({
   } = useApiCall<{
     professions: Array<{id: number, nama_profesi: string}>;
     educationLevels: Array<{id: number, pendidikan_terakhir: string}>;
+    bidangTujuan: Array<{id: number, bidang: string}>;
     tujuanKunjungan: Array<{id: number, tujuan: string}>;
     memperolehInformasi: Array<{id: number, nama_opsi: string}>;
     mendapatkanSalinan: Array<{id: number, nama_opsi: string}>;
@@ -99,6 +101,14 @@ export default function GuestRegistrationForm({
       label: e.pendidikan_terakhir
     })) || [])
   ], [formOptions?.educationLevels]);
+
+  const processedDepartmentOptions = React.useMemo(() => [
+    { value: '', label: 'Pilih bidang tujuan' },
+    ...(formOptions?.bidangTujuan?.map(b => ({
+      value: b.id.toString(),
+      label: b.bidang
+    })) || [])
+  ], [formOptions?.bidangTujuan]);
 
   const processedPurposeOptions = React.useMemo(() => [
     { value: '', label: 'Pilih tujuan kunjungan' },
@@ -232,13 +242,19 @@ export default function GuestRegistrationForm({
       newErrors.profession = 'Profesi harus dipilih';
     }
 
+    if (!formData.department) {
+      newErrors.department = 'Bidang tujuan harus dipilih';
+    }
+
     if (!formData.purpose) {
       newErrors.purpose = 'Tujuan kunjungan harus dipilih';
     }
 
-    // Validasi catatan tambahan jika "Lainnya" dipilih
-    if (formData.purpose === 'other' && !formData.notes.trim()) {
-      newErrors.notes = 'Catatan tambahan wajib diisi untuk tujuan "Lainnya"';
+    // If "Lainnya" is selected, notes field must be filled
+    if (formData.purpose === 'other') {
+      if (!formData.notes || formData.notes.trim().length < 5) {
+        newErrors.notes = 'Jelaskan tujuan kunjungan Anda minimal 5 karakter';
+      }
     }
 
     // Wajib memilih minimal satu opsi pada Cara Memperoleh
@@ -287,6 +303,7 @@ export default function GuestRegistrationForm({
         phone: formData.phone,
         alamat: formData.address,
         jenis_kelamin: formData.gender,
+        bidang_tujuan_id: formData.department ? parseInt(formData.department) : undefined,
         pendidikan_terakhir_id: formData.education ? parseInt(formData.education) : undefined,
         profesi_id: formData.profession ? parseInt(formData.profession) : undefined,
         instansi: formData.company, // Changed from asal_instansi to instansi
@@ -299,10 +316,17 @@ export default function GuestRegistrationForm({
       
       safeLog.sensitive('Sending data to API', apiFormData);
       
+      console.log('[DEBUG] Form data values:');
+      console.log('- formData.department:', formData.department);
+      console.log('- formData.education:', formData.education);
+      console.log('- formData.profession:', formData.profession);
+      console.log('- formData.purpose:', formData.purpose);
+      
       console.log('[DEBUG] About to submit form, checking required fields:');
       console.log('- nama:', apiFormData.nama);
       console.log('- email:', apiFormData.email);
       console.log('- phone:', apiFormData.phone);
+      console.log('- bidang_tujuan_id:', apiFormData.bidang_tujuan_id);
       console.log('- pendidikan_terakhir_id:', apiFormData.pendidikan_terakhir_id);
       console.log('- profesi_id:', apiFormData.profesi_id);
       console.log('- tujuan_kunjungan_id:', apiFormData.tujuan_kunjungan_id);
@@ -340,6 +364,7 @@ export default function GuestRegistrationForm({
             education: '',
             profession: '',
             company: '',
+            department: '',
             purpose: '',
             cara_memperoleh: [],
             cara_salinan: [],
@@ -361,6 +386,7 @@ export default function GuestRegistrationForm({
             education: '',
             profession: '',
             company: '',
+            department: '',
             purpose: '',
             cara_memperoleh: [],
             cara_salinan: [],
@@ -555,6 +581,21 @@ export default function GuestRegistrationForm({
               </svg>
             }
           />
+
+          <FormSelect
+            label="Bidang Tujuan"
+            name="department"
+            value={formData.department}
+            onChange={handleInputChange}
+            error={errors.department}
+            options={processedDepartmentOptions}
+            required
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            }
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:gap-6">
@@ -651,37 +692,18 @@ export default function GuestRegistrationForm({
         </div>
 
         <div>
-          <label className={`block text-sm font-semibold mb-2 ${formData.purpose === 'other' ? 'text-yellow-800' : 'text-gray-700'}`}>
+          <label className="block text-sm font-semibold mb-2 text-gray-700">
             Catatan Tambahan
-            {formData.purpose === 'other' && <span className="text-red-500 ml-1">*</span>}
-            {formData.purpose === 'other' && (
-              <span className="text-yellow-600 text-xs font-normal ml-2">
-                (Wajib diisi karena Anda memilih "Lainnya" pada tujuan kunjungan)
-              </span>
-            )}
+            <span className="text-gray-500 font-normal ml-2">(Opsional)</span>
           </label>
           <textarea
             name="notes"
             value={formData.notes}
             onChange={handleInputChange}
             rows={4}
-            className={`w-full px-4 py-3 text-gray-900 placeholder-gray-500 border rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-white hover:bg-gray-50 focus:bg-white ${
-              formData.purpose === 'other' 
-                ? 'border-yellow-400 focus:ring-yellow-500 focus:border-yellow-500' 
-                : 'border-gray-300 focus:ring-[#3D5DC3] focus:border-[#3D5DC3]'
-            }`}
-            placeholder={
-              formData.purpose === 'other' 
-                ? "Jelaskan tujuan kunjungan Anda secara detail..." 
-                : "Tambahkan catatan atau informasi tambahan jika diperlukan..."
-            }
-            required={formData.purpose === 'other'}
+            className="w-full px-4 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-white hover:bg-gray-50 focus:bg-white focus:ring-[#3D5DC3] focus:border-[#3D5DC3]"
+            placeholder="Tambahkan catatan atau informasi tambahan jika diperlukan..."
           />
-          {formData.purpose === 'other' && !formData.notes.trim() && (
-            <p className="text-red-500 text-sm mt-1">
-              Catatan tambahan wajib diisi untuk tujuan "Lainnya"
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-3 sm:gap-4 pt-4 sm:pt-6">
@@ -711,6 +733,7 @@ export default function GuestRegistrationForm({
                 education: '',
                 profession: '',
                 company: '',
+                department: '',
                 purpose: '',
                 cara_memperoleh: [],
                 cara_salinan: [],
