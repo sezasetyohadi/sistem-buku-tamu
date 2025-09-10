@@ -391,6 +391,25 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           </div>
         </div>
 
+        {/* Catatan Tambahan */}
+        <div className="pt-4 border-t border-gray-200">
+          <div className="flex items-center">
+            <h4 className="text-sm font-medium text-gray-500">Catatan Tambahan</h4>
+            <Tooltip content="Catatan atau informasi tambahan dari tamu">
+              <span className="ml-1 cursor-help text-gray-400 hover:text-gray-600 flex items-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+            </Tooltip>
+          </div>
+          <div className="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-gray-900 whitespace-pre-wrap">
+              {guest.catatan_tambahan || 'Tidak ada catatan tambahan'}
+            </p>
+          </div>
+        </div>
+
         {/* Information Access Methods */}
         <div className="pt-4 border-t border-gray-200">
           <div className="flex items-center">
