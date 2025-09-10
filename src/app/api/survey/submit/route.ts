@@ -30,7 +30,7 @@ const SURVEY_SUBMIT_SCHEMA: ValidationSchema = {
         return 'Email wajib diisi';
       }
       
-      if (!identity.nomor_telepon || typeof identity.nomor_telepon !== 'string') {
+      if (!identity.nomor_telp || typeof identity.nomor_telp !== 'string') {
         return 'Nomor telepon wajib diisi';
       }
       
@@ -54,7 +54,7 @@ const SURVEY_SUBMIT_SCHEMA: ValidationSchema = {
           return `Jawaban ${i + 1} tidak valid`;
         }
         
-        if (!answer.question_id || typeof answer.question_id !== 'number') {
+        if (!answer.pertanyaan_id || typeof answer.pertanyaan_id !== 'number') {
           return `ID pertanyaan untuk jawaban ${i + 1} tidak valid`;
         }
         
