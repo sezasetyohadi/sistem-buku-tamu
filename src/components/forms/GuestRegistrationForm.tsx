@@ -118,7 +118,6 @@ export default function GuestRegistrationForm({
     formOptions?.memperolehInformasi || [], 
     [formOptions?.memperolehInformasi]
   );
-  // Removed salinanOptions as it's moved to the Schedule Modal
 
   // Token modal will only be hidden when user clicks close button
   // No auto-hide functionality
@@ -284,8 +283,7 @@ export default function GuestRegistrationForm({
         keterangan: formData.notes, // Changed from catatan to keterangan  
         tujuan_kunjungan_id: formData.purpose === 'other' ? null : (formData.purpose ? parseInt(formData.purpose) : undefined),
         tujuan_kunjungan_lainnya: formData.purpose === 'other' ? formData.notes : null,
-        cara_memperoleh: formData.cara_memperoleh,
-        cara_salinan: formData.cara_salinan
+        cara_memperoleh: formData.cara_memperoleh
       };
       
       safeLog.sensitive('Sending data to API', apiFormData);
@@ -336,7 +334,6 @@ export default function GuestRegistrationForm({
             education: '',
             profession: '',
             company: '',
-            
             purpose: '',
             cara_memperoleh: [],
             notes: ''
@@ -357,7 +354,6 @@ export default function GuestRegistrationForm({
             education: '',
             profession: '',
             company: '',
-            
             purpose: '',
             cara_memperoleh: [],
             notes: ''
@@ -615,37 +611,6 @@ export default function GuestRegistrationForm({
           )}
         </div>
 
-        {/* Cara Mendapatkan Salinan Informasi Section */}
-        <div className={`bg-blue-50 p-4 md:p-6 rounded-lg border ${errors.cara_salinan ? 'border-red-500' : 'border-blue-200'}`}>
-          <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-1">
-            Cara Mendapatkan Salinan Informasi <span className="text-red-500">*</span>
-          </h3>
-          <p className="text-xs text-gray-500 mb-4">Pilih minimal satu opsi</p>
-          <div className="space-y-2 md:space-y-3">
-            {salinanOptions.map((option) => (
-              <label key={option.id} className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="cara_salinan"
-                  value={option.id.toString()}
-                  checked={formData.cara_salinan.includes(option.id)}
-                  onChange={handleInputChange}
-                  className="w-4 h-4 mt-0.5 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600 flex-shrink-0"
-                  style={{
-                    backgroundImage: formData.cara_salinan.includes(option.id)
-                      ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                      : 'none'
-                  }}
-                />
-                <span className="text-sm text-gray-700 leading-relaxed">{option.nama_opsi}</span>
-              </label>
-            ))}
-          </div>
-          {errors.cara_salinan && (
-            <p className="text-red-500 text-sm mt-2">{errors.cara_salinan}</p>
-          )}
-        </div>
-
         <div>
           <label className="block text-sm font-semibold mb-2 text-gray-700">
             Catatan Tambahan
@@ -701,7 +666,6 @@ export default function GuestRegistrationForm({
                 education: '',
                 profession: '',
                 company: '',
-                
                 purpose: '',
                 cara_memperoleh: [],
                 notes: ''

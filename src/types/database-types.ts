@@ -41,6 +41,8 @@ export interface DaftarTamu {
   asal_instansi?: string;
   keperluan?: string;
   tujuan_kunjungan_id?: number;
+  bidang_tujuan_id?: number; // ID bidang yang dituju
+  bidang_tujuan?: string; // Nama bidang yang dituju (from JOIN)
   asn_dituju?: string; // ASN yang dituju
   status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
   jadwal_checkin?: string | null; // datetime
@@ -126,6 +128,7 @@ export interface GuestFormData {
   asal_instansi?: string;
   keperluan?: string;
   tujuan_kunjungan_id?: number;
+  bidang_tujuan_id?: number; // ID bidang yang dituju
   catatan?: string; // For catatan_tambahan column
   file_upload?: string;
   cara_memperoleh?: number[]; // Array of IDs from memperoleh_informasi table
