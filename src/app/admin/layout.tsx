@@ -352,16 +352,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="h-screen flex bg-gray-50 overflow-hidden">
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out overflow-hidden
         ${sidebarOpen ? 'w-56 sm:w-64' : 'w-0 md:w-12 xl:w-16'}
         md:relative md:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div className="h-full flex flex-col overflow-hidden">
           {/* Logo with Toggle Button */}
-          <div className={`flex items-center h-14 sm:h-16 px-3 sm:px-4 bg-white border-b border-gray-200 transition-all duration-300 ${
-            sidebarOpen ? '' : 'md:px-2'
-          }`}>
+          <div className="flex items-center h-14 sm:h-16 px-3 sm:px-4 bg-white border-b border-gray-200 transition-all duration-300">
             <button
               type="button"
               className="w-7 h-7 sm:w-8 sm:h-8 bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0 hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
@@ -372,47 +370,73 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className={`ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-800 transition-opacity duration-300 ${
-              sidebarOpen ? 'opacity-100' : 'md:opacity-0 md:w-0 overflow-hidden'
+            <span className={`ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-800 transition-all duration-300 whitespace-nowrap ${
+              sidebarOpen ? 'opacity-100 translate-x-0' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
             }`}>Admin Panel</span>
           </div>
           
           {/* Navigation */}
           <nav className={`flex-1 overflow-y-auto transition-all duration-300 ${
-            sidebarOpen ? 'mt-4 sm:mt-5 px-2' : 'md:mt-6 xl:mt-8 md:px-0'
+            sidebarOpen ? 'mt-4 sm:mt-5 px-2' : 'mt-4 sm:mt-5 md:px-1 xl:px-2'
           }`}>
-            <div className={`transition-all duration-300 ${
-              sidebarOpen ? 'space-y-1' : 'md:space-y-2 xl:space-y-3'
-            }`}>
+            <div className="transition-all duration-300 space-y-1 md:space-y-2">
               {filteredMenuItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
                   prefetch={true} // Enable Next.js prefetching
                   onMouseEnter={() => enhancedPrefetch(item.path)} // Enhanced prefetch on hover
+                  title={!sidebarOpen ? item.name : undefined} // Tooltip for collapsed state
                   className={`
-                    group flex items-center text-xs sm:text-sm font-medium transition-all duration-300
+                    group flex items-center text-xs sm:text-sm font-medium transition-all duration-300 relative
                     ${sidebarOpen 
                       ? 'px-2 sm:px-3 py-2 mx-0 rounded-md' 
-                      : 'md:px-0 md:py-2 xl:py-3 md:mx-1 xl:mx-2 md:justify-center md:rounded-lg py-2 px-2 sm:px-3 mx-0 rounded-md'
+                      : 'py-2 px-2 sm:px-3 mx-0 rounded-md md:mx-1 xl:mx-2 md:py-2 xl:py-3 md:px-0 xl:px-0 md:justify-center md:items-center md:flex md:rounded-lg'
                     }
                     ${isActive(item.path)
-                      ? 'bg-red-50 text-red-700 border-r-2 border-red-600'
+                      ? sidebarOpen 
+                        ? 'bg-red-50 text-red-700 border-r-2 border-red-600' 
+                        : 'md:bg-red-600 md:text-white bg-red-50 text-red-700 border-r-2 border-red-600'
                       : 'text-gray-800 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
                 >
-                  <span className={`flex-shrink-0 transition-all duration-300 ${
-                    isActive(item.path) ? 'text-red-500' : 'text-gray-700 group-hover:text-gray-800'
-                  } ${
-                    sidebarOpen ? 'w-4 h-4 sm:w-5 sm:h-5' : 'md:w-4 md:h-4 xl:w-5 xl:h-5 w-4 h-4 sm:w-5 sm:h-5'
-                  }`}>
-                    {item.icon}
-                  </span>
-                  {sidebarOpen && (
-                    <span className="ml-2 sm:ml-3 transition-opacity duration-300 truncate">
-                      {item.name}
-                    </span>
+                  {sidebarOpen ? (
+                    <>
+                      <span className={`flex-shrink-0 transition-all duration-300 w-4 h-4 sm:w-5 sm:h-5 ${
+                        isActive(item.path) ? 'text-red-500' : 'text-gray-700 group-hover:text-gray-800'
+                      }`}>
+                        {item.icon}
+                      </span>
+                      <span className={`ml-2 sm:ml-3 transition-all duration-300 truncate whitespace-nowrap ${
+                        sidebarOpen ? 'opacity-100 translate-x-0 w-auto' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
+                      }`}>
+                        {item.name}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {/* Mobile view - same as expanded */}
+                      <span className={`flex-shrink-0 transition-all duration-300 w-4 h-4 sm:w-5 sm:h-5 md:hidden ${
+                        isActive(item.path) ? 'text-red-500' : 'text-gray-700 group-hover:text-gray-800'
+                      }`}>
+                        {item.icon}
+                      </span>
+                      <span className={`ml-2 sm:ml-3 transition-all duration-300 truncate whitespace-nowrap md:hidden ${
+                        sidebarOpen ? 'opacity-100 translate-x-0 w-auto' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
+                      }`}>
+                        {item.name}
+                      </span>
+                      
+                      {/* Desktop collapsed view - perfectly centered icon */}
+                      <div className="hidden md:flex md:w-full md:h-full md:items-center md:justify-center">
+                        <span className={`transition-all duration-300 w-4 h-4 sm:w-5 sm:h-5 ${
+                          isActive(item.path) ? 'text-white' : 'text-gray-700 group-hover:text-gray-800'
+                        }`}>
+                          {item.icon}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </Link>
               ))}
@@ -420,15 +444,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </nav>
           
           {/* Logout */}
-          <div className="p-3 sm:p-4 border-t border-gray-200">
+          <div className={`p-3 sm:p-4 border-t border-gray-200 ${!sidebarOpen ? 'md:px-1 xl:px-2' : ''}`}>
             <button
               onClick={handleLogout}
-              className="flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left"
+              title={!sidebarOpen ? "Logout" : undefined} // Tooltip for collapsed state
+              className={`flex items-center text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left ${
+                sidebarOpen ? 'px-2 sm:px-3 py-2' : 'px-2 sm:px-3 py-2 md:justify-center'
+              }`}
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              {sidebarOpen && "Logout"}
+              <span className={`ml-2 sm:ml-3 transition-all duration-300 whitespace-nowrap ${
+                sidebarOpen ? 'opacity-100 translate-x-0 w-auto' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
+              }`}>Logout</span>
             </button>
           </div>
         </div>
