@@ -6,13 +6,18 @@ import ConfirmationModal from './ConfirmationModal';
 interface SurveyQuestion {
   id?: number;
   pertanyaan: string;
-  tipe_pertanyaan: 'rating';
+  tipe_pertanyaan: 'rating' | 'text';
   status: boolean;
   jenis_rating_id?: number;
   is_required?: boolean;
   urutan?: number;
   baris?: number;
-  multiple_rating_types?: { jenis_rating_id: number; is_required?: boolean }[];
+  multiple_rating_types?: { 
+    jenis_rating_id: number; 
+    is_required?: boolean; 
+    nama_rating?: string;
+    urutan?: number;
+  }[];
 }
 
 interface SurveyQuestionsListProps {

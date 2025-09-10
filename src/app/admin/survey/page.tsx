@@ -16,13 +16,18 @@ import { surveyLogger } from "@/lib/logger";
 interface SurveyQuestion {
   id?: number;
   pertanyaan: string;
-  tipe_pertanyaan: 'rating';
+  tipe_pertanyaan: 'rating' | 'text';
   status: boolean;
   jenis_rating_id?: number;
   is_required?: boolean;
   urutan?: number;
   baris?: number;
-  multiple_rating_types?: { jenis_rating_id: number; is_required?: boolean }[];
+  multiple_rating_types?: { 
+    jenis_rating_id: number; 
+    is_required?: boolean; 
+    nama_rating?: string;
+    urutan?: number;
+  }[];
 }
 
 interface SurveyStatistics {
@@ -153,7 +158,7 @@ export default function AdminSurvey() {
     if (kinerjaRatingFilter) {
       filtered = filtered.filter(response => {
         const kinerjaRatings = response.kinerja_ratings || {};
-        return Object.values(kinerjaRatings).some(rating => 
+        return Object.values(kinerjaRatings).some((rating: any) => 
           rating.toString() === kinerjaRatingFilter
         );
       });
@@ -162,7 +167,7 @@ export default function AdminSurvey() {
     if (kepentinganRatingFilter) {
       filtered = filtered.filter(response => {
         const kepentinganRatings = response.kepentingan_ratings || {};
-        return Object.values(kepentinganRatings).some(rating => 
+        return Object.values(kepentinganRatings).some((rating: any) => 
           rating.toString() === kepentinganRatingFilter
         );
       });
@@ -185,11 +190,12 @@ export default function AdminSurvey() {
   // API Functions
   const fetchResponseCount = async () => {
     try {
-      const response = await fetch('/api/survey/responses/count');
+      // Use the existing responses endpoint to get count
+      const response = await fetch('/api/survey/responses');
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setResponseCount(data.count);
+          setResponseCount(data.data.length);
         }
       }
     } catch (error) {
@@ -557,7 +563,7 @@ export default function AdminSurvey() {
         isOpen={showAddQuestion}
         onClose={() => setShowAddQuestion(false)}
         onAddQuestion={handleAddQuestion}
-        initialQuestion={null}
+        initialQuestion={undefined}
         isEditMode={false}
       />
 
@@ -565,7 +571,7 @@ export default function AdminSurvey() {
         isOpen={!!editingQuestion}
         onClose={() => setEditingQuestion(null)}
         onAddQuestion={handleEditQuestion}
-        initialQuestion={editingQuestion}
+        initialQuestion={editingQuestion || undefined}
         isEditMode={true}
       />
 

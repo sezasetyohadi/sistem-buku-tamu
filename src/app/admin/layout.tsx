@@ -10,6 +10,55 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
+// Route prefetching cache with performance optimizations
+const routeCache = new Map<string, Promise<any>>();
+const prefetchTimestamps = new Map<string, number>();
+const PREFETCH_CACHE_TTL = 60000; // 1 minute
+const PREFETCH_DEBOUNCE_DELAY = 200; // 200ms
+
+// Advanced prefetch function with caching and debouncing
+const prefetchRoute = (path: string) => {
+  const now = Date.now();
+  const lastPrefetch = prefetchTimestamps.get(path) || 0;
+  
+  // Skip if recently prefetched
+  if (now - lastPrefetch < PREFETCH_DEBOUNCE_DELAY) {
+    return;
+  }
+  
+  // Check if cache is still valid
+  if (routeCache.has(path)) {
+    const cacheAge = now - lastPrefetch;
+    if (cacheAge < PREFETCH_CACHE_TTL) {
+      return; // Use cached version
+    } else {
+      routeCache.delete(path); // Clear expired cache
+    }
+  }
+  
+  prefetchTimestamps.set(path, now);
+  
+  // Create prefetch promise with retry logic
+  const prefetchPromise = fetch(path, {
+    method: 'GET',
+    headers: {
+      'x-prefetch': 'true',
+      'Cache-Control': 'max-age=300' // 5 minute browser cache
+    }
+  }).catch((error) => {
+    console.debug('Prefetch failed for:', path, error);
+    // Remove failed cache entry
+    routeCache.delete(path);
+    prefetchTimestamps.delete(path);
+  });
+  
+  routeCache.set(path, prefetchPromise);
+};
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const pathname = usePathname();
@@ -20,6 +69,42 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
   const [isProfileLoaded, setIsProfileLoaded] = React.useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
+
+  // Enhanced prefetch function that uses the router instance
+  const enhancedPrefetch = React.useCallback((path: string) => {
+    // Use the fetch-based prefetch
+    prefetchRoute(path);
+    
+    // Also use Next.js router prefetch
+    if (router.prefetch) {
+      router.prefetch(path);
+    }
+  }, [router]);
+
+  // Warm up critical routes on component mount
+  React.useEffect(() => {
+    const warmUpRoutes = () => {
+      const criticalRoutes = [pathname]; // Current route first
+      const currentIndex = ['/admin', '/admin/guest-management', '/admin/reports', '/admin/survey'].indexOf(pathname);
+      
+      // Add likely next routes based on current location
+      if (currentIndex !== -1) {
+        const nextRoutes = ['/admin/guest-management', '/admin/reports', '/admin/survey', '/admin/profile'];
+        criticalRoutes.push(...nextRoutes.filter(route => route !== pathname));
+      }
+      
+      // Prefetch with staggered delays to avoid overwhelming the browser
+      criticalRoutes.forEach((route, index) => {
+        setTimeout(() => {
+          enhancedPrefetch(route);
+        }, index * 50); // 50ms between each prefetch
+      });
+    };
+
+    // Wait a bit for initial page load to settle
+    const timeoutId = setTimeout(warmUpRoutes, 500);
+    return () => clearTimeout(timeoutId);
+  }, [pathname, enhancedPrefetch]);
 
   React.useEffect(() => {
     // Get admin session data when component mounts
@@ -76,6 +161,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           
           setIsProfileLoaded(true);
           console.log('Admin Layout: Profile loaded successfully');
+          
+          // Preload common admin routes after profile load
+          setTimeout(() => {
+            const commonRoutes = ['/admin/guest-management', '/admin/reports', '/admin/survey', '/admin/profile'];
+            commonRoutes.forEach(route => {
+              if (route !== pathname) {
+                enhancedPrefetch(route);
+              }
+            });
+          }, 100); // Small delay to not interfere with initial page load
         } else {
           console.log(`Admin Layout: No admin data found (attempt ${retryCount + 1})`);
           
@@ -293,6 +388,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <Link
                   key={item.path}
                   href={item.path}
+                  prefetch={true} // Enable Next.js prefetching
+                  onMouseEnter={() => enhancedPrefetch(item.path)} // Enhanced prefetch on hover
                   className={`
                     group flex items-center text-xs sm:text-sm font-medium transition-all duration-300
                     ${sidebarOpen 
@@ -354,7 +451,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               
 
               {/* User Profile */}
-              <Link href="/admin/profile" className="flex items-center space-x-2 sm:space-x-3 hover:bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-colors duration-200 group">
+              <Link 
+                href="/admin/profile" 
+                prefetch={true} // Enable Next.js prefetching
+                className="flex items-center space-x-2 sm:space-x-3 hover:bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-colors duration-200 group"
+                onMouseEnter={() => enhancedPrefetch('/admin/profile')} // Enhanced prefetch on hover
+              >
                 {isLoadingProfile ? (
                   // Loading state
                   <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-gray-300 animate-pulse flex items-center justify-center ring-2 ring-gray-100">
