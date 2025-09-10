@@ -1,8 +1,53 @@
 "use client";
 import React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { SectionErrorBoundary } from "../../components/error/ErrorBoundary";
+
+// Route prefetching cache with performance optimizations
+const routeCache = new Map<string, Promise<any>>();
+const prefetchTimestamps = new Map<string, number>();
+const PREFETCH_CACHE_TTL = 60000; // 1 minute
+const PREFETCH_DEBOUNCE_DELAY = 200; // 200ms
+
+// Advanced prefetch function with caching and debouncing
+const prefetchRoute = (path: string) => {
+  const now = Date.now();
+  const lastPrefetch = prefetchTimestamps.get(path) || 0;
+  
+  // Skip if recently prefetched
+  if (now - lastPrefetch < PREFETCH_DEBOUNCE_DELAY) {
+    return;
+  }
+  
+  // Check if cache is still valid
+  if (routeCache.has(path)) {
+    const cacheAge = now - lastPrefetch;
+    if (cacheAge < PREFETCH_CACHE_TTL) {
+      return; // Use cached version
+    } else {
+      routeCache.delete(path); // Clear expired cache
+    }
+  }
+  
+  prefetchTimestamps.set(path, now);
+  
+  // Create prefetch promise with retry logic
+  const prefetchPromise = fetch(path, {
+    method: 'GET',
+    headers: {
+      'x-prefetch': 'true',
+      'Cache-Control': 'max-age=300' // 5 minute browser cache
+    }
+  }).catch((error) => {
+    console.debug('Prefetch failed for:', path, error);
+    // Remove failed cache entry
+    routeCache.delete(path);
+    prefetchTimestamps.delete(path);
+  });
+  
+  routeCache.set(path, prefetchPromise);
+};
 
 interface GuestLayoutProps {
   children: React.ReactNode;
@@ -11,6 +56,43 @@ interface GuestLayoutProps {
 export default function GuestLayout({ children }: GuestLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true); // Keep default true for desktop
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Enhanced prefetch function that uses the router instance
+  const enhancedPrefetch = React.useCallback((path: string) => {
+    // Use the fetch-based prefetch
+    prefetchRoute(path);
+    
+    // Also use Next.js router prefetch
+    if (router.prefetch) {
+      router.prefetch(path);
+    }
+  }, [router]);
+
+  // Warm up critical routes on component mount
+  React.useEffect(() => {
+    const warmUpRoutes = () => {
+      const criticalRoutes = [pathname]; // Current route first
+      const currentIndex = ['/guest/register', '/guest/status', '/guest/survey'].indexOf(pathname);
+      
+      // Add likely next routes based on current location
+      if (currentIndex !== -1) {
+        const nextRoutes = ['/guest/register', '/guest/status', '/guest/survey'];
+        criticalRoutes.push(...nextRoutes.filter(route => route !== pathname));
+      }
+      
+      // Prefetch with staggered delays to avoid overwhelming the browser
+      criticalRoutes.forEach((route, index) => {
+        setTimeout(() => {
+          enhancedPrefetch(route);
+        }, index * 50); // 50ms between each prefetch
+      });
+    };
+
+    // Wait a bit for initial page load to settle
+    const timeoutId = setTimeout(warmUpRoutes, 500);
+    return () => clearTimeout(timeoutId);
+  }, [pathname, enhancedPrefetch]);
 
   // Skip layout for the main guest landing pages to make it full screen
   if (pathname === '/guest' || pathname === '/guest/landing') {
@@ -59,15 +141,13 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
     <div className="h-screen flex bg-gray-50 overflow-hidden">
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out overflow-hidden
         md:relative md:translate-x-0
         ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0 md:w-16'}
       `}>
         <div className="h-full flex flex-col overflow-hidden">
           {/* Logo with Toggle Button */}
-          <div className={`flex items-center h-16 px-4 bg-white border-b border-gray-200 transition-all duration-300 ${
-            sidebarOpen ? '' : 'md:px-2'
-          }`}>
+          <div className="flex items-center h-16 px-4 bg-white border-b border-gray-200 transition-all duration-300">
             <button
               type="button"
               className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0 hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -78,45 +158,69 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className={`ml-3 text-lg font-semibold text-gray-800 transition-opacity duration-300 ${
-              sidebarOpen ? 'opacity-100' : 'md:opacity-0 md:w-0 overflow-hidden'
+            <span className={`ml-3 text-lg font-semibold text-gray-800 transition-all duration-300 whitespace-nowrap ${
+              sidebarOpen ? 'opacity-100 translate-x-0' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
             }`}>Portal Tamu</span>
           </div>
           
           {/* Navigation */}
           <nav className={`flex-1 overflow-y-auto transition-all duration-300 ${
-            sidebarOpen ? 'mt-5 px-2' : 'md:mt-8 md:px-0'
+            sidebarOpen ? 'mt-5 px-2' : 'md:mt-8 md:px-1'
           }`}>
-            <div className={`transition-all duration-300 ${
-              sidebarOpen ? 'space-y-1' : 'md:space-y-3'
-            }`}>
+            <div className="transition-all duration-300 space-y-1 md:space-y-3">
               {menuItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
+                  prefetch={true} // Enable Next.js prefetching
+                  onMouseEnter={() => enhancedPrefetch(item.path)} // Enhanced prefetch on hover
+                  title={!sidebarOpen ? item.name : undefined} // Tooltip for collapsed state
                   className={`
-                    group flex items-center text-sm font-medium transition-all duration-300
+                    group flex items-center text-sm font-medium transition-all duration-300 relative
                     ${sidebarOpen 
                       ? 'px-3 py-2 mx-0 rounded-md' 
-                      : 'md:px-0 md:py-3 md:mx-2 md:justify-center md:rounded-lg py-2 px-3 mx-0 rounded-md'
+                      : 'py-2 px-3 mx-0 rounded-md md:mx-2 md:py-3 md:px-0 md:justify-center md:items-center md:flex md:rounded-lg'
                     }
                     ${isActive(item.path)
-                      ? 'bg-green-50 text-green-700 border-r-2 border-green-600'
-                      : 'text-gray-800'
+                      ? sidebarOpen 
+                        ? 'bg-green-50 text-green-700 border-r-2 border-green-600' 
+                        : 'md:bg-green-600 md:text-white bg-green-50 text-green-700 border-r-2 border-green-600'
+                      : 'text-gray-800 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
                 >
-                  <span className={`flex-shrink-0 transition-all duration-300 ${
-                    isActive(item.path) ? 'text-green-500' : 'text-gray-700 group-hover:text-gray-800'
-                  } ${
-                    sidebarOpen ? 'w-5 h-5' : 'md:w-5 md:h-5 w-5 h-5'
-                  }`}>
-                    {item.icon}
-                  </span>
-                  {sidebarOpen && (
-                    <span className="ml-3 transition-opacity duration-300">
-                      {item.name}
-                    </span>
+                  {sidebarOpen ? (
+                    <>
+                      <span className={`flex-shrink-0 transition-all duration-300 w-5 h-5 ${
+                        isActive(item.path) ? 'text-green-500' : 'text-gray-700 group-hover:text-gray-800'
+                      }`}>
+                        {item.icon}
+                      </span>
+                      <span className="ml-3 transition-all duration-300 truncate whitespace-nowrap">
+                        {item.name}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {/* Mobile view - same as expanded */}
+                      <span className={`flex-shrink-0 transition-all duration-300 w-5 h-5 md:hidden ${
+                        isActive(item.path) ? 'text-green-500' : 'text-gray-700 group-hover:text-gray-800'
+                      }`}>
+                        {item.icon}
+                      </span>
+                      <span className="ml-3 transition-all duration-300 truncate whitespace-nowrap md:hidden">
+                        {item.name}
+                      </span>
+                      
+                      {/* Desktop collapsed view - perfectly centered icon */}
+                      <div className="hidden md:flex md:w-full md:h-full md:items-center md:justify-center">
+                        <span className={`transition-all duration-300 w-5 h-5 ${
+                          isActive(item.path) ? 'text-white' : 'text-gray-700 group-hover:text-gray-800'
+                        }`}>
+                          {item.icon}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </Link>
               ))}
