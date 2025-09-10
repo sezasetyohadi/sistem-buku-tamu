@@ -136,8 +136,8 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       pendidikan_terakhir_id: sanitizedData.pendidikan_terakhir_id,
       profesi_id: sanitizedData.profesi_id,
       asal_instansi: sanitizedData.instansi || undefined,
-      keperluan: sanitizedData.keterangan || 'Kunjungan umum',
-      catatan: undefined, // Remove extra catatan field
+      keperluan: sanitizedData.tujuan_kunjungan_lainnya || 'Kunjungan umum', // Use tujuan_kunjungan_lainnya for keperluan
+      catatan: sanitizedData.keterangan || undefined, // Map keterangan to catatan field for catatan_tambahan column
       tujuan_kunjungan_id: sanitizedData.tujuan_kunjungan_id,
       file_upload: sanitizedData.file_upload || undefined,
       cara_memperoleh: sanitizedData.cara_memperoleh || undefined,
