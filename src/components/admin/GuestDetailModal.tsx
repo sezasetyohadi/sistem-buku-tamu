@@ -36,7 +36,7 @@ interface GuestDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   guest: DaftarTamu | null;
-  onGuestUpdate?: () => void; // Callback for when guest data is updated
+  onGuestUpdate?: (updatedGuest?: DaftarTamu) => void; // Enhanced callback with optional updated guest data
   isEditMode?: boolean; // Whether the modal is opened in edit mode
 }
 
@@ -157,17 +157,19 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
       toast.success('Tamu berhasil ditandai datang');
       
       // Update guest data locally with response from API
+      let updatedGuest = guest;
       if (guest && result.data) {
-        setGuest({
+        updatedGuest = {
           ...guest,
           waktu_checkin: result.data.waktu_checkin,
           status_kunjungan: result.data.status_kunjungan
-        });
+        };
+        setGuest(updatedGuest);
       }
       
-      // Trigger refresh of guest data in the parent component
+      // Trigger refresh of guest data in the parent component with updated data
       if (onGuestUpdate) {
-        onGuestUpdate();
+        onGuestUpdate(updatedGuest || undefined);
       }
     } catch (error) {
       console.error('Error checking in guest:', error);
@@ -201,17 +203,19 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
       toast.success('Kunjungan tamu berhasil ditandai selesai');
       
       // Update guest data locally with response from API
+      let updatedGuest = guest;
       if (guest && result.data) {
-        setGuest({
+        updatedGuest = {
           ...guest,
           waktu_checkout: result.data.waktu_checkout,
           status_kunjungan: result.data.status_kunjungan
-        });
+        };
+        setGuest(updatedGuest);
       }
       
-      // Trigger refresh of guest data in the parent component
+      // Trigger refresh of guest data in the parent component with updated data
       if (onGuestUpdate) {
-        onGuestUpdate();
+        onGuestUpdate(updatedGuest || undefined);
       }
     } catch (error) {
       console.error('Error checking out guest:', error);

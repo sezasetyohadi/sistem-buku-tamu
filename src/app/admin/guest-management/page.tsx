@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { DaftarTamu } from "@/types/database-types";
 import Modal from "@/components/ui/Modal";
 import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
@@ -11,6 +11,23 @@ import ExcelJS from 'exceljs';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ErrorMessage, TableLoading } from '@/components/ui/loading-states';
 import { useErrorHandler, useFetch } from '@/hooks/useErrorHandling';
+
+// Debounce hook for search optimization
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,13 +50,52 @@ function AdminGuestsManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [guestToDelete, setGuestToDelete] = useState<DaftarTamu | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   
-  // Filter guests based on current filters
+  // Performance optimization: Debounced search
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  
+  // Cache for optimistic updates
+  const optimisticUpdatesRef = useRef<Map<number, Partial<DaftarTamu>>>(new Map());
+  
+  // Memoized date filters for better performance
+  const dateFilters = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+    
+    const startOfWeek = new Date(today);
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    startOfYear.setHours(0, 0, 0, 0);
+    
+    return { today, endOfToday, startOfWeek, startOfMonth, startOfYear };
+  }, []);
+  
+  // Optimized filter function with better memoization
   const filteredGuests = useMemo(() => {
-    return guests.filter(guest => {
+    let filtered = guests;
+    
+    // Apply optimistic updates first
+    if (optimisticUpdatesRef.current.size > 0) {
+      filtered = guests.map(guest => {
+        const optimisticUpdate = guest.id ? optimisticUpdatesRef.current.get(guest.id) : null;
+        return optimisticUpdate ? { ...guest, ...optimisticUpdate } : guest;
+      });
+    }
+    
+    return filtered.filter(guest => {
       // Filter by status
       if (statusFilter !== "Semua Status") {
         if (statusFilter === "Proses" && guest.status_kunjungan !== "Datang") {
@@ -49,50 +105,32 @@ function AdminGuestsManagement() {
         }
       }
       
-      // Filter by date
+      // Filter by date (using optimized date filters)
       if (dateFilter !== "Semua Waktu") {
         const visitDate = guest.waktu_checkin ? new Date(guest.waktu_checkin) : null;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of today
-        
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999); // End of today
-        
         if (!visitDate) return false;
         
-        if (dateFilter === "Hari Ini") {
-          // Check if visit date is today
-          if (visitDate < today || visitDate > endOfToday) return false;
-        } 
-        else if (dateFilter === "Minggu Ini") {
-          // Start of week (Monday of this week)
-          const startOfWeek = new Date(today);
-          const day = today.getDay();
-          const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-          startOfWeek.setDate(diff);
-          startOfWeek.setHours(0, 0, 0, 0);
-          
-          if (visitDate < startOfWeek || visitDate > endOfToday) return false;
-        } 
-        else if (dateFilter === "Bulan Ini") {
-          // Start of month
-          const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-          startOfMonth.setHours(0, 0, 0, 0);
-          
-          if (visitDate < startOfMonth || visitDate > endOfToday) return false;
-        }
-        else if (dateFilter === "Tahun Ini") {
-          // Start of year
-          const startOfYear = new Date(today.getFullYear(), 0, 1);
-          startOfYear.setHours(0, 0, 0, 0);
-          
-          if (visitDate < startOfYear || visitDate > endOfToday) return false;
+        const { today, endOfToday, startOfWeek, startOfMonth, startOfYear } = dateFilters;
+        
+        switch (dateFilter) {
+          case "Hari Ini":
+            if (visitDate < today || visitDate > endOfToday) return false;
+            break;
+          case "Minggu Ini":
+            if (visitDate < startOfWeek || visitDate > endOfToday) return false;
+            break;
+          case "Bulan Ini":
+            if (visitDate < startOfMonth || visitDate > endOfToday) return false;
+            break;
+          case "Tahun Ini":
+            if (visitDate < startOfYear || visitDate > endOfToday) return false;
+            break;
         }
       }
       
-      // Filter by search term
-      if (searchTerm.trim() !== '') {
-        const searchLower = searchTerm.toLowerCase();
+      // Filter by search term (using debounced value)
+      if (debouncedSearchTerm.trim() !== '') {
+        const searchLower = debouncedSearchTerm.toLowerCase();
         
         // Check if any field contains the search term
         // Including name, phone number, institution, email, token
@@ -110,25 +148,30 @@ function AdminGuestsManagement() {
       
       return true;
     });
-  }, [guests, statusFilter, searchTerm]);
+  }, [guests, statusFilter, dateFilter, debouncedSearchTerm, dateFilters]);
   
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredGuests.length / itemsPerPage);
+  // Optimized pagination calculation with memoization
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(filteredGuests.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredGuests.length);
+    const currentGuests = filteredGuests.slice(startIndex, endIndex);
+    
+    return {
+      totalPages,
+      currentGuests,
+      totalItems: filteredGuests.length,
+      startIndex: startIndex + 1,
+      endIndex
+    };
+  }, [filteredGuests, currentPage, itemsPerPage]);
   
   // Reset to first page when filters change dramatically
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
+    if (currentPage > paginationData.totalPages && paginationData.totalPages > 0) {
       setCurrentPage(1);
     }
-  }, [filteredGuests.length, itemsPerPage, totalPages, currentPage]);
-  
-  // Get current page of guests
-  const currentGuests = useMemo(() => {
-    return filteredGuests.slice(
-      (currentPage - 1) * itemsPerPage, 
-      currentPage * itemsPerPage
-    );
-  }, [filteredGuests, currentPage, itemsPerPage]);
+  }, [filteredGuests.length, itemsPerPage, paginationData.totalPages, currentPage]);
 
   useEffect(() => {
     const initialFetchData = async () => {
@@ -148,6 +191,8 @@ function AdminGuestsManagement() {
   const handleRefresh = async () => {
     try {
       setIsLoading(true);
+      // Clear optimistic updates when doing full refresh
+      optimisticUpdatesRef.current.clear();
       await fetchData();
     } catch (error) {
       console.error("Error refreshing data:", error);
@@ -155,6 +200,52 @@ function AdminGuestsManagement() {
       setIsLoading(false);
     }
   };
+
+  // Optimistic update functions for instant UI feedback
+  const applyOptimisticUpdate = useCallback((guestId: number, updates: Partial<DaftarTamu>) => {
+    optimisticUpdatesRef.current.set(guestId, updates);
+    // Force re-render by updating a dummy state
+    setGuests(prev => [...prev]);
+  }, []);
+
+  const removeOptimisticUpdate = useCallback((guestId: number) => {
+    optimisticUpdatesRef.current.delete(guestId);
+    setGuests(prev => [...prev]);
+  }, []);
+
+  // Prefetch guest details on hover for better UX
+  const prefetchGuestDetails = useCallback(async (guestId: number) => {
+    try {
+      const response = await fetch(`/api/guests/${guestId}/details`);
+      if (response.ok) {
+        const result = await response.json();
+        // Store in a simple cache for immediate use
+        sessionStorage.setItem(`guest_${guestId}`, JSON.stringify(result.data));
+      }
+    } catch (error) {
+      // Silently fail - this is just for prefetching
+      console.debug('Prefetch failed for guest', guestId, error);
+    }
+  }, []);
+  const handleGuestUpdateOptimistic = useCallback(async (updatedGuest?: DaftarTamu) => {
+    if (updatedGuest && updatedGuest.id) {
+      // Apply optimistic update immediately
+      applyOptimisticUpdate(updatedGuest.id, {
+        status_kunjungan: updatedGuest.status_kunjungan,
+        waktu_checkin: updatedGuest.waktu_checkin,
+        waktu_checkout: updatedGuest.waktu_checkout
+      });
+
+      // Remove optimistic update after a delay and refresh
+      setTimeout(() => {
+        removeOptimisticUpdate(updatedGuest.id!);
+        handleRefresh();
+      }, 500);
+    } else {
+      // Fallback to regular refresh
+      handleRefresh();
+    }
+  }, [applyOptimisticUpdate, removeOptimisticUpdate]);
 
   const handleGuestFormSubmit = async (data: any) => {
     setIsFormSubmitting(true);
@@ -736,7 +827,7 @@ function AdminGuestsManagement() {
             </div>
           ) : (
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <table className="w-full min-w-[1000px]">
+              <table className="w-full min-w-[1000px] table-fixed">{/* Fixed table layout for better performance */}
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Tamu</th>
@@ -749,12 +840,26 @@ function AdminGuestsManagement() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {currentGuests.map((guest, i) => (
+                  {paginationData.currentGuests.map((guest: DaftarTamu, i: number) => {
+                    const hasOptimisticUpdate = guest.id && optimisticUpdatesRef.current.has(guest.id);
+                    return (
                       <tr 
                         key={guest.id || i} 
-                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                        className={`hover:bg-gray-50 cursor-pointer transition-colors ${hasOptimisticUpdate ? 'bg-blue-50 opacity-75' : ''}`}
+                        onMouseEnter={() => guest.id && prefetchGuestDetails(guest.id)}
                         onClick={async () => {
                           try {
+                            // Try to use prefetched data first
+                            const cachedData = sessionStorage.getItem(`guest_${guest.id}`);
+                            if (cachedData) {
+                              const parsedData = JSON.parse(cachedData);
+                              setSelectedGuest(parsedData);
+                              setIsEditMode(false);
+                              setIsDetailModalOpen(true);
+                              return;
+                            }
+
+                            // Fallback to API call if no cached data
                             const response = await fetch(`/api/guests/${guest.id}/details`);
                             const result = await response.json();
                             
@@ -926,7 +1031,8 @@ function AdminGuestsManagement() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                   </tbody>
                 </table>
               </div>
@@ -937,9 +1043,12 @@ function AdminGuestsManagement() {
               <div className="bg-white px-3 sm:px-4 lg:px-6 py-3 border-t border-gray-200">
                 <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-xs sm:text-sm text-gray-700">
-                    Menampilkan <span className="font-medium">{filteredGuests.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> sampai{' '}
-                    <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredGuests.length)}</span> dari{' '}
-                    <span className="font-medium">{filteredGuests.length}</span> hasil
+                    Menampilkan <span className="font-medium">{paginationData.startIndex}</span> sampai{' '}
+                    <span className="font-medium">{paginationData.endIndex}</span> dari{' '}
+                    <span className="font-medium">{paginationData.totalItems}</span> tamu
+                    {debouncedSearchTerm && (
+                      <span className="text-gray-500 ml-2">(filtered)</span>
+                    )}
                   </div>
                   
                   <div className="flex space-x-1 justify-center sm:justify-end">
@@ -959,7 +1068,7 @@ function AdminGuestsManagement() {
                       // Calculate page number logic for when there are many pages
                       let pageNum;
                       
-                      if (totalPages <= 5) {
+                      if (paginationData.totalPages <= 5) {
                         // Less than 5 pages, just show the page number
                         pageNum = i + 1;
                       } else if (currentPage <= 3) {
@@ -967,21 +1076,21 @@ function AdminGuestsManagement() {
                         if (i < 4) {
                           pageNum = i + 1;
                         } else {
-                          pageNum = totalPages;
+                          pageNum = paginationData.totalPages;
                         }
-                      } else if (currentPage >= totalPages - 2) {
+                      } else if (currentPage >= paginationData.totalPages - 2) {
                         // At the end
                         if (i === 0) {
                           pageNum = 1;
                         } else {
-                          pageNum = totalPages - 4 + i;
+                          pageNum = paginationData.totalPages - 4 + i;
                         }
                       } else {
                         // In the middle
                         if (i === 0) {
                           pageNum = 1;
                         } else if (i === 4) {
-                          pageNum = totalPages;
+                          pageNum = paginationData.totalPages;
                         } else {
                           pageNum = currentPage - 1 + i;
                         }
@@ -1004,12 +1113,12 @@ function AdminGuestsManagement() {
                     
                     <button
                       className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded transition-colors ${
-                        currentPage >= totalPages 
+                        currentPage >= paginationData.totalPages 
                           ? 'bg-gray-100 cursor-not-allowed text-gray-400' 
                           : 'bg-white hover:bg-gray-50 text-gray-700'
                       }`}
-                      onClick={() => currentPage < totalPages && setCurrentPage(prev => prev + 1)}
-                      disabled={currentPage >= totalPages}
+                      onClick={() => currentPage < paginationData.totalPages && setCurrentPage(prev => prev + 1)}
+                      disabled={currentPage >= paginationData.totalPages}
                     >
                       <span className="hidden sm:inline">Selanjutnya</span>
                       <span className="sm:hidden">›</span>
@@ -1048,7 +1157,7 @@ function AdminGuestsManagement() {
           setIsEditMode(false); // Reset edit mode when closing modal
         }}
         guest={selectedGuest}
-        onGuestUpdate={handleRefresh}
+        onGuestUpdate={handleGuestUpdateOptimistic}
         isEditMode={isEditMode}
       />
 
