@@ -231,10 +231,17 @@ export default function AdminSurvey() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setQuestions(data.data);
+          // Normalize the backend response to match frontend interface
+          const normalizedQuestions = data.data.map((q: any) => ({
+            ...q,
+            status: Boolean(q.is_aktif !== undefined ? q.is_aktif : q.status), // Ensure boolean and map is_aktif to status
+            tipe_pertanyaan: q.tipe_jawaban || q.tipe_pertanyaan || 'rating' // Handle different field names
+          }));
+          
+          setQuestions(normalizedQuestions);
 
-          const totalQuestions = data.data.length;
-          const activeQuestions = data.data.filter((q: any) => q.status).length;
+          const totalQuestions = normalizedQuestions.length;
+          const activeQuestions = normalizedQuestions.filter((q: any) => q.status).length;
 
           setStatistics(prev => ({
             ...prev,
@@ -400,11 +407,26 @@ export default function AdminSurvey() {
         }),
       });
 
-      setQuestions((prev) =>
-        prev.map((q) =>
+      // Update the questions state with new status
+      setQuestions((prev) => {
+        const updatedQuestions = prev.map((q) =>
           q.id === question.id ? { ...q, status: !q.status } : q
-        )
-      );
+        );
+        
+        // Immediately update statistics based on new question state
+        const totalQuestions = updatedQuestions.length;
+        const activeQuestions = updatedQuestions.filter(q => q.status).length;
+        
+        setStatistics(prev => ({
+          ...prev,
+          totalQuestions,
+          activeQuestions
+        }));
+        
+        return updatedQuestions;
+      });
+      
+      showToast.success('Status pertanyaan berhasil diubah');
     } catch (error) {
       showToast.error('Gagal mengubah status pertanyaan');
     }
