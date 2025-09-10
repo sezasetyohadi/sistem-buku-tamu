@@ -9,10 +9,12 @@ export async function getAllGuests(): Promise<DaftarTamu[]> {
     SELECT t.*, 
            pt.pendidikan_terakhir,
            p.nama_profesi as profesi,
+           bt.bidang as bidang_tujuan,
            tt.token
     FROM daftar_tamu t
     LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
     LEFT JOIN profesi p ON t.profesi_id = p.id
+    LEFT JOIN bidang_tujuan bt ON t.bidang_tujuan_id = bt.id
     LEFT JOIN tamu_token tt ON t.id = tt.tamu_id AND tt.is_active = 1
     ORDER BY t.id DESC
   `;
@@ -23,10 +25,12 @@ export async function getGuestById(id: number): Promise<DaftarTamu | null> {
   const query = `
     SELECT t.*, 
            pt.pendidikan_terakhir,
-           p.nama_profesi as profesi
+           p.nama_profesi as profesi,
+           bt.bidang as bidang_tujuan
     FROM daftar_tamu t
     LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
     LEFT JOIN profesi p ON t.profesi_id = p.id
+    LEFT JOIN bidang_tujuan bt ON t.bidang_tujuan_id = bt.id
     WHERE t.id = ?
   `;
   const guests = await executeQuery<DaftarTamu[]>(query, [id]);

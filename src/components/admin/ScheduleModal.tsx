@@ -294,12 +294,12 @@ export default function ScheduleModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? "Edit Jadwal" : "Jadwalkan Kunjungan"} size="md">
-      <div className="p-2">
+      <div className="p-2 dark:bg-dark-surface">
         {isEdit && currentSchedule && (
           <div className="mb-6">
-            <div className="p-3 bg-gray-100 rounded-md mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-1">Jadwal Kunjungan Saat Ini</h4>
-              <p className="font-medium text-gray-900">
+            <div className="p-3 bg-gray-100 dark:bg-dark-card rounded-md mb-4">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1">Jadwal Kunjungan Saat Ini</h4>
+              <p className="font-medium text-gray-900 dark:text-dark-text-primary">
                 {new Date(currentSchedule).toLocaleString('id-ID', {
                   day: 'numeric',
                   month: 'long', 
@@ -312,7 +312,7 @@ export default function ScheduleModal({
           </div>
         )}
 
-        <div className="text-base text-gray-700 mb-6">
+        <div className="text-base text-gray-700 dark:text-dark-text-primary mb-6">
           {isEdit 
             ? "Pilih tanggal dan waktu baru untuk mengubah jadwal kunjungan tamu."
             : "Pilih tanggal dan waktu untuk jadwal kunjungan tamu."}
@@ -320,7 +320,7 @@ export default function ScheduleModal({
 
         <div className="space-y-6">
           <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
               Tanggal
             </label>
             <div>
@@ -330,14 +330,16 @@ export default function ScheduleModal({
                 value={date}
                 min={minDate}
                 onChange={(e) => setDate(e.target.value)}
-                className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base text-gray-900 bg-white"
+                className={`block w-full rounded-md py-3 px-4 text-base text-gray-900 dark:text-dark-text-primary bg-white dark:bg-dark-surface focus:border-blue-500 focus:ring-blue-500 ${
+                  !date ? 'border-gray-400 dark:border-gray-600' : 'border-gray-300 dark:border-gray-700'
+                } border`}
                 style={{ minHeight: '48px' }}
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="time" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
               Waktu
             </label>
             <div className="flex items-center">
@@ -349,8 +351,10 @@ export default function ScheduleModal({
                 onFocus={handleFocus}
                 placeholder="--"
                 maxLength={2}
-                className={`block w-24 border rounded-md py-3 text-center text-base text-gray-900 bg-white ${
-                  error && !hour ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                className={`block w-24 rounded-md py-3 text-center text-base text-gray-900 dark:text-dark-text-primary bg-white dark:bg-dark-surface border ${
+                  error && !hour ? 'border-error-500 dark:border-error-400 ring-1 ring-error-500 dark:ring-error-400 focus:border-error-500 focus:ring-error-500' : 
+                  !hour ? 'border-gray-400 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500' :
+                  'border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500'
                 }`}
                 style={{ minHeight: '48px' }}
                 aria-label="Jam"
@@ -364,8 +368,10 @@ export default function ScheduleModal({
                 onFocus={handleFocus}
                 placeholder="--"
                 maxLength={2}
-                className={`block w-24 border rounded-md py-3 text-center text-base text-gray-900 bg-white ${
-                  error && !minute ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                className={`block w-24 rounded-md py-3 text-center text-base text-gray-900 dark:text-dark-text-primary bg-white dark:bg-dark-surface border ${
+                  error && !minute ? 'border-error-500 dark:border-error-400 ring-1 ring-error-500 dark:ring-error-400 focus:border-error-500 focus:ring-error-500' : 
+                  !minute ? 'border-gray-400 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500' :
+                  'border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500'
                 }`}
                 style={{ minHeight: '48px' }}
                 aria-label="Menit"
@@ -374,7 +380,7 @@ export default function ScheduleModal({
           </div>
           
           <div>
-            <label htmlFor="bidangTujuan" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="bidangTujuan" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
               Bidang Tujuan
             </label>
             <div>
@@ -382,8 +388,10 @@ export default function ScheduleModal({
                 id="bidangTujuan"
                 value={bidangTujuanId || ''}
                 onChange={(e) => setBidangTujuanId(e.target.value ? Number(e.target.value) : undefined)}
-                className={`block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base text-gray-900 bg-white ${
-                  error && !bidangTujuanId ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                className={`block w-full rounded-md py-3 px-4 text-base text-gray-900 dark:text-dark-text-primary bg-white dark:bg-dark-surface border ${
+                  error && !bidangTujuanId ? 'border-error-500 dark:border-error-400 ring-1 ring-error-500 dark:ring-error-400 focus:border-error-500 focus:ring-error-500' : 
+                  !bidangTujuanId ? 'border-gray-400 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500' :
+                  'border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500'
                 }`}
                 style={{ minHeight: '48px' }}
               >
@@ -393,12 +401,15 @@ export default function ScheduleModal({
                     {bidang.bidang}
                   </option>
                 ))}
+                {(!lookupData?.bidangTujuan || lookupData.bidangTujuan.length === 0) && !loading && (
+                  <option value="" disabled>Tidak ada bidang tersedia</option>
+                )}
               </select>
             </div>
           </div>
           
           <div>
-            <label htmlFor="asnDituju" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="asnDituju" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
               Menemui
             </label>
             <div>
@@ -408,7 +419,9 @@ export default function ScheduleModal({
                 value={asnDituju}
                 onChange={(e) => setAsnDituju(e.target.value)}
                 placeholder="Nama ASN yang ingin ditemui"
-                className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base text-gray-900 bg-white"
+                className={`block w-full rounded-md py-3 px-4 text-base text-gray-900 dark:text-dark-text-primary bg-white dark:bg-dark-surface border ${
+                  !asnDituju ? 'border-gray-400 dark:border-gray-600' : 'border-gray-300 dark:border-gray-700'
+                } focus:border-blue-500 focus:ring-blue-500`}
                 style={{ minHeight: '48px' }}
               />
             </div>
@@ -416,12 +429,12 @@ export default function ScheduleModal({
           
           <div>
             <div className="flex items-center">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
                 Cara Mendapatkan Salinan
               </label>
-              <span className="ml-1 text-sm text-gray-500">(Opsional)</span>
+              <span className="ml-1 text-sm text-gray-500 dark:text-dark-text-secondary">(Opsional)</span>
             </div>
-            <div className="mt-1 p-3 bg-gray-50 rounded-md border border-gray-200">
+            <div className="mt-1 p-3 bg-gray-50 dark:bg-dark-surface rounded-md border border-gray-200 dark:border-dark-border">
               {lookupData?.mendapatkanSalinan?.map((option) => (
                 <div key={option.id} className="flex items-center mb-2 last:mb-0">
                   <input
@@ -432,32 +445,32 @@ export default function ScheduleModal({
                     onChange={handleCaraSalinanChange}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor={`salinan-${option.id}`} className="ml-2 text-sm text-gray-700">
+                  <label htmlFor={`salinan-${option.id}`} className="ml-2 text-sm text-gray-700 dark:text-dark-text-secondary">
                     {option.nama_opsi}
                   </label>
                 </div>
               ))}
               
               {(!lookupData?.mendapatkanSalinan || lookupData.mendapatkanSalinan.length === 0) && !loading && (
-                <p className="text-sm text-gray-500 italic">Tidak ada opsi tersedia</p>
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary italic">Tidak ada opsi tersedia</p>
               )}
             </div>
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 mt-2">{error}</div>
+            <div className="text-sm text-error-600 dark:text-error-400 mt-2">{error}</div>
           )}
           
           {loading && (
-            <div className="text-sm text-gray-600 mt-2">Memuat data bidang tujuan...</div>
+            <div className="text-sm text-gray-600 dark:text-dark-text-secondary mt-2">Memuat data bidang tujuan...</div>
           )}
         </div>
 
-        <div className="flex justify-end space-x-3 pt-6 mt-4 border-t border-gray-200">
+        <div className="flex justify-end space-x-3 pt-6 mt-4 border-t border-gray-200 dark:border-dark-border">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+            className="px-6 py-2 bg-white dark:bg-dark-surface border border-gray-300 dark:border-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-dark-text-primary hover:bg-gray-50 dark:hover:bg-dark-hover focus:outline-none"
           >
             Batal
           </button>
@@ -466,7 +479,7 @@ export default function ScheduleModal({
             onClick={handleSubmit}
             disabled={isSubmitting}
             className={`px-6 py-2 rounded-md text-sm font-medium text-white 
-              ${isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+              ${isSubmitting ? 'bg-blue-400 dark:bg-blue-500' : 'bg-blue-600 hover:bg-blue-700 dark:bg-primary-600 dark:hover:bg-primary-700'}`}
           >
             {isSubmitting ? 'Menjadwalkan...' : isEdit ? 'Simpan Perubahan' : 'Jadwalkan'}
           </button>
