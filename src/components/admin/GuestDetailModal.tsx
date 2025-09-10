@@ -286,16 +286,11 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
             </div>
             
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Waktu Kedatangan</h4>
-              <p className="text-base font-medium text-blue-700">{formatDate(guest.waktu_checkin)}</p>
-            </div>
-            
-            <div>
               <h4 className="text-sm font-medium text-gray-500">Bidang Dituju</h4>
               <p className="text-base font-medium text-blue-700">{guest.bidang_tujuan || 'Belum ditetapkan'}</p>
             </div>
             
-            <div>
+            <div className="md:col-span-2">
               <h4 className="text-sm font-medium text-gray-500">Menemui (ASN)</h4>
               <p className="text-base font-medium text-blue-700">{guest.asn_dituju || 'Tidak ditentukan'}</p>
             </div>

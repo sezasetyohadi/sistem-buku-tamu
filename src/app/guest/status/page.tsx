@@ -32,6 +32,7 @@ type GuestDetail = {
 	asal_instansi?: string;
 	keperluan?: string;
 	bidang_tujuan?: string;
+	asn_dituju?: string;
 	status_kunjungan: GuestStatusType;
 	jadwal_checkin?: string | null;
 	waktu_checkin?: string | null;
@@ -123,7 +124,8 @@ export default function StatusPengajuanPage() {
 					profesi: details.profesi,
 					asal_instansi: details.asal_instansi,
 					keperluan: details.keperluan,
-					bidang_tujuan: details.bidang,
+					bidang_tujuan: details.bidang_tujuan || details.bidang,
+					asn_dituju: details.asn_dituju,
 					status_kunjungan: statusMapping[apiStatus] || details.status_kunjungan,
 					jadwal_checkin: details.jadwal_checkin,
 					waktu_checkin: details.waktu_checkin,
@@ -309,6 +311,30 @@ export default function StatusPengajuanPage() {
 						</div>
 					</div>
 
+					{/* Container for scheduled visit information */}
+					{(guestDetail.status_kunjungan === "Terjadwal" || guestDetail.status_kunjungan === "Datang" || guestDetail.status_kunjungan === "Selesai") && (
+						<div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 mt-4">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+								<div>
+									<h4 className="text-sm font-medium text-gray-500">Jadwal Kunjungan</h4>
+									<p className="text-base font-medium text-blue-700">{formatDate(guestDetail.jadwal_checkin)}</p>
+								</div>
+								
+								<div>
+									<h4 className="text-sm font-medium text-gray-500">Bidang Dituju</h4>
+									<p className="text-base font-medium text-blue-700">{guestDetail.bidang_tujuan || 'Belum ditetapkan'}</p>
+								</div>
+
+								{guestDetail.asn_dituju && (
+									<div className="md:col-span-2">
+										<h4 className="text-sm font-medium text-gray-500">Menemui (ASN)</h4>
+										<p className="text-base font-medium text-blue-700">{guestDetail.asn_dituju}</p>
+									</div>
+								)}
+							</div>
+						</div>
+					)}
+
 					{/* Grid informasi dua kolom */}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-4">
 						{/* Kolom kiri */}
@@ -362,12 +388,7 @@ export default function StatusPengajuanPage() {
 							<p className="text-gray-900 whitespace-pre-wrap">{guestDetail.keperluan || 'Tidak tersedia'}</p>
 						</div>
 						
-						<div className="flex items-center mt-4">
-							<h4 className="text-sm font-medium text-gray-500">Bidang Dituju</h4>
-						</div>
-						<div className="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
-							<p className="text-gray-900">{guestDetail.bidang_tujuan || 'Tidak tersedia'}</p>
-						</div>
+						{/* Bidang Dituju information is shown in the blue container for scheduled visits */}
 
 						{/* Informasi Waktu */}
 						<div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">

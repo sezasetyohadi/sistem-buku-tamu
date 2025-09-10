@@ -3,6 +3,7 @@ import {
   getEducationOptions, 
   getProfessionOptions, 
   getTujuanKunjunganOptions,
+  getBidangTujuanOptions,
   getMemperolehInformasiOptions,
   getMendapatkanSalinanOptions
 } from '@/backend/config/db';
@@ -11,10 +12,11 @@ export async function GET() {
   try {
     // Tables are now handled by migrations
     
-    const [educationLevels, professions, tujuanKunjungan, memperolehInformasi, mendapatkanSalinan] = await Promise.all([
+    const [educationLevels, professions, tujuanKunjungan, bidangTujuan, memperolehInformasi, mendapatkanSalinan] = await Promise.all([
       getEducationOptions(),
       getProfessionOptions(),
       getTujuanKunjunganOptions(),
+      getBidangTujuanOptions(),
       getMemperolehInformasiOptions(),
       getMendapatkanSalinanOptions()
     ]);
@@ -25,6 +27,7 @@ export async function GET() {
         educationLevels,
         professions,
         tujuanKunjungan,
+        bidangTujuan,
         memperolehInformasi,
         mendapatkanSalinan
       },
