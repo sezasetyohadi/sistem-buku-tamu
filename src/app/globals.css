@@ -89,6 +89,46 @@ svg,
   }
 }
 
+/* Responsive form improvements for mobile devices */
+@media (max-width: 640px) {
+  /* Ensure forms don't overflow on small screens */
+  .form-container {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Improve input field sizing on mobile */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    min-height: 44px; /* iOS touch target minimum */
+  }
+
+  /* Better button sizing for mobile */
+  button {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  /* Reduce horizontal padding on very small screens */
+  .mobile-padding-adjust {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Improve checkbox and radio button sizing */
+  input[type="checkbox"], input[type="radio"] {
+    transform: scale(1.2);
+    margin-right: 0.5rem;
+  }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-spacing {
+    padding: 1rem;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -588,4 +628,94 @@ select::-webkit-inner-spin-button {
 
 .anim-delay-4 {
   animation-delay: 4s;
+}
+
+/* Custom checkbox styling for better consistency across all devices */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  display: inline-block;
+  position: relative;
+  width: 1rem !important;
+  height: 1rem !important;
+  min-width: 1rem;
+  min-height: 1rem;
+  max-width: 1rem;
+  max-height: 1rem;
+  background-color: white;
+  border: 2px solid #9CA3AF;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
+}
+
+/* Ensure consistent sizing on mobile devices */
+@media (max-width: 640px) {
+  input[type="checkbox"] {
+    width: 1rem !important;
+    height: 1rem !important;
+    min-width: 1rem !important;
+    min-height: 1rem !important;
+  }
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #3B82F6;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #3B82F6;
+  border-color: #3B82F6;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.65rem;
+  height: 0.65rem;
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: #6B7280;
+}
+
+input[type="checkbox"]:checked:hover:not(:disabled) {
+  background-color: #2563EB;
+  border-color: #2563EB;
+}
+
+/* Mobile-specific improvements for checkbox labels */
+@media (max-width: 640px) {
+  /* Ensure checkbox labels have proper spacing and text size on mobile */
+  input[type="checkbox"] + label {
+    font-size: 0.875rem !important; /* 14px */
+    line-height: 1.5 !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+  }
+
+  /* Ensure text doesn't get clipped in checkbox containers */
+  .checkbox-container {
+    min-height: fit-content;
+    word-break: break-word;
+  }
+  
+  /* Additional spacing for mobile checkbox layouts */
+  .checkbox-layout {
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
 }

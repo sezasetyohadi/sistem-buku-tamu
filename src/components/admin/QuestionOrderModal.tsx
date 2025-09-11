@@ -53,16 +53,12 @@ export default function QuestionOrderModal({
 
   useEffect(() => {
     if (isOpen && questions.length > 0) {
-      // Sort questions by baris and assign sequential order - preserve original status
+      // Sort questions by baris and assign sequential order - preserve ALL original properties
       const sortedQuestions = [...questions]
         .sort((a, b) => (a.baris || 0) - (b.baris || 0))
         .map((q, index) => ({
-          ...q,
-          baris: index + 1,
-          // Preserve all original question data, especially status
-          tipe_pertanyaan: q.tipe_pertanyaan || (q.tipe_jawaban === 'rating' ? 'rating' : 'text'),
-          tipe_jawaban: q.tipe_jawaban || (q.tipe_pertanyaan === 'rating' ? 'rating' : 'teks')
-          // Don't modify status here - keep original values
+          ...q,  // Keep ALL original properties intact
+          baris: index + 1 // Only update the row/order number
         }));
       
       setOrderedQuestions(sortedQuestions);
@@ -91,10 +87,10 @@ export default function QuestionOrderModal({
     if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
       const reorderedQuestions = arrayMove(orderedQuestions, oldIndex, newIndex);
       
-      // Update baris values to match the new order
+      // Update ONLY baris values to match the new order, preserve all other properties
       const updatedQuestions = reorderedQuestions.map((question, index) => ({
-        ...question,
-        baris: index + 1
+        ...question,  // Keep all original properties
+        baris: index + 1 // Only update the row/order number
       }));
       
       setOrderedQuestions(updatedQuestions);
@@ -117,11 +113,12 @@ export default function QuestionOrderModal({
 
   const handleReset = () => {
     if (questions.length > 0) {
+      // Reset to original order, only update baris field
       const sortedQuestions = [...questions]
         .sort((a, b) => (a.baris || 0) - (b.baris || 0))
         .map((q, index) => ({
-          ...q,
-          baris: index + 1
+          ...q, // Keep all original properties
+          baris: index + 1 // Only update the row/order number
         }));
       
       setOrderedQuestions(sortedQuestions);
@@ -174,13 +171,7 @@ export default function QuestionOrderModal({
                                   {question.pertanyaan}
                                 </p>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                    (question.tipe_pertanyaan || question.tipe_jawaban) === 'rating' 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-blue-100 text-blue-800'
-                                  }`}>
-                                    {(question.tipe_pertanyaan || question.tipe_jawaban) === 'rating' ? 'Rating' : 'Text'}
-                                  </span>
+                                  {/* Removed rating indicator as requested */}
                                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                     question.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                   }`}>

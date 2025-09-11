@@ -55,13 +55,16 @@ export default function SurveyForm() {
       }
 
       // Convert responses to the format expected by the API
-      const answers = responses.map(response => ({
-        pertanyaan_id: response.pertanyaan_id,
-        jawaban: response.jawaban
-      }));
+      const answers = responses
+        .filter(response => response.jawaban !== undefined) // Filter out undefined answers
+        .map(response => ({
+          pertanyaan_id: response.pertanyaan_id,
+          jawaban: response.jawaban as string | number // Type assertion since we filtered out undefined
+        }));
 
       const submission: SurveySubmission = {
         identity: {
+          ...(guestIdentity.tamu_id ? { tamu_id: guestIdentity.tamu_id } : {}), // Only include tamu_id if it exists
           nama_lengkap: guestIdentity.nama,
           jenis_kelamin: guestIdentity.jenis_kelamin,
           tanggal_lahir: guestIdentity.tanggal_lahir || '',
@@ -206,7 +209,7 @@ export default function SurveyForm() {
 
           {!isFormValid() && questions.length > 0 && (
             <p className="text-sm text-gray-500 text-center mt-4">
-              Silakan lengkapi data identitas dan berikan penilaian pada setidaknya satu pertanyaan untuk dapat mengirim survey
+              Silakan lengkapi data identitas dan berikan penilaian terhadap pelayanan kami ^^
             </p>
           )}
         </form>

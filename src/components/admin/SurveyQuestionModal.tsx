@@ -21,7 +21,6 @@ interface SurveyQuestion {
   baris?: number;
   multiple_rating_types?: { 
     jenis_rating_id: number; 
-    is_required?: boolean; 
     nama_rating?: string;
     urutan?: number;
   }[];
@@ -53,6 +52,7 @@ export default function SurveyQuestionModal({
     tipe_pertanyaan: 'rating',
     status: true,
     jenis_rating_id: undefined,
+    // Default to true for required field
     is_required: true
   });
   const [extraAnswers, setExtraAnswers] = useState<
@@ -71,8 +71,10 @@ export default function SurveyQuestionModal({
     if (initialQuestion && isOpen) {
       // First fetch rating types to have them available
       fetchRatingTypes().then(() => {
+        // Ensure is_required is properly handled
         setQuestionData({
-          ...initialQuestion
+          ...initialQuestion,
+          is_required: initialQuestion.is_required === undefined ? true : !!initialQuestion.is_required
         });
         
         // Load extra answers from multiple_rating_types if available
@@ -85,7 +87,8 @@ export default function SurveyQuestionModal({
             setQuestionData(prev => ({
               ...prev,
               jenis_rating_id: sortedRatingTypes[0].jenis_rating_id,
-              is_required: sortedRatingTypes[0].is_required
+              // Use is_required directly from initialQuestion, not from rating types
+              is_required: initialQuestion.is_required === undefined ? true : !!initialQuestion.is_required
             }));
           }
           
@@ -153,16 +156,15 @@ export default function SurveyQuestionModal({
       // Prepare the question data with multiple rating types
       const questionToSubmit = {
         ...questionData,
+        // Keep is_required at the question level, not in each rating type
         multiple_rating_types: [
           // Main rating type
           { 
-            jenis_rating_id: questionData.jenis_rating_id!, 
-            is_required: questionData.is_required 
+            jenis_rating_id: questionData.jenis_rating_id!
           },
           // Additional rating types from extraAnswers
           ...extraAnswers.map(ans => ({
-            jenis_rating_id: ans.jenis_rating_id!,
-            is_required: true // Default to required for extra answers
+            jenis_rating_id: ans.jenis_rating_id!
           }))
         ].filter(item => item.jenis_rating_id) // Remove undefined values
       };

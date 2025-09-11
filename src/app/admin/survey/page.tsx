@@ -439,17 +439,11 @@ export default function AdminSurvey() {
       const updatePromises = reorderedQuestions.map(question => {
         if (!question.id) return Promise.resolve();
 
-        const originalQuestion = questions.find(q => q.id === question.id);
-
+        // Only send the id and baris field to update order
         const requestBody = {
           id: question.id,
-          urutan: question.urutan,
           baris: question.baris || 1,
-          pertanyaan: question.pertanyaan,
-          tipe_pertanyaan: 'rating',
-          is_aktif: originalQuestion?.status !== undefined ? originalQuestion.status : true,
-          jenis_rating_id: question.jenis_rating_id,
-          is_required: question.is_required !== undefined ? question.is_required : true
+          // Do NOT include any other fields to prevent overwriting existing values
         };
 
         return fetch(`/api/survey/questions/${question.id}`, {

@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, useRef, useEffect } from 'react';
 import { GuestIdentity, LookupData } from '@/types/survey-types';
+import { fetchGuestByEmail, mapGuestDataToIdentity } from '@/lib/guest-api';
+import { showToast } from '@/lib/toast';
 
 interface GuestIdentityFormProps {
   guestIdentity: GuestIdentity;
@@ -21,6 +24,67 @@ export default function GuestIdentityForm({
   handleDropdownBlur,
   handleDropdownChange
 }: GuestIdentityFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousEmailRef = useRef<string>('');
+
+  // Handle email lookup with debounce
+  const handleEmailChange = async (email: string) => {
+    // First update the state with the current input value
+    updateGuestIdentity('email', email);
+
+    // Save current email to prevent duplicate lookups
+    if (previousEmailRef.current === email) {
+      return;
+    }
+
+    // Reset warning state when email changes
+    setAlreadySubmitted(false);
+
+    // Clear any existing timeout
+    if (emailTimeoutRef.current) {
+      clearTimeout(emailTimeoutRef.current);
+    }
+
+    // Set new timeout for lookup (500ms delay)
+    if (email && email.includes('@') && email.includes('.')) {
+      emailTimeoutRef.current = setTimeout(async () => {
+        previousEmailRef.current = email;
+        
+        try {
+          setLoading(true);
+          const result = await fetchGuestByEmail(email);
+          
+          if (result.found) {
+            // Check if this guest has already submitted a survey
+            if (result.hasSubmittedSurvey) {
+              // Silently set the flag but don't show a warning
+              setAlreadySubmitted(true);
+              // Don't auto-fill the form for emails that have already submitted a survey
+            } else {
+              // Map guest data to form fields
+              const guestIdentityData = mapGuestDataToIdentity(result.guest);
+              
+              // Update all fields
+              Object.entries(guestIdentityData).forEach(([key, value]) => {
+                if (value && key !== 'id') {
+                  updateGuestIdentity(key as keyof GuestIdentity, String(value));
+                }
+              });
+              
+              showToast.success('Data tamu berhasil ditemukan');
+            }
+          }
+        } catch (error) {
+          console.error('Error looking up guest:', error);
+        } finally {
+          setLoading(false);
+        }
+      }, 500);
+    }
+  };
+
   return (
     <div className="mb-8">
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg mb-6">
@@ -29,6 +93,33 @@ export default function GuestIdentityForm({
       </div>
 
       <div className="space-y-6">
+        {/* Email field moved to the top for auto-fill lookup */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Email
+          </label>
+          <div className="flex items-center relative">
+            <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <input
+              type="email"
+              className="w-full px-3 py-3 text-base text-gray-900 bg-gray-50 border border-gray-300 rounded-lg min-h-[48px]"
+              value={guestIdentity?.email || ''}
+              onChange={e => handleEmailChange(e.target.value)}
+              placeholder="Masukkan email"
+              required
+              disabled={loading}
+            />
+            {loading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+              </div>
+            )}
+          </div>
+          {/* Removed warning message for already submitted emails */}
+        </div>
+
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Nama Lengkap
@@ -44,25 +135,7 @@ export default function GuestIdentityForm({
               onChange={e => updateGuestIdentity('nama', e.target.value)}
               placeholder="Masukkan nama lengkap"
               required
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Email
-          </label>
-          <div className="flex items-center">
-            <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <input
-              type="email"
-              className="w-full px-3 py-3 text-base text-gray-900 bg-gray-50 border border-gray-300 rounded-lg min-h-[48px]"
-              value={guestIdentity?.email || ''}
-              onChange={e => updateGuestIdentity('email', e.target.value)}
-              placeholder="Masukkan email"
-              required
+              disabled={loading}
             />
           </div>
         </div>
@@ -82,6 +155,7 @@ export default function GuestIdentityForm({
               onChange={e => updateGuestIdentity('nomor_telp', e.target.value)}
               placeholder="Masukkan nomor telepon"
               required
+              disabled={loading}
             />
           </div>
         </div>
@@ -109,6 +183,7 @@ export default function GuestIdentityForm({
                   color: '#1f2937 !important',
                   WebkitTextFillColor: '#1f2937 !important'
                 }}
+                disabled={loading}
               >
                 <option value="">Pilih jenis kelamin</option>
                 <option value="Laki-laki">Laki-laki</option>
@@ -139,6 +214,7 @@ export default function GuestIdentityForm({
               onChange={e => updateGuestIdentity('tanggal_lahir', e.target.value)}
               placeholder="Tanggal Lahir"
               required
+              disabled={loading}
             />
           </div>
         </div>
@@ -159,6 +235,7 @@ export default function GuestIdentityForm({
               onChange={e => updateGuestIdentity('alamat', e.target.value)}
               placeholder="Masukkan alamat lengkap"
               required
+              disabled={loading}
             />
           </div>
         </div>
@@ -187,6 +264,7 @@ export default function GuestIdentityForm({
                   color: '#1f2937 !important',
                   WebkitTextFillColor: '#1f2937 !important'
                 }}
+                disabled={loading}
               >
                 <option value="">Pilih pendidikan terakhir</option>
                 {lookupData.educationLevels.map((education) => (
@@ -228,6 +306,7 @@ export default function GuestIdentityForm({
                   color: '#1f2937 !important',
                   WebkitTextFillColor: '#1f2937 !important'
                 }}
+                disabled={loading}
               >
                 <option value="">Pilih pekerjaan utama</option>
                 {lookupData.professions.map((profession) => (
@@ -260,6 +339,11 @@ export default function GuestIdentityForm({
                 onChange={(e) => {
                   updateGuestIdentity('jenis_layanan', e.target.value);
                   handleDropdownChange('service');
+                  
+                  // Reset catatan_tambahan when changing from "Lainnya"
+                  if (e.target.value !== 'Lainnya' && guestIdentity?.jenis_layanan === 'Lainnya') {
+                    updateGuestIdentity('catatan_tambahan', '');
+                  }
                 }}
                 onMouseDown={() => handleDropdownMouseDown('service')}
                 onBlur={() => handleDropdownBlur('service')}
@@ -269,6 +353,7 @@ export default function GuestIdentityForm({
                   color: '#1f2937 !important',
                   WebkitTextFillColor: '#1f2937 !important'
                 }}
+                disabled={loading}
               >
                 <option value="">Pilih jenis layanan</option>
                 {lookupData.tujuanKunjungan.map((layanan) => (
@@ -276,6 +361,8 @@ export default function GuestIdentityForm({
                     {layanan.tujuan}
                   </option>
                 ))}
+                {/* Add Lainnya option manually */}
+                <option value="Lainnya">Lainnya</option>
               </select>
               {/* Dropdown arrow with animation */}
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
