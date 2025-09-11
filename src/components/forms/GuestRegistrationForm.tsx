@@ -105,7 +105,7 @@ export default function GuestRegistrationForm({
       value: t.id.toString(),
       label: t.tujuan
     })) || []),
-    { value: 'other', label: 'Lainnya' }
+    { value: '999', label: 'Lainnya' } // Using ID 999 for "Lainnya" option
   ], [formOptions?.tujuanKunjungan]);
 
   // Debug processed options
@@ -231,7 +231,7 @@ export default function GuestRegistrationForm({
     }
 
     // If "Lainnya" is selected, notes field must be filled
-    if (formData.purpose === 'other') {
+    if (formData.purpose === '999') {
       if (!formData.notes || formData.notes.trim().length < 5) {
         newErrors.notes = 'Jelaskan tujuan kunjungan Anda minimal 5 karakter';
       }
@@ -281,8 +281,8 @@ export default function GuestRegistrationForm({
         profesi_id: formData.profession ? parseInt(formData.profession) : undefined,
         instansi: formData.company, // Changed from asal_instansi to instansi
         keterangan: formData.notes, // Changed from catatan to keterangan  
-        tujuan_kunjungan_id: formData.purpose === 'other' ? null : (formData.purpose ? parseInt(formData.purpose) : undefined),
-        tujuan_kunjungan_lainnya: formData.purpose === 'other' ? formData.notes : null,
+        tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined,
+        tujuan_kunjungan_lainnya: formData.purpose === '999' ? formData.notes : null,
         cara_memperoleh: formData.cara_memperoleh
       };
       
@@ -569,7 +569,7 @@ export default function GuestRegistrationForm({
           />
           
           {/* Tampilkan peringatan jika "Lainnya" dipilih */}
-          {formData.purpose === 'other' && (
+          {formData.purpose === '999' && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 sm:p-4 rounded-r-lg mt-2">
               <div className="flex items-start">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -630,15 +630,15 @@ export default function GuestRegistrationForm({
             onChange={handleInputChange}
             rows={4}
             className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 text-gray-900 placeholder-gray-500 border rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-white hover:bg-gray-50 focus:bg-white focus:ring-[#3D5DC3] focus:border-[#3D5DC3] text-xs sm:text-sm ${
-              formData.purpose === 'other' && errors.notes ? 'border-red-500' : 'border-gray-300'
+              formData.purpose === '999' && errors.notes ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder={formData.purpose === 'other' 
+            placeholder={formData.purpose === '999' 
               ? "Jelaskan tujuan kunjungan Anda (wajib diisi)..." 
               : "Tambahkan catatan atau informasi tambahan jika diperlukan..."
             }
-            required={formData.purpose === 'other'}
+            required={formData.purpose === '999'}
           />
-          {formData.purpose === 'other' && errors.notes && (
+          {formData.purpose === '999' && errors.notes && (
             <p className="text-red-500 text-xs sm:text-sm mt-2">{errors.notes}</p>
           )}
         </div>

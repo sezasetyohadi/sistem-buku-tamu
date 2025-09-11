@@ -50,6 +50,7 @@ export interface GuestIdentity {
   pendidikan_terakhir?: string;
   pekerjaan_utama?: string;
   jenis_layanan?: string;
+  catatan_tambahan?: string; // For "Lainnya" option details
 }
 
 export interface LookupOption {

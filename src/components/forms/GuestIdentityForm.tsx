@@ -339,6 +339,11 @@ export default function GuestIdentityForm({
                 onChange={(e) => {
                   updateGuestIdentity('jenis_layanan', e.target.value);
                   handleDropdownChange('service');
+                  
+                  // Reset catatan_tambahan when changing from "Lainnya"
+                  if (e.target.value !== 'Lainnya' && guestIdentity?.jenis_layanan === 'Lainnya') {
+                    updateGuestIdentity('catatan_tambahan', '');
+                  }
                 }}
                 onMouseDown={() => handleDropdownMouseDown('service')}
                 onBlur={() => handleDropdownBlur('service')}

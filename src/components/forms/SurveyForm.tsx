@@ -209,7 +209,7 @@ export default function SurveyForm() {
 
           {!isFormValid() && questions.length > 0 && (
             <p className="text-sm text-gray-500 text-center mt-4">
-              Silakan lengkapi data identitas dan berikan penilaian pada setidaknya satu pertanyaan untuk dapat mengirim survey
+              Silakan lengkapi data identitas dan berikan penilaian terhadap pelayanan kami ^^
             </p>
           )}
         </form>

@@ -30,14 +30,21 @@ export async function fetchGuestByEmail(email: string): Promise<{
 export function mapGuestDataToIdentity(guestData: any): GuestIdentity {
   // Special handling for "Lainnya" option in keperluan field
   let jenisLayanan = guestData.keperluan || '';
+  let catatan_tambahan = '';
   
-  // If keperluan is "Lainnya" or not in standard options, set to empty string
-  // This will let the user select from the dropdown
+  // Standard options for tujuan kunjungan
   const standardOptions = ['Konsultasi Layanan', 'Pengaduan/Keluhan', 'Pengajuan Permohonan', 
                            'Mencari Informasi', 'Meeting/Rapat', 'Survey/Penelitian'];
   
+  // Check if the purpose is a non-standard option (including "Lainnya")
   if (!standardOptions.includes(jenisLayanan)) {
-    jenisLayanan = '';
+    // If it's not in standard options, it should be "Lainnya"
+    if (jenisLayanan) {
+      catatan_tambahan = jenisLayanan; // Save the original value as notes
+      jenisLayanan = 'Lainnya'; // Set to "Lainnya"
+    } else {
+      jenisLayanan = ''; // If it's empty, keep it empty
+    }
   }
   
   return {
@@ -51,6 +58,7 @@ export function mapGuestDataToIdentity(guestData: any): GuestIdentity {
     alamat: guestData.alamat || '',
     pendidikan_terakhir: guestData.pendidikan_terakhir || '',
     pekerjaan_utama: guestData.profesi || '',
-    jenis_layanan: jenisLayanan
+    jenis_layanan: jenisLayanan,
+    catatan_tambahan: catatan_tambahan // Add the notes field
   };
 }
