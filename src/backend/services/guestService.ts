@@ -648,3 +648,97 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
     };
   }
 }
+
+/**
+ * Find a guest by email address
+ */
+export async function findGuestByEmail(email: string): Promise<DaftarTamu | null> {
+  try {
+    const query = `
+      SELECT t.*, 
+             pt.pendidikan_terakhir,
+             p.nama_profesi as profesi,
+             bt.bidang as bidang_tujuan
+      FROM daftar_tamu t
+      LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
+      LEFT JOIN profesi p ON t.profesi_id = p.id
+      LEFT JOIN bidang_tujuan bt ON t.bidang_tujuan_id = bt.id
+      WHERE t.email = ?
+      ORDER BY t.id DESC
+      LIMIT 1
+    `;
+    
+    const result = await executeQuery<DaftarTamu[]>(query, [email]);
+    
+    if (result.length > 0) {
+      return result[0];
+    }
+    
+    return null;
+  } catch (error) {
+    guestLogger.error('Error finding guest by email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if a guest has already submitted a survey based on their ID
+ */
+export async function checkIfSurveySubmitted(tamuId: number): Promise<boolean> {
+  if (!tamuId) {
+    return false;
+  }
+  
+  try {
+    const query = `
+      SELECT COUNT(*) as count
+      FROM jawaban_identitas_survei
+      WHERE tamu_id = ?
+    `;
+    
+    const result = await executeQuery<Array<{count: number}>>(query, [tamuId]);
+    
+    // If count > 0, survey has been submitted
+    return result[0]?.count > 0;
+  } catch (error) {
+    guestLogger.error('Error checking if survey submitted:', error);
+    return false;
+  }
+}
+
+/**
+ * Gets guest data by ID to use for autofilling survey identity form
+ */
+export async function getGuestDataForSurvey(tamuId: number): Promise<any> {
+  try {
+    const query = `
+      SELECT 
+        t.id,
+        t.nama,
+        t.email,
+        t.nomor_telp,
+        t.alamat,
+        t.jenis_kelamin,
+        t.pendidikan_terakhir_id,
+        pt.pendidikan_terakhir,
+        t.profesi_id,
+        p.nama_profesi,
+        t.keperluan
+      FROM daftar_tamu t
+      LEFT JOIN pendidikan_terakhir pt ON t.pendidikan_terakhir_id = pt.id
+      LEFT JOIN profesi p ON t.profesi_id = p.id
+      WHERE t.id = ?
+    `;
+    
+    const result = await executeQuery<any[]>(query, [tamuId]);
+    
+    if (result.length > 0) {
+      return result[0];
+    }
+    
+    return null;
+  } catch (error) {
+    guestLogger.error('Error getting guest data for survey:', error);
+    throw error;
+  }
+}

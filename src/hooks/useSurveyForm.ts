@@ -55,6 +55,7 @@ export function useSurveyData() {
   const [submitted, setSubmitted] = useState(false);
   const [guestIdentity, setGuestIdentity] = useState<GuestIdentity>({
     id: 1,
+    tamu_id: undefined, // Added tamu_id field for auto-fill
     nama: '',
     email: '',
     nomor_telp: '',
@@ -187,6 +188,7 @@ export function useSurveyData() {
     setFeedback('');
     setGuestIdentity({
       id: 1,
+      tamu_id: undefined,
       nama: '',
       email: '',
       nomor_telp: '',

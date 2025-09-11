@@ -37,6 +37,7 @@ export interface SurveyResponse {
 
 export interface GuestIdentity {
   id: number;
+  tamu_id?: number; // Added tamu_id for linking with existing guests
   nama: string;
   email: string;
   nomor_telp: string;
@@ -66,6 +67,7 @@ export interface LookupData {
 
 export interface SurveySubmission {
   identity: {
+    tamu_id?: number; // Optional ID to link to an existing guest
     nama_lengkap: string;
     jenis_kelamin: string;
     tanggal_lahir: string;

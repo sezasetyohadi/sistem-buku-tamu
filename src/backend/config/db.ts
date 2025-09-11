@@ -199,7 +199,7 @@ export async function getProfessionOptions(): Promise<Array<{ id: number, nama_p
 export async function getTujuanKunjunganOptions(): Promise<Array<{ id: number, tujuan: string }>> {
   try {
     const options = await executeQueryCached<Array<{ id: number, tujuan: string }>>(
-      'SELECT id, tujuan FROM tujuan_kunjungan ORDER BY id ASC',
+      'SELECT id, tujuan FROM tujuan_kunjungan WHERE id != 999 ORDER BY id ASC',
       [],
       600000 // 10 minutes cache for lookup data
     );

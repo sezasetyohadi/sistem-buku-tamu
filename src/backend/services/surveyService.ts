@@ -18,6 +18,7 @@ export interface RowWithQuestions {
 }
 
 export interface SurveyIdentity {
+  tamu_id?: number; // Optional ID to link to an existing guest
   nama_lengkap: string;
   jenis_kelamin: 'Laki-laki' | 'Perempuan';
   tanggal_lahir: string;
@@ -327,10 +328,11 @@ export async function submitSurveyWithIdentity(
     // First, insert the identity data using the correct column structure from disnaker.sql
     const identityResult = await executeQuery<any>(
       `INSERT INTO jawaban_identitas_survei 
-       (nama_lengkap, tanggal_lahir, email, nomor_telepon, jenis_kelamin, alamat, 
+       (tamu_id, nama_lengkap, tanggal_lahir, email, nomor_telepon, jenis_kelamin, alamat, 
         pendidikan_terakhir_id, pekerjaan_utama_id, jenis_layanan_id, saran, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
+        identity.tamu_id || null, // Include tamu_id if provided
         identity.nama_lengkap,
         identity.tanggal_lahir, // Use tanggal_lahir directly instead of calculating age
         identity.email,
@@ -397,6 +399,12 @@ async function getProfesiId(profesi: string): Promise<number | null> {
 
 async function getTujuanKunjunganId(tujuan: string): Promise<number | null> {
   try {
+    // Handle "Lainnya" option specially
+    if (tujuan === "Lainnya") {
+      // Return ID 999 for "Lainnya"
+      return 999;
+    }
+    
     const result = await executeQuery<{id: number}[]>(
       'SELECT id FROM tujuan_kunjungan WHERE tujuan = ?',
       [tujuan]
