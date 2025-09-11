@@ -5,6 +5,7 @@ import { DaftarTamu } from "@/types/database-types";
 import Modal from "@/components/ui/Modal";
 import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
+import ServiceManagementModal from '@/components/admin/ServiceManagementModal';
 import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
 import { toast } from "react-hot-toast";
 import ExcelJS from 'exceljs';
@@ -53,6 +54,7 @@ function AdminGuestsManagement() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   
   // Performance optimization: Debounced search
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -662,6 +664,15 @@ function AdminGuestsManagement() {
             </svg>
             <span className="whitespace-nowrap">Tambah Tamu</span>
           </button>
+          <button
+            onClick={() => setIsServiceModalOpen(true)}
+            className="bg-purple-200 text-purple-800 px-3 sm:px-4 lg:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-purple-300 transition-colors flex items-center space-x-1 sm:space-x-2 min-w-0"
+          >
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            <span className="whitespace-nowrap">Tambah Layanan</span>
+          </button>
           <button 
             onClick={handleExportData}
             disabled={isExporting}
@@ -1211,6 +1222,13 @@ function AdminGuestsManagement() {
           }}
         />
       )}
+
+      {/* Service Management Modal */}
+      <ServiceManagementModal
+        isOpen={isServiceModalOpen}
+        onClose={() => setIsServiceModalOpen(false)}
+        onServiceAdded={handleRefresh}
+      />
       </div>
     </div>
   );
