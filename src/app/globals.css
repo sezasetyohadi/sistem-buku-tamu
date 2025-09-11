@@ -693,3 +693,29 @@ input[type="checkbox"]:checked:hover:not(:disabled) {
   background-color: #2563EB;
   border-color: #2563EB;
 }
+
+/* Mobile-specific improvements for checkbox labels */
+@media (max-width: 640px) {
+  /* Ensure checkbox labels have proper spacing and text size on mobile */
+  input[type="checkbox"] + label {
+    font-size: 0.875rem !important; /* 14px */
+    line-height: 1.5 !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+  }
+
+  /* Ensure text doesn't get clipped in checkbox containers */
+  .checkbox-container {
+    min-height: fit-content;
+    word-break: break-word;
+  }
+  
+  /* Additional spacing for mobile checkbox layouts */
+  .checkbox-layout {
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+}

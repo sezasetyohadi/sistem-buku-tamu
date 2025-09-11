@@ -591,19 +591,19 @@ export default function GuestRegistrationForm({
           <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-5">Pilih minimal satu opsi</p>
           <div className="space-y-4 sm:space-y-5">
             {memperolehOptions.map((option) => (
-              <div key={option.id} className="flex items-start gap-3 p-2.5 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200">
+              <div key={option.id} className="checkbox-container flex items-start checkbox-layout gap-3 p-2.5 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200">
                 <input
                   type="checkbox"
                   name="cara_memperoleh"
                   value={option.id.toString()}
                   checked={formData.cara_memperoleh.includes(option.id)}
                   onChange={handleInputChange}
-                  className="w-4 h-4 mt-0.5 cursor-pointer flex-shrink-0"
+                  className="w-4 h-4 mt-1 cursor-pointer flex-shrink-0"
                   id={`cara_memperoleh_${option.id}`}
                 />
                 <label 
                   htmlFor={`cara_memperoleh_${option.id}`}
-                  className="text-sm text-gray-700 leading-relaxed cursor-pointer select-none flex-1"
+                  className="text-sm sm:text-base text-gray-700 leading-relaxed cursor-pointer select-none flex-1 break-words overflow-wrap-break-word"
                 >
                   {option.nama_opsi}
                 </label>
