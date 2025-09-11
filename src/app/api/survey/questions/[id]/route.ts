@@ -4,6 +4,7 @@ import {
   deleteQuestion,
   getQuestionById
 } from '@/backend/services/surveyService';
+import { legacyExecuteQuery as executeQuery } from '@/lib/database-service';
 
 export async function PUT(
   request: NextRequest,
@@ -14,6 +15,22 @@ export async function PUT(
     const { id } = await params;
     const questionId = parseInt(id);
     const body = await request.json();
+
+    // Check if this is just a baris update (reordering)
+    if (body.id !== undefined && body.baris !== undefined && Object.keys(body).length <= 2) {
+      // This is just a reordering request, only update baris
+      await executeQuery(
+        'UPDATE pertanyaan_survei SET baris = ? WHERE id = ?',
+        [body.baris, questionId]
+      );
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Question order updated successfully'
+      });
+    }
+    
+    // For full updates, extract all parameters
     const { 
       pertanyaan, 
       tipe_pertanyaan, 

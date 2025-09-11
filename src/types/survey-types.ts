@@ -8,9 +8,9 @@ export interface SurveyQuestion {
   tipe_pertanyaan?: 'rating' | 'text';
   ratingOptions?: any[]; // Changed to support grouped rating options
   is_required?: boolean | number;
+  jenis_rating_id?: number; // Added to support direct rating type ID
   multiple_rating_types?: { 
     jenis_rating_id: number; 
-    is_required?: boolean; 
     nama_rating?: string;
     tipe?: string;
     urutan?: number;
@@ -24,6 +24,9 @@ export interface RatingOption {
   deskripsi?: string;
   skala_rating?: string;
   urutan?: number;
+  rating_type_name?: string; // Rating name like "Sesuai" or "Penting"
+  rating_type_id?: number;
+  rating_type_urutan?: number;
 }
 
 export interface SurveyResponse {

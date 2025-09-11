@@ -12,15 +12,15 @@ export async function up() {
   
   // Insert default survey question
   await executeQuery(`
-    INSERT IGNORE INTO pertanyaan_survei (id, baris, pertanyaan, is_aktif, created_at) VALUES
-    (1, 1, 'Persyaratan untuk memperoleh layanan publik di Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah', 1, '2025-08-28 02:39:19');
+    INSERT IGNORE INTO pertanyaan_survei (id, baris, pertanyaan, is_aktif, is_required, created_at) VALUES
+    (1, 1, 'Persyaratan untuk memperoleh layanan publik di Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah', 1, 1, '2025-08-28 02:39:19');
   `);
   
   // Insert default survey question ratings
   await executeQuery(`
-    INSERT IGNORE INTO pertanyaan_s_jenis_rating (id, pertanyaan_id, jenis_rating_id, urutan, is_required) VALUES
-    (1, 1, 4, 1, 1),
-    (2, 1, 5, 2, 1);
+    INSERT IGNORE INTO pertanyaan_s_jenis_rating (id, pertanyaan_id, jenis_rating_id, urutan) VALUES
+    (1, 1, 4, 1),
+    (2, 1, 5, 2);
   `);
   
   console.log('Default admin data inserted successfully');

@@ -44,8 +44,8 @@ export const SURVEY_QUERIES = {
         WHEN pjr.jenis_rating_id = 3 THEN 'teks'
         ELSE 'rating'
       END as tipe_jawaban,
-      ps.is_aktif, ps.created_at, pjr.jenis_rating_id,
-      pjr.is_required, pjr.urutan
+      ps.is_aktif, ps.created_at, ps.is_required, pjr.jenis_rating_id,
+      pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     ORDER BY ps.baris
@@ -59,8 +59,8 @@ export const SURVEY_QUERIES = {
         WHEN pjr.jenis_rating_id = 3 THEN 'teks'
         ELSE 'rating'
       END as tipe_jawaban,
-      ps.is_aktif, ps.created_at, pjr.jenis_rating_id,
-      pjr.is_required, pjr.urutan
+      ps.is_aktif, ps.created_at, ps.is_required, pjr.jenis_rating_id,
+      pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     ORDER BY ps.baris
@@ -74,8 +74,8 @@ export const SURVEY_QUERIES = {
         WHEN pjr.jenis_rating_id = 3 THEN 'teks'
         ELSE 'rating'
       END as tipe_jawaban,
-      ps.is_aktif, ps.created_at, pjr.jenis_rating_id,
-      pjr.is_required, pjr.urutan
+      ps.is_aktif, ps.created_at, ps.is_required, pjr.jenis_rating_id,
+      pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     WHERE ps.is_aktif = 1
@@ -90,8 +90,8 @@ export const SURVEY_QUERIES = {
         WHEN pjr.jenis_rating_id = 3 THEN 'teks'
         ELSE 'rating'
       END as tipe_jawaban,
-      ps.is_aktif, ps.created_at, pjr.jenis_rating_id,
-      pjr.is_required, pjr.urutan
+      ps.is_aktif, ps.created_at, ps.is_required, pjr.jenis_rating_id,
+      pjr.urutan
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     WHERE ps.id = ?
@@ -198,33 +198,33 @@ export const SURVEY_QUERIES = {
   
   // Add a new survey question
   ADD_QUESTION: `
-    INSERT INTO pertanyaan_survei (baris, pertanyaan, is_aktif)
-    VALUES (?, ?, ?)
+    INSERT INTO pertanyaan_survei (baris, pertanyaan, is_aktif, is_required)
+    VALUES (?, ?, ?, ?)
   `,
   
   // Add question rating association
   ADD_QUESTION_RATING: `
-    INSERT INTO pertanyaan_s_jenis_rating (pertanyaan_id, jenis_rating_id, urutan, is_required)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO pertanyaan_s_jenis_rating (pertanyaan_id, jenis_rating_id, urutan)
+    VALUES (?, ?, ?)
   `,
   
   // Update a survey question
   UPDATE_QUESTION: `
     UPDATE pertanyaan_survei
-    SET baris = ?, pertanyaan = ?, is_aktif = ?
+    SET baris = ?, pertanyaan = ?, is_aktif = ?, is_required = ?
     WHERE id = ?
   `,
   
   // Update question rating association
   UPDATE_QUESTION_RATING: `
     UPDATE pertanyaan_s_jenis_rating
-    SET jenis_rating_id = ?, urutan = ?, is_required = ?
+    SET jenis_rating_id = ?, urutan = ?
     WHERE pertanyaan_id = ?
   `,
   
   // Get question rating association
   GET_QUESTION_RATING: `
-    SELECT pertanyaan_id, jenis_rating_id, urutan, is_required
+    SELECT pertanyaan_id, jenis_rating_id, urutan
     FROM pertanyaan_s_jenis_rating
     WHERE pertanyaan_id = ?
   `,

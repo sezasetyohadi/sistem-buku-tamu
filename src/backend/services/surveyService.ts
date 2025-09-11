@@ -63,9 +63,10 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
   const questionsWithOptions = await Promise.all(questions.map(async (question) => {
     // Get all rating types associated with this question
     const questionRatingTypes = await executeQuery<any[]>(
-      `SELECT pjr.jenis_rating_id, pjr.urutan, pjr.is_required, jr.nama_rating
+      `SELECT ps.is_required, pjr.jenis_rating_id, pjr.urutan, jr.nama_rating
        FROM pertanyaan_s_jenis_rating pjr
        JOIN jenis_rating jr ON pjr.jenis_rating_id = jr.id
+       JOIN pertanyaan_survei ps ON pjr.pertanyaan_id = ps.id
        WHERE pjr.pertanyaan_id = ? 
        ORDER BY pjr.urutan`,
       [question.id]
@@ -126,7 +127,8 @@ export async function getActiveQuestionsForGuests(): Promise<QuestionWithRatingO
     SELECT 
       ps.id, ps.baris, ps.pertanyaan, 
       ps.is_aktif, ps.created_at,
-      pjr.jenis_rating_id, pjr.is_required, pjr.urutan as rating_urutan
+      ps.is_required, pjr.jenis_rating_id, pjr.urutan as rating_urutan,
+      jr.nama_rating
     FROM pertanyaan_survei ps
     LEFT JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
     LEFT JOIN jenis_rating jr ON pjr.jenis_rating_id = jr.id
@@ -146,7 +148,7 @@ export async function getActiveQuestionsForGuests(): Promise<QuestionWithRatingO
         pertanyaan: row.pertanyaan,
         is_aktif: row.is_aktif,
         created_at: row.created_at,
-        jenis_rating_id: row.jenis_rating_id,
+        jenis_rating_id: row.jenis_rating_id, // This will make it available on the question directly
         is_required: row.is_required,
         ratingOptions: [],
         multiple_rating_types: []
@@ -241,7 +243,7 @@ export async function getQuestionsByLayout(): Promise<RowWithQuestions[]> {
 export async function getQuestionById(questionId: number): Promise<QuestionWithRatingOptions> {
   // First get the question
   const questions = await executeQuery<SurveyQuestion[]>(`
-    SELECT id, baris, pertanyaan, is_aktif, created_at
+    SELECT id, baris, pertanyaan, is_aktif, is_required, created_at
     FROM pertanyaan_survei
     WHERE id = ?
   `, [questionId]);
@@ -254,7 +256,7 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
   
   // Get all rating types associated with this question
   const questionRatingTypes = await executeQuery<any[]>(
-    `SELECT pjr.jenis_rating_id, pjr.urutan, pjr.is_required, jr.nama_rating
+    `SELECT pjr.jenis_rating_id, pjr.urutan, jr.nama_rating
      FROM pertanyaan_s_jenis_rating pjr
      JOIN jenis_rating jr ON pjr.jenis_rating_id = jr.id
      WHERE pjr.pertanyaan_id = ? 
@@ -287,7 +289,9 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
 
   // Set the primary jenis_rating_id (first one for backward compatibility)
   const jenis_rating_id = questionRatingTypes.length > 0 ? questionRatingTypes[0].jenis_rating_id : undefined;
-  const is_required = questionRatingTypes.length > 0 ? questionRatingTypes[0].is_required === 1 : true;
+  // Get is_required directly from the question data
+  // Convert from database number (0/1) to boolean
+  const is_required = Boolean(question.is_required);
 
   return {
     id: question.id,
@@ -479,7 +483,7 @@ export async function addQuestion(
     // Insert the question first
     const questionResult = await executeQuery<any>(
       SURVEY_QUERIES.ADD_QUESTION, 
-      [nextBaris, question, 1] // baris, pertanyaan, is_aktif
+      [nextBaris, question, 1, isRequired ? 1 : 0] // baris, pertanyaan, is_aktif, is_required
     );
     
     const questionId = questionResult.insertId;
@@ -493,7 +497,7 @@ export async function addQuestion(
         
         await executeQuery(
           SURVEY_QUERIES.ADD_QUESTION_RATING,
-          [questionId, ratingType.jenis_rating_id, urutanRating, ratingType.is_required ? 1 : 0]
+          [questionId, ratingType.jenis_rating_id, urutanRating]
         );
       }
     } else {
@@ -508,7 +512,7 @@ export async function addQuestion(
       // Insert the rating association
       await executeQuery(
         SURVEY_QUERIES.ADD_QUESTION_RATING,
-        [questionId, jenisRatingId, urutanRating, isRequired ? 1 : 0]
+        [questionId, jenisRatingId, urutanRating]
       );
     }
     
@@ -540,7 +544,7 @@ export async function updateQuestion(
     // Update the question first
     await executeQuery(
       SURVEY_QUERIES.UPDATE_QUESTION, 
-      [baris, question, isActive ? 1 : 0, id]
+      [baris, question, isActive ? 1 : 0, isRequired ? 1 : 0, id]
     );
     
     // Remove existing rating associations for this question
@@ -558,7 +562,7 @@ export async function updateQuestion(
         
         await executeQuery(
           SURVEY_QUERIES.ADD_QUESTION_RATING,
-          [id, ratingType.jenis_rating_id, urutanRating, ratingType.is_required ? 1 : 0]
+          [id, ratingType.jenis_rating_id, urutanRating]
         );
       }
     } else {
@@ -573,7 +577,7 @@ export async function updateQuestion(
       // Insert the rating association
       await executeQuery(
         SURVEY_QUERIES.ADD_QUESTION_RATING,
-        [id, jenisRatingId, urutanRating, isRequired ? 1 : 0]
+        [id, jenisRatingId, urutanRating]
       );
     }
     
