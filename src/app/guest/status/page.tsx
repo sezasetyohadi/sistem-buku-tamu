@@ -388,6 +388,18 @@ export default function StatusPengajuanPage() {
 							<p className="text-gray-900 whitespace-pre-wrap">{guestDetail.keperluan || 'Tidak tersedia'}</p>
 						</div>
 						
+						{/* Catatan Tambahan */}
+						{guestDetail.catatan_tambahan && (
+							<div className="mt-4">
+								<div className="flex items-center">
+									<h4 className="text-sm font-medium text-gray-500">Catatan Tambahan</h4>
+								</div>
+								<div className="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
+									<p className="text-gray-900 whitespace-pre-wrap">{guestDetail.catatan_tambahan}</p>
+								</div>
+							</div>
+						)}
+						
 						{/* Bidang Dituju information is shown in the blue container for scheduled visits */}
 
 						{/* Informasi Waktu */}
