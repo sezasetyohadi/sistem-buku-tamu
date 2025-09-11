@@ -40,7 +40,7 @@ export default function FormInput({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-black mb-2">
+        <label className="block text-xs sm:text-sm font-semibold text-black mb-2">
           {label}
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -58,6 +58,7 @@ export default function FormInput({
             w-full max-w-full px-3 py-2.5 sm:px-4 sm:py-3 text-black placeholder-black 
             border rounded-lg shadow-sm transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-opacity-50
+            text-sm sm:text-base
             ${inputVariant.border} ${inputVariant.ring}
             ${icon ? 'pl-9 sm:pl-10' : ''}
             ${error ? 'bg-red-50' : 'bg-white hover:bg-gray-50 focus:bg-white'}

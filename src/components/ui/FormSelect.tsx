@@ -64,7 +64,7 @@ export default function FormSelect({
   return (
     <div className="w-full">
       {label && (
-  <label className="block text-sm font-semibold text-black mb-2">
+  <label className="block text-xs sm:text-sm font-semibold text-black mb-2">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -91,7 +91,7 @@ export default function FormSelect({
             w-full max-w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 text-black 
             border border-gray-300 rounded-lg shadow-sm transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-[#3D5DC3] focus:ring-opacity-50 focus:border-[#3D5DC3]
-            appearance-none cursor-pointer
+            appearance-none cursor-pointer text-sm sm:text-base
             bg-white hover:bg-gray-50 focus:bg-white
             ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
             ${className}
