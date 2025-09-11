@@ -398,12 +398,12 @@ export default function GuestRegistrationForm({
       >
         <Card 
           variant={isInModal ? "default" : "elevated"} 
-          padding={isInModal ? "md" : "lg"}
-          className={`${isInModal ? "shadow-none border-0" : ""} w-full`}
+          padding={isInModal ? "sm" : "md"}
+          className={`${isInModal ? "shadow-none border-0" : ""} w-full max-w-full overflow-hidden`}
         >
           {!isInModal && (
-            <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Registrasi Tamu</h2>
+            <div className="mb-3 sm:mb-4 md:mb-6">
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Registrasi Tamu</h2>
               <p className="text-xs sm:text-sm md:text-base text-gray-800 leading-relaxed">Daftarkan kunjungan Anda ke DISNAKERTRANS Provinsi Jawa Tengah</p>
             </div>
           )}
@@ -417,8 +417,9 @@ export default function GuestRegistrationForm({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={`space-y-6 ${isInModal ? "overflow-y-visible" : ""}`}>
-        <div className="space-y-6">
+          <form onSubmit={handleSubmit} className={`space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden ${isInModal ? "overflow-y-visible" : ""}`}>
+        {/* Personal Information Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <FormInput
             label="Nama Lengkap"
             name="name"
@@ -451,7 +452,7 @@ export default function GuestRegistrationForm({
           />
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <FormInput
             label="Nomor Telepon"
             name="phone"
@@ -463,7 +464,7 @@ export default function GuestRegistrationForm({
             required
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 002-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
             }
           />
@@ -484,7 +485,7 @@ export default function GuestRegistrationForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
+        <div className="w-full">
           <FormInput
             label="Alamat"
             name="address"
@@ -502,7 +503,8 @@ export default function GuestRegistrationForm({
           />
         </div>
 
-        <div className="space-y-6">
+        {/* Professional Information Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <FormSelect
             label="Profesi"
             name="profession"
@@ -534,7 +536,7 @@ export default function GuestRegistrationForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
+        <div className="w-full">
           <FormInput
             label="Perusahaan/Instansi"
             name="company"
@@ -549,7 +551,8 @@ export default function GuestRegistrationForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
+        {/* Visit Information Section */}
+        <div className="w-full">
           <FormSelect
             label="Tujuan Kunjungan"
             name="purpose"
@@ -567,12 +570,12 @@ export default function GuestRegistrationForm({
           
           {/* Tampilkan peringatan jika "Lainnya" dipilih */}
           {formData.purpose === 'other' && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 md:p-4 rounded-r-lg">
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 sm:p-4 rounded-r-lg mt-2">
               <div className="flex items-start">
-                <svg className="w-5 h-5 text-yellow-400 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <p className="text-yellow-800 text-sm font-medium">
+                <p className="text-yellow-800 text-xs sm:text-sm font-medium leading-relaxed">
                   Anda memilih "Lainnya". Silakan jelaskan tujuan kunjungan Anda pada bagian "Catatan Tambahan" di bawah <span className="text-red-600 font-semibold">(WAJIB DIISI)</span>.
                 </p>
               </div>
@@ -581,38 +584,39 @@ export default function GuestRegistrationForm({
         </div>
 
         {/* Cara Memperoleh Section */}
-        <div className={`bg-gray-50 p-4 md:p-6 rounded-lg border ${errors.cara_memperoleh ? 'border-red-500' : 'border-gray-200'}`}>
-          <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-1">
+        <div className={`bg-gray-50 p-4 sm:p-5 md:p-6 rounded-lg border ${errors.cara_memperoleh ? 'border-red-500' : 'border-gray-200'}`}>
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">
             Cara Memperoleh Informasi <span className="text-red-500">*</span>
           </h3>
-          <p className="text-xs text-gray-500 mb-4">Pilih minimal satu opsi</p>
-          <div className="space-y-2 md:space-y-3">
+          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-5">Pilih minimal satu opsi</p>
+          <div className="space-y-4 sm:space-y-5">
             {memperolehOptions.map((option) => (
-              <label key={option.id} className="flex items-start space-x-3 cursor-pointer">
+              <div key={option.id} className="checkbox-container flex items-start checkbox-layout gap-3 p-2.5 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200">
                 <input
                   type="checkbox"
                   name="cara_memperoleh"
                   value={option.id.toString()}
                   checked={formData.cara_memperoleh.includes(option.id)}
                   onChange={handleInputChange}
-                  className="w-4 h-4 mt-0.5 text-blue-600 bg-gray-100 border-2 border-gray-400 rounded-none focus:ring-blue-500 focus:ring-2 appearance-none checked:bg-blue-600 checked:border-blue-600 flex-shrink-0"
-                  style={{
-                    backgroundImage: formData.cara_memperoleh.includes(option.id)
-                      ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e")` 
-                      : 'none'
-                  }}
+                  className="w-4 h-4 mt-1 cursor-pointer flex-shrink-0"
+                  id={`cara_memperoleh_${option.id}`}
                 />
-                <span className="text-sm text-gray-700 leading-relaxed">{option.nama_opsi}</span>
-              </label>
+                <label 
+                  htmlFor={`cara_memperoleh_${option.id}`}
+                  className="text-sm sm:text-base text-gray-700 leading-relaxed cursor-pointer select-none flex-1 break-words overflow-wrap-break-word"
+                >
+                  {option.nama_opsi}
+                </label>
+              </div>
             ))}
           </div>
           {errors.cara_memperoleh && (
-            <p className="text-red-500 text-sm mt-2">{errors.cara_memperoleh}</p>
+            <p className="text-red-500 text-xs sm:text-sm mt-4 font-medium">{errors.cara_memperoleh}</p>
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold mb-2 text-gray-700">
+        <div className="w-full">
+          <label className="block text-xs sm:text-sm font-semibold mb-2 text-gray-700">
             Catatan Tambahan
             {formData.purpose === 'other' ? (
               <span className="text-red-500 font-normal ml-2">*</span>
@@ -625,7 +629,7 @@ export default function GuestRegistrationForm({
             value={formData.notes}
             onChange={handleInputChange}
             rows={4}
-            className={`w-full px-4 py-3 text-gray-900 placeholder-gray-500 border rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-white hover:bg-gray-50 focus:bg-white focus:ring-[#3D5DC3] focus:border-[#3D5DC3] ${
+            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 text-gray-900 placeholder-gray-500 border rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-white hover:bg-gray-50 focus:bg-white focus:ring-[#3D5DC3] focus:border-[#3D5DC3] text-xs sm:text-sm ${
               formData.purpose === 'other' && errors.notes ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder={formData.purpose === 'other' 
@@ -635,7 +639,7 @@ export default function GuestRegistrationForm({
             required={formData.purpose === 'other'}
           />
           {formData.purpose === 'other' && errors.notes && (
-            <p className="text-red-500 text-sm mt-2">{errors.notes}</p>
+            <p className="text-red-500 text-xs sm:text-sm mt-2">{errors.notes}</p>
           )}
         </div>
 
@@ -646,7 +650,7 @@ export default function GuestRegistrationForm({
             size="lg"
             isLoading={submitFormMutation.loading}
             loadingText="Sedang Memproses..."
-            className="w-full min-h-[48px] text-base font-semibold"
+            className="w-full min-h-[44px] sm:min-h-[48px] text-sm sm:text-base font-semibold"
           >
             Daftar Sekarang
           </LoadingButton>
@@ -655,7 +659,7 @@ export default function GuestRegistrationForm({
             type="button"
             variant="secondary"
             size="lg"
-            className="w-full sm:w-auto sm:mx-auto min-h-[48px] text-base"
+            className="w-full sm:w-auto sm:mx-auto min-h-[44px] sm:min-h-[48px] text-sm sm:text-base"
             onClick={() => {
               setFormData({
                 name: '',
