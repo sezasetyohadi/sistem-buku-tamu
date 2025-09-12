@@ -589,13 +589,17 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
     const durationGrowthNum = previousAvgMinutes > 0 ? ((avgMinutes - previousAvgMinutes) / previousAvgMinutes * 100) : 0;
     const durationGrowthLabel = durationGrowthNum.toFixed(1);
 
-    // Satisfaction rating - ensure proper number conversion (max rating = 4)
+    // Satisfaction rating - convert 4-point scale to 10-point scale (each choice = 2.5 points)
     const currentRating = parseFloat(satisfactionData[0]?.current_rating) || 0;
     const previousRating = parseFloat(satisfactionData[0]?.previous_rating) || 0;
     const totalResponses = parseInt(satisfactionData[0]?.total_responses) || 0;
-    const ratingChangeNum = previousRating > 0 ? (currentRating - previousRating) : 0;
+    
+    // Convert 4-point scale to 10-point scale (multiply by 2.5)
+    const currentRating10 = currentRating * 2.5;
+    const previousRating10 = previousRating * 2.5;
+    const ratingChangeNum = previousRating > 0 ? (currentRating10 - previousRating10) : 0;
     const ratingChangeLabel = ratingChangeNum.toFixed(1);
-    const satisfactionValue = currentRating > 0 ? `${currentRating.toFixed(1)}/4` : '0/4';
+    const satisfactionValue = currentRating > 0 ? `${Math.round(currentRating10)}/10` : '0/10';
 
     return {
       // Key metrics for dashboard cards
@@ -640,7 +644,7 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
         totalVisits: { value: 0, growth: 0, label: 'No data available' },
         dailyAverage: { value: 0, growth: 0, label: 'No data available' },
         avgDuration: { value: '0h', growth: 0, label: 'No data available' },
-        satisfaction: { value: '0/4', growth: 0, label: 'No data available' }
+        satisfaction: { value: '0/10', growth: 0, label: 'No data available' }
       },
       weeklyTrends: [],
       serviceCategories: [],

@@ -367,7 +367,7 @@ export default function AdminReportsAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-800">Tingkat Kepuasan</h3>
-                <p className="text-3xl font-bold text-gray-800">{data?.metrics.satisfaction.value || '0/5'}</p>
+                <p className="text-3xl font-bold text-gray-800">{data?.metrics.satisfaction.value || '0/10'}</p>
                 <p className="text-sm text-gray-900 flex items-center">
                   <svg className={`w-4 h-4 mr-1 ${(data?.metrics.satisfaction.growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d={
