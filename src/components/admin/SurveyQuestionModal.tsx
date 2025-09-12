@@ -16,7 +16,7 @@ interface SurveyQuestion {
   tipe_pertanyaan: 'rating' | 'text';
   status: boolean;
   jenis_rating_id?: number;
-  is_required?: boolean;
+  is_required?: boolean | number; // Allow both boolean and number (1/0 from DB)
   urutan?: number;
   baris?: number;
   multiple_rating_types?: { 
@@ -71,10 +71,16 @@ export default function SurveyQuestionModal({
     if (initialQuestion && isOpen) {
       // First fetch rating types to have them available
       fetchRatingTypes().then(() => {
-        // Ensure is_required is properly handled
+        // Ensure is_required is properly handled - convert 1/0 or boolean to boolean
+        const processedIsRequired = initialQuestion.is_required === undefined 
+          ? true 
+          : Boolean(Number(initialQuestion.is_required));
+          
+        console.log('Loading question - is_required from DB:', initialQuestion.is_required, 'converted to:', processedIsRequired);
+          
         setQuestionData({
           ...initialQuestion,
-          is_required: initialQuestion.is_required === undefined ? true : !!initialQuestion.is_required
+          is_required: processedIsRequired
         });
         
         // Load extra answers from multiple_rating_types if available
@@ -87,8 +93,8 @@ export default function SurveyQuestionModal({
             setQuestionData(prev => ({
               ...prev,
               jenis_rating_id: sortedRatingTypes[0].jenis_rating_id,
-              // Use is_required directly from initialQuestion, not from rating types
-              is_required: initialQuestion.is_required === undefined ? true : !!initialQuestion.is_required
+              // Use is_required directly from initialQuestion, convert from 1/0 to boolean
+              is_required: Boolean(Number(initialQuestion.is_required))
             }));
           }
           
@@ -156,6 +162,8 @@ export default function SurveyQuestionModal({
       // Prepare the question data with multiple rating types
       const questionToSubmit = {
         ...questionData,
+        // Ensure is_required is always a boolean
+        is_required: Boolean(questionData.is_required),
         // Keep is_required at the question level, not in each rating type
         multiple_rating_types: [
           // Main rating type
@@ -168,6 +176,9 @@ export default function SurveyQuestionModal({
           }))
         ].filter(item => item.jenis_rating_id) // Remove undefined values
       };
+      
+      // Debug log to check data being sent
+      console.log('Submitting question with is_required:', questionToSubmit.is_required, typeof questionToSubmit.is_required);
       
       // Call parent handler
       await onAddQuestion(questionToSubmit);

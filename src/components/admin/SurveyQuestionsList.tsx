@@ -9,12 +9,12 @@ interface SurveyQuestion {
   tipe_pertanyaan: 'rating' | 'text';
   status: boolean;
   jenis_rating_id?: number;
-  is_required?: boolean;
+  is_required?: boolean | number; // Allow both boolean and number (1/0 from DB)
   urutan?: number;
   baris?: number;
   multiple_rating_types?: { 
     jenis_rating_id: number; 
-    is_required?: boolean; 
+    is_required?: boolean | number; 
     nama_rating?: string;
     urutan?: number;
   }[];

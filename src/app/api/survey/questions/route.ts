@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
       multiple_rating_types
     } = body;
     
+    console.log('API received is_required:', is_required, typeof is_required);
+    
     // Add question with multiple rating types support
     const questionId = await addQuestion(
       pertanyaan, 
