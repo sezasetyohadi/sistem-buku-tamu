@@ -19,12 +19,12 @@ interface SurveyQuestion {
   tipe_pertanyaan: 'rating' | 'text';
   status: boolean;
   jenis_rating_id?: number;
-  is_required?: boolean;
+  is_required?: boolean | number; // Allow both boolean and number (1/0 from DB)
   urutan?: number;
   baris?: number;
   multiple_rating_types?: { 
     jenis_rating_id: number; 
-    is_required?: boolean; 
+    is_required?: boolean | number; 
     nama_rating?: string;
     urutan?: number;
   }[];
@@ -276,17 +276,21 @@ export default function AdminSurvey() {
     if (!question) return;
 
     try {
+      const requestData = {
+        pertanyaan: question.pertanyaan,
+        tipe_pertanyaan: 'rating',
+        is_aktif: question.status,
+        jenis_rating_id: question.jenis_rating_id,
+        is_required: Boolean(question.is_required), // Ensure boolean
+        multiple_rating_types: question.multiple_rating_types
+      };
+
+      console.log('Adding question with is_required:', requestData.is_required, typeof requestData.is_required);
+
       const response = await fetch('/api/survey/questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pertanyaan: question.pertanyaan,
-          tipe_pertanyaan: 'rating',
-          is_aktif: question.status,
-          jenis_rating_id: question.jenis_rating_id,
-          is_required: question.is_required,
-          multiple_rating_types: question.multiple_rating_types
-        }),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -315,9 +319,11 @@ export default function AdminSurvey() {
         tipe_pertanyaan: 'rating',
         is_aktif: question.status,
         jenis_rating_id: question.jenis_rating_id,
-        is_required: question.is_required,
+        is_required: Boolean(question.is_required), // Ensure boolean
         multiple_rating_types: question.multiple_rating_types
       };
+
+      console.log('Updating question with is_required:', requestBody.is_required, typeof requestBody.is_required);
 
       const response = await fetch(`/api/survey/questions/${question.id}`, {
         method: 'PUT',

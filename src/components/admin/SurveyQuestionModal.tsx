@@ -16,7 +16,7 @@ interface SurveyQuestion {
   tipe_pertanyaan: 'rating' | 'text';
   status: boolean;
   jenis_rating_id?: number;
-  is_required?: boolean;
+  is_required?: boolean | number; // Allow both boolean and number (1/0 from DB)
   urutan?: number;
   baris?: number;
   multiple_rating_types?: { 
@@ -71,10 +71,16 @@ export default function SurveyQuestionModal({
     if (initialQuestion && isOpen) {
       // First fetch rating types to have them available
       fetchRatingTypes().then(() => {
-        // Ensure is_required is properly handled
+        // Ensure is_required is properly handled - convert 1/0 or boolean to boolean
+        const processedIsRequired = initialQuestion.is_required === undefined 
+          ? true 
+          : Boolean(Number(initialQuestion.is_required));
+          
+        console.log('Loading question - is_required from DB:', initialQuestion.is_required, 'converted to:', processedIsRequired);
+          
         setQuestionData({
           ...initialQuestion,
-          is_required: initialQuestion.is_required === undefined ? true : !!initialQuestion.is_required
+          is_required: processedIsRequired
         });
         
         // Load extra answers from multiple_rating_types if available
@@ -87,8 +93,8 @@ export default function SurveyQuestionModal({
             setQuestionData(prev => ({
               ...prev,
               jenis_rating_id: sortedRatingTypes[0].jenis_rating_id,
-              // Use is_required directly from initialQuestion, not from rating types
-              is_required: initialQuestion.is_required === undefined ? true : !!initialQuestion.is_required
+              // Use is_required directly from initialQuestion, convert from 1/0 to boolean
+              is_required: Boolean(Number(initialQuestion.is_required))
             }));
           }
           
@@ -156,6 +162,8 @@ export default function SurveyQuestionModal({
       // Prepare the question data with multiple rating types
       const questionToSubmit = {
         ...questionData,
+        // Ensure is_required is always a boolean
+        is_required: Boolean(questionData.is_required),
         // Keep is_required at the question level, not in each rating type
         multiple_rating_types: [
           // Main rating type
@@ -168,6 +176,9 @@ export default function SurveyQuestionModal({
           }))
         ].filter(item => item.jenis_rating_id) // Remove undefined values
       };
+      
+      // Debug log to check data being sent
+      console.log('Submitting question with is_required:', questionToSubmit.is_required, typeof questionToSubmit.is_required);
       
       // Call parent handler
       await onAddQuestion(questionToSubmit);
@@ -377,16 +388,19 @@ export default function SurveyQuestionModal({
           <div className="mt-4">
             <div className="mb-3">
               <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={questionData.status}
-                  onChange={(e) => setQuestionData({
+                <div 
+                  onClick={() => setQuestionData({
                     ...questionData,
-                    status: e.target.checked
+                    status: !questionData.status
                   })}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                    questionData.status ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className={`absolute top-[2px] left-[2px] bg-white border border-gray-300 rounded-full h-5 w-5 transition-transform duration-200 ease-in-out ${
+                    questionData.status ? 'transform translate-x-full' : ''
+                  }`}></div>
+                </div>
                 <span className="ms-3 text-sm font-medium text-gray-700">
                   Aktifkan pertanyaan
                 </span>
@@ -395,16 +409,19 @@ export default function SurveyQuestionModal({
             
             <div>
               <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={questionData.is_required}
-                  onChange={(e) => setQuestionData({
+                <div 
+                  onClick={() => setQuestionData({
                     ...questionData,
-                    is_required: e.target.checked
+                    is_required: !questionData.is_required
                   })}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                    questionData.is_required ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className={`absolute top-[2px] left-[2px] bg-white border border-gray-300 rounded-full h-5 w-5 transition-transform duration-200 ease-in-out ${
+                    questionData.is_required ? 'transform translate-x-full' : ''
+                  }`}></div>
+                </div>
                 <span className="ms-3 text-sm font-medium text-gray-700">
                   Wajib diisi
                 </span>

@@ -55,7 +55,7 @@ export async function getAllQuestions(): Promise<SurveyQuestion[]> {
 export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptions[]> {
   // Get questions directly from pertanyaan_survei table to avoid duplication
   const questions = await executeQuery<any[]>(`
-    SELECT id, baris, pertanyaan, is_aktif, created_at
+    SELECT id, baris, pertanyaan, is_aktif, is_required, created_at
     FROM pertanyaan_survei
     ORDER BY baris
   `);
@@ -64,10 +64,9 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
   const questionsWithOptions = await Promise.all(questions.map(async (question) => {
     // Get all rating types associated with this question
     const questionRatingTypes = await executeQuery<any[]>(
-      `SELECT ps.is_required, pjr.jenis_rating_id, pjr.urutan, jr.nama_rating
+      `SELECT pjr.jenis_rating_id, pjr.urutan, jr.nama_rating
        FROM pertanyaan_s_jenis_rating pjr
        JOIN jenis_rating jr ON pjr.jenis_rating_id = jr.id
-       JOIN pertanyaan_survei ps ON pjr.pertanyaan_id = ps.id
        WHERE pjr.pertanyaan_id = ? 
        ORDER BY pjr.urutan`,
       [question.id]
@@ -91,14 +90,18 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
     // Format multiple rating types
     const multiple_rating_types = questionRatingTypes.map(rt => ({
       jenis_rating_id: rt.jenis_rating_id,
-      is_required: rt.is_required === 1,
       nama_rating: rt.nama_rating,
       urutan: rt.urutan
     }));
 
     // Set the primary jenis_rating_id (first one for backward compatibility)
     const jenis_rating_id = questionRatingTypes.length > 0 ? questionRatingTypes[0].jenis_rating_id : undefined;
-    const is_required = questionRatingTypes.length > 0 ? questionRatingTypes[0].is_required === 1 : true;
+    // Get is_required from the question itself, not from rating types
+    // Handle both numeric (1/0) and boolean values from database
+    const is_required = Number(question.is_required) === 1 || question.is_required === true;
+    
+    // Debug log
+    console.log(`getAllQuestionsForAdmin - Question ID ${question.id} - is_required from DB:`, question.is_required, 'type:', typeof question.is_required, 'converted to:', is_required);
 
     return {
       id: question.id,
@@ -283,7 +286,6 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
   // Format multiple rating types
   const multiple_rating_types = questionRatingTypes.map(rt => ({
     jenis_rating_id: rt.jenis_rating_id,
-    is_required: rt.is_required === 1,
     nama_rating: rt.nama_rating,
     urutan: rt.urutan
   }));
@@ -291,8 +293,11 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
   // Set the primary jenis_rating_id (first one for backward compatibility)
   const jenis_rating_id = questionRatingTypes.length > 0 ? questionRatingTypes[0].jenis_rating_id : undefined;
   // Get is_required directly from the question data
-  // Convert from database number (0/1) to boolean
-  const is_required = Boolean(question.is_required);
+  // Handle both numeric (1/0) and boolean values from database
+  const is_required = Number(question.is_required) === 1 || question.is_required === true;
+  
+  // Debug log
+  console.log(`getQuestionById - Question ID ${questionId} - is_required from DB:`, question.is_required, 'type:', typeof question.is_required, 'converted to:', is_required);
 
   return {
     id: question.id,

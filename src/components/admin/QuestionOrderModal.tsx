@@ -28,7 +28,7 @@ interface SurveyQuestion {
   status?: boolean;
   is_aktif?: boolean;
   jenis_rating_id?: number;
-  is_required?: boolean;
+  is_required?: boolean | number; // Allow both boolean and number (1/0 from DB)
   urutan?: number;
   baris?: number;
 }

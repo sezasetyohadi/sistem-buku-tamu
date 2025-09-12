@@ -79,7 +79,8 @@ export interface PertanyaanSurvei {
   baris?: number;
   pertanyaan: string;
   jenis_rating_id?: number;
-  is_aktif?: boolean;
+  is_aktif?: boolean | number | string; // Allow for database values
+  is_required?: boolean | number | string; // Allow for database values
   created_at?: string;
 }
 

@@ -7,7 +7,7 @@ export interface SurveyQuestion {
   tipe_jawaban?: 'rating' | 'teks';
   tipe_pertanyaan?: 'rating' | 'text';
   ratingOptions?: any[]; // Changed to support grouped rating options
-  is_required?: boolean | number;
+  is_required?: boolean | number | string; // Allow for database values
   jenis_rating_id?: number; // Added to support direct rating type ID
   multiple_rating_types?: { 
     jenis_rating_id: number; 
