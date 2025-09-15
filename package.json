@@ -21,7 +21,10 @@
     "migrate": "tsx src/backend/migrations/runMigrations.ts",
     "migrate:single": "tsx -r dotenv/config src/backend/migrations/runSingleMigration.ts",
     "migrate:fresh": "tsx src/backend/migrations/drop-all-tables.ts && tsx src/backend/migrations/runMigrations.ts",
-    "db:drop": "tsx src/backend/migrations/drop-all-tables.ts"
+    "db:drop": "tsx src/backend/migrations/drop-all-tables.ts",
+    "deploy:admin": "vercel --prod --local-config vercel-admin.json",
+    "deploy:guest": "vercel --prod --local-config vercel-guest.json",
+    "deploy:both": "npm run deploy:admin && npm run deploy:guest"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

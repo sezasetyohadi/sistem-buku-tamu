@@ -6,8 +6,9 @@ import { envValidator } from './src/lib/environment-validator';
 export function middleware(request: NextRequest) {
   const appMode = process.env.APP_MODE;
   const pathname = request.nextUrl.pathname;
+  const hostname = request.nextUrl.hostname;
   
-  console.log('Middleware - Path:', pathname, 'Mode:', appMode);
+  console.log('Middleware - Path:', pathname, 'Mode:', appMode, 'Host:', hostname);
   
   // Create response with security headers
   const response = NextResponse.next();
@@ -18,6 +19,54 @@ export function middleware(request: NextRequest) {
   // HTTPS Enforcement for production
   if (shouldEnforceHttps(request)) {
     return enforceHttps(request);
+  }
+  
+  // Domain-based routing for production deployment
+  if (process.env.NODE_ENV === 'production' && hostname) {
+    console.log('Production mode - checking domain routing');
+    
+    // Check if domain indicates admin or guest based on actual domains
+    const isAdminDomain = hostname.includes('admin-sistem-buku-tamu') || hostname.includes('admin.');
+    const isGuestDomain = hostname.includes('guest-sistem-buku-tamu') || hostname.includes('guest.');
+    
+    console.log('Domain detection:', { hostname, isAdminDomain, isGuestDomain });
+    
+    if (isAdminDomain) {
+      console.log('Admin domain detected:', hostname);
+      // Admin domain should only serve admin routes
+      if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && pathname !== '/favicon.ico') {
+        console.log('Redirecting to admin from:', pathname);
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+      
+      // Block guest routes on admin domain
+      if (pathname.startsWith('/guest')) {
+        console.log('Blocking guest route on admin domain');
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+    } 
+    else if (isGuestDomain) {
+      console.log('Guest domain detected:', hostname);
+      // Guest domain should only serve guest routes
+      if (!pathname.startsWith('/guest') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && pathname !== '/favicon.ico') {
+        console.log('Redirecting to guest from:', pathname);
+        return NextResponse.redirect(new URL('/guest', request.url));
+      }
+      
+      // Block admin routes on guest domain
+      if (pathname.startsWith('/admin')) {
+        console.log('Blocking admin route on guest domain');
+        return NextResponse.redirect(new URL('/guest', request.url));
+      }
+    }
+    else {
+      console.log('Main domain - allowing both routes');
+      // Main domain allows both, but redirect root to appropriate section
+      if (pathname === '/') {
+        // You can choose default behavior for main domain
+        return NextResponse.redirect(new URL('/guest', request.url));
+      }
+    }
   }
   
   // Always allow login page - no authentication required
