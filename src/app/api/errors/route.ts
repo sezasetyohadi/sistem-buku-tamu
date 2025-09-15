@@ -118,7 +118,7 @@ async function handleErrorReport(request: NextRequest) {
   }
 }
 
-// Database table creation (run this in migration)
+// Database table creation utilities
 async function createErrorReportsTable() {
   try {
     await executeQuery(`

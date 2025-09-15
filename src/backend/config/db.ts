@@ -163,8 +163,8 @@ export async function testConnection(): Promise<boolean> {
   }
 }
 
-// NOTE: Table creation and data insertion have been removed
-// as they are now handled by migrations and seeds
+// NOTE: Table creation and data insertion should be handled
+// through database management tools or seed files
 
 // Get education options with caching
 export async function getEducationOptions(): Promise<Array<{ id: number, pendidikan_terakhir: string }>> {

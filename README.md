@@ -89,13 +89,7 @@ cp .env.example .env
 ```
 
 ### 4. **Setup Database**
-```bash
-# Jalankan migrasi database
-npm run migrate
-
-# Atau untuk fresh installation
-npm run migrate:fresh
-```
+Pastikan database MySQL sudah dibuat dan konfigurasi `.env` sudah benar.
 
 ### 5. **Jalankan Aplikasi**
 
@@ -177,10 +171,7 @@ npm run start:admin       # Start admin production server
 npm run start:guest       # Start guest production server
 
 # Database
-npm run migrate           # Jalankan migrasi
-npm run migrate:fresh     # Drop semua tabel dan migrasi ulang
-npm run migrate:single    # Jalankan satu migrasi
-npm run db:drop          # Drop semua tabel
+# Database operations require manual setup
 
 # Code Quality
 npm run lint             # ESLint check
@@ -204,7 +195,7 @@ src/
 │   ├── config/         # Database configuration
 │   ├── models/         # Data models
 │   ├── services/       # Business logic
-│   └── migrations/     # Database migrations
+│   └── seeds/          # Database seed data
 ├── components/         # React components
 │   ├── admin/          # Admin-specific components
 │   ├── guest/          # Guest-specific components

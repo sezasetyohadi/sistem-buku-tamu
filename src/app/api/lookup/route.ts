@@ -11,7 +11,7 @@ import {
 
 export async function GET() {
   try {
-    // Tables are now handled by migrations
+    // Lookup data from database tables
     
     const [educationLevels, professions, tujuanKunjungan, bidangTujuan, memperolehInformasi, mendapatkanSalinan] = await Promise.all([
       getEducationOptions(),

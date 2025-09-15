@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { testConnection } from '@/backend/config/db';
-import migrationManager from '@/backend/migrations/migrationManager';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,23 +14,12 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
     
-    // Initialize migration and seed tables
-    await migrationManager.initMigrationTable();
-    
-    // Run all migrations
-    console.log('Running migrations...');
-    await migrationManager.runMigrations();
-    
-    // Run all seeds
-    console.log('Running seeds...');
-    await migrationManager.runSeeds();
-    
     return NextResponse.json({
       success: true,
-      message: 'Database initialized successfully with migrations and seeds'
+      message: 'Database connection tested successfully'
     });
   } catch (error: any) {
-    console.error('Error initializing database:', error);
+    console.error('Error testing database connection:', error);
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
