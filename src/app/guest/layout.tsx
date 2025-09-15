@@ -2,6 +2,7 @@
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { SectionErrorBoundary } from "../../components/error/ErrorBoundary";
 
 // Route prefetching cache with performance optimizations
@@ -96,7 +97,16 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
 
   // Skip layout for the main guest landing pages to make it full screen
   if (pathname === '/guest' || pathname === '/guest/landing') {
-    return <>{children}</>;
+    return (
+      <>
+        <Script 
+          src="https://cdn.userway.org/widget.js" 
+          data-account="3DtJJGdGnQ"
+          strategy="afterInteractive"
+        />
+        {children}
+      </>
+    );
   }
 
   // Function to check if menu item is active
@@ -139,6 +149,11 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
 
   return (
     <div className="h-screen flex bg-gray-50 overflow-hidden">
+      <Script 
+        src="https://cdn.userway.org/widget.js" 
+        data-account="3DtJJGdGnQ"
+        strategy="afterInteractive"
+      />
       {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out overflow-hidden
