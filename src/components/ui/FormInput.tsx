@@ -13,15 +13,15 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const InputVariants = {
   default: {
-    border: 'border-gray-300 focus:border-[#3D5DC3]',
+    border: 'border-gray-200 focus:border-[#3D5DC3]',
     ring: 'focus:ring-[#3D5DC3]'
   },
   success: {
-    border: 'border-green-500 focus:border-green-600',
+    border: 'border-green-300 focus:border-green-500',
     ring: 'focus:ring-green-500'
   },
   error: {
-    border: 'border-red-500 focus:border-red-600',
+    border: 'border-red-300 focus:border-red-500',
     ring: 'focus:ring-red-500'
   }
 };
@@ -56,10 +56,10 @@ export default function FormInput({
         <input
           className={`
             w-full max-w-full px-3 py-2.5 sm:px-4 sm:py-3 text-black placeholder-black 
-            border rounded-lg shadow-sm transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-opacity-50
+            border rounded-md transition-colors duration-200
+            focus:outline-none focus:ring-0
             text-sm sm:text-base
-            ${inputVariant.border} ${inputVariant.ring}
+            ${inputVariant.border} 
             ${icon ? 'pl-9 sm:pl-10' : ''}
             ${error ? 'bg-red-50' : 'bg-white hover:bg-gray-50 focus:bg-white'}
             ${className}
