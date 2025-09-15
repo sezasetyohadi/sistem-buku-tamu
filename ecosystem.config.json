@@ -1,0 +1,42 @@
+{
+  "apps": [
+    {
+      "name": "sistem-buku-tamu-guest",
+      "script": "npm",
+      "args": "run start:guest",
+      "cwd": "./",
+      "env": {
+        "NODE_ENV": "production",
+        "APP_MODE": "guest",
+        "PORT": "3000"
+      },
+      "instances": 1,
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "1G",
+      "error_file": "logs/guest-error.log",
+      "out_file": "logs/guest-out.log",
+      "log_file": "logs/guest-combined.log",
+      "time": true
+    },
+    {
+      "name": "sistem-buku-tamu-admin",
+      "script": "npm",
+      "args": "run start:admin",
+      "cwd": "./",
+      "env": {
+        "NODE_ENV": "production",
+        "APP_MODE": "admin",
+        "PORT": "3001"
+      },
+      "instances": 1,
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "1G",
+      "error_file": "logs/admin-error.log",
+      "out_file": "logs/admin-out.log",
+      "log_file": "logs/admin-combined.log",
+      "time": true
+    }
+  ]
+}
