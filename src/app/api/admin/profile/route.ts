@@ -1,7 +1,8 @@
+import bcrypt from 'bcrypt';
 import { NextRequest, NextResponse } from 'next/server';
+
 import { executeQuery } from '@/backend/config/db';
 import Admin from '@/backend/models/adminModel';
-import bcrypt from 'bcrypt';
 import { verifyToken } from '@/lib/jwt';
 
 export async function GET(request: NextRequest) {

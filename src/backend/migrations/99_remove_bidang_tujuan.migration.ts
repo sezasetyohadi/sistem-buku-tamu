@@ -5,7 +5,7 @@ export async function up() {
   
   try {
     // Drop foreign key constraint first if it exists
-    await executeQuery(`ALTER TABLE daftar_tamu DROP FOREIGN KEY IF EXISTS fk_bidang_tujuan;`);
+    await executeQuery('ALTER TABLE daftar_tamu DROP FOREIGN KEY IF EXISTS fk_bidang_tujuan;');
     console.log('Dropped foreign key constraint fk_bidang_tujuan');
   } catch (error) {
     console.log('Foreign key constraint fk_bidang_tujuan may not exist, continuing...');
@@ -13,7 +13,7 @@ export async function up() {
 
   try {
     // Drop index if it exists
-    await executeQuery(`ALTER TABLE daftar_tamu DROP INDEX IF EXISTS fk_bidang_tujuan;`);
+    await executeQuery('ALTER TABLE daftar_tamu DROP INDEX IF EXISTS fk_bidang_tujuan;');
     console.log('Dropped index fk_bidang_tujuan');
   } catch (error) {
     console.log('Index fk_bidang_tujuan may not exist, continuing...');
@@ -21,7 +21,7 @@ export async function up() {
 
   try {
     // Drop the column
-    await executeQuery(`ALTER TABLE daftar_tamu DROP COLUMN IF EXISTS bidang_tujuan_id;`);
+    await executeQuery('ALTER TABLE daftar_tamu DROP COLUMN IF EXISTS bidang_tujuan_id;');
     console.log('Dropped column bidang_tujuan_id from daftar_tamu table');
   } catch (error) {
     console.log('Column bidang_tujuan_id may not exist, continuing...');
@@ -29,7 +29,7 @@ export async function up() {
 
   try {
     // Drop the bidang_tujuan table
-    await executeQuery(`DROP TABLE IF EXISTS bidang_tujuan;`);
+    await executeQuery('DROP TABLE IF EXISTS bidang_tujuan;');
     console.log('Dropped bidang_tujuan table');
   } catch (error) {
     console.log('Table bidang_tujuan may not exist, continuing...');
@@ -63,10 +63,10 @@ export async function down() {
   `);
 
   // Add column back to daftar_tamu
-  await executeQuery(`ALTER TABLE daftar_tamu ADD COLUMN bidang_tujuan_id int(11) DEFAULT NULL;`);
+  await executeQuery('ALTER TABLE daftar_tamu ADD COLUMN bidang_tujuan_id int(11) DEFAULT NULL;');
   
   // Add index
-  await executeQuery(`ALTER TABLE daftar_tamu ADD INDEX fk_bidang_tujuan (bidang_tujuan_id);`);
+  await executeQuery('ALTER TABLE daftar_tamu ADD INDEX fk_bidang_tujuan (bidang_tujuan_id);');
   
   // Add foreign key constraint
   await executeQuery(`

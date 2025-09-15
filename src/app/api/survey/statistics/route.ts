@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { 
   getAllQuestions,
   getSurveyStatistics,
@@ -55,14 +56,14 @@ export async function GET(request: NextRequest) {
 
 // Helper function to calculate the overall average rating
 function calculateAverageRating(statistics: any[]): number {
-  if (!statistics.length) return 0;
+  if (!statistics.length) {return 0;}
   
   const validRatings = statistics.filter(stat => 
     stat.tipe_jawaban === 'rating' && 
     stat.average_rating !== null
   );
   
-  if (!validRatings.length) return 0;
+  if (!validRatings.length) {return 0;}
   
   const sum = validRatings.reduce((acc, curr) => acc + parseFloat(curr.average_rating), 0);
   return Number((sum / validRatings.length).toFixed(1));

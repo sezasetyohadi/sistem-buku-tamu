@@ -91,7 +91,7 @@ const ENV_VALIDATION_RULES: Record<keyof EnvironmentConfig, ValidationRule> = {
   EMAIL_SMTP_PORT: {
     required: false,
     validator: (value) => {
-      if (value === undefined) return true;
+      if (value === undefined) {return true;}
       const port = Number(value);
       return !isNaN(port) && port > 0 && port < 65536;
     },

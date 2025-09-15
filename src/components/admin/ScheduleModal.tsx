@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
-import Modal from "../ui/Modal";
-import { useApiCall } from "@/hooks/useDataFetching";
+import React, { useState, useEffect } from 'react';
+
+import { useApiCall } from '@/hooks/useDataFetching';
+
+import Modal from '../ui/Modal';
 
 interface ScheduleModalProps {
   isOpen: boolean;
@@ -64,7 +66,7 @@ export default function ScheduleModal({
           setHour(String(scheduledDate.getHours()).padStart(2, '0'));
           setMinute(String(scheduledDate.getMinutes()).padStart(2, '0'));
         } catch (error) {
-          console.error("Error parsing existing schedule:", error);
+          console.error('Error parsing existing schedule:', error);
           resetToCurrentTime();
         }
         
@@ -234,22 +236,22 @@ export default function ScheduleModal({
       
       // Check for missing values
       if (!hour && !minute) {
-        setError("Waktu harus diisi lengkap");
+        setError('Waktu harus diisi lengkap');
         return;
       }
       
       if (!hour) {
-        setError("Jam harus diisi");
+        setError('Jam harus diisi');
         return;
       }
       
       if (!minute) {
-        setError("Menit harus diisi");
+        setError('Menit harus diisi');
         return;
       }
       
       if (!bidangTujuanId) {
-        setError("Bidang tujuan harus dipilih");
+        setError('Bidang tujuan harus dipilih');
         return;
       }
       
@@ -258,18 +260,18 @@ export default function ScheduleModal({
       const minuteNum = parseInt(minute, 10);
       
       if (isNaN(hourNum) || hourNum < 0 || hourNum > 23) {
-        setError("Format jam tidak valid (0-23)");
+        setError('Format jam tidak valid (0-23)');
         return;
       }
       
       if (isNaN(minuteNum) || minuteNum < 0 || minuteNum > 59) {
-        setError("Format menit tidak valid (0-59)");
+        setError('Format menit tidak valid (0-59)');
         return;
       }
       
       // Validate time if date is today
       if (!isTimeValid()) {
-        setError("Waktu yang dipilih harus di masa depan");
+        setError('Waktu yang dipilih harus di masa depan');
         return;
       }
 
@@ -283,8 +285,8 @@ export default function ScheduleModal({
       await onSchedule(scheduledDateTime, bidangTujuanId, asnDituju.trim(), caraSalinan);
       onClose();
     } catch (error) {
-      setError("Gagal menjadwalkan kunjungan. Silakan coba lagi.");
-      console.error("Error scheduling visit:", error);
+      setError('Gagal menjadwalkan kunjungan. Silakan coba lagi.');
+      console.error('Error scheduling visit:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -293,7 +295,7 @@ export default function ScheduleModal({
   // We're using text inputs for hours and minutes now instead of dropdowns
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? "Edit Jadwal" : "Jadwalkan Kunjungan"} size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Edit Jadwal' : 'Jadwalkan Kunjungan'} size="md">
       <div className="p-2 dark:bg-dark-surface">
         {isEdit && currentSchedule && (
           <div className="mb-6">
@@ -314,8 +316,8 @@ export default function ScheduleModal({
 
         <div className="text-base text-gray-700 dark:text-dark-text-primary mb-6">
           {isEdit 
-            ? "Pilih tanggal dan waktu baru untuk mengubah jadwal kunjungan tamu."
-            : "Pilih tanggal dan waktu untuk jadwal kunjungan tamu."}
+            ? 'Pilih tanggal dan waktu baru untuk mengubah jadwal kunjungan tamu.'
+            : 'Pilih tanggal dan waktu untuk jadwal kunjungan tamu.'}
         </div>
 
         <div className="space-y-6">

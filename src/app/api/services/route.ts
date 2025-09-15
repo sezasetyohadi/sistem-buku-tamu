@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { executeQuery } from '@/backend/config/db';
 import { createApiResponse } from '@/lib/api-response';
 

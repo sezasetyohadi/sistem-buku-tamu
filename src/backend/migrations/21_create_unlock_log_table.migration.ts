@@ -20,6 +20,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS unlock_log;`);
+  await executeQuery('DROP TABLE IF EXISTS unlock_log;');
   console.log('Unlock_log table dropped successfully');
 }

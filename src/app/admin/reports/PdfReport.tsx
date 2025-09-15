@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,6 +9,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import React from 'react';
 import { Line } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -84,68 +84,68 @@ const PdfReport = ({ data }: PdfReportProps) => {
 
   return (
     <div style={{ 
-      fontFamily: "Arial, sans-serif", 
-      fontSize: "12px", 
-      color: "#333", 
-      padding: "30px", 
-      background: "#fff",
-      minWidth: "794px",
-      width: "794px",
-      height: "auto",
-      border: "1px solid #ddd",
-      boxSizing: "border-box"
+      fontFamily: 'Arial, sans-serif', 
+      fontSize: '12px', 
+      color: '#333', 
+      padding: '30px', 
+      background: '#fff',
+      minWidth: '794px',
+      width: '794px',
+      height: 'auto',
+      border: '1px solid #ddd',
+      boxSizing: 'border-box'
     }}>
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "30px", borderBottom: "2px solid #333", paddingBottom: "15px" }}>
-        <h1 style={{ margin: "0", fontSize: "22px", color: "#333", fontWeight: "bold" }}>
+      <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '2px solid #333', paddingBottom: '15px' }}>
+        <h1 style={{ margin: '0', fontSize: '22px', color: '#333', fontWeight: 'bold' }}>
           LAPORAN BUKU TAMU
         </h1>
-        <p style={{ margin: "10px 0 0 0", fontSize: "14px", color: "#666" }}>
-          Tanggal Cetak: {new Date().toLocaleDateString("id-ID", { 
-            day: "2-digit", 
-            month: "long", 
-            year: "numeric",
-            weekday: "long"
+        <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
+          Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { 
+            day: '2-digit', 
+            month: 'long', 
+            year: 'numeric',
+            weekday: 'long'
           })}
         </p>
       </div>
 
       {/* Statistics Table */}
-      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
         Statistik Kunjungan
       </h3>
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "25px" }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
         <thead>
           <tr>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Total Kunjungan</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Rata-rata Harian</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Waktu Rata-rata</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Tingkat Kepuasan</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Total Kunjungan</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Rata-rata Harian</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu Rata-rata</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Tingkat Kepuasan</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
-              {reportData.metrics?.totalVisits?.value ?? "0"}
+            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
+              {reportData.metrics?.totalVisits?.value ?? '0'}
             </td>
-            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
-              {reportData.metrics?.dailyAverage?.value ?? "0"}
+            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
+              {reportData.metrics?.dailyAverage?.value ?? '0'}
             </td>
-            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
-              {reportData.metrics?.avgDuration?.value ?? "0h"}
+            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
+              {reportData.metrics?.avgDuration?.value ?? '0h'}
             </td>
-            <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>
-              {reportData.metrics?.satisfaction?.value ?? "0/5"}
+            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
+              {reportData.metrics?.satisfaction?.value ?? '0/5'}
             </td>
           </tr>
         </tbody>
       </table>
 
       {/* Visitor Trends Chart */}
-      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
         Tren Kunjungan (7 Hari Terakhir)
       </h3>
-      <div style={{ width: "100%", height: "150px", marginBottom: "20px", background: "#f9f9f9", border: "1px solid #ddd", borderRadius: "4px" }}>
+      <div style={{ width: '100%', height: '150px', marginBottom: '20px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
         {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 ? (
           <Line
             data={{
@@ -229,61 +229,61 @@ const PdfReport = ({ data }: PdfReportProps) => {
             }}
           />
         ) : (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#666" }}>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ margin: "0", fontSize: "14px" }}>Tidak ada data trend tersedia</p>
-              <p style={{ margin: "5px 0 0 0", fontSize: "12px" }}>Data akan muncul setelah ada aktivitas kunjungan</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ margin: '0', fontSize: '14px' }}>Tidak ada data trend tersedia</p>
+              <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>Data akan muncul setelah ada aktivitas kunjungan</p>
             </div>
           </div>
         )}
       </div>
 
       {/* Top Visitors Table */}
-      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
         Tamu Paling Aktif
       </h3>
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "25px" }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
         <thead>
           <tr>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Nama</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Instansi</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Jumlah Kunjungan</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Nama</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Instansi</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Jumlah Kunjungan</th>
           </tr>
         </thead>
         <tbody>
           {visitorsToShow.map((visitor: any, idx: number) => (
             <tr key={idx}>
-              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{visitor.nama}</td>
-              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{visitor.asal_instansi}</td>
-              <td style={{ border: "1px solid #999", padding: "8px", textAlign: "center", fontSize: "11px" }}>{visitor.visit_count}</td>
+              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{visitor.nama}</td>
+              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{visitor.asal_instansi}</td>
+              <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>{visitor.visit_count}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
       {/* Recent Activities Table */}
-      <h3 style={{ marginTop: "20px", marginBottom: "10px", fontSize: "16px", color: "#333" }}>
+      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
         Aktivitas Terbaru
       </h3>
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
         <thead>
           <tr>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Nama</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Instansi</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Keperluan</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Tanggapan</th>
-            <th style={{ border: "1px solid #999", padding: "8px", background: "#f5f5f5", fontSize: "11px" }}>Waktu</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Nama</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Instansi</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Keperluan</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Tanggapan</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu</th>
           </tr>
         </thead>
         <tbody>
           {activitiesToShow.map((activity: any, idx: number) => (
             <tr key={idx}>
-              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.nama}</td>
-              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.asal_instansi}</td>
-              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.keperluan}</td>
-              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>{activity.tanggapan}</td>
-              <td style={{ border: "1px solid #999", padding: "8px", fontSize: "11px" }}>
-                {new Date(activity.waktu_dibuat).toLocaleDateString("id-ID")}
+              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.nama}</td>
+              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.asal_instansi}</td>
+              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.keperluan}</td>
+              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.tanggapan}</td>
+              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>
+                {new Date(activity.waktu_dibuat).toLocaleDateString('id-ID')}
               </td>
             </tr>
           ))}
@@ -291,11 +291,11 @@ const PdfReport = ({ data }: PdfReportProps) => {
       </table>
 
       {/* Footer */}
-      <div style={{ marginTop: "30px", padding: "15px", border: "1px solid #ddd", backgroundColor: "#f9f9f9", fontSize: "10px" }}>
-        <h4 style={{ margin: "0 0 10px 0", fontSize: "12px" }}>Informasi Sistem</h4>
-        <p style={{ margin: "5px 0" }}>Laporan ini dihasilkan dari Sistem Buku Tamu Digital</p>
-        <p style={{ margin: "5px 0" }}>Tanggal: {new Date().toLocaleDateString("id-ID")}</p>
-        <p style={{ margin: "5px 0" }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
+      <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ddd', backgroundColor: '#f9f9f9', fontSize: '10px' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '12px' }}>Informasi Sistem</h4>
+        <p style={{ margin: '5px 0' }}>Laporan ini dihasilkan dari Sistem Buku Tamu Digital</p>
+        <p style={{ margin: '5px 0' }}>Tanggal: {new Date().toLocaleDateString('id-ID')}</p>
+        <p style={{ margin: '5px 0' }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
       </div>
     </div>
   );

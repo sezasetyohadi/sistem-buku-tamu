@@ -6,10 +6,10 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { showToast } from '@/lib/toast';
+
+import { createError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
-import { createError, ErrorType } from '@/lib/error-handler';
-import { errorRecovery } from '@/lib/error-recovery';
+import { showToast } from '@/lib/toast';
 
 // Error boundary state interface
 interface ErrorBoundaryState {

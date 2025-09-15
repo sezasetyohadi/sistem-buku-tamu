@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRatingOptions } from '@/backend/services/surveyService';
+
 import { executeQuery } from '@/backend/config/db';
 import { SURVEY_QUERIES } from '@/backend/models/surveyModel';
+import { getRatingOptions } from '@/backend/services/surveyService';
 
 export const GET = async (request: NextRequest) => {
   try {

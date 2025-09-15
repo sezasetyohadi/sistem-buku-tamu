@@ -1,23 +1,24 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import PasswordInput from "../../../components/ui/PasswordInput";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import PasswordInput from '../../../components/ui/PasswordInput';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    username: '',
+    password: '',
     rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [isForgotPasswordLoading, setIsForgotPasswordLoading] = useState(false);
-  const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
-  const [forgotPasswordError, setForgotPasswordError] = useState("");
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
   const router = useRouter();
 
   // Check if already authenticated - redirect to admin dashboard
@@ -55,8 +56,8 @@ export default function LoginPage() {
           const credentials = JSON.parse(savedCredentials);
           setFormData(prev => ({
             ...prev,
-            username: credentials.username || "",
-            password: credentials.password || "",
+            username: credentials.username || '',
+            password: credentials.password || '',
             rememberMe: true
           }));
         }
@@ -86,11 +87,11 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError('');
 
     // Basic validation
     if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Username dan password harus diisi");
+      setError('Username dan password harus diisi');
       setIsLoading(false);
       return;
     }
@@ -148,12 +149,12 @@ export default function LoginPage() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsForgotPasswordLoading(true);
-    setForgotPasswordError("");
-    setForgotPasswordMessage("");
+    setForgotPasswordError('');
+    setForgotPasswordMessage('');
 
     // Validasi email
     if (!forgotPasswordEmail.trim()) {
-      setForgotPasswordError("Email harus diisi");
+      setForgotPasswordError('Email harus diisi');
       setIsForgotPasswordLoading(false);
       return;
     }
@@ -161,7 +162,7 @@ export default function LoginPage() {
     // Validasi format email sederhana
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(forgotPasswordEmail)) {
-      setForgotPasswordError("Format email tidak valid");
+      setForgotPasswordError('Format email tidak valid');
       setIsForgotPasswordLoading(false);
       return;
     }
@@ -179,11 +180,11 @@ export default function LoginPage() {
 
       if (result.success) {
         setForgotPasswordMessage(result.message);
-        setForgotPasswordEmail("");
+        setForgotPasswordEmail('');
         // Sembunyikan form forgot password setelah berhasil
         setTimeout(() => {
           setShowForgotPassword(false);
-          setForgotPasswordMessage("");
+          setForgotPasswordMessage('');
         }, 5000);
       } else {
         setForgotPasswordError(result.message || 'Gagal mengirim email reset password');
@@ -388,9 +389,9 @@ export default function LoginPage() {
                   <button
                     onClick={() => {
                       setShowForgotPassword(false);
-                      setForgotPasswordEmail("");
-                      setForgotPasswordError("");
-                      setForgotPasswordMessage("");
+                      setForgotPasswordEmail('');
+                      setForgotPasswordError('');
+                      setForgotPasswordMessage('');
                     }}
                     className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
                     disabled={isForgotPasswordLoading}
@@ -490,9 +491,9 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => {
                         setShowForgotPassword(false);
-                        setForgotPasswordEmail("");
-                        setForgotPasswordError("");
-                        setForgotPasswordMessage("");
+                        setForgotPasswordEmail('');
+                        setForgotPasswordError('');
+                        setForgotPasswordMessage('');
                       }}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium underline transition-colors duration-200"
                       disabled={isForgotPasswordLoading}

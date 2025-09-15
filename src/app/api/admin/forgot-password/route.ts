@@ -1,7 +1,9 @@
+import crypto from 'crypto';
+
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+
 import { executeQuery } from '@/backend/config/db';
-import crypto from 'crypto';
 
 // Konfigurasi transporter nodemailer
 const transporter = nodemailer.createTransport({

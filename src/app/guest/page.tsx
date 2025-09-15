@@ -1,8 +1,9 @@
 'use client';
 
-import Link from "next/link";
-import ScrollWave from "@/components/ScrollWave";
-import { useEffect } from "react";
+import Link from 'next/link';
+import { useEffect } from 'react';
+
+import ScrollWave from '@/components/ScrollWave';
 
 export default function GuestLandingPage() {
   useEffect(() => {

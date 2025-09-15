@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import Modal from '@/components/ui/Modal';
 import { toast } from 'react-hot-toast';
+
+import Modal from '@/components/ui/Modal';
 
 interface Service {
   id: number;

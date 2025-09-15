@@ -1,9 +1,14 @@
-import { DaftarTamu } from "@/types/database-types";
-import Modal from "../ui/Modal";
-import { useState, useEffect } from "react";
-import ScheduleModal from "./ScheduleModal";
-import DeleteConfirmationDialog from "../ui/DeleteConfirmationDialog";
-import { toast } from "react-hot-toast";
+import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+
+import { DaftarTamu } from '@/types/database-types';
+
+import DeleteConfirmationDialog from '../ui/DeleteConfirmationDialog';
+import Modal from '../ui/Modal';
+
+import ScheduleModal from './ScheduleModal';
+
+
 
 // Tooltip component
 interface TooltipProps {
@@ -53,15 +58,15 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
   
   // Auto-open schedule modal if edit mode is active and guest status is "Menunggu" or "Terjadwal"
   useEffect(() => {
-    if (isOpen && isEditMode && guest && (guest.status_kunjungan === "Menunggu" || guest.status_kunjungan === "Terjadwal")) {
+    if (isOpen && isEditMode && guest && (guest.status_kunjungan === 'Menunggu' || guest.status_kunjungan === 'Terjadwal')) {
       setIsScheduleModalOpen(true);
     }
   }, [isOpen, isEditMode, guest]);
   
-  if (!guest) return null;
+  if (!guest) {return null;}
 
   const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "Belum tersedia";
+    if (!dateString) {return 'Belum tersedia';}
     
     try {
       const date = new Date(dateString);
@@ -73,7 +78,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
         minute: '2-digit'
       }).format(date);
     } catch (error) {
-      return "Format tanggal tidak valid";
+      return 'Format tanggal tidak valid';
     }
   };
   
@@ -242,7 +247,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
 
     // Alias untuk status "Datang" menjadi "Proses"
     const getDisplayStatus = (statusValue: string | undefined) => {
-      if (statusValue === 'Datang') return 'Proses';
+      if (statusValue === 'Datang') {return 'Proses';}
       return statusValue || 'Menunggu';
     };
     
@@ -259,7 +264,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? "Edit Tamu" : "Detail Tamu"} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? 'Edit Tamu' : 'Detail Tamu'} size="lg">
       <div className="space-y-6">
         {/* Header with avatar and basic info */}
         <div className="flex items-center pb-4 border-b border-gray-200">
@@ -474,24 +479,24 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
         {/* Footer with action buttons */}
         <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
           {/* Tombol Jadwalkan / Edit Jadwal */}
-          {(guest.status_kunjungan === "Menunggu" || guest.status_kunjungan === "Terjadwal") && (
+          {(guest.status_kunjungan === 'Menunggu' || guest.status_kunjungan === 'Terjadwal') && (
             <button 
               onClick={() => setIsScheduleModalOpen(true)} 
               disabled={isSubmitting}
               className={`px-4 py-2 rounded-md transition-colors ${
                 isSubmitting 
                   ? 'bg-blue-200 text-blue-600' 
-                  : guest.status_kunjungan === "Terjadwal"
+                  : guest.status_kunjungan === 'Terjadwal'
                     ? 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300' 
                     : 'bg-blue-200 text-blue-800 hover:bg-blue-300'
               }`}
             >
-              {guest.status_kunjungan === "Terjadwal" ? 'Edit Jadwal' : 'Jadwalkan'}
+              {guest.status_kunjungan === 'Terjadwal' ? 'Edit Jadwal' : 'Jadwalkan'}
             </button>
           )}
           
           {/* Tombol Tandai Datang (Check-in) */}
-          {(guest.status_kunjungan === "Menunggu" || guest.status_kunjungan === "Terjadwal") && (
+          {(guest.status_kunjungan === 'Menunggu' || guest.status_kunjungan === 'Terjadwal') && (
             <button 
               onClick={handleCheckin}
               disabled={isSubmitting}
@@ -502,7 +507,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           )}
           
           {/* Tombol Tandai Selesai (Check-out) - Tetap menggunakan status internal "Datang" */}
-          {guest.status_kunjungan === "Datang" && (
+          {guest.status_kunjungan === 'Datang' && (
             <button 
               onClick={handleCheckout}
               disabled={isSubmitting}
@@ -546,7 +551,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
             // This might need updating based on your actual implementation
             return 0;
           })}
-          isEdit={guest.status_kunjungan === "Terjadwal"}
+          isEdit={guest.status_kunjungan === 'Terjadwal'}
         />
       )}
       

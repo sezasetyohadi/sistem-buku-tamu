@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+import { SurveyQuestion } from '@/backend/models/surveyModel';
 import { 
   getAllQuestions,
   getAllQuestionsForAdmin,
@@ -9,7 +11,6 @@ import {
   updateQuestion,
   deleteQuestion
 } from '@/backend/services/surveyService';
-import { SurveyQuestion } from '@/backend/models/surveyModel';
 
 export async function GET(request: NextRequest) {
   try {

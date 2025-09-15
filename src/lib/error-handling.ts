@@ -323,7 +323,7 @@ export function validateRequired(
 // Database Error Handler
 export function handleDatabaseError(error: any, operation: string, requestId?: string): never {
   let message = `Database ${operation} failed`;
-  let context: Record<string, any> = { operation };
+  const context: Record<string, any> = { operation };
 
   if (error.code) {
     context.errorCode = error.code;

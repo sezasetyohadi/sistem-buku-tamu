@@ -26,6 +26,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS admin;`);
+  await executeQuery('DROP TABLE IF EXISTS admin;');
   console.log('Admin table dropped successfully');
 }

@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { executeQuery } from '@/backend/config/db';
 import fs from 'fs';
 import path from 'path';
+
+import { NextRequest, NextResponse } from 'next/server';
+
+import { executeQuery } from '@/backend/config/db';
 import { verifyToken } from '@/lib/jwt';
 
 export async function DELETE(request: NextRequest) {

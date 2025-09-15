@@ -4,9 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+import { executeQuery } from '@/backend/config/db';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
-import { executeQuery } from '@/backend/config/db';
 
 interface ErrorReport {
   id: string;
@@ -140,10 +141,10 @@ async function createErrorReportsTable() {
     `);
     
     // Create indexes separately
-    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_error_type ON error_reports(error_type)`);
-    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_severity ON error_reports(severity)`);
-    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_reported_at ON error_reports(reported_at)`);
-    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_user_id ON error_reports(user_id)`);
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_error_type ON error_reports(error_type)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_severity ON error_reports(severity)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_reported_at ON error_reports(reported_at)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_user_id ON error_reports(user_id)');
   } catch (error) {
     logger.error('Error creating error_reports table:', error);
   }

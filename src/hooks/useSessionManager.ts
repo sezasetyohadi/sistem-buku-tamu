@@ -6,6 +6,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { authLogger } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
@@ -67,7 +68,7 @@ export function useSessionManager(options: UseSessionManagerOptions = {}) {
 
   // Start idle detection
   const startIdleDetection = useCallback(() => {
-    if (!enabled || !isAuthenticated) return;
+    if (!enabled || !isAuthenticated) {return;}
 
     clearTimers();
 
@@ -102,7 +103,7 @@ export function useSessionManager(options: UseSessionManagerOptions = {}) {
 
   // Handle token refresh
   const handleTokenRefresh = useCallback(async () => {
-    if (!enabled || !isAuthenticated) return;
+    if (!enabled || !isAuthenticated) {return;}
 
     try {
       authLogger.debug('Attempting automatic token refresh');
@@ -123,7 +124,7 @@ export function useSessionManager(options: UseSessionManagerOptions = {}) {
 
   // Reset timers when activity occurs
   const resetTimers = useCallback(() => {
-    if (!enabled || !isAuthenticated) return;
+    if (!enabled || !isAuthenticated) {return;}
 
     clearTimers();
     warningShownRef.current = false;
@@ -135,7 +136,7 @@ export function useSessionManager(options: UseSessionManagerOptions = {}) {
 
   // Set up event listeners for user activity
   useEffect(() => {
-    if (!enabled || !isAuthenticated) return;
+    if (!enabled || !isAuthenticated) {return;}
 
     const events = [
       'mousedown',
@@ -183,7 +184,7 @@ export function useSessionManager(options: UseSessionManagerOptions = {}) {
 }
 
 // Utility function to throttle events
-function throttle<T extends (...args: any[]) => any>(func: T, wait: number): T {
+function throttle<T extends(...args: any[]) => any>(func: T, wait: number): T {
   let timeout: NodeJS.Timeout | null = null;
   let previous = 0;
 

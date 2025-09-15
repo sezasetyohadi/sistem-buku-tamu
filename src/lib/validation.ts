@@ -3,9 +3,10 @@
  * Provides schema-based validation with consistent error messages and sanitization
  */
 
-import { logger } from '@/lib/logger';
 import validator from 'validator';
+
 import { ValidationError } from '@/lib/error-handling';
+import { logger } from '@/lib/logger';
 
 // Create validation logger
 const validationLogger = logger.scope('VALIDATION');
@@ -469,17 +470,17 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     minLength: 1,
     maxLength: 100,
     custom: (value) => {
-      if (typeof value !== 'string') return 'Nama harus berupa text';
+      if (typeof value !== 'string') {return 'Nama harus berupa text';}
       
       // Sanitize the name: remove non-letters and normalize spaces
       const sanitized = value.trim().replace(/[^a-zA-Z\s]/g, '').replace(/\s+/g, ' ');
       
       // Check if sanitized name is empty
-      if (!sanitized) return 'Nama harus berisi huruf';
+      if (!sanitized) {return 'Nama harus berisi huruf';}
       
       // Check length after sanitization
-      if (sanitized.length < 1) return 'Nama terlalu pendek';
-      if (sanitized.length > 100) return 'Nama terlalu panjang (maksimal 100 karakter)';
+      if (sanitized.length < 1) {return 'Nama terlalu pendek';}
+      if (sanitized.length > 100) {return 'Nama terlalu panjang (maksimal 100 karakter)';}
       
       return null;
     },
@@ -699,7 +700,7 @@ export const PASSWORD_RESET_SCHEMA: ValidationSchema = {
     minLength: 6,
     maxLength: 128,
     custom: (value) => {
-      if (typeof value !== 'string') return 'Password harus berupa text';
+      if (typeof value !== 'string') {return 'Password harus berupa text';}
       
       const password = value as string;
       

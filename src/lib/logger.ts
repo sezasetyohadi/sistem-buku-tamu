@@ -28,7 +28,7 @@ class Logger {
 
   private shouldLog(level: LogLevel): boolean {
     // Always log errors, even in production
-    if (level === 'error') return true;
+    if (level === 'error') {return true;}
     
     // In production, only log if explicitly enabled
     if (!this.isDevelopment && !this.options.enableInProduction) {

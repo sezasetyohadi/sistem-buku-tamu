@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import Card from '../ui/Card';
-import PrimaryButton from '../ui/PrimaryButton';
 import FormInput from '../ui/FormInput';
+import PrimaryButton from '../ui/PrimaryButton';
 
 interface Guest {
   id: number;
@@ -69,7 +70,7 @@ export default function GuestList({
   };
 
   const formatTime = (timeString?: string) => {
-    if (!timeString) return '-';
+    if (!timeString) {return '-';}
     return timeString.substring(0, 5); // HH:MM format
   };
 
@@ -153,7 +154,7 @@ export default function GuestList({
                 <div className="text-orange-50 font-medium text-sm">Minggu Ini</div>
                 <div className="text-3xl font-bold mt-1">
                   {guests.filter(g => {
-                    if (!g.waktu_dibuat) return false;
+                    if (!g.waktu_dibuat) {return false;}
                     const guestDate = new Date(g.waktu_dibuat);
                     const weekAgo = new Date();
                     weekAgo.setDate(weekAgo.getDate() - 7);

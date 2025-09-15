@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
             </div>
             <div className="ml-3 sm:ml-4 xl:ml-5 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Tamu Hari Ini</p>
-              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? "..." : stats.todayGuests}</p>
+              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? '...' : stats.todayGuests}</p>
             </div>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
             </div>
             <div className="ml-3 sm:ml-4 xl:ml-5 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Terjadwal Hari Ini</p>
-              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckIn}</p>
+              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? '...' : stats.todayCheckIn}</p>
             </div>
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
             </div>
             <div className="ml-3 sm:ml-4 xl:ml-5 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Selesai Hari Ini</p>
-              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? "..." : stats.todayCheckOut}</p>
+              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? '...' : stats.todayCheckOut}</p>
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
             </div>
             <div className="ml-3 sm:ml-4 xl:ml-5 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Datang Hari Ini</p>
-              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? "..." : stats.currentlyVisiting}</p>
+              <p className="text-xl sm:text-2xl xl:text-3xl font-bold text-gray-900">{isLoading ? '...' : stats.currentlyVisiting}</p>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+
 import { ErrorLogger } from '@/lib/error-handling';
 
 interface Props {

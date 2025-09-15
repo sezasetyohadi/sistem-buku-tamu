@@ -8,7 +8,7 @@ export const POST = async (request: NextRequest) => {
     }
     // Insert the new rating type
     const result = await executeQuery(
-      "INSERT INTO jenis_rating (nama_rating) VALUES (?)",
+      'INSERT INTO jenis_rating (nama_rating) VALUES (?)',
       [nama_rating]
     ) as { insertId: number };
     const jenis_rating_id = result.insertId;
@@ -16,7 +16,7 @@ export const POST = async (request: NextRequest) => {
     for (let i = 0; i < options.length; i++) {
       const skala_rating = options[i];
       await executeQuery(
-        "INSERT INTO opsi_rating (jenis_rating_id, skala_rating, urutan_rating) VALUES (?, ?, ?)",
+        'INSERT INTO opsi_rating (jenis_rating_id, skala_rating, urutan_rating) VALUES (?, ?, ?)',
         [jenis_rating_id, skala_rating, i + 1]
       );
     }
@@ -27,6 +27,7 @@ export const POST = async (request: NextRequest) => {
   }
 };
 import { NextRequest, NextResponse } from 'next/server';
+
 import { executeQuery } from '@/backend/config/db';
 import { getRatingTypes } from '@/backend/services/surveyService';
 

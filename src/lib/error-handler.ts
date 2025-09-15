@@ -3,8 +3,8 @@
  * Handles different types of errors across the application
  */
 
-import { showToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
+import { showToast } from '@/lib/toast';
 
 // Error types enum
 export enum ErrorType {

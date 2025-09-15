@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import SurveyQuestionModal from "@/components/admin/SurveyQuestionModal";
-import QuestionOrderModal from "@/components/admin/QuestionOrderModal";
-import SurveyResponseDetailModal from "@/components/admin/SurveyResponseDetailModal";
-import ExportToExcelButton from "@/components/admin/ExportToExcelButton";
-import SurveyStatistics from "@/components/admin/SurveyStatistics";
-import SurveyTabs from "@/components/admin/SurveyTabs";
-import SurveyQuestionsList from "@/components/admin/SurveyQuestionsList";
-import SurveyResponsesList from "@/components/admin/SurveyResponsesList";
-import SurveyFilters from "@/components/admin/SurveyFilters";
-import { showToast } from "@/lib/toast";
-import { surveyLogger } from "@/lib/logger";
+import { useState, useEffect } from 'react';
+
+import ExportToExcelButton from '@/components/admin/ExportToExcelButton';
+import QuestionOrderModal from '@/components/admin/QuestionOrderModal';
+import SurveyFilters from '@/components/admin/SurveyFilters';
+import SurveyQuestionModal from '@/components/admin/SurveyQuestionModal';
+import SurveyQuestionsList from '@/components/admin/SurveyQuestionsList';
+import SurveyResponseDetailModal from '@/components/admin/SurveyResponseDetailModal';
+import SurveyResponsesList from '@/components/admin/SurveyResponsesList';
+import SurveyStatistics from '@/components/admin/SurveyStatistics';
+import SurveyTabs from '@/components/admin/SurveyTabs';
+import { surveyLogger } from '@/lib/logger';
+import { showToast } from '@/lib/toast';
 
 interface SurveyQuestion {
   id?: number;
@@ -273,7 +274,7 @@ export default function AdminSurvey() {
 
   // Question Management Functions
   const handleAddQuestion = async (question: SurveyQuestion | null) => {
-    if (!question) return;
+    if (!question) {return;}
 
     try {
       const requestData = {
@@ -306,7 +307,7 @@ export default function AdminSurvey() {
   };
 
   const handleEditQuestion = async (question: SurveyQuestion | null) => {
-    if (!question || !question.id) return;
+    if (!question || !question.id) {return;}
 
     try {
       const originalQuestion = questions.find(q => q.id === question.id);
@@ -370,7 +371,7 @@ export default function AdminSurvey() {
         }
       }
     } catch (error) {
-      surveyLogger.error("Error fetching question details:", error);
+      surveyLogger.error('Error fetching question details:', error);
       setQuestionToDelete(question);
     } finally {
       setDeleteConfirmationOpen(true);
@@ -379,7 +380,7 @@ export default function AdminSurvey() {
 
   const handleDeleteQuestion = async () => {
     const id = questionToDelete?.id;
-    if (!id) return;
+    if (!id) {return;}
 
     try {
       setIsDeleting(true);
@@ -443,7 +444,7 @@ export default function AdminSurvey() {
       setIsReordering(true);
 
       const updatePromises = reorderedQuestions.map(question => {
-        if (!question.id) return Promise.resolve();
+        if (!question.id) {return Promise.resolve();}
 
         // Only send the id and baris field to update order
         const requestBody = {

@@ -6,9 +6,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+
 import { useLoadingState } from '@/components/ui/LoadingState';
-import { useErrorRecovery, RetryConfigs } from '@/lib/error-recovery';
 import { useApiClient } from '@/lib/api-interceptors';
+import { useErrorRecovery, RetryConfigs } from '@/lib/error-recovery';
 import { logger } from '@/lib/logger';
 
 /**
@@ -61,7 +62,7 @@ class SimpleCache {
 
   get(key: string) {
     const item = this.cache.get(key);
-    if (!item) return null;
+    if (!item) {return null;}
 
     const isExpired = Date.now() - item.timestamp > item.duration;
     if (isExpired) {
@@ -596,7 +597,7 @@ export function useInfiniteData<T>(
   );
 
   const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore) {return;}
 
     try {
       const result = await execute();

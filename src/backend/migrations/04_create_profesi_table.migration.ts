@@ -33,6 +33,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS profesi;`);
+  await executeQuery('DROP TABLE IF EXISTS profesi;');
   console.log('Profesi table dropped successfully');
 }

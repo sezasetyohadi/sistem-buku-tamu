@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 interface SurveyResponse {
   id: number;
   nama_lengkap: string;

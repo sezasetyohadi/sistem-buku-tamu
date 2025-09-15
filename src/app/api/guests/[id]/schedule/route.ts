@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { executeQuery } from '@/backend/config/db';
 import { GUEST_QUERIES } from '@/backend/models/guestModel';
 import { apiLogger } from '@/lib/logger';

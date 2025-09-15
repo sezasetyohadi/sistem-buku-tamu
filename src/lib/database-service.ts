@@ -4,6 +4,7 @@
  */
 
 import { PoolConnection } from 'mysql2/promise';
+
 import { db, executeQuery, executeTransaction } from './database';
 import { dbLogger } from './logger';
 

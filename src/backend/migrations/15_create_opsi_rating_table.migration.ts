@@ -40,6 +40,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS opsi_rating;`);
+  await executeQuery('DROP TABLE IF EXISTS opsi_rating;');
   console.log('Opsi_rating table dropped successfully');
 }

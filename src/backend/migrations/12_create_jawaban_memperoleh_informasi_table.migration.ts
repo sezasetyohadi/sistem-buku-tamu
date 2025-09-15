@@ -20,6 +20,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS jawaban_memperoleh_informasi;`);
+  await executeQuery('DROP TABLE IF EXISTS jawaban_memperoleh_informasi;');
   console.log('Jawaban_memperoleh_informasi table dropped successfully');
 }

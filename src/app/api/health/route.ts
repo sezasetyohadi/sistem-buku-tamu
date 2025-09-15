@@ -5,11 +5,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { HealthCheckService } from '../../../lib/database-service';
-import { dbLogger } from '../../../lib/logger';
+
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { HttpStatus } from '@/lib/api-response';
 import { verifyToken } from '@/lib/jwt';
+
+import { HealthCheckService } from '../../../lib/database-service';
+import { dbLogger } from '../../../lib/logger';
 
 // Basic health check interface (public)
 interface BasicHealthCheck {
@@ -53,7 +55,7 @@ function checkAdminAuth(request: NextRequest): boolean {
     
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
     
-    if (!token) return false;
+    if (!token) {return false;}
 
     const payload = verifyToken(token, 'admin-panel');
     return payload?.userType === 'admin';

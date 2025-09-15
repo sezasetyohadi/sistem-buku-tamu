@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -80,7 +80,7 @@ export function getAdminSessionData() {
 
 // Format date to a readable string
 export function formatDate(date: Date | string): string {
-  if (!date) return '';
+  if (!date) {return '';}
   const d = new Date(date);
   return d.toLocaleDateString('en-US', {
     year: 'numeric',

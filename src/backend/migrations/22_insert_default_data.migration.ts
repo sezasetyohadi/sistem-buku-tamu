@@ -27,8 +27,8 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DELETE FROM pertanyaan_s_jenis_rating WHERE id IN (1, 2);`);
-  await executeQuery(`DELETE FROM pertanyaan_survei WHERE id = 1;`);
-  await executeQuery(`DELETE FROM admin WHERE id IN (1, 2);`);
+  await executeQuery('DELETE FROM pertanyaan_s_jenis_rating WHERE id IN (1, 2);');
+  await executeQuery('DELETE FROM pertanyaan_survei WHERE id = 1;');
+  await executeQuery('DELETE FROM admin WHERE id IN (1, 2);');
   console.log('Default admin data removed successfully');
 }

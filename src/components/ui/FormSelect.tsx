@@ -1,7 +1,7 @@
 // Komponen Select yang dapat digunakan ulang dengan icon
 // Filename: FormSelect.tsx
 
-"use client";
+'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 
@@ -26,7 +26,7 @@ export default function FormSelect({
   required = false,
   helperText,
   icon,
-  className = "",
+  className = '',
   ...props 
 }: FormSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +51,7 @@ export default function FormSelect({
 
   // Get appropriate icon based on the label
   const getContextualIcon = () => {
-    if (icon) return icon;
+    if (icon) {return icon;}
     
     // Return generic list icon for all dropdowns - no more contextual icons
     return (

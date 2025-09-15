@@ -5,7 +5,7 @@ async function resetAndMigrate() {
     console.log('Resetting migration tracking...');
     
     // Clear migration records
-    await executeQuery(`DELETE FROM migrations WHERE 1=1`);
+    await executeQuery('DELETE FROM migrations WHERE 1=1');
     console.log('Migration records cleared');
     
     console.log('Running fresh migrations...');

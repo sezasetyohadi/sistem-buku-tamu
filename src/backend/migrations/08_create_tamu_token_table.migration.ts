@@ -21,6 +21,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS tamu_token;`);
+  await executeQuery('DROP TABLE IF EXISTS tamu_token;');
   console.log('Tamu_token table dropped successfully');
 }

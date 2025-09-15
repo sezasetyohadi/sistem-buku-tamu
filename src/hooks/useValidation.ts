@@ -4,6 +4,8 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+
+import { showToast } from '@/lib/toast';
 import { 
   ValidationSchema, 
   ValidationResult, 
@@ -11,7 +13,6 @@ import {
   validateSingleField,
   createDebouncedValidator 
 } from '@/lib/validation';
-import { showToast } from '@/lib/toast';
 
 export interface UseValidationOptions {
   schema: ValidationSchema;

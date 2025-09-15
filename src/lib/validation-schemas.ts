@@ -151,7 +151,7 @@ export const SURVEY_IDENTITY_SCHEMA: ValidationSchema = {
   },
   pendidikan_terakhir: {
     custom: (value) => {
-      if (!value) return null; // Optional field
+      if (!value) {return null;} // Optional field
       const validEducations = ['SD', 'SMP', 'SMA/SMK', 'D3', 'S1', 'S2', 'S3'];
       return validEducations.includes(value) ? null : 'Pilih pendidikan terakhir yang valid';
     }

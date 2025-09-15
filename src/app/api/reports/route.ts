@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getReportsStatistics, getRecentActivities } from '@/backend/services/guestService';
 
 export async function GET(request: NextRequest) {

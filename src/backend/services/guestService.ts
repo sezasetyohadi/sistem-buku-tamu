@@ -1,7 +1,7 @@
-import { executeQuery } from '../config/db';
+import { guestLogger, dbLogger, safeLog } from '../../lib/logger';
 import { DaftarTamu, JawabanSurvei, GuestFormData, SurveyFormData, DatabaseResult, 
          PertanyaanSurvei, OpsiJawaban, PendidikanTerakhir, Profesi, Admin } from '../../types/database-types';
-import { guestLogger, dbLogger, safeLog } from '../../lib/logger';
+import { executeQuery } from '../config/db';
 
 // Guest Service untuk tabel daftar_tamu
 export async function getAllGuests(): Promise<DaftarTamu[]> {
@@ -452,7 +452,7 @@ export async function getSurveyStatistics(): Promise<any> {
   
   return {
     totalSurveys: total[0]?.total || 0,
-    averageRating: "0.00",
+    averageRating: '0.00',
     ratingDistribution: []
   };
 }

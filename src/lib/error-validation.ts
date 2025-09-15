@@ -3,9 +3,9 @@
  * Simple validation script to verify our error handling components work correctly
  */
 
-import { ErrorRecoveryManager } from '@/lib/error-recovery';
 import { ApiClient } from '@/lib/api-interceptors';
 import { createError } from '@/lib/error-handler';
+import { ErrorRecoveryManager } from '@/lib/error-recovery';
 
 // Simple validation function
 export function validateErrorHandling() {

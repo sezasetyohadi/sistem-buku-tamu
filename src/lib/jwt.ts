@@ -189,7 +189,7 @@ export function extractTokenFromHeader(authHeader: string | null): string | null
 export function getTokenExpiry(token: string): number | null {
   try {
     const decoded = jwt.decode(token) as { exp?: number };
-    if (!decoded || !decoded.exp) return null;
+    if (!decoded || !decoded.exp) {return null;}
     
     const now = Math.floor(Date.now() / 1000);
     return decoded.exp - now;

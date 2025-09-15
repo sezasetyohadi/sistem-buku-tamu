@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { SurveyQuestion } from '@/types/survey-types';
 
@@ -27,7 +27,7 @@ export default function QuestionCard({
   
   // Map rating type IDs to their display names
   const getRatingTypeName = (typeId: number | undefined): string => {
-    if (!typeId) return 'Rating';
+    if (!typeId) {return 'Rating';}
     
     switch(typeId) {
       case 1: return 'Skala 5';

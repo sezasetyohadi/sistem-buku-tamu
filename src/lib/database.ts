@@ -4,6 +4,7 @@
  */
 
 import mysql, { Pool, PoolConnection, PoolOptions, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+
 import { dbLogger } from '@/lib/logger';
 
 // Database configuration interface

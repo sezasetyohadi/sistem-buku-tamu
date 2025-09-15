@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
 import ScrollWave from '@/components/ScrollWave';
 
 export default function LandingPage() {
@@ -27,7 +28,7 @@ export default function LandingPage() {
     return () => clearTimeout(timer);
   }, []);
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading) {return;}
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {

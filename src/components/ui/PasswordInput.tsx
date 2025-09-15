@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
 interface PasswordInputProps {
   id: string;
@@ -22,12 +22,12 @@ export default function PasswordInput({
   name,
   value,
   onChange,
-  placeholder = "Masukkan password",
-  className = "",
+  placeholder = 'Masukkan password',
+  className = '',
   required = false,
   disabled = false,
   label,
-  autoComplete = "current-password",
+  autoComplete = 'current-password',
   showLeftIcon = false,
   focusColor = 'red'
 }: PasswordInputProps) {
@@ -37,10 +37,10 @@ export default function PasswordInput({
     setShowPassword(!showPassword);
   };
 
-  const leftPadding = showLeftIcon ? "pl-10" : "px-4";
+  const leftPadding = showLeftIcon ? 'pl-10' : 'px-4';
   const focusRing = focusColor === 'blue' 
-    ? "focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-    : "focus:ring-2 focus:ring-red-500 focus:border-red-500";
+    ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' 
+    : 'focus:ring-2 focus:ring-red-500 focus:border-red-500';
     
   const baseClassName = `w-full ${leftPadding} pr-12 py-3 border border-gray-300 rounded-lg ${focusRing} transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 ${className}`;
 
@@ -60,7 +60,7 @@ export default function PasswordInput({
           </div>
         )}
         <input
-          type={showPassword ? "text" : "password"}
+          type={showPassword ? 'text' : 'password'}
           id={id}
           name={name}
           value={value}
@@ -84,7 +84,7 @@ export default function PasswordInput({
           onClick={togglePasswordVisibility}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-700 transition-colors duration-200 z-10 hover:bg-gray-100/50 rounded p-1"
           tabIndex={-1}
-          title={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+          title={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
           disabled={disabled}
         >
           {showPassword ? (

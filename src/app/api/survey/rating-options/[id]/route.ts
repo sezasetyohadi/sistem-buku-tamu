@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { getRatingOptions } from '@/backend/services/surveyService';
 
 export async function GET(

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { findGuestByEmail, checkIfSurveySubmitted } from '@/backend/services/guestService';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';

@@ -3,10 +3,11 @@
  * Provides secure file upload functionality with validation and protection
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { createHash, randomBytes } from 'crypto';
 import { writeFile, mkdir, access, constants } from 'fs/promises';
 import { join, extname, basename } from 'path';
-import { createHash, randomBytes } from 'crypto';
+
+import { NextRequest, NextResponse } from 'next/server';
 
 // Configuration
 const UPLOAD_CONFIG = {
@@ -258,7 +259,7 @@ export class SecureFileUpload {
       const maxAge = Date.now() - (maxAgeHours * 60 * 60 * 1000);
 
       for (const file of files) {
-        if (file === '.htaccess') continue; // Skip .htaccess file
+        if (file === '.htaccess') {continue;} // Skip .htaccess file
         
         const filePath = join(UPLOAD_CONFIG.tempDir, file);
         const stats = await stat(filePath);

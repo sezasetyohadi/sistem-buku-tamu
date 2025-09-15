@@ -24,6 +24,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS pesan_email;`);
+  await executeQuery('DROP TABLE IF EXISTS pesan_email;');
   console.log('Pesan_email table dropped successfully');
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+
 import { executeQuery } from '@/backend/config/db';
 
 // Fungsi untuk mencari token berdasarkan email
@@ -7,7 +8,7 @@ const getTokenByEmail = async (email: string): Promise<string | null> => {
   try {
     // Cari tamu berdasarkan email
     const guests = await executeQuery<any[]>(
-      `SELECT dt.id, dt.email FROM daftar_tamu dt WHERE dt.email = ? LIMIT 1`,
+      'SELECT dt.id, dt.email FROM daftar_tamu dt WHERE dt.email = ? LIMIT 1',
       [email]
     );
     
@@ -19,7 +20,7 @@ const getTokenByEmail = async (email: string): Promise<string | null> => {
     
     // Cari token aktif untuk tamu tersebut
     const tokens = await executeQuery<any[]>(
-      `SELECT token FROM tamu_token WHERE tamu_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1`,
+      'SELECT token FROM tamu_token WHERE tamu_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1',
       [tamuId]
     );
     
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     
     // Pesan error yang lebih spesifik berdasarkan jenis error
     let errorMessage = 'Terjadi kesalahan saat mengirim token';
-    let statusCode = 500;
+    const statusCode = 500;
     
     if (error.code === 'EAUTH') {
       errorMessage = 'Gagal autentikasi email. Silakan periksa konfigurasi SMTP di server.';

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdminRefreshToken, generateAdminTokens } from '../../../../lib/jwt';
-import { findByUsername } from '../../../../backend/services/adminService';
+
 import { getConnection } from '../../../../backend/config/db';
+import { findByUsername } from '../../../../backend/services/adminService';
+import { verifyAdminRefreshToken, generateAdminTokens } from '../../../../lib/jwt';
 
 export async function POST(request: NextRequest) {
   let connection;

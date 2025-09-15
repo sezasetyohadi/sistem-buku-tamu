@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { deactivateToken, verifyToken } from '@/backend/services/tokenService';
 
 export async function POST(request: NextRequest) {

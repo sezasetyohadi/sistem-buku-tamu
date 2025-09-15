@@ -1,10 +1,11 @@
-"use client";
-import React from "react";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
-import AuthGuard from "../../components/auth/AuthGuard";
-import { SectionErrorBoundary } from "../../components/error/ErrorBoundary";
-import { getAdminData, clearAdminSessionAndRedirect } from "../../lib/utils";
+'use client';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import React from 'react';
+
+import AuthGuard from '../../components/auth/AuthGuard';
+import { SectionErrorBoundary } from '../../components/error/ErrorBoundary';
+import { getAdminData, clearAdminSessionAndRedirect } from '../../lib/utils';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -447,7 +448,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className={`p-3 sm:p-4 border-t border-gray-200 ${!sidebarOpen ? 'md:px-1 xl:px-2' : ''}`}>
             <button
               onClick={handleLogout}
-              title={!sidebarOpen ? "Logout" : undefined} // Tooltip for collapsed state
+              title={!sidebarOpen ? 'Logout' : undefined} // Tooltip for collapsed state
               className={`flex items-center text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left ${
                 sidebarOpen ? 'px-2 sm:px-3 py-2' : 'px-2 sm:px-3 py-2 md:justify-center'
               }`}

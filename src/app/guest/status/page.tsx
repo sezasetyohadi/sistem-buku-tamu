@@ -1,15 +1,16 @@
-"use client";
+'use client';
 
-import { useState } from "react";
 import { format, parseISO } from 'date-fns';
+import { useState } from 'react';
+
 import { showToast } from '@/lib/toast';
 
 // Tipe data untuk status kunjungan sesuai dengan database
-type GuestStatusType = "Menunggu" | "Terjadwal" | "Datang" | "Selesai";
+type GuestStatusType = 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';
 
 // Fungsi untuk memformat tanggal
 const formatDate = (dateString: string | null | undefined): string => {
-	if (!dateString) return 'Tidak tersedia';
+	if (!dateString) {return 'Tidak tersedia';}
 	try {
 		const date = parseISO(dateString);
 		return format(date, 'dd MMMM yyyy, HH:mm');
@@ -45,25 +46,25 @@ type GuestDetail = {
 
 // Mapping warna untuk status kunjungan
 const statusColor: Record<GuestStatusType, string> = {
-	Menunggu: "bg-yellow-100 text-yellow-800",
-	Terjadwal: "bg-orange-100 text-orange-800",
-	Datang: "bg-blue-100 text-blue-800",
-	Selesai: "bg-green-100 text-green-800",
+	Menunggu: 'bg-yellow-100 text-yellow-800',
+	Terjadwal: 'bg-orange-100 text-orange-800',
+	Datang: 'bg-blue-100 text-blue-800',
+	Selesai: 'bg-green-100 text-green-800',
 };
 
 export default function StatusPengajuanPage() {
-	const [token, setToken] = useState("");
+	const [token, setToken] = useState('');
 	const [guestDetail, setGuestDetail] = useState<GuestDetail | null>(null);
-	const [error, setError] = useState("");
-	const [email, setEmail] = useState("");
+	const [error, setError] = useState('');
+	const [email, setEmail] = useState('');
 	const [showForgotToken, setShowForgotToken] = useState(false);
-	const [forgotTokenMessage, setForgotTokenMessage] = useState("");
+	const [forgotTokenMessage, setForgotTokenMessage] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
 	// Format tanggal untuk tampilan yang konsisten
 	const formatDate = (dateString?: string | null) => {
-		if (!dateString) return "Belum tersedia";
+		if (!dateString) {return 'Belum tersedia';}
 		
 		try {
 			const date = new Date(dateString);
@@ -75,17 +76,17 @@ export default function StatusPengajuanPage() {
 				minute: '2-digit'
 			}).format(date);
 		} catch (error) {
-			return "Format tanggal tidak valid";
+			return 'Format tanggal tidak valid';
 		}
 	};
 
 	const handleCheck = async () => {
 		if (!token.trim()) {
-			setError("Silakan masukkan token terlebih dahulu");
+			setError('Silakan masukkan token terlebih dahulu');
 			return;
 		}
 
-		setError("");
+		setError('');
 		setIsLoading(true);
 		
 		try {
@@ -102,10 +103,10 @@ export default function StatusPengajuanPage() {
 			if (response.ok && data.success && data.data.details) {
 				// Mapping status dari API ke GuestStatusType
 				const statusMapping: Record<string, GuestStatusType> = {
-					registered: "Menunggu",
-					scheduled: "Terjadwal",
-					checked_in: "Datang",
-					completed: "Selesai"
+					registered: 'Menunggu',
+					scheduled: 'Terjadwal',
+					checked_in: 'Datang',
+					completed: 'Selesai'
 				};
 				
 				// Mengambil detail tamu dari respons API
@@ -139,41 +140,41 @@ export default function StatusPengajuanPage() {
 				setGuestDetail(guestData);
 			} else {
 				setGuestDetail(null);
-				setError(data.message || "Token tidak ditemukan. Pastikan token sudah benar.");
+				setError(data.message || 'Token tidak ditemukan. Pastikan token sudah benar.');
 			}
 		} catch (err) {
-			console.error("Error fetching guest data:", err);
+			console.error('Error fetching guest data:', err);
 			setGuestDetail(null);
-			setError("Terjadi kesalahan saat mengambil data. Silakan coba lagi.");
+			setError('Terjadi kesalahan saat mengambil data. Silakan coba lagi.');
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	const handleReset = () => {
-		setToken("");
+		setToken('');
 		setGuestDetail(null);
-		setError("");
+		setError('');
 		setShowForgotToken(false);
-		setForgotTokenMessage("");
-		setEmail("");
+		setForgotTokenMessage('');
+		setEmail('');
 	};
 
 	const handleForgotToken = async () => {
 		if (!email.trim()) {
-			setForgotTokenMessage("Silakan masukkan email Anda");
+			setForgotTokenMessage('Silakan masukkan email Anda');
 			return;
 		}
 
 		try {
 			setIsSubmitting(true);
-			setForgotTokenMessage("");
+			setForgotTokenMessage('');
 
 			// Kirim permintaan ke API untuk mendapatkan token
-			const response = await fetch("/api/forgot-token", {
-				method: "POST",
+			const response = await fetch('/api/forgot-token', {
+				method: 'POST',
 				headers: {
-					"Content-Type": "application/json",
+					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({ email }),
 			});
@@ -182,15 +183,15 @@ export default function StatusPengajuanPage() {
 
 			if (response.ok) {
 				// Tampilkan notifikasi bahwa token berhasil dikirim
-				showToast.success("Token berhasil dikirimkan");
+				showToast.success('Token berhasil dikirimkan');
 				// Reset form dan kembali ke halaman input token
 				handleReset();
 			} else {
 				// Tampilkan pesan error yang lebih informatif dari server
-				setForgotTokenMessage(data.error || "Email tidak ditemukan");
+				setForgotTokenMessage(data.error || 'Email tidak ditemukan');
 			}
 		} catch (err) {
-			setForgotTokenMessage("Terjadi kesalahan saat mengirim token");
+			setForgotTokenMessage('Terjadi kesalahan saat mengirim token');
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -230,7 +231,7 @@ export default function StatusPengajuanPage() {
 					disabled={isLoading}
 					className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
 				>
-					{isLoading ? "Mencari..." : "Cek Status"}
+					{isLoading ? 'Mencari...' : 'Cek Status'}
 				</button>
 				<button
 					onClick={() => setShowForgotToken(true)}
@@ -264,7 +265,7 @@ export default function StatusPengajuanPage() {
 						disabled={isSubmitting}
 						className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
 					>
-						{isSubmitting ? "Mengirim..." : "Kirim"}
+						{isSubmitting ? 'Mengirim...' : 'Kirim'}
 					</button>
 					<button
 						onClick={() => setShowForgotToken(false)}
@@ -312,7 +313,7 @@ export default function StatusPengajuanPage() {
 					</div>
 
 					{/* Container for scheduled visit information */}
-					{(guestDetail.status_kunjungan === "Terjadwal" || guestDetail.status_kunjungan === "Datang" || guestDetail.status_kunjungan === "Selesai") && (
+					{(guestDetail.status_kunjungan === 'Terjadwal' || guestDetail.status_kunjungan === 'Datang' || guestDetail.status_kunjungan === 'Selesai') && (
 						<div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 mt-4">
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
 								<div>

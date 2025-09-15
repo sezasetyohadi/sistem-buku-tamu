@@ -23,6 +23,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS login_attempts;`);
+  await executeQuery('DROP TABLE IF EXISTS login_attempts;');
   console.log('Login_attempts table dropped successfully');
 }

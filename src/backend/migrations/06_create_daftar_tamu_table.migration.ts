@@ -42,6 +42,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS daftar_tamu;`);
+  await executeQuery('DROP TABLE IF EXISTS daftar_tamu;');
   console.log('Daftar_tamu table dropped successfully');
 }

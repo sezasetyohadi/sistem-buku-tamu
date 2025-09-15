@@ -1,7 +1,8 @@
+import bcrypt from 'bcrypt';
+
 import { adminService } from '../../lib/database-service';
 import { dbLogger } from '../../lib/logger';
 import Admin from '../models/adminModel';
-import bcrypt from 'bcrypt';
 
 export async function findByUsername(username: string): Promise<Admin | null> {
   try {

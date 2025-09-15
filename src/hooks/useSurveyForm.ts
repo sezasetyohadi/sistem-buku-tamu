@@ -1,5 +1,11 @@
 // Custom hooks for survey functionality
 import { useState, useEffect } from 'react';
+
+import { 
+  fetchSurveyQuestions, 
+  fetchRatingOptions, 
+  fetchLookupData 
+} from '@/lib/survey-api';
 import { 
   SurveyQuestion, 
   RatingOption, 
@@ -7,11 +13,6 @@ import {
   GuestIdentity, 
   LookupData 
 } from '@/types/survey-types';
-import { 
-  fetchSurveyQuestions, 
-  fetchRatingOptions, 
-  fetchLookupData 
-} from '@/lib/survey-api';
 
 export function useDropdownState() {
   const [focusedDropdowns, setFocusedDropdowns] = useState<{[key: string]: boolean}>({});
@@ -113,7 +114,7 @@ export function useSurveyData() {
 
   // Handle rating change for questions
   const handleRatingChange = (questionId: number, optionId: number, ratingTypeId?: number) => {
-    if (isNaN(optionId)) return; // Ignore invalid options
+    if (isNaN(optionId)) {return;} // Ignore invalid options
     
     setResponses(prev => {
       const responseKey = ratingTypeId ? `${questionId}-${ratingTypeId}` : questionId;

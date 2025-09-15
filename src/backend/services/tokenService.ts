@@ -1,5 +1,6 @@
-import { executeQuery } from '../config/db';
 import crypto from 'crypto';
+
+import { executeQuery } from '../config/db';
 
 // Interface for token data
 export interface TokenData {
@@ -49,7 +50,7 @@ export async function verifyToken(token: string): Promise<TokenData | null> {
   try {
     // Find token in database
     const tokens = await executeQuery<TokenData[]>(
-      `SELECT * FROM tamu_token WHERE token = ? AND is_active = 1`,
+      'SELECT * FROM tamu_token WHERE token = ? AND is_active = 1',
       [token]
     );
     
@@ -69,7 +70,7 @@ export async function deactivateToken(tokenId: number): Promise<boolean> {
   try {
     // Mark token as inactive
     await executeQuery(
-      `UPDATE tamu_token SET is_active = 0 WHERE id = ?`,
+      'UPDATE tamu_token SET is_active = 0 WHERE id = ?',
       [tokenId]
     );
     
@@ -155,7 +156,7 @@ export async function getTokenStatus(token: string): Promise<{ tamuId: number; s
 export async function getTokensByTamuId(tamuId: number): Promise<TokenData[]> {
   try {
     const tokens = await executeQuery<TokenData[]>(
-      `SELECT * FROM tamu_token WHERE tamu_id = ? ORDER BY created_at DESC`,
+      'SELECT * FROM tamu_token WHERE tamu_id = ? ORDER BY created_at DESC',
       [tamuId]
     );
     
@@ -170,7 +171,7 @@ export async function getTokensByTamuId(tamuId: number): Promise<TokenData[]> {
 export async function cleanupOldTokens(daysOld: number = 30): Promise<number> {
   try {
     const result = await executeQuery<any>(
-      `DELETE FROM tamu_token WHERE is_active = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ? DAY)`,
+      'DELETE FROM tamu_token WHERE is_active = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ? DAY)',
       [daysOld]
     );
     

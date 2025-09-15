@@ -4,8 +4,8 @@
  */
 
 import { GlobalErrorHandler, createError, ErrorType, AppError, ErrorContext } from './error-handler';
-import { showToast } from './toast';
 import { logger } from './logger';
+import { showToast } from './toast';
 
 export interface RetryConfig {
   maxAttempts: number;
@@ -215,7 +215,7 @@ export class ErrorRecoveryManager {
   ): void {
     const actions = this.buildRecoveryActions(error, context, errorId, options);
     
-    if (actions.length === 0) return;
+    if (actions.length === 0) {return;}
 
     // Custom toast with action buttons (simplified for now)
     showToast.error(`${error.message} - Tindakan pemulihan tersedia.`);

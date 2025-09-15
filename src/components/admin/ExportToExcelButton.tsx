@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import { showToast } from '@/lib/toast';
 
 interface ExportButtonProps {
@@ -9,8 +10,8 @@ interface ExportButtonProps {
 
 const ExportToExcelButton: React.FC<ExportButtonProps> = ({ 
   url, 
-  className = "bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center",
-  buttonText = "Ekspor Excel"
+  className = 'bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center',
+  buttonText = 'Ekspor Excel'
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   

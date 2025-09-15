@@ -20,7 +20,7 @@ export function useLazyLoading<T extends HTMLElement>(
   }, []);
 
   useEffect(() => {
-    if (!ref) return;
+    if (!ref) {return;}
     
     let observer: IntersectionObserver;
     

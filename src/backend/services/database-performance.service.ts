@@ -3,9 +3,10 @@
  * Provides optimized query functions and performance monitoring
  */
 
-import { executeQuery, executeQueryCached, getDatabaseStats, getPoolStatus } from '../config/db';
-import { dbLogger } from '@/lib/logger';
 import { handleDatabaseError } from '@/lib/error-handling';
+import { dbLogger } from '@/lib/logger';
+
+import { executeQuery, executeQueryCached, getDatabaseStats, getPoolStatus } from '../config/db';
 
 export interface GuestQueryFilters {
   status?: string;
@@ -47,8 +48,8 @@ export async function getGuestsPaginated(filters: GuestQueryFilters = {}): Promi
   } = filters;
 
   // Build optimized query with proper indexing
-  let whereConditions: string[] = [];
-  let queryParams: any[] = [];
+  const whereConditions: string[] = [];
+  const queryParams: any[] = [];
 
   if (status) {
     whereConditions.push('dt.status_kunjungan = ?');
@@ -193,7 +194,7 @@ export async function getAdminByUsername(username: string) {
  * Batch update for better performance
  */
 export async function updateGuestStatus(guestIds: number[], status: string): Promise<void> {
-  if (guestIds.length === 0) return;
+  if (guestIds.length === 0) {return;}
 
   const placeholders = guestIds.map(() => '?').join(',');
   const query = `
@@ -235,7 +236,7 @@ export async function getPerformanceMetrics() {
  * Optimized search across multiple fields
  */
 export async function searchGuests(searchTerm: string, limit: number = 10): Promise<GuestSummary[]> {
-  if (!searchTerm.trim()) return [];
+  if (!searchTerm.trim()) {return [];}
 
   try {
     const results = await executeQuery<GuestSummary[]>(

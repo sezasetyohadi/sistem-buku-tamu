@@ -1,9 +1,10 @@
-"use client";
-import React from "react";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
-import Script from "next/script";
-import { SectionErrorBoundary } from "../../components/error/ErrorBoundary";
+'use client';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import Script from 'next/script';
+import React from 'react';
+
+import { SectionErrorBoundary } from '../../components/error/ErrorBoundary';
 
 // Route prefetching cache with performance optimizations
 const routeCache = new Map<string, Promise<any>>();

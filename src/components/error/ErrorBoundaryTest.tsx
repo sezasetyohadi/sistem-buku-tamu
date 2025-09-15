@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import { ComponentErrorBoundary, SectionErrorBoundary, PageErrorBoundary } from './ErrorBoundary';
 import { withFormErrorBoundary, withDataErrorBoundary, AsyncErrorBoundary } from './ErrorBoundaryWrappers';
 

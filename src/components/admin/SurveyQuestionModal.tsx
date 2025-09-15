@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+
 import Modal from '@/components/ui/Modal';
 
 interface RatingType {
@@ -130,7 +131,7 @@ export default function SurveyQuestionModal({
     try {
       setIsLoadingRatingTypes(true);
       const response = await fetch('/api/survey/rating-types');
-      if (!response.ok) throw new Error('Failed to fetch rating types');
+      if (!response.ok) {throw new Error('Failed to fetch rating types');}
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
         setRatingTypes(data.data);
@@ -241,7 +242,7 @@ export default function SurveyQuestionModal({
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title={isEditMode ? "Edit Pertanyaan" : "Tambah Pertanyaan Baru"} 
+      title={isEditMode ? 'Edit Pertanyaan' : 'Tambah Pertanyaan Baru'} 
       size="md"
     >
       <div className="space-y-6">

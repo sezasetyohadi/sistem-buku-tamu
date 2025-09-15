@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { updateGuestCheckIn, Guest } from '@/backend/models/guestModel';
 
 export async function PATCH(

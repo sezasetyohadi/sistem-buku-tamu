@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { testConnection } from '@/backend/config/db';
 import migrationManager from '@/backend/migrations/migrationManager';
 

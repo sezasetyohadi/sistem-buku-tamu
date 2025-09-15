@@ -93,7 +93,7 @@ export default function DatabasePerformanceDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!autoRefresh) {return;}
 
     const interval = setInterval(fetchMetrics, 10000); // Refresh every 10 seconds
     return () => clearInterval(interval);
@@ -149,7 +149,7 @@ export default function DatabasePerformanceDashboard() {
     );
   }
 
-  if (!metrics) return null;
+  if (!metrics) {return null;}
 
   const slowQueryPercent = metrics.database.totalQueries > 0 
     ? (metrics.database.slowQueries / metrics.database.totalQueries) * 100 

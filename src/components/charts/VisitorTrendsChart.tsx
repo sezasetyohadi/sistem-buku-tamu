@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +11,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import React from 'react';
 import { Line } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -79,7 +79,7 @@ const VisitorTrendsChart: React.FC<VisitorTrendsChartProps> = ({ data }) => {
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             return `${context.parsed.y} kunjungan`;
           }
         }

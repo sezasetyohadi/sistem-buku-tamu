@@ -3,12 +3,13 @@
  * Uses the new authentication context for proper state management
  */
 
-"use client";
-import React from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
-import { authLogger } from "@/lib/logger";
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import React from 'react';
+
+import { useAuth } from '@/contexts/AuthContext';
+import { authLogger } from '@/lib/logger';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -44,7 +45,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Get display name and initial from user data
   const getDisplayInfo = () => {
-    if (!user) return { name: 'Admin', initial: 'A', profilePicture: null };
+    if (!user) {return { name: 'Admin', initial: 'A', profilePicture: null };}
     
     const displayName = user.nama_lengkap 
       ? user.nama_lengkap.split(' ')[0] 

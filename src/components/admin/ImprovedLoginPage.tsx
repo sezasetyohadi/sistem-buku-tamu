@@ -3,25 +3,26 @@
  * Uses the new authentication context for proper state management
  */
 
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
-import { authLogger } from "@/lib/logger";
-import { showToast } from "@/lib/toast";
-import PasswordInput from "@/components/ui/PasswordInput";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import PasswordInput from '@/components/ui/PasswordInput';
+import { useAuth } from '@/contexts/AuthContext';
+import { authLogger } from '@/lib/logger';
+import { showToast } from '@/lib/toast';
 
 export default function ImprovedLoginPage() {
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    username: '',
+    password: '',
     rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [isForgotPasswordLoading, setIsForgotPasswordLoading] = useState(false);
 
   const { login, isAuthenticated, user, error } = useAuth();

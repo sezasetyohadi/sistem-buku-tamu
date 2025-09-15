@@ -5,8 +5,9 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react';
+
 import { authLogger, safeLog } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
 

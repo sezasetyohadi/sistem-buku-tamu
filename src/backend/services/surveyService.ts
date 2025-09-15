@@ -73,10 +73,10 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
     );
 
     // Since tipe field is removed, we default to rating type
-    let tipe_jawaban = 'rating';
+    const tipe_jawaban = 'rating';
 
     // Get rating options if it's a rating question
-    let ratingOptions: RatingOption[] = [];
+    const ratingOptions: RatingOption[] = [];
     if (tipe_jawaban === 'rating' && questionRatingTypes.length > 0) {
       for (const ratingType of questionRatingTypes) {
         const options = await executeQuery<RatingOption[]>(
@@ -269,10 +269,10 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
   );
 
   // Since tipe field is removed, we default to rating type
-  let tipe_jawaban = 'rating';
+  const tipe_jawaban = 'rating';
 
   // Get rating options if it's a rating question
-  let ratingOptions: RatingOption[] = [];
+  const ratingOptions: RatingOption[] = [];
   if (tipe_jawaban === 'rating' && questionRatingTypes.length > 0) {
     for (const ratingType of questionRatingTypes) {
       const options = await executeQuery<RatingOption[]>(
@@ -405,7 +405,7 @@ async function getProfesiId(profesi: string): Promise<number | null> {
 async function getTujuanKunjunganId(tujuan: string): Promise<number | null> {
   try {
     // Handle "Lainnya" option specially
-    if (tujuan === "Lainnya") {
+    if (tujuan === 'Lainnya') {
       // Return ID 999 for "Lainnya"
       return 999;
     }

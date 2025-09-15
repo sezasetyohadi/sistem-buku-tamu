@@ -1,12 +1,15 @@
-"use client";
+'use client';
 
-import { useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
+
 import Card from '@/components/ui/Card';
 import { useSurveyData, useDropdownState } from '@/hooks/useSurveyForm';
 import { submitSurvey } from '@/lib/survey-api';
-import LoadingState from '../guest/LoadingState';
-import { SurveySubmission } from '@/types/survey-types';
 import { showToast } from '@/lib/toast';
+import { SurveySubmission } from '@/types/survey-types';
+
+import LoadingState from '../guest/LoadingState';
+
 
 // Lazy loaded components
 const GuestIdentityForm = lazy(() => import('./GuestIdentityForm'));

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 
@@ -6,7 +6,7 @@ interface LoadingStateProps {
   message?: string;
 }
 
-export default function LoadingState({ message = "Memuat survey..." }: LoadingStateProps) {
+export default function LoadingState({ message = 'Memuat survey...' }: LoadingStateProps) {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
       <div className="text-center">

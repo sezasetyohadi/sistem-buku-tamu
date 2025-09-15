@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { getAdminData, getAdminSessionData, clearAdminSessionAndRedirect } from "../../../lib/utils";
-import PasswordInput from "../../../components/ui/PasswordInput";
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import PasswordInput from '../../../components/ui/PasswordInput';
+import { getAdminData, getAdminSessionData, clearAdminSessionAndRedirect } from '../../../lib/utils';
 
 interface AdminProfile {
   id: number;
@@ -22,28 +23,28 @@ export default function AdminProfile() {
   
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    fullName: "",
-    email: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+    fullName: '',
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
-  const [lastModified, setLastModified] = useState<string>("");
+  const [lastModified, setLastModified] = useState<string>('');
   const router = useRouter();
 
     // Auto-hide message after 5 seconds
   useEffect(() => {
     if (message.text) {
       const timer = setTimeout(() => {
-        setMessage({ type: "", text: "" });
+        setMessage({ type: '', text: '' });
       }, 5000); // 5 seconds
 
       return () => clearTimeout(timer);
@@ -95,9 +96,9 @@ export default function AdminProfile() {
           setEditForm({
             fullName: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
             email: data.admin.email || adminData.email || '',
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
           });
 
           // Dispatch event to update layout component
@@ -123,9 +124,9 @@ export default function AdminProfile() {
           setEditForm({
             fullName: adminData.nama_lengkap || 'Administrator',
             email: adminData.email || '',
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
           });
         }
       } catch (error) {
@@ -147,7 +148,7 @@ export default function AdminProfile() {
   const handleEdit = () => {
     if (profile) {
       setIsEditing(true);
-      setMessage({ type: "", text: "" });
+      setMessage({ type: '', text: '' });
     }
   };
 
@@ -157,12 +158,12 @@ export default function AdminProfile() {
       setEditForm({
         fullName: profile.nama_lengkap,
         email: profile.email,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
       });
     }
-    setMessage({ type: "", text: "" });
+    setMessage({ type: '', text: '' });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,41 +181,41 @@ export default function AdminProfile() {
 
   const getPasswordStrength = (password: string) => {
     let strength = 0;
-    let feedback = [];
+    const feedback = [];
 
     if (password.length >= 8) {
       strength += 1;
     } else {
-      feedback.push("Minimal 8 karakter");
+      feedback.push('Minimal 8 karakter');
     }
 
     if (/[A-Z]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push("Huruf besar");
+      feedback.push('Huruf besar');
     }
 
     if (/[a-z]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push("Huruf kecil");
+      feedback.push('Huruf kecil');
     }
 
     if (/\d/.test(password)) {
       strength += 1;
     } else {
-      feedback.push("Angka");
+      feedback.push('Angka');
     }
 
     if (/[^A-Za-z0-9]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push("Simbol khusus");
+      feedback.push('Simbol khusus');
     }
 
-    const levels = ["Sangat Lemah", "Lemah", "Sedang", "Kuat", "Sangat Kuat"];
-    const colors = ["text-red-600", "text-orange-600", "text-yellow-600", "text-blue-600", "text-green-600"];
-    const bgColors = ["bg-red-100", "bg-orange-100", "bg-yellow-100", "bg-blue-100", "bg-green-100"];
+    const levels = ['Sangat Lemah', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
+    const colors = ['text-red-600', 'text-orange-600', 'text-yellow-600', 'text-blue-600', 'text-green-600'];
+    const bgColors = ['bg-red-100', 'bg-orange-100', 'bg-yellow-100', 'bg-blue-100', 'bg-green-100'];
 
     return {
       score: strength,
@@ -246,19 +247,19 @@ export default function AdminProfile() {
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        setMessage({ type: "error", text: "Format file tidak didukung. Gunakan JPEG, PNG, atau WebP" });
+        setMessage({ type: 'error', text: 'Format file tidak didukung. Gunakan JPEG, PNG, atau WebP' });
         return;
       }
 
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        setMessage({ type: "error", text: "Ukuran file terlalu besar. Maksimal 5MB" });
+        setMessage({ type: 'error', text: 'Ukuran file terlalu besar. Maksimal 5MB' });
         return;
       }
 
       setSelectedFile(file);
-      setMessage({ type: "", text: "" });
+      setMessage({ type: '', text: '' });
       
       // Create preview URL
       const fileUrl = URL.createObjectURL(file);
@@ -278,7 +279,7 @@ export default function AdminProfile() {
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        setMessage({ type: "error", text: "Format file tidak didukung. Gunakan JPEG, PNG, atau WebP" });
+        setMessage({ type: 'error', text: 'Format file tidak didukung. Gunakan JPEG, PNG, atau WebP' });
         // Reset input
         e.target.value = '';
         return;
@@ -287,14 +288,14 @@ export default function AdminProfile() {
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        setMessage({ type: "error", text: "Ukuran file terlalu besar. Maksimal 5MB" });
+        setMessage({ type: 'error', text: 'Ukuran file terlalu besar. Maksimal 5MB' });
         // Reset input
         e.target.value = '';
         return;
       }
 
       setSelectedFile(file);
-      setMessage({ type: "", text: "" });
+      setMessage({ type: '', text: '' });
       
       // Create preview URL
       const fileUrl = URL.createObjectURL(file);
@@ -304,7 +305,7 @@ export default function AdminProfile() {
 
   const handleDeleteProfilePicture = async () => {
     setUploadingPicture(true);
-    setMessage({ type: "", text: "" });
+    setMessage({ type: '', text: '' });
 
     try {
       // Check JWT authentication
@@ -330,7 +331,7 @@ export default function AdminProfile() {
       const data = await response.json();
 
       if (data.success) {
-        setMessage({ type: "success", text: "Foto profil berhasil dihapus!" });
+        setMessage({ type: 'success', text: 'Foto profil berhasil dihapus!' });
         setShowDeleteConfirm(false);
         
         // Clean up any preview URL
@@ -359,10 +360,10 @@ export default function AdminProfile() {
           detail: { profilePicture: null } 
         }));
       } else {
-        setMessage({ type: "error", text: data.message || "Gagal menghapus foto profil" });
+        setMessage({ type: 'error', text: data.message || 'Gagal menghapus foto profil' });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Gagal menghapus foto profil. Silakan coba lagi." });
+      setMessage({ type: 'error', text: 'Gagal menghapus foto profil. Silakan coba lagi.' });
     } finally {
       setUploadingPicture(false);
     }
@@ -370,12 +371,12 @@ export default function AdminProfile() {
 
   const handleUploadPicture = async () => {
     if (!selectedFile) {
-      setMessage({ type: "error", text: "Pilih file terlebih dahulu" });
+      setMessage({ type: 'error', text: 'Pilih file terlebih dahulu' });
       return;
     }
 
     setUploadingPicture(true);
-    setMessage({ type: "", text: "" });
+    setMessage({ type: '', text: '' });
 
     try {
       // Check JWT authentication
@@ -405,7 +406,7 @@ export default function AdminProfile() {
       const data = await response.json();
 
       if (data.success) {
-        setMessage({ type: "success", text: "Foto profil berhasil diunggah!" });
+        setMessage({ type: 'success', text: 'Foto profil berhasil diunggah!' });
         setSelectedFile(null);
         
         // Clean up preview URL
@@ -433,10 +434,10 @@ export default function AdminProfile() {
           detail: { profilePicture: data.profilePicture } 
         }));
       } else {
-        setMessage({ type: "error", text: data.message || "Gagal mengunggah foto profil" });
+        setMessage({ type: 'error', text: data.message || 'Gagal mengunggah foto profil' });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Gagal mengunggah foto profil. Silakan coba lagi." });
+      setMessage({ type: 'error', text: 'Gagal mengunggah foto profil. Silakan coba lagi.' });
     } finally {
       setUploadingPicture(false);
     }
@@ -445,25 +446,25 @@ export default function AdminProfile() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage({ type: "", text: "" });
+    setMessage({ type: '', text: '' });
 
     try {
       // Validate passwords if changing
       if (editForm.newPassword || editForm.confirmPassword) {
         if (!editForm.currentPassword) {
-          setMessage({ type: "error", text: "Password saat ini diperlukan untuk mengubah password" });
+          setMessage({ type: 'error', text: 'Password saat ini diperlukan untuk mengubah password' });
           setLoading(false);
           return;
         }
         
         if (editForm.newPassword !== editForm.confirmPassword) {
-          setMessage({ type: "error", text: "Password baru dan konfirmasi password tidak cocok" });
+          setMessage({ type: 'error', text: 'Password baru dan konfirmasi password tidak cocok' });
           setLoading(false);
           return;
         }
         
         if (editForm.newPassword.length < 8) {
-          setMessage({ type: "error", text: "Password baru minimal 8 karakter" });
+          setMessage({ type: 'error', text: 'Password baru minimal 8 karakter' });
           setLoading(false);
           return;
         }
@@ -471,7 +472,7 @@ export default function AdminProfile() {
         // Enhanced password strength validation
         const passwordStrength = getPasswordStrength(editForm.newPassword);
         if (passwordStrength.score < 3) {
-          setMessage({ type: "error", text: "Password terlalu lemah. Gunakan kombinasi huruf besar, kecil, angka, dan simbol." });
+          setMessage({ type: 'error', text: 'Password terlalu lemah. Gunakan kombinasi huruf besar, kecil, angka, dan simbol.' });
           setLoading(false);
           return;
         }
@@ -524,22 +525,22 @@ export default function AdminProfile() {
           detail: { nama_lengkap: data.admin.nama_lengkap } 
         }));
 
-        setMessage({ type: "success", text: "Profile berhasil diperbarui!" });
+        setMessage({ type: 'success', text: 'Profile berhasil diperbarui!' });
         setIsEditing(false);
         
         // Clear password fields
         setEditForm(prev => ({
           ...prev,
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
         }));
       } else {
-        setMessage({ type: "error", text: data.message || "Gagal memperbarui profile" });
+        setMessage({ type: 'error', text: data.message || 'Gagal memperbarui profile' });
       }
       
     } catch (error) {
-      setMessage({ type: "error", text: "Gagal memperbarui profile. Silakan coba lagi." });
+      setMessage({ type: 'error', text: 'Gagal memperbarui profile. Silakan coba lagi.' });
     } finally {
       setLoading(false);
     }
@@ -645,7 +646,7 @@ export default function AdminProfile() {
             <span>{message.text}</span>
           </div>
           <button
-            onClick={() => setMessage({ type: "", text: "" })}
+            onClick={() => setMessage({ type: '', text: '' })}
             className={`ml-4 ${message.type === 'success' ? 'text-green-500 hover:text-green-700' : 'text-red-500 hover:text-red-700'} transition-colors`}
             title="Tutup"
           >

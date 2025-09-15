@@ -25,6 +25,6 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TABLE IF EXISTS jenis_rating;`);
+  await executeQuery('DROP TABLE IF EXISTS jenis_rating;');
   console.log('Jenis_rating table dropped successfully');
 }

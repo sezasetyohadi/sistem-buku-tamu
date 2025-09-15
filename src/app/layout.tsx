@@ -1,32 +1,33 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "react-hot-toast";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { LoadingProvider } from "@/components/ui/LoadingState";
-import { PageErrorBoundary } from "@/components/error/ErrorBoundary";
-import "@/lib/global-error-handler"; // Initialize global error handling
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import { Toaster } from 'react-hot-toast';
+
+import { PageErrorBoundary } from '@/components/error/ErrorBoundary';
+import { LoadingProvider } from '@/components/ui/LoadingState';
+import { AuthProvider } from '@/contexts/AuthContext';
+import '@/lib/global-error-handler'; // Initialize global error handling
+import './globals.css';
 
 // Optimized font loading with display=swap and preload
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap", // Show fallback font until custom font loads
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+  display: 'swap', // Show fallback font until custom font loads
   preload: true,
   adjustFontFallback: true,
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap", // Show fallback font until custom font loads
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap', // Show fallback font until custom font loads
   preload: true,
   adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
-  title: "Sistem Buku Tamu Digital - DISNAKERTRANS Jawa Tengah",
-  description: "Sistem Buku Tamu Digital Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah",
+  title: 'Sistem Buku Tamu Digital - DISNAKERTRANS Jawa Tengah',
+  description: 'Sistem Buku Tamu Digital Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah',
 };
 
 export default function RootLayout({

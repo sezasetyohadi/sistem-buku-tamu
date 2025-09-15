@@ -1,5 +1,6 @@
-import * as ExcelJS from 'exceljs';
 import { format } from 'date-fns';
+import * as ExcelJS from 'exceljs';
+
 import { SurveyQuestion, SurveyResponse } from '@/types/survey-types';
 
 /**
@@ -20,7 +21,7 @@ export class SurveyExportService {
   ): Promise<ExcelJS.Workbook> {
     // Get the current year for title
     const currentYear = new Date().getFullYear();
-    const dateRange = `tanggal data (rentang kapan sampai kapan)`;
+    const dateRange = 'tanggal data (rentang kapan sampai kapan)';
     
     // Create a new workbook and worksheet
     const workbook = new ExcelJS.Workbook();
@@ -97,7 +98,7 @@ export class SurveyExportService {
     // Group questions by their section ID
     const questionGroups = questions.reduce<Record<number, SurveyQuestion[]>>((acc, q) => {
       const key = q.section_id || 0;
-      if (!acc[key]) acc[key] = [];
+      if (!acc[key]) {acc[key] = [];}
       acc[key].push(q);
       return acc;
     }, {});

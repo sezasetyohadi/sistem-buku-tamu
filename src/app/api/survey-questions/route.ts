@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { getAllSurveyQuestions, getSurveyOptions } from '@/backend/services/guestService';
 
 export async function GET() {

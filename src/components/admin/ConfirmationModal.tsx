@@ -1,4 +1,4 @@
-import Modal from "../ui/Modal";
+import Modal from '../ui/Modal';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -19,9 +19,9 @@ export default function ConfirmationModal({
   onConfirm,
   title,
   message,
-  confirmButtonText = "Ya, Hapus Data",
-  cancelButtonText = "Batal",
-  confirmButtonColor = "bg-red-600 hover:bg-red-700",
+  confirmButtonText = 'Ya, Hapus Data',
+  cancelButtonText = 'Batal',
+  confirmButtonColor = 'bg-red-600 hover:bg-red-700',
   isLoading = false,
   itemName
 }: ConfirmationModalProps) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import Modal from '@/components/ui/Modal';
 
 interface SurveyResponse {
@@ -66,13 +67,13 @@ export default function SurveyResponseDetailModal({
   }, [isOpen, response]);
 
   const fetchQuestionDetails = async () => {
-    if (!response) return;
+    if (!response) {return;}
     
     try {
       setLoading(true);
       
       // Get all questions first
-      const questionResponse = await fetch(`/api/survey/questions`);
+      const questionResponse = await fetch('/api/survey/questions');
       const questionData = await questionResponse.json();
       
       if (!questionData.success) {
@@ -94,7 +95,7 @@ export default function SurveyResponseDetailModal({
       const questionDetailsPromises = questionTexts.map(async (questionText) => {
         // Find the question by matching the text
         const question = questionData.data.find((q: any) => q.pertanyaan === questionText);
-        if (!question) return null;
+        if (!question) {return null;}
 
         // Find detailed answers for this question
         const detailedAnswers = detailedAnswersData.data.filter(
@@ -180,7 +181,7 @@ export default function SurveyResponseDetailModal({
     }
   };
 
-  if (!response) return null;
+  if (!response) {return null;}
 
   return (
     <Modal 

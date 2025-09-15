@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { GuestIdentity, LookupData } from '@/types/survey-types';
+import { useState, useRef } from 'react';
+
 import { fetchGuestByEmail, mapGuestDataToIdentity } from '@/lib/guest-api';
 import { showToast } from '@/lib/toast';
+import { GuestIdentity, LookupData } from '@/types/survey-types';
 
 interface GuestIdentityFormProps {
   guestIdentity: GuestIdentity;
@@ -25,7 +26,6 @@ export default function GuestIdentityForm({
   handleDropdownChange
 }: GuestIdentityFormProps) {
   const [loading, setLoading] = useState(false);
-  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previousEmailRef = useRef<string>('');
 
@@ -38,9 +38,6 @@ export default function GuestIdentityForm({
     if (previousEmailRef.current === email) {
       return;
     }
-
-    // Reset warning state when email changes
-    setAlreadySubmitted(false);
 
     // Clear any existing timeout
     if (emailTimeoutRef.current) {
@@ -59,8 +56,6 @@ export default function GuestIdentityForm({
           if (result.found) {
             // Check if this guest has already submitted a survey
             if (result.hasSubmittedSurvey) {
-              // Silently set the flag but don't show a warning
-              setAlreadySubmitted(true);
               // Don't auto-fill the form for emails that have already submitted a survey
             } else {
               // Map guest data to form fields

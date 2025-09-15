@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
 import PasswordInput from '../../components/ui/PasswordInput';
 
 export default function ResetPasswordPage() {
@@ -10,20 +11,20 @@ export default function ResetPasswordPage() {
   const token = searchParams.get('token');
 
   const [formData, setFormData] = useState({
-    newPassword: "",
-    confirmPassword: "",
+    newPassword: '',
+    confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [adminData, setAdminData] = useState<any>(null);
 
   // Verifikasi token saat halaman dimuat
   useEffect(() => {
     const verifyToken = async () => {
       if (!token) {
-        setError("Token tidak ditemukan");
+        setError('Token tidak ditemukan');
         setIsVerifying(false);
         return;
       }
@@ -56,30 +57,30 @@ export default function ResetPasswordPage() {
     }));
     
     // Clear error saat user mulai mengetik
-    if (error) setError("");
+    if (error) {setError('');}
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
 
     // Validasi
     if (!formData.newPassword.trim()) {
-      setError("Password baru harus diisi");
+      setError('Password baru harus diisi');
       setIsLoading(false);
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      setError("Password minimal 6 karakter");
+      setError('Password minimal 6 karakter');
       setIsLoading(false);
       return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError("Konfirmasi password tidak sesuai");
+      setError('Konfirmasi password tidak sesuai');
       setIsLoading(false);
       return;
     }

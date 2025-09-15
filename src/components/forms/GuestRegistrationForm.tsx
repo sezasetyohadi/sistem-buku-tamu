@@ -3,17 +3,20 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+
+import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
+import { LoadingWrapper } from '@/components/ui/LoadingState';
+import { useApiCall, useMutation } from '@/hooks/useDataFetching';
+import { guestLogger, safeLog } from '@/lib/logger';
+import { showToast } from '@/lib/toast';
+
 import Card from '../ui/Card';
 import FormInput from '../ui/FormInput';
 import FormSelect from '../ui/FormSelect';
 import PrimaryButton from '../ui/PrimaryButton';
-import { guestLogger, safeLog } from '@/lib/logger';
 import TokenModal from '../ui/TokenModal';
-import { useApiCall, useMutation } from '@/hooks/useDataFetching';
-import { LoadingWrapper, useLoadingState } from '@/components/ui/LoadingState';
-import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
-import { showToast } from '@/lib/toast';
+
 
 interface GuestRegistrationFormProps {
   onSubmit?: (data: any) => Promise<{success: boolean, guestData?: any, tokenData?: any}>;
@@ -397,9 +400,9 @@ export default function GuestRegistrationForm({
         }
       >
         <Card 
-          variant={isInModal ? "default" : "elevated"} 
-          padding={isInModal ? "sm" : "md"}
-          className={`${isInModal ? "shadow-none border-0" : ""} w-full max-w-full overflow-hidden`}
+          variant={isInModal ? 'default' : 'elevated'} 
+          padding={isInModal ? 'sm' : 'md'}
+          className={`${isInModal ? 'shadow-none border-0' : ''} w-full max-w-full overflow-hidden`}
         >
           {!isInModal && (
             <div className="mb-3 sm:mb-4 md:mb-6">
@@ -417,7 +420,7 @@ export default function GuestRegistrationForm({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={`space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden ${isInModal ? "overflow-y-visible" : ""}`}>
+          <form onSubmit={handleSubmit} className={`space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden ${isInModal ? 'overflow-y-visible' : ''}`}>
         {/* Personal Information Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <FormInput
@@ -576,7 +579,7 @@ export default function GuestRegistrationForm({
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 <p className="text-yellow-800 text-xs sm:text-sm font-medium leading-relaxed">
-                  Anda memilih "Lainnya". Silakan jelaskan tujuan kunjungan Anda pada bagian "Catatan Tambahan" di bawah <span className="text-red-600 font-semibold">(WAJIB DIISI)</span>.
+                  Anda memilih &ldquo;Lainnya&rdquo;. Silakan jelaskan tujuan kunjungan Anda pada bagian &ldquo;Catatan Tambahan&rdquo; di bawah <span className="text-red-600 font-semibold">(WAJIB DIISI)</span>.
                 </p>
               </div>
             </div>
@@ -633,8 +636,8 @@ export default function GuestRegistrationForm({
               formData.purpose === '999' && errors.notes ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder={formData.purpose === '999' 
-              ? "Jelaskan tujuan kunjungan Anda (wajib diisi)..." 
-              : "Tambahkan catatan atau informasi tambahan jika diperlukan..."
+              ? 'Jelaskan tujuan kunjungan Anda (wajib diisi)...' 
+              : 'Tambahkan catatan atau informasi tambahan jika diperlukan...'
             }
             required={formData.purpose === '999'}
           />

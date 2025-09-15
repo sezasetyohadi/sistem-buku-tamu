@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { executeQuery } from '@/backend/config/db';
 
 export async function GET() {

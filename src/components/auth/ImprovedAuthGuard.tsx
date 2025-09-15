@@ -5,8 +5,9 @@
 
 'use client';
 
-import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { authLogger } from '@/lib/logger';

@@ -1,11 +1,5 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Metadata } from 'next';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import PdfReport from './PdfReport';
-import { showToast } from '@/lib/toast';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,7 +11,16 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Metadata } from 'next';
+import { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
+
+import { showToast } from '@/lib/toast';
+
+import PdfReport from './PdfReport';
+
 
 ChartJS.register(
   CategoryScale,
@@ -165,16 +168,16 @@ export default function AdminReportsAnalytics() {
         throw new Error(`Canvas has zero dimensions: ${canvas.width}x${canvas.height}`);
       }
       
-      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
       
       if (!imgData || imgData === 'data:,' || imgData.length < 100) {
         throw new Error('Failed to generate valid image data from canvas');
       }
       
       const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "pt",
-        format: "a4",
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4',
       });
       
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -191,8 +194,8 @@ export default function AdminReportsAnalytics() {
         finalWidth = (canvas.width * finalHeight) / canvas.height;
       }
       
-      pdf.addImage(imgData, "JPEG", 20, 20, finalWidth, finalHeight);
-      pdf.save("laporan-buku-tamu.pdf");
+      pdf.addImage(imgData, 'JPEG', 20, 20, finalWidth, finalHeight);
+      pdf.save('laporan-buku-tamu.pdf');
       
       showToast.success('PDF berhasil diekspor!');
       
@@ -277,7 +280,7 @@ export default function AdminReportsAnalytics() {
               </select>
               <button 
                 className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300"
-                style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}
+                style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)' }}
                 onClick={handleExportPDF}
               >
                 <svg className="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -291,7 +294,7 @@ export default function AdminReportsAnalytics() {
 
         {/* Key Metrics */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#EBF4FF', borderColor: '#BFDBFE'}}>
+          <div className="p-6 rounded-lg shadow border" style={{ backgroundColor: '#EBF4FF', borderColor: '#BFDBFE' }}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-800">Total Kunjungan</h3>
@@ -300,14 +303,14 @@ export default function AdminReportsAnalytics() {
                   <svg className={`w-4 h-4 mr-1 ${(data?.metrics.totalVisits.growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d={
                       (data?.metrics.totalVisits.growth || 0) >= 0 
-                        ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        ? 'M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z'
+                        : 'M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z'
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.totalVisits.label || 'No data'}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3D5DC3, #2563EB)' }}>
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM5 7a2 2 0 00-2 2v4a2 2 0 002 2h10a2 2 0 002-2V9a2 2 0 00-2-2H5z" />
                 </svg>
@@ -315,7 +318,7 @@ export default function AdminReportsAnalytics() {
             </div>
           </div>
 
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#FEF3E2', borderColor: '#FED7AA'}}>
+          <div className="p-6 rounded-lg shadow border" style={{ backgroundColor: '#FEF3E2', borderColor: '#FED7AA' }}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-800">Rata-rata Harian</h3>
@@ -324,14 +327,14 @@ export default function AdminReportsAnalytics() {
                   <svg className={`w-4 h-4 mr-1 ${(data?.metrics.dailyAverage.growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d={
                       (data?.metrics.dailyAverage.growth || 0) >= 0 
-                        ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        ? 'M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z'
+                        : 'M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z'
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.dailyAverage.label || 'No data'}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #F29442, #EA580C)'}}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F29442, #EA580C)' }}>
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586L14.586 7H12z" clipRule="evenodd" />
                 </svg>
@@ -339,7 +342,7 @@ export default function AdminReportsAnalytics() {
             </div>
           </div>
 
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#F0FDF4', borderColor: '#BBF7D0'}}>
+          <div className="p-6 rounded-lg shadow border" style={{ backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-800">Waktu Rata-rata</h3>
@@ -348,14 +351,14 @@ export default function AdminReportsAnalytics() {
                   <svg className={`w-4 h-4 mr-1 ${(data?.metrics.avgDuration.growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d={
                       (data?.metrics.avgDuration.growth || 0) >= 0 
-                        ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        ? 'M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z'
+                        : 'M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z'
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.avgDuration.label || 'No data'}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)' }}>
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                 </svg>
@@ -363,7 +366,7 @@ export default function AdminReportsAnalytics() {
             </div>
           </div>
 
-          <div className="p-6 rounded-lg shadow border" style={{backgroundColor: '#F9FAFB', borderColor: '#E5E7EB'}}>
+          <div className="p-6 rounded-lg shadow border" style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-800">Tingkat Kepuasan</h3>
@@ -372,8 +375,8 @@ export default function AdminReportsAnalytics() {
                   <svg className={`w-4 h-4 mr-1 ${(data?.metrics.satisfaction.growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d={
                       (data?.metrics.satisfaction.growth || 0) >= 0 
-                        ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                        : "M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z"
+                        ? 'M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z'
+                        : 'M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z'
                     } clipRule="evenodd"/>
                   </svg>
                   {data?.metrics.satisfaction.label || 'No data'}
@@ -447,7 +450,7 @@ export default function AdminReportsAnalytics() {
                         cornerRadius: 8,
                         displayColors: false,
                         callbacks: {
-                          label: function(context: any) {
+                          label: function (context: any) {
                             return `${context.parsed.y} kunjungan`;
                           }
                         }
@@ -511,7 +514,7 @@ export default function AdminReportsAnalytics() {
                   return (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="w-4 h-4 rounded" style={{backgroundColor: colors[i % colors.length]}}></div>
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: colors[i % colors.length] }}></div>
                         <span className="ml-3 text-sm text-gray-900">{category.category || 'Tidak Kategori'}</span>
                       </div>
                       <span className="text-sm font-semibold text-gray-900">{category.percentage}%</span>
@@ -611,7 +614,7 @@ export default function AdminReportsAnalytics() {
                     }`}>
                       {i + 1}
                     </div>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{background: 'linear-gradient(135deg, #3D5DC3, #2563EB)'}}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ background: 'linear-gradient(135deg, #3D5DC3, #2563EB)' }}>
                       {visitor.nama.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <div className="flex-1">

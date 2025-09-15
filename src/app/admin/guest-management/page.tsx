@@ -1,17 +1,18 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { DaftarTamu } from "@/types/database-types";
-import Modal from "@/components/ui/Modal";
-import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
+import ExcelJS from 'exceljs';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { toast } from 'react-hot-toast';
+
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
 import ServiceManagementModal from '@/components/admin/ServiceManagementModal';
-import DeleteConfirmationDialog from "@/components/ui/DeleteConfirmationDialog";
-import { toast } from "react-hot-toast";
-import ExcelJS from 'exceljs';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
+import DeleteConfirmationDialog from '@/components/ui/DeleteConfirmationDialog';
 import { ErrorMessage, TableLoading } from '@/components/ui/loading-states';
+import Modal from '@/components/ui/Modal';
 import { useErrorHandler, useFetch } from '@/hooks/useErrorHandling';
+import { DaftarTamu } from '@/types/database-types';
 
 // Debounce hook for search optimization
 function useDebounce<T>(value: T, delay: number): T {
@@ -31,9 +32,9 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 function AdminGuestsManagement() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("Semua Status");
-  const [dateFilter, setDateFilter] = useState("Semua Waktu");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Semua Status');
+  const [dateFilter, setDateFilter] = useState('Semua Waktu');
   const [stats, setStats] = useState({
     totalGuests: 0,
     todayCheckIn: 0,
@@ -99,33 +100,33 @@ function AdminGuestsManagement() {
     
     return filtered.filter(guest => {
       // Filter by status
-      if (statusFilter !== "Semua Status") {
-        if (statusFilter === "Proses" && guest.status_kunjungan !== "Datang") {
+      if (statusFilter !== 'Semua Status') {
+        if (statusFilter === 'Proses' && guest.status_kunjungan !== 'Datang') {
           return false;
-        } else if (statusFilter !== "Proses" && guest.status_kunjungan !== statusFilter) {
+        } else if (statusFilter !== 'Proses' && guest.status_kunjungan !== statusFilter) {
           return false;
         }
       }
       
       // Filter by date (using optimized date filters)
-      if (dateFilter !== "Semua Waktu") {
+      if (dateFilter !== 'Semua Waktu') {
         const visitDate = guest.waktu_checkin ? new Date(guest.waktu_checkin) : null;
-        if (!visitDate) return false;
+        if (!visitDate) {return false;}
         
         const { today, endOfToday, startOfWeek, startOfMonth, startOfYear } = dateFilters;
         
         switch (dateFilter) {
-          case "Hari Ini":
-            if (visitDate < today || visitDate > endOfToday) return false;
+          case 'Hari Ini':
+            if (visitDate < today || visitDate > endOfToday) {return false;}
             break;
-          case "Minggu Ini":
-            if (visitDate < startOfWeek || visitDate > endOfToday) return false;
+          case 'Minggu Ini':
+            if (visitDate < startOfWeek || visitDate > endOfToday) {return false;}
             break;
-          case "Bulan Ini":
-            if (visitDate < startOfMonth || visitDate > endOfToday) return false;
+          case 'Bulan Ini':
+            if (visitDate < startOfMonth || visitDate > endOfToday) {return false;}
             break;
-          case "Tahun Ini":
-            if (visitDate < startOfYear || visitDate > endOfToday) return false;
+          case 'Tahun Ini':
+            if (visitDate < startOfYear || visitDate > endOfToday) {return false;}
             break;
         }
       }
@@ -145,7 +146,7 @@ function AdminGuestsManagement() {
           (guest.token && guest.token.toLowerCase().includes(searchLower))
         );
         
-        if (!matchesSearch) return false;
+        if (!matchesSearch) {return false;}
       }
       
       return true;
@@ -181,7 +182,7 @@ function AdminGuestsManagement() {
       try {
         await fetchData();
       } catch (error) {
-        console.error("Error in initial data fetch:", error);
+        console.error('Error in initial data fetch:', error);
       } finally {
         setIsLoading(false);
       }
@@ -197,7 +198,7 @@ function AdminGuestsManagement() {
       optimisticUpdatesRef.current.clear();
       await fetchData();
     } catch (error) {
-      console.error("Error refreshing data:", error);
+      console.error('Error refreshing data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -268,7 +269,7 @@ function AdminGuestsManagement() {
         
         // Show success message with token info if available
         if (result.data?.token) {
-          toast.success(`Tamu dan token berhasil ditambahkan!`);
+          toast.success('Tamu dan token berhasil ditambahkan!');
           //toast.success(`Tamu berhasil ditambahkan! Token: ${result.data.token.token}`);
         } else {
           toast.success('Tamu berhasil ditambahkan!');
@@ -552,7 +553,7 @@ function AdminGuestsManagement() {
         setError('Gagal mengambil data tamu dari server');
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching data:', error);
       setGuests([]);
       if (error instanceof Error) {
         if (error.message.includes('fetch')) {
@@ -584,7 +585,7 @@ function AdminGuestsManagement() {
               message={error}
               type="error"
               action={{
-                label: "Coba Lagi",
+                label: 'Coba Lagi',
                 onClick: () => {
                   setError(null);
                   handleRefresh();
@@ -605,7 +606,7 @@ function AdminGuestsManagement() {
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600">Total Tamu</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? "..." : stats.totalGuests}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? '...' : stats.totalGuests}</p>
             </div>
           </div>
         </div>
@@ -619,7 +620,7 @@ function AdminGuestsManagement() {
               </div>
               <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Terjadwal Hari Ini</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? "..." : stats.todayCheckIn}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? '...' : stats.todayCheckIn}</p>
               </div>
             </div>
           </div>
@@ -633,7 +634,7 @@ function AdminGuestsManagement() {
               </div>
               <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Selesai Hari Ini</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? "..." : stats.todayCheckOut}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? '...' : stats.todayCheckOut}</p>
               </div>
             </div>
           </div>
@@ -647,7 +648,7 @@ function AdminGuestsManagement() {
               </div>
               <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Proses Hari Ini</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? "..." : stats.currentlyVisiting}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? '...' : stats.currentlyVisiting}</p>
               </div>
             </div>
           </div>
@@ -687,7 +688,7 @@ function AdminGuestsManagement() {
                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
               </svg>
             )}
-            <span className="whitespace-nowrap">{isExporting ? "Mengekspor..." : "Export Data"}</span>
+            <span className="whitespace-nowrap">{isExporting ? 'Mengekspor...' : 'Export Data'}</span>
           </button>
           <button 
             onClick={handleRefresh}
@@ -704,7 +705,7 @@ function AdminGuestsManagement() {
                 <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
               </svg>
             )}
-            <span className="whitespace-nowrap">{isLoading ? "Memuat..." : "Refresh"}</span>
+            <span className="whitespace-nowrap">{isLoading ? 'Memuat...' : 'Refresh'}</span>
           </button>
         </div>
 
@@ -898,26 +899,26 @@ function AdminGuestsManagement() {
                             <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
                               <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{guest.nama}</div>
                               <div className="text-xs text-gray-500 hidden sm:block">ID: {guest.id}</div>
-                              <div className="text-xs text-gray-500 sm:hidden block truncate">{guest.asal_instansi || guest.keperluan || "-"}</div>
+                              <div className="text-xs text-gray-500 sm:hidden block truncate">{guest.asal_instansi || guest.keperluan || '-'}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden sm:table-cell">
-                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.asal_instansi || "-"}</div>
+                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.asal_instansi || '-'}</div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden md:table-cell">
-                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.bidang_tujuan || "-"}</div>
+                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.bidang_tujuan || '-'}</div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden lg:table-cell">
                           <div className="text-xs sm:text-sm text-gray-900">
                             {guest.waktu_checkin 
-                              ? new Date(guest.waktu_checkin).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})
-                              : "-"}
+                              ? new Date(guest.waktu_checkin).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : '-'}
                           </div>
                           <div className="text-xs text-gray-500">
                             {guest.waktu_checkin 
-                              ? new Date(guest.waktu_checkin).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'})
-                              : ""}
+                              ? new Date(guest.waktu_checkin).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                              : ''}
                           </div>
                         </td>
                          <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap">
@@ -998,8 +999,8 @@ function AdminGuestsManagement() {
                           <div className="flex space-x-1">
                             <button 
                               className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors" 
-                              title={guest.status_kunjungan === "Menunggu" ? "Jadwalkan" : 
-                                     guest.status_kunjungan === "Terjadwal" ? "Edit Jadwal" : "Edit"}
+                              title={guest.status_kunjungan === 'Menunggu' ? 'Jadwalkan' : 
+                                     guest.status_kunjungan === 'Terjadwal' ? 'Edit Jadwal' : 'Edit'}
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 try {

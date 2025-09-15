@@ -6,8 +6,10 @@
 'use client';
 
 import React from 'react';
-import { ComponentErrorBoundary, SectionErrorBoundary } from './ErrorBoundary';
+
 import { useGlobalErrorHandler, createError } from '@/lib/error-handler';
+
+import { ComponentErrorBoundary, SectionErrorBoundary } from './ErrorBoundary';
 
 /**
  * HOC for wrapping form components with error boundaries

@@ -58,8 +58,8 @@ export async function up() {
 }
 
 export async function down() {
-  await executeQuery(`DROP TRIGGER IF EXISTS set_terjadwal;`);
-  await executeQuery(`DROP TRIGGER IF EXISTS set_datang;`);
-  await executeQuery(`DROP TRIGGER IF EXISTS set_selesai;`);
+  await executeQuery('DROP TRIGGER IF EXISTS set_terjadwal;');
+  await executeQuery('DROP TRIGGER IF EXISTS set_datang;');
+  await executeQuery('DROP TRIGGER IF EXISTS set_selesai;');
   console.log('Daftar_tamu triggers dropped successfully');
 }

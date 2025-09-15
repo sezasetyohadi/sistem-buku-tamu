@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useCallback } from 'react';
+
 import { showToast } from '@/lib/toast';
 
 interface UseIdleDetectionProps {
@@ -20,7 +21,7 @@ export function useIdleDetection({ timeout, onIdle, enabled = true }: UseIdleDet
   }, [onIdle]);
 
   const resetTimer = useCallback(() => {
-    if (!enabled) return;
+    if (!enabled) {return;}
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);

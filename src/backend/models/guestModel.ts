@@ -1,5 +1,6 @@
-import { executeQuery } from "../config/db";
 import { RowDataPacket } from 'mysql2';
+
+import { executeQuery } from '../config/db';
 
 /**
  * Enum untuk jenis kelamin tamu

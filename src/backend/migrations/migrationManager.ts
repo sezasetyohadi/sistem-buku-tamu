@@ -1,6 +1,7 @@
-import { executeQuery } from '../config/db';
-import path from 'path';
 import fs from 'fs/promises';
+import path from 'path';
+
+import { executeQuery } from '../config/db';
 
 // Migration manager to handle database migrations
 export class MigrationManager {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateGuestCheckOut, Guest } from '@/backend/models/guestModel';
+
 import { executeQuery } from '@/backend/config/db';
+import { updateGuestCheckOut, Guest } from '@/backend/models/guestModel';
 
 export async function POST(
   request: NextRequest,

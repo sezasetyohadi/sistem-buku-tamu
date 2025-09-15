@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+
 import { cn } from '@/lib/utils';
 
 /**
@@ -96,8 +97,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   };
 
   const style: React.CSSProperties = {};
-  if (width) style.width = typeof width === 'number' ? `${width}px` : width;
-  if (height) style.height = typeof height === 'number' ? `${height}px` : height;
+  if (width) {style.width = typeof width === 'number' ? `${width}px` : width;}
+  if (height) {style.height = typeof height === 'number' ? `${height}px` : height;}
 
   return (
     <div
@@ -266,7 +267,7 @@ export const CardSkeleton: React.FC<CardSkeletonProps> = ({
             <Skeleton 
               key={index} 
               height={16} 
-              width={index === rows - 1 ? "40%" : "100%"} 
+              width={index === rows - 1 ? '40%' : '100%'} 
             />
           ))}
         </div>
@@ -313,7 +314,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
                 <td key={colIndex} className="px-6 py-4">
                   <Skeleton 
                     height={16} 
-                    width={colIndex === 0 ? "60%" : "80%"} 
+                    width={colIndex === 0 ? '60%' : '80%'} 
                   />
                 </td>
               ))}

@@ -40,7 +40,7 @@ export default function Modal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const sizeClass = ModalSizes[size];
 

@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getConnection } from '@/backend/config/db';
 import { verifyToken } from '@/lib/jwt';
 

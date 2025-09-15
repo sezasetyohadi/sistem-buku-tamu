@@ -5,8 +5,8 @@
 
 import { GlobalErrorHandler, createError, ErrorType } from './error-handler';
 import { ErrorRecoveryManager, RetryConfigs } from './error-recovery';
-import { showToast } from './toast';
 import { logger } from './logger';
+import { showToast } from './toast';
 
 export interface ApiErrorInterceptorConfig {
   enableRetry: boolean;

@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
 import dynamic from 'next/dynamic';
+
 import LoadingState from '../guest/LoadingState';
 
 // Dynamically import the SurveyForm component with loading state

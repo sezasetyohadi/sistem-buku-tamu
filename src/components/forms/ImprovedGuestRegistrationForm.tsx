@@ -6,8 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useValidatedSubmit } from '@/hooks/useValidation';
-import { GUEST_REGISTRATION_SCHEMA } from '@/lib/validation-schemas';
+
 import { 
   ValidatedInput, 
   ValidatedSelect, 
@@ -15,8 +14,10 @@ import {
   FormGroup,
   ValidatedSubmitButton 
 } from '@/components/ui/ValidatedFormComponents';
-import { showToast } from '@/lib/toast';
+import { useValidatedSubmit } from '@/hooks/useValidation';
 import { guestLogger } from '@/lib/logger';
+import { showToast } from '@/lib/toast';
+import { GUEST_REGISTRATION_SCHEMA } from '@/lib/validation-schemas';
 
 interface ImprovedGuestRegistrationFormProps {
   onSubmit?: (data: any) => Promise<{success: boolean, guestData?: any, tokenData?: any}>;

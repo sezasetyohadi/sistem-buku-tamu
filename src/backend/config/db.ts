@@ -1,8 +1,9 @@
-import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import mysql from 'mysql2/promise';
 import type { PoolOptions } from 'mysql2/promise';
-import { dbLogger } from '@/lib/logger';
+
 import { DatabaseError } from '@/lib/error-handling';
+import { dbLogger } from '@/lib/logger';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -47,7 +48,7 @@ const slowQueryThreshold = Number(process.env.SLOW_QUERY_THRESHOLD) || 1000; // 
 // Query performance monitoring
 function logSlowQuery(query: string, duration: number, params?: any[]) {
   slowQueryCount++;
-  dbLogger.warn(`Slow Query Detected`, {
+  dbLogger.warn('Slow Query Detected', {
     operation: 'SLOW_QUERY',
     duration,
     metadata: {
@@ -107,7 +108,7 @@ export async function executeQuery<T>(
     });
     throw error;
   } finally {
-    if (connection) connection.release();
+    if (connection) {connection.release();}
   }
 }
 
