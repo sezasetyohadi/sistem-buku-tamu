@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
 
 // JWT Configuration
-const JWT_SECRET = process.env.JWT_SECRET; // Use a strong secret in production
+const JWT_SECRET = process.env.JWT_SECRET || 'default-development-secret'; // Use a strong secret in production
+if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET === undefined) {
+  throw new Error('JWT_SECRET must be set in production environment');
+}
 const JWT_EXPIRES_IN = '24h';
 const JWT_REFRESH_EXPIRES_IN = '7d';
 
@@ -95,9 +98,21 @@ export function verifyToken(token: string, audience: 'admin-panel' | 'guest-port
     const decoded = jwt.verify(token, JWT_SECRET, {
       issuer: 'sistem-buku-tamu',
       audience: audience
-    }) as JWTPayload;
+    });
     
-    return decoded;
+    // Validate and type-cast the decoded token
+    const payload = decoded as Record<string, any>;
+    if (typeof payload !== 'object' || !payload.userType) {
+      return null;
+    }
+
+    if (payload.userType === 'admin') {
+      return payload as AdminJWTPayload;
+    } else if (payload.userType === 'guest') {
+      return payload as GuestJWTPayload;
+    }
+    
+    return null;
   } catch (error) {
     console.error('JWT verification failed:', error);
     return null;
@@ -112,11 +127,19 @@ export function verifyAdminRefreshToken(token: string): { userId: number; userna
     const decoded = jwt.verify(token, JWT_SECRET, {
       issuer: 'sistem-buku-tamu',
       audience: 'admin-panel'
-    }) as { userId: number; username: string; userType: string };
+    });
     
-    if (decoded.userType !== 'admin') return null;
+    const payload = decoded as Record<string, any>;
+    if (
+      typeof payload !== 'object' ||
+      payload.userType !== 'admin' ||
+      typeof payload.userId !== 'number' ||
+      typeof payload.username !== 'string'
+    ) {
+      return null;
+    }
     
-    return { userId: decoded.userId, username: decoded.username };
+    return { userId: payload.userId, username: payload.username };
   } catch (error) {
     console.error('Admin refresh token verification failed:', error);
     return null;
@@ -131,11 +154,18 @@ export function verifyGuestRefreshToken(token: string): { guestId: number } | nu
     const decoded = jwt.verify(token, JWT_SECRET, {
       issuer: 'sistem-buku-tamu',
       audience: 'guest-portal'
-    }) as { guestId: number; userType: string };
+    });
     
-    if (decoded.userType !== 'guest') return null;
+    const payload = decoded as Record<string, any>;
+    if (
+      typeof payload !== 'object' ||
+      payload.userType !== 'guest' ||
+      typeof payload.guestId !== 'number'
+    ) {
+      return null;
+    }
     
-    return { guestId: decoded.guestId };
+    return { guestId: payload.guestId };
   } catch (error) {
     console.error('Guest refresh token verification failed:', error);
     return null;

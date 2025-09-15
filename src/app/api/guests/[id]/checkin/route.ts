@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateGuestCheckIn } from '@/backend/models/guestModel';
+import { updateGuestCheckIn, Guest } from '@/backend/models/guestModel';
 
 export async function PATCH(
   request: NextRequest,
@@ -29,12 +29,13 @@ export async function PATCH(
     }
 
     // Return success response with updated guest data
+    const updatedGuest = result.data as Guest;
     return NextResponse.json({
       success: true,
       message: 'Tamu berhasil ditandai datang',
       data: {
-        waktu_checkin: result.data?.waktu_checkin,
-        status_kunjungan: result.data?.status_kunjungan
+        waktu_checkin: updatedGuest.waktu_checkin,
+        status_kunjungan: updatedGuest.status_kunjungan
       }
     });
   } catch (error: any) {

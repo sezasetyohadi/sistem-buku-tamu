@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateGuestCheckOut } from '@/backend/models/guestModel';
+import { updateGuestCheckOut, Guest } from '@/backend/models/guestModel';
 import { executeQuery } from '@/backend/config/db';
 
 export async function POST(
@@ -41,12 +41,13 @@ export async function POST(
     }
 
     // Return success response with updated guest data
+    const updatedGuest = result.data as Guest;
     return NextResponse.json({
       success: true,
       message: 'Kunjungan tamu berhasil ditandai selesai',
       data: {
-        waktu_checkout: result.data?.waktu_checkout,
-        status_kunjungan: result.data?.status_kunjungan
+        waktu_checkout: updatedGuest.waktu_checkout,
+        status_kunjungan: updatedGuest.status_kunjungan
       }
     });
   } catch (error: any) {

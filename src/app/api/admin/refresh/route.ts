@@ -38,6 +38,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new tokens
+    if (!admin.id || !admin.username || !admin.email || !admin.nama_lengkap || admin.is_super_admin === undefined) {
+      return NextResponse.json({
+        success: false,
+        message: 'Data admin tidak lengkap'
+      }, { status: 500 });
+    }
+
     const { accessToken, refreshToken: newRefreshToken } = generateAdminTokens({
       userId: admin.id,
       username: admin.username,

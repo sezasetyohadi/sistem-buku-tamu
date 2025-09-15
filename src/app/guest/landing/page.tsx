@@ -14,16 +14,17 @@ export default function LandingPage() {
     if (hasVisitedBefore) {
       // If returning, load faster
       setIsLoading(false);
-    } else {
-      // For first visit, show loading animation
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-        // Mark that we've visited
-        sessionStorage.setItem('hasVisitedLanding', 'true');
-      }, 1000); // Reduced from 1500ms to 1000ms
-      
-      return () => clearTimeout(timer);
+      return;
     }
+    
+    // For first visit, show loading animation
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      // Mark that we've visited
+      sessionStorage.setItem('hasVisitedLanding', 'true');
+    }, 1000); // Reduced from 1500ms to 1000ms
+    
+    return () => clearTimeout(timer);
   }, []);
   useEffect(() => {
     if (isLoading) return;

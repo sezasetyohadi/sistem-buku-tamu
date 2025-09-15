@@ -32,10 +32,14 @@ const LazyImage = ({ src, alt, width, height, className }: LazyImageProps) => {
         observer.observe(element);
       }
 
-      return () => observer.disconnect();
+      return () => {
+        observer.disconnect();
+        return undefined;
+      };
     } else {
       // Fallback for browsers without IntersectionObserver
       setIsIntersected(true);
+      return undefined;
     }
   }, [src]);
 

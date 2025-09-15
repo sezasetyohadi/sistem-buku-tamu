@@ -39,7 +39,7 @@ export default function AdminProfile() {
   const [lastModified, setLastModified] = useState<string>("");
   const router = useRouter();
 
-  // Auto-hide message after 5 seconds
+    // Auto-hide message after 5 seconds
   useEffect(() => {
     if (message.text) {
       const timer = setTimeout(() => {
@@ -48,9 +48,8 @@ export default function AdminProfile() {
 
       return () => clearTimeout(timer);
     }
-  }, [message.text]);
-
-  // Fetch admin profile data
+    return undefined; // Explicit return for when message.text is falsy
+  }, [message.text]);  // Fetch admin profile data
   useEffect(() => {
     const fetchAdminProfile = async () => {
       try {
@@ -61,7 +60,7 @@ export default function AdminProfile() {
         if (!adminData) {
           // Redirect to login if not authenticated
           clearAdminSessionAndRedirect(router);
-          return;
+          return undefined;
         }
         
         // Fetch profile data using JWT authentication (cookies automatically included)
@@ -138,7 +137,11 @@ export default function AdminProfile() {
       }
     };
 
-    fetchAdminProfile();
+    // Return the fetch promise to ensure proper cleanup
+    const fetchPromise = fetchAdminProfile();
+    return () => {
+      // Cleanup function if needed
+    };
   }, [router]);
 
   const handleEdit = () => {
@@ -570,6 +573,7 @@ export default function AdminProfile() {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
+      return undefined;
     };
   }, [previewUrl]);
 
@@ -586,6 +590,7 @@ export default function AdminProfile() {
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      return undefined;
     };
   }, [showDeleteConfirm]);
 

@@ -1,5 +1,6 @@
 import * as ExcelJS from 'exceljs';
 import { format } from 'date-fns';
+import { SurveyQuestion, SurveyResponse } from '@/types/survey-types';
 
 /**
  * Service for generating Excel exports for survey data
@@ -13,9 +14,9 @@ export class SurveyExportService {
    * @returns ExcelJS.Workbook
    */
   static async generateSurveyExcel(
-    questions: any[],
-    responses: any[],
-    answersByRespondent: Map<number, Map<number, any>>
+    questions: SurveyQuestion[],
+    responses: SurveyResponse[],
+    answersByRespondent: Map<number, Map<number, SurveyResponse>>
   ): Promise<ExcelJS.Workbook> {
     // Get the current year for title
     const currentYear = new Date().getFullYear();
@@ -93,9 +94,9 @@ export class SurveyExportService {
     });
 
     
-    // Group questions by their 'baris' value
-    const questionGroups = questions.reduce((acc, q) => {
-      const key = q.baris || 0;
+    // Group questions by their section ID
+    const questionGroups = questions.reduce<Record<number, SurveyQuestion[]>>((acc, q) => {
+      const key = q.section_id || 0;
       if (!acc[key]) acc[key] = [];
       acc[key].push(q);
       return acc;
@@ -104,22 +105,22 @@ export class SurveyExportService {
     // Track the row to add data to
     let currentRow = 4;
     
-    // Get sorted baris numbers to ensure correct ordering
-    const sortedBaris = Object.keys(questionGroups).sort((a, b) => 
-      parseInt(a) - parseInt(b)
-    );
+    // Get sorted section IDs to ensure correct ordering
+    const sortedSections = Object.keys(questionGroups)
+      .map(key => parseInt(key))
+      .sort((a, b) => a - b);
     
     // Process each question group
-    sortedBaris.forEach((baris) => {
-      const groupQuestions = questionGroups[baris];
-      const isMainSection = baris !== '0' && groupQuestions.length > 0;
+    sortedSections.forEach((sectionId) => {
+      const groupQuestions = questionGroups[sectionId];
+      const isMainSection = sectionId !== 0 && groupQuestions.length > 0;
       let questionCounter = 1;
       
       // For multi-part questions, generate proper numbering
       if (isMainSection) {
         groupQuestions.forEach((question, idx) => {
           // Generate question numbering (1, 2.a, 2.b, etc.)
-          const questionNum = idx === 0 ? baris : `${baris}${String.fromCharCode(97 + idx)}`; // a, b, c, ...
+          const questionNum = idx === 0 ? sectionId.toString() : `${sectionId}${String.fromCharCode(97 + idx)}`; // a, b, c, ...
           
           const row = worksheet.addRow([]);
           row.getCell(1).value = questionNum;
