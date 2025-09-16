@@ -44,8 +44,9 @@ export async function uploadToR2(
 
     await r2Client.send(command);
 
-    // Construct the public URL
-    const url = `https://${process.env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET}/${key}`;
+    // Construct the public URL using custom domain
+    const publicUrl = process.env.R2_PUBLIC_URL || `https://${process.env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET}`;
+    const url = `${publicUrl}/${key}`;
 
     return { url, key };
   } catch (error) {

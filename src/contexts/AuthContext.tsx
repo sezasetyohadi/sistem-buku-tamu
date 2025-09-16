@@ -35,6 +35,7 @@ type AuthAction =
   | { type: 'AUTH_FAILURE'; payload: string }
   | { type: 'AUTH_LOGOUT' }
   | { type: 'UPDATE_ACTIVITY' }
+  | { type: 'UPDATE_USER'; payload: Partial<AdminUser> }
   | { type: 'CLEAR_ERROR' };
 
 // Initial state
@@ -85,6 +86,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         ...state,
         lastActivity: Date.now(),
       };
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: state.user ? { ...state.user, ...action.payload } : null,
+      };
     case 'CLEAR_ERROR':
       return {
         ...state,
@@ -102,6 +108,7 @@ interface AuthContextType extends AuthState {
   checkAuth: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
   updateActivity: () => void;
+  updateUser: (userData: Partial<AdminUser>) => void;
   clearError: () => void;
 }
 
@@ -244,6 +251,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'UPDATE_ACTIVITY' });
   }, []);
 
+  // Update user data
+  const updateUser = useCallback((userData: Partial<AdminUser>) => {
+    dispatch({ type: 'UPDATE_USER', payload: userData });
+  }, []);
+
   // Clear error
   const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
@@ -280,6 +292,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuth,
     refreshToken,
     updateActivity,
+    updateUser,
     clearError,
   };
 

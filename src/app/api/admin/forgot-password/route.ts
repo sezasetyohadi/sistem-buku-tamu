@@ -62,7 +62,12 @@ export async function POST(request: NextRequest) {
     );
 
     // Kirim email dengan link reset password
-    const resetUrl = getFullUrl(`/reset-password-page?token=${resetToken}`, request);
+    // Gunakan NEXT_PUBLIC_APP_URL untuk reset password (bisa admin atau guest URL tergantung konfigurasi)
+    const resetBaseUrl = getFullUrl(`/reset-password-page?token=${resetToken}`, request);
+    
+    // Override dengan NEXT_PUBLIC_APP_URL jika ada, fallback ke detected URL
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const resetUrl = appUrl ? `${appUrl}/reset-password-page?token=${resetToken}` : resetBaseUrl;
     
     await transporter.sendMail({
       from: process.env.SMTP_USER || 'noreply@sistem-buku-tamu.com',
