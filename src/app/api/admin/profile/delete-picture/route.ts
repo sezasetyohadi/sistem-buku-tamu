@@ -1,9 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-
 import { NextRequest, NextResponse } from 'next/server';
 
 import { executeQuery } from '@/backend/config/db';
+import { deleteFromR2, extractKeyFromUrl } from '@/lib/cloudflare-r2';
 import { verifyToken } from '@/lib/jwt';
 
 export async function DELETE(request: NextRequest) {
@@ -33,19 +31,16 @@ export async function DELETE(request: NextRequest) {
     const currentPictureResult = await executeQuery<any[]>(getCurrentPictureQuery, [payload.userId]);
     
     if (currentPictureResult && currentPictureResult.length > 0 && currentPictureResult[0].profile_picture) {
-      const currentPicturePath = currentPictureResult[0].profile_picture;
+      const currentPictureUrl = currentPictureResult[0].profile_picture;
       
-      // Try to delete the physical file
+      // Try to delete the file from R2
       try {
-        // Extract filename from URL and construct file path
-        const filename = path.basename(currentPicturePath);
-        const filePath = path.join(process.cwd(), 'public', 'uploads', 'profiles', filename);
-        
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
+        const fileKey = extractKeyFromUrl(currentPictureUrl);
+        if (fileKey) {
+          await deleteFromR2(fileKey);
         }
       } catch (fileError) {
-        console.error('Error deleting physical file:', fileError);
+        console.error('Error deleting R2 file:', fileError);
         // Continue even if file deletion fails
       }
     }
