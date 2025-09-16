@@ -1,10 +1,7 @@
-import { existsSync } from 'fs';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-
 import { NextRequest, NextResponse } from 'next/server';
 
 import { executeQuery } from '@/backend/config/db';
+import { uploadToR2, generateFileKey, extractKeyFromUrl, deleteFromR2 } from '@/lib/cloudflare-r2';
 import { verifyToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
@@ -59,31 +56,50 @@ export async function POST(request: NextRequest) {
     }
 
     // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'profiles');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
+    // Not needed for R2 storage
 
     // Generate unique filename
-    const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop();
-    const fileName = `admin_${payload.userId}_${timestamp}.${fileExtension}`;
-    const filePath = join(uploadsDir, fileName);
+    if (!fileExtension) {
+      return NextResponse.json({
+        success: false,
+        message: 'File tidak memiliki ekstensi',
+      }, { status: 400 });
+    }
 
-    // Convert file to buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+    // Generate unique key for R2
+    const fileKey = generateFileKey('profiles', payload.userId.toString(), fileExtension);
+
+    // Get current profile picture to delete old one if exists
+    const currentProfileQuery = 'SELECT profile_picture FROM admin WHERE id = ?';
+    const currentProfile = await executeQuery<any[]>(currentProfileQuery, [payload.userId]);
+    
+    let oldFileKey: string | null = null;
+    if (currentProfile && currentProfile.length > 0 && currentProfile[0].profile_picture) {
+      oldFileKey = extractKeyFromUrl(currentProfile[0].profile_picture);
+    }
+
+    // Upload file to Cloudflare R2
+    const uploadResult = await uploadToR2(file, fileKey, file.type);
 
     // Update admin profile with new picture URL
-    const pictureUrl = `/uploads/profiles/${fileName}`;
     const updateQuery = 'UPDATE admin SET profile_picture = ? WHERE id = ?';
-    await executeQuery(updateQuery, [pictureUrl, payload.userId]);
+    await executeQuery(updateQuery, [uploadResult.url, payload.userId]);
+
+    // Delete old profile picture from R2 if exists
+    if (oldFileKey) {
+      try {
+        await deleteFromR2(oldFileKey);
+      } catch (error) {
+        console.warn('Warning: Could not delete old profile picture:', error);
+        // Continue execution as this is not critical
+      }
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Foto profil berhasil diunggah',
-      profilePicture: pictureUrl
+      profilePicture: uploadResult.url
     });
 
   } catch (error) {

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 import { executeQuery } from '@/backend/config/db';
+import { getFullUrl } from '@/lib/url-utils';
 
 // Konfigurasi transporter nodemailer
 const transporter = nodemailer.createTransport({
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Kirim email dengan link reset password
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/reset-password-page?token=${resetToken}`;
+    const resetUrl = getFullUrl(`/reset-password-page?token=${resetToken}`, request);
     
     await transporter.sendMail({
       from: process.env.SMTP_USER || 'noreply@sistem-buku-tamu.com',
