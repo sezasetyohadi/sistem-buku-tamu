@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 import PasswordInput from '../../../components/ui/PasswordInput';
+import { useAuth } from '../../../contexts/AuthContext';
 import { getAdminData, getAdminSessionData, clearAdminSessionAndRedirect } from '../../../lib/utils';
 
 interface AdminProfile {
@@ -20,6 +21,7 @@ interface AdminProfile {
 export default function AdminProfile() {
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { updateUser } = useAuth();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -355,6 +357,9 @@ export default function AdminProfile() {
           });
         }
 
+        // Update AuthContext to remove profile picture
+        updateUser({ profile_picture: null });
+
         // Dispatch custom event to update header
         window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
           detail: { profilePicture: null } 
@@ -428,6 +433,9 @@ export default function AdminProfile() {
             profile_picture: data.profilePicture
           });
         }
+
+        // Update AuthContext with new profile picture
+        updateUser({ profile_picture: data.profilePicture });
 
         // Dispatch custom event to update header
         window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
@@ -519,6 +527,12 @@ export default function AdminProfile() {
             email: data.admin.email,
           });
         }
+
+        // Update AuthContext with new profile data
+        updateUser({
+          nama_lengkap: data.admin.nama_lengkap,
+          email: data.admin.email,
+        });
 
         // Dispatch custom event to update header with new name
         window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 

@@ -7,8 +7,9 @@ export function middleware(request: NextRequest) {
   const appMode = process.env.APP_MODE;
   const pathname = request.nextUrl.pathname;
   const hostname = request.nextUrl.hostname;
+  const requestUrl = request.nextUrl.origin;
   
-  console.log('Middleware - Path:', pathname, 'Mode:', appMode, 'Host:', hostname);
+  console.log('Middleware - Path:', pathname, 'Mode:', appMode, 'Host:', hostname, 'Origin:', requestUrl);
   
   // Create response with security headers
   const response = NextResponse.next();
@@ -19,6 +20,12 @@ export function middleware(request: NextRequest) {
   // HTTPS Enforcement for production
   if (shouldEnforceHttps(request)) {
     return enforceHttps(request);
+  }
+
+  // URL-based access control
+  const urlAccessControl = checkUrlBasedAccess(request);
+  if (urlAccessControl) {
+    return urlAccessControl;
   }
   
   // Domain-based routing for production deployment
@@ -146,6 +153,77 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
+// URL-based Access Control
+function checkUrlBasedAccess(request: NextRequest): NextResponse | null {
+  const pathname = request.nextUrl.pathname;
+  const requestUrl = request.nextUrl.origin;
+  
+  // Skip API routes, static files, and Next.js internal routes
+  if (pathname.startsWith('/api') || 
+      pathname.startsWith('/_next') || 
+      pathname.startsWith('/favicon.ico') ||
+      pathname.startsWith('/static') ||
+      pathname.startsWith('/uploads')) {
+    return null;
+  }
+
+  // Get configured URLs from environment
+  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL;
+  const guestUrl = process.env.NEXT_PUBLIC_GUEST_URL;
+  
+  console.log('URL Access Control:', {
+    requestUrl,
+    adminUrl,
+    guestUrl,
+    pathname
+  });
+
+  // Check admin routes access
+  if (pathname.startsWith('/admin')) {
+    if (adminUrl && requestUrl !== adminUrl.replace(/\/$/, '')) {
+      console.log('Blocking admin access - wrong URL:', requestUrl, 'expected:', adminUrl);
+      
+      // Allow access-denied page to load
+      if (pathname === '/access-denied') {
+        return null;
+      }
+      
+      return NextResponse.redirect(new URL('/access-denied', request.url));
+    }
+  }
+  
+  // Check guest routes access
+  if (pathname.startsWith('/guest')) {
+    if (guestUrl && requestUrl !== guestUrl.replace(/\/$/, '')) {
+      console.log('Blocking guest access - wrong URL:', requestUrl, 'expected:', guestUrl);
+      
+      // Allow access-denied page to load
+      if (pathname === '/access-denied') {
+        return null;
+      }
+      
+      return NextResponse.redirect(new URL('/access-denied', request.url));
+    }
+  }
+
+  // Check reset password page access
+  if (pathname.startsWith('/reset-password-page')) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (appUrl && requestUrl !== appUrl.replace(/\/$/, '')) {
+      console.log('Blocking reset password access - wrong URL:', requestUrl, 'expected:', appUrl);
+      
+      // Allow access-denied page to load
+      if (pathname === '/access-denied') {
+        return null;
+      }
+      
+      return NextResponse.redirect(new URL('/access-denied', request.url));
+    }
+  }
+
+  return null;
+}
+
 // Security Functions
 function shouldEnforceHttps(request: NextRequest): boolean {
   try {
@@ -254,6 +332,8 @@ export const config = {
   matcher: [
     '/admin/:path*',
     '/guest/:path*',
+    '/reset-password-page/:path*',
+    '/access-denied',
     '/api/:path*'
     // Removed '/' from matcher so it doesn't interfere with landing page
   ],
