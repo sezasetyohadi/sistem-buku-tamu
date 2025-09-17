@@ -50,6 +50,7 @@ export interface DaftarTamu {
   waktu_checkin?: string | null; // datetime
   waktu_checkout?: string | null; // datetime
   file_upload?: string;
+  file_name?: string; // Original filename
   waktu_dibuat?: string; // datetime
   catatan_tambahan?: string;
   cara_memperoleh_informasi?: string[]; // Array of cara memperoleh informasi names
@@ -132,6 +133,7 @@ export interface GuestFormData {
   bidang_tujuan_id?: number; // ID bidang yang dituju
   catatan?: string; // For catatan_tambahan column
   file_upload?: string;
+  file_name?: string; // Original filename
   cara_memperoleh?: number[]; // Array of IDs from memperoleh_informasi table
   cara_salinan?: number[]; // Array of IDs from mendapatkan_salinan table
   status_kunjungan?: 'Menunggu' | 'Terjadwal' | 'Datang' | 'Selesai';

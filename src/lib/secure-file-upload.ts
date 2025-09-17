@@ -8,6 +8,7 @@ import { writeFile, mkdir, access, constants } from 'fs/promises';
 import { join, extname, basename } from 'path';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { uploadToR2, generateFileKey } from './cloudflare-r2';
 
 // Configuration
 const UPLOAD_CONFIG = {
@@ -15,27 +16,13 @@ const UPLOAD_CONFIG = {
   allowedTypes: {
     'image/jpeg': ['.jpg', '.jpeg'],
     'image/png': ['.png'],
-    'image/gif': ['.gif'],
-    'image/webp': ['.webp'],
-    'application/pdf': ['.pdf'],
-    'text/plain': ['.txt'],
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+    'application/pdf': ['.pdf']
   },
   uploadDir: join(process.cwd(), 'public', 'uploads'),
   profilesDir: join(process.cwd(), 'public', 'uploads', 'profiles'),
   documentsDir: join(process.cwd(), 'public', 'uploads', 'documents'),
   tempDir: join(process.cwd(), 'public', 'uploads', 'temp')
 };
-
-// Virus signature patterns (basic detection)
-const VIRUS_SIGNATURES = [
-  // Common virus/malware signatures in hex
-  'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*', // EICAR test string
-  '%PDF-1.', // PDF magic number
-  '\\x7fELF', // ELF executable
-  'MZ', // Windows executable
-];
 
 export class SecureFileUpload {
   /**
@@ -74,16 +61,32 @@ export class SecureFileUpload {
     const arrayBuffer = await file.arrayBuffer();
     const content = new Uint8Array(arrayBuffer);
     
-    // Check for virus signatures
-    const contentString = Array.from(content).map(b => String.fromCharCode(b)).join('');
+    // Check for executable signatures that shouldn't be in documents
+    const header = Array.from(content.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join('');
     
-    for (const signature of VIRUS_SIGNATURES) {
-      if (contentString.includes(signature)) {
-        return {
-          isValid: false,
-          error: 'File contains suspicious content'
-        };
-      }
+    // Check for Windows executable (MZ header)
+    if (header.startsWith('4d5a')) { // MZ in hex
+      return {
+        isValid: false,
+        error: 'Executable files are not allowed'
+      };
+    }
+    
+    // Check for ELF executable
+    if (header.startsWith('7f454c46')) { // ELF in hex
+      return {
+        isValid: false,
+        error: 'Executable files are not allowed'
+      };
+    }
+    
+    // Check for EICAR test string (only check first 100 bytes as text)
+    const textContent = Array.from(content.slice(0, 100)).map(b => String.fromCharCode(b)).join('');
+    if (textContent.includes('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')) {
+      return {
+        isValid: false,
+        error: 'File contains test virus signature'
+      };
     }
 
     // Validate file headers
@@ -118,7 +121,7 @@ export class SecureFileUpload {
         }
         break;
       case 'application/pdf':
-        if (!header.startsWith('255044462d')) {
+        if (!header.startsWith('255044462d')) { // %PDF- in hex
           return { isValid: false, error: 'Invalid PDF file header' };
         }
         break;
@@ -198,25 +201,62 @@ export class SecureFileUpload {
   }
 
   /**
-   * Upload file with security checks
+   * Upload file with security checks using Cloudflare R2 or local fallback
    */
   static async uploadFile(
     file: File, 
-    category: 'profiles' | 'documents' | 'temp' = 'temp',
+    category: 'profiles' | 'documents' | 'temp' = 'documents',
     userId?: string
-  ): Promise<{ success: boolean; filename?: string; path?: string; error?: string }> {
+  ): Promise<{ success: boolean; url?: string; filename?: string; path?: string; error?: string }> {
     try {
+      console.log('🔍 Starting file upload process for:', file.name);
+      
       // Validate file
+      console.log('✅ Validating file...');
       const validation = await this.validateFile(file);
       if (!validation.isValid) {
+        console.log('❌ File validation failed:', validation.error);
         return { success: false, error: validation.error };
       }
+      console.log('✅ File validation passed');
 
-      // Ensure directories exist
-      await this.ensureSecureDirectories();
-
-      // Generate secure filename
+      // Generate secure filename and R2 key
       const secureFilename = this.generateSecureFilename(file.name, userId);
+      const fileExtension = extname(file.name).toLowerCase().substring(1); // Remove the dot
+
+      console.log('📝 Generated filenames:', {
+        original: file.name,
+        secure: secureFilename,
+        extension: fileExtension
+      });
+
+      // Check if Cloudflare R2 is configured
+      const hasR2Config = process.env.CF_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && 
+                         process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET;
+
+      if (hasR2Config) {
+        console.log('☁️ Using Cloudflare R2 storage...');
+        try {
+          const r2Key = generateFileKey(category, userId || 'guest', fileExtension);
+          const uploadResult = await uploadToR2(file, r2Key, file.type);
+          console.log('✅ Upload to R2 successful:', uploadResult.url);
+          
+          return {
+            success: true,
+            url: uploadResult.url,
+            filename: secureFilename,
+            path: uploadResult.url
+          };
+        } catch (r2Error) {
+          console.error('💥 Cloudflare R2 upload failed, falling back to local storage:', r2Error);
+        }
+      } else {
+        console.log('⚠️ Cloudflare R2 not configured, using local storage...');
+      }
+
+      // Fallback to local storage
+      console.log('💾 Using local storage fallback...');
+      await this.ensureSecureDirectories();
 
       // Determine upload directory
       const uploadDir = join(UPLOAD_CONFIG.uploadDir, category);
@@ -229,19 +269,18 @@ export class SecureFileUpload {
       // Write file
       await writeFile(filePath, buffer);
 
-      // Generate file hash for integrity verification
-      const fileHash = createHash('sha256').update(buffer).digest('hex');
-      
-      console.log(`File uploaded successfully: ${secureFilename} (SHA256: ${fileHash})`);
+      const localUrl = `/uploads/${category}/${secureFilename}`;
+      console.log('✅ Local upload successful:', localUrl);
 
       return {
         success: true,
         filename: secureFilename,
-        path: `/uploads/${category}/${secureFilename}`
+        path: localUrl,
+        url: localUrl
       };
 
     } catch (error) {
-      console.error('File upload error:', error);
+      console.error('💥 File upload error:', error);
       return { 
         success: false, 
         error: 'Failed to upload file' 
@@ -278,12 +317,24 @@ export class SecureFileUpload {
 // API route handler for file uploads
 export async function handleFileUpload(request: NextRequest): Promise<NextResponse> {
   try {
+    console.log('🔄 File upload request received');
+    
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const category = (formData.get('category') as string) || 'temp';
+    const category = (formData.get('category') as string) || 'documents';
     const userId = formData.get('userId') as string;
 
+    console.log('📋 Upload request details:', {
+      hasFile: !!file,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+      category,
+      userId
+    });
+
     if (!file) {
+      console.log('❌ No file provided in request');
       return NextResponse.json(
         { success: false, error: 'No file provided' },
         { status: 400 }
@@ -292,21 +343,32 @@ export async function handleFileUpload(request: NextRequest): Promise<NextRespon
 
     // Validate category
     if (!['profiles', 'documents', 'temp'].includes(category)) {
+      console.log('❌ Invalid category:', category);
       return NextResponse.json(
         { success: false, error: 'Invalid category' },
         { status: 400 }
       );
     }
 
+    console.log('🔍 Starting file validation...');
     const result = await SecureFileUpload.uploadFile(file, category as any, userId);
+
+    console.log('📤 Upload result:', {
+      success: result.success,
+      hasUrl: !!result.url,
+      hasFilename: !!result.filename,
+      error: result.error
+    });
 
     if (result.success) {
       return NextResponse.json({
         success: true,
         filename: result.filename,
+        url: result.url,
         path: result.path
       });
     } else {
+      console.log('❌ Upload failed:', result.error);
       return NextResponse.json(
         { success: false, error: result.error },
         { status: 400 }
@@ -314,7 +376,7 @@ export async function handleFileUpload(request: NextRequest): Promise<NextRespon
     }
 
   } catch (error) {
-    console.error('Upload API error:', error);
+    console.error('💥 Upload API error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

@@ -60,6 +60,15 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     minLength: 5,
     maxLength: 200,
     message: 'Keperluan wajib diisi minimal 5 karakter'
+  },
+  file_upload: {
+    // Optional file upload field - URL string validation
+    custom: (value) => {
+      if (!value) return null; // Optional field
+      if (typeof value !== 'string') return 'URL file tidak valid';
+      if (value.length > 500) return 'URL file terlalu panjang';
+      return null;
+    }
   }
 };
 

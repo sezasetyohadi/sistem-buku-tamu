@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
 import { LoadingWrapper } from '@/components/ui/LoadingState';
@@ -12,6 +12,7 @@ import { guestLogger, safeLog } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
 
 import Card from '../ui/Card';
+import FileUpload, { FileUploadRef } from '../ui/FileUpload';
 import FormInput from '../ui/FormInput';
 import FormSelect from '../ui/FormSelect';
 import PrimaryButton from '../ui/PrimaryButton';
@@ -40,12 +41,15 @@ export default function GuestRegistrationForm({
     company: '',
     purpose: '',
     cara_memperoleh: [] as number[], // Changed to number array for IDs
-    notes: ''
+    notes: '',
+    fileUpload: '', // URL dari file yang diupload
+    fileName: '' // Nama file asli
   });
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [token, setToken] = useState<string>('');
+  const fileUploadRef = useRef<FileUploadRef>(null);
 
   // Use API hooks for loading form options
   const {
@@ -286,7 +290,9 @@ export default function GuestRegistrationForm({
         keterangan: formData.notes, // Changed from catatan to keterangan  
         tujuan_kunjungan_id: formData.purpose ? parseInt(formData.purpose) : undefined,
         tujuan_kunjungan_lainnya: formData.purpose === '999' ? formData.notes : null,
-        cara_memperoleh: formData.cara_memperoleh
+        cara_memperoleh: formData.cara_memperoleh,
+        file_upload: formData.fileUpload || null, // Add file upload URL
+        file_name: formData.fileName || null // Add original file name
       };
       
       safeLog.sensitive('Sending data to API', apiFormData);
@@ -339,9 +345,12 @@ export default function GuestRegistrationForm({
             company: '',
             purpose: '',
             cara_memperoleh: [],
-            notes: ''
+            notes: '',
+            fileUpload: '',
+            fileName: ''
           });
           setErrors({});
+          fileUploadRef.current?.reset(); // Reset file upload component
         } else if (result.success) {
           // Registration successful but no token
           console.warn('Registration successful but no token received');
@@ -359,9 +368,12 @@ export default function GuestRegistrationForm({
             company: '',
             purpose: '',
             cara_memperoleh: [],
-            notes: ''
+            notes: '',
+            fileUpload: '',
+            fileName: ''
           });
           setErrors({});
+          fileUploadRef.current?.reset(); // Reset file upload component
         }
         
         // Note: Removed the duplicate onSubmit call here since we're already using it above
@@ -646,6 +658,31 @@ export default function GuestRegistrationForm({
           )}
         </div>
 
+        {/* File Upload Section */}
+        <div className="w-full">
+          <FileUpload
+            label="Upload Berkas"
+            name="fileUpload"
+            accept=".jpg,.jpeg,.png,.pdf"
+            maxSize={5 * 1024 * 1024} // 5MB
+            onFileSelect={(file, url, fileName) => {
+              if (url && fileName) {
+                setFormData(prev => ({ ...prev, fileUpload: url, fileName: fileName }));
+                // Clear any file upload errors
+                if (errors.fileUpload) {
+                  setErrors(prev => ({ ...prev, fileUpload: '' }));
+                }
+              } else {
+                setFormData(prev => ({ ...prev, fileUpload: '', fileName: '' }));
+              }
+            }}
+            error={errors.fileUpload}
+            hint="Maksimal 1 file, ukuran 5MB. Format: JPG, PNG, PDF"
+            value={formData.fileUpload}
+            ref={fileUploadRef}
+          />
+        </div>
+
         <div className="flex flex-col gap-3 sm:gap-4 pt-4 sm:pt-6">
           <LoadingButton
             type="submit"
@@ -675,9 +712,12 @@ export default function GuestRegistrationForm({
                 company: '',
                 purpose: '',
                 cara_memperoleh: [],
-                notes: ''
+                notes: '',
+                fileUpload: '',
+                fileName: ''
               });
               setErrors({});
+              fileUploadRef.current?.reset(); // Reset file upload component
             }}
           >
             Reset

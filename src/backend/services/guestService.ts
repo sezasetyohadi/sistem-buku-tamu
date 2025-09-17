@@ -92,8 +92,8 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir_id, 
-       profesi_id, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?)
+       profesi_id, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload, file_name) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?, ?)
     `;
     
     // Parameter with all needed fields including catatan_tambahan
@@ -108,7 +108,8 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       formData.asal_instansi || null,
       keperluan,
       formData.catatan || null, // Save notes to catatan_tambahan column
-      formData.file_upload || null
+      formData.file_upload || null,
+      formData.file_name || null // Add original filename
     ];
 
     const result = await executeQuery<any>(query, params);
