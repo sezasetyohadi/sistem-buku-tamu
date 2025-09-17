@@ -33,10 +33,16 @@ export function middleware(request: NextRequest) {
     return enforceHttps(request);
   }
 
+  // Subdomain-based mode detection
+  const detectedMode = detectModeFromSubdomain(hostname);
+  const finalMode = detectedMode || appMode;
+  
+  console.log('Mode detection - ENV:', appMode, 'Subdomain:', detectedMode, 'Final:', finalMode);
+
   // Mode-specific routing logic
-  if (appMode === 'admin') {
+  if (finalMode === 'admin') {
     // Admin deployment mode
-    console.log('Admin deployment mode detected');
+    console.log('Admin mode detected');
     
     // Redirect root to admin
     if (pathname === '/') {
@@ -48,7 +54,7 @@ export function middleware(request: NextRequest) {
     if (pathname.startsWith('/guest') || 
         pathname === '/register' || 
         pathname === '/visit') {
-      console.log('Blocking guest route in admin deployment:', pathname);
+      console.log('Blocking guest route in admin mode:', pathname);
       return NextResponse.redirect(new URL('/access-denied', request.url));
     }
     
@@ -71,9 +77,9 @@ export function middleware(request: NextRequest) {
     }
   }
   
-  else if (appMode === 'guest') {
+  else if (finalMode === 'guest') {
     // Guest deployment mode
-    console.log('Guest deployment mode detected');
+    console.log('Guest mode detected');
     
     // Redirect root to guest landing
     if (pathname === '/') {
@@ -83,7 +89,7 @@ export function middleware(request: NextRequest) {
     
     // Block admin routes in guest deployment
     if (pathname.startsWith('/admin')) {
-      console.log('Blocking admin route in guest deployment:', pathname);
+      console.log('Blocking admin route in guest mode:', pathname);
       return NextResponse.redirect(new URL('/access-denied', request.url));
     }
     
@@ -105,79 +111,10 @@ export function middleware(request: NextRequest) {
     // Development or full mode
     console.log('Development/full mode - allowing flexible routing');
     
-    // URL-based access control for development
-    const urlAccessControl = checkUrlBasedAccess(request);
-    if (urlAccessControl) {
-      return urlAccessControl;
-    }
-    
-    // Flexible domain-based routing using environment variables
-    if (hostname) {
-      console.log('Checking domain routing for hostname:', hostname);
-      
-      // Get configured domains from environment variables
-      const adminDomain = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
-      const guestDomain = process.env.NEXT_PUBLIC_GUEST_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
-      const baseDomain = process.env.NEXT_PUBLIC_BASE_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
-      
-      console.log('Domain config:', { 
-        hostname, 
-        adminDomain, 
-        guestDomain, 
-        baseDomain,
-        currentPath: pathname 
-      });
-      
-      // Check if current hostname matches admin domain
-      const isAdminDomain = adminDomain && hostname === adminDomain;
-      const isGuestDomain = guestDomain && hostname === guestDomain;
-      const isBaseDomain = baseDomain && hostname === baseDomain;
-      
-      console.log('Domain detection:', { isAdminDomain, isGuestDomain, isBaseDomain });
-      
-      if (isAdminDomain) {
-        console.log('Admin domain detected:', hostname);
-        // Admin domain should only serve admin routes
-        if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
-          console.log('Redirecting to admin from:', pathname);
-          return NextResponse.redirect(new URL('/admin', request.url));
-        }
-        
-        // Block guest routes on admin domain
-        if (pathname.startsWith('/guest')) {
-          console.log('Blocking guest route on admin domain');
-          return NextResponse.redirect(new URL('/admin', request.url));
-        }
-      } 
-      else if (isGuestDomain) {
-        console.log('Guest domain detected:', hostname);
-        // Guest domain should only serve guest routes
-        if (!pathname.startsWith('/guest') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
-          console.log('Redirecting to guest from:', pathname);
-          return NextResponse.redirect(new URL('/guest', request.url));
-        }
-        
-        // Block admin routes on guest domain
-        if (pathname.startsWith('/admin')) {
-          console.log('Blocking admin route on guest domain');
-          return NextResponse.redirect(new URL('/guest', request.url));
-        }
-      }
-      else if (isBaseDomain || process.env.NODE_ENV === 'development') {
-        console.log('Base/development domain - allowing both routes');
-        // Base domain allows both, redirect root to guest by default
-        if (pathname === '/') {
-          console.log('Redirecting root to guest landing');
-          return NextResponse.redirect(new URL('/guest/landing', request.url));
-        }
-      }
-      else {
-        console.log('Unknown domain, allowing default behavior');
-        // For unknown domains, allow default Next.js behavior
-        if (pathname === '/') {
-          return NextResponse.redirect(new URL('/guest/landing', request.url));
-        }
-      }
+    // Default routing for development
+    if (pathname === '/') {
+      console.log('Redirecting root to guest landing');
+      return NextResponse.redirect(new URL('/guest/landing', request.url));
     }
     
     // Always allow login page - no authentication required
@@ -210,6 +147,48 @@ export function middleware(request: NextRequest) {
   }
   
   return response;
+}
+
+// Detect mode from subdomain
+function detectModeFromSubdomain(hostname: string): string | null {
+  if (!hostname) return null;
+  
+  // Check for admin subdomain
+  if (hostname.startsWith('admin.') || hostname.includes('admin-') || hostname.includes('-admin')) {
+    return 'admin';
+  }
+  
+  // Check for guest subdomain or main domain (default to guest)
+  if (hostname.startsWith('guest.') || hostname.includes('guest-') || hostname.includes('-guest')) {
+    return 'guest';
+  }
+  
+  // For Vercel deployments, check hostname pattern
+  if (hostname.includes('vercel.app')) {
+    if (hostname.includes('admin')) {
+      return 'admin';
+    } else if (hostname.includes('guest')) {
+      return 'guest';
+    }
+  }
+  
+  // Default behavior based on known patterns
+  const adminPatterns = ['admin', 'panel', 'dashboard'];
+  const guestPatterns = ['guest', 'visitor', 'public'];
+  
+  for (const pattern of adminPatterns) {
+    if (hostname.includes(pattern)) {
+      return 'admin';
+    }
+  }
+  
+  for (const pattern of guestPatterns) {
+    if (hostname.includes(pattern)) {
+      return 'guest';
+    }
+  }
+  
+  return null;
 }
 
 // URL-based Access Control

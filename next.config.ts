@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const appMode = process.env.APP_MODE || process.env.NEXT_PUBLIC_APP_MODE || 'full';
 
+console.log('Next.js Config - Building with APP_MODE:', appMode);
+
 const nextConfig: NextConfig = {
   // SWC minification is enabled by default in Next.js 13+, no need to specify
   reactStrictMode: true,
@@ -38,14 +40,38 @@ const nextConfig: NextConfig = {
     appMode: appMode,
   },
   
+  // Headers for security and mode identification
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-App-Mode',
+            value: appMode,
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+        ],
+      },
+    ];
+  },
+  
   // Conditional redirects based on environment and domain
   async redirects() {
     const redirects = [];
     
-    console.log('Next.js config - APP_MODE:', appMode);
+    console.log('Next.js config redirects - APP_MODE:', appMode);
     
     if (appMode === 'admin') {
       // Admin deployment redirects
+      console.log('Setting up admin redirects');
       redirects.push(
         {
           source: '/',
@@ -70,6 +96,7 @@ const nextConfig: NextConfig = {
       );
     } else if (appMode === 'guest') {
       // Guest deployment redirects
+      console.log('Setting up guest redirects');
       redirects.push(
         {
           source: '/',
@@ -84,6 +111,7 @@ const nextConfig: NextConfig = {
       );
     } else {
       // Full mode - redirect root to guest landing by default
+      console.log('Setting up full mode redirects');
       redirects.push({
         source: '/',
         destination: '/guest/landing',
@@ -91,21 +119,24 @@ const nextConfig: NextConfig = {
       });
     }
     
+    console.log('Generated redirects:', redirects);
     return redirects;
   },
   
-  // Conditional rewrites for domain-based routing
+  // Conditional rewrites for API routing
   async rewrites() {
     const rewrites = [];
     
     // Mode-specific API blocking
     if (appMode === 'admin') {
+      console.log('Setting up admin API rewrites - blocking guest APIs');
       // Block guest-specific API routes in admin deployment
       rewrites.push({
         source: '/api/guest/:path*',
         destination: '/api/not-found',
       });
     } else if (appMode === 'guest') {
+      console.log('Setting up guest API rewrites - blocking admin APIs');
       // Block admin-specific API routes in guest deployment
       rewrites.push({
         source: '/api/admin/:path*',
@@ -113,6 +144,7 @@ const nextConfig: NextConfig = {
       });
     }
     
+    console.log('Generated rewrites:', rewrites);
     return rewrites;
   }
 };
