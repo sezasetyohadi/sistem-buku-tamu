@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "name": "buku-tamu-guest",
+  "alias": ["guest-buku-tamu"],
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "build": {
+    "env": {
+      "APP_MODE": "guest",
+      "NEXT_PUBLIC_APP_MODE": "guest"
+    }
+  },
+  "env": {
+    "APP_MODE": "guest",
+    "NEXT_PUBLIC_APP_MODE": "guest"
+  },
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/admin/(.*)",
+      "destination": "/access-denied"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/guest",
+      "permanent": false
+    }
+  ]
+}

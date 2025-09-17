@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const appMode = process.env.APP_MODE || process.env.NEXT_PUBLIC_APP_MODE || 'full';
+
 const nextConfig: NextConfig = {
   // SWC minification is enabled by default in Next.js 13+, no need to specify
   reactStrictMode: true,
@@ -25,42 +27,61 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['react-icons', 'date-fns', 'lodash', 'recharts'],
   },
   env: {
-    APP_MODE: process.env.APP_MODE || 'full',
+    APP_MODE: appMode,
     ADMIN_PORT: process.env.ADMIN_PORT || '3001',
     GUEST_PORT: process.env.GUEST_PORT || '3000',
+    CUSTOM_KEY: 'value'
   },
+  
+  // Public runtime config
+  publicRuntimeConfig: {
+    appMode: appMode,
+  },
+  
   // Conditional redirects based on environment and domain
   async redirects() {
-    const appMode = process.env.APP_MODE;
     const redirects = [];
     
-    // Default redirect for root to guest landing
+    console.log('Next.js config - APP_MODE:', appMode);
+    
     if (appMode === 'admin') {
-      redirects.push({
-        source: '/',
-        destination: '/admin',
-        permanent: false,
-      });
-      
-      // Block guest routes in admin mode
-      redirects.push({
-        source: '/guest/:path*',
-        destination: '/admin',
-        permanent: false,
-      });
+      // Admin deployment redirects
+      redirects.push(
+        {
+          source: '/',
+          destination: '/admin',
+          permanent: false,
+        },
+        {
+          source: '/guest/:path*',
+          destination: '/access-denied',
+          permanent: false,
+        },
+        {
+          source: '/register',
+          destination: '/access-denied',
+          permanent: false,
+        },
+        {
+          source: '/visit',
+          destination: '/access-denied',
+          permanent: false,
+        }
+      );
     } else if (appMode === 'guest') {
-      redirects.push({
-        source: '/',
-        destination: '/guest/landing',
-        permanent: false,
-      });
-      
-      // Block admin routes in guest mode
-      redirects.push({
-        source: '/admin/:path*',
-        destination: '/guest',
-        permanent: false,
-      });
+      // Guest deployment redirects
+      redirects.push(
+        {
+          source: '/',
+          destination: '/guest',
+          permanent: false,
+        },
+        {
+          source: '/admin/:path*',
+          destination: '/access-denied',
+          permanent: false,
+        }
+      );
     } else {
       // Full mode - redirect root to guest landing by default
       redirects.push({
@@ -76,15 +97,16 @@ const nextConfig: NextConfig = {
   // Conditional rewrites for domain-based routing
   async rewrites() {
     const rewrites = [];
-    const appMode = process.env.APP_MODE;
     
-    // Block API routes based on mode
+    // Mode-specific API blocking
     if (appMode === 'admin') {
+      // Block guest-specific API routes in admin deployment
       rewrites.push({
         source: '/api/guest/:path*',
         destination: '/api/not-found',
       });
     } else if (appMode === 'guest') {
+      // Block admin-specific API routes in guest deployment
       rewrites.push({
         source: '/api/admin/:path*',
         destination: '/api/not-found',

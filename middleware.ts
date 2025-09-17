@@ -4,7 +4,7 @@ import { verifyToken } from './src/lib/jwt';
 import { envValidator } from './src/lib/environment-validator';
 
 export function middleware(request: NextRequest) {
-  const appMode = process.env.APP_MODE;
+  const appMode = process.env.APP_MODE || process.env.NEXT_PUBLIC_APP_MODE;
   const pathname = request.nextUrl.pathname;
   const hostname = request.nextUrl.hostname;
   const requestUrl = request.nextUrl.origin;
@@ -17,145 +17,181 @@ export function middleware(request: NextRequest) {
   // Apply security headers to all responses
   applySecurityHeaders(response, request);
   
+  // Skip middleware for static files and API routes
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/static') ||
+    pathname.includes('.')
+  ) {
+    return response;
+  }
+
   // HTTPS Enforcement for production
   if (shouldEnforceHttps(request)) {
     return enforceHttps(request);
   }
 
-  // URL-based access control
-  const urlAccessControl = checkUrlBasedAccess(request);
-  if (urlAccessControl) {
-    return urlAccessControl;
-  }
-  
-  // Flexible domain-based routing using environment variables
-  if (hostname) {
-    console.log('Checking domain routing for hostname:', hostname);
-    
-    // Get configured domains from environment variables
-    const adminDomain = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const guestDomain = process.env.NEXT_PUBLIC_GUEST_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const baseDomain = process.env.NEXT_PUBLIC_BASE_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    
-    console.log('Domain config:', { 
-      hostname, 
-      adminDomain, 
-      guestDomain, 
-      baseDomain,
-      currentPath: pathname 
-    });
-    
-    // Check if current hostname matches admin domain
-    const isAdminDomain = adminDomain && hostname === adminDomain;
-    const isGuestDomain = guestDomain && hostname === guestDomain;
-    const isBaseDomain = baseDomain && hostname === baseDomain;
-    
-    console.log('Domain detection:', { isAdminDomain, isGuestDomain, isBaseDomain });
-    
-    if (isAdminDomain) {
-      console.log('Admin domain detected:', hostname);
-      // Admin domain should only serve admin routes
-      if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
-        console.log('Redirecting to admin from:', pathname);
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
-      
-      // Block guest routes on admin domain
-      if (pathname.startsWith('/guest')) {
-        console.log('Blocking guest route on admin domain');
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
-    } 
-    else if (isGuestDomain) {
-      console.log('Guest domain detected:', hostname);
-      // Guest domain should only serve guest routes
-      if (!pathname.startsWith('/guest') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
-        console.log('Redirecting to guest from:', pathname);
-        return NextResponse.redirect(new URL('/guest', request.url));
-      }
-      
-      // Block admin routes on guest domain
-      if (pathname.startsWith('/admin')) {
-        console.log('Blocking admin route on guest domain');
-        return NextResponse.redirect(new URL('/guest', request.url));
-      }
-    }
-    else if (isBaseDomain || process.env.NODE_ENV === 'development') {
-      console.log('Base/development domain - allowing both routes');
-      // Base domain allows both, redirect root to guest by default
-      if (pathname === '/') {
-        console.log('Redirecting root to guest landing');
-        return NextResponse.redirect(new URL('/guest/landing', request.url));
-      }
-    }
-    else {
-      console.log('Unknown domain, allowing default behavior');
-      // For unknown domains, allow default Next.js behavior
-      if (pathname === '/') {
-        return NextResponse.redirect(new URL('/guest/landing', request.url));
-      }
-    }
-  }
-  
-  // Always allow login page - no authentication required
-  if (pathname === '/admin/login') {
-    console.log('Allowing access to login page');
-    return response;
-  }
-  
-  // Mode-specific routing
+  // Mode-specific routing logic
   if (appMode === 'admin') {
-    // Block guest routes in admin mode
-    if (pathname.startsWith('/guest') && !pathname.startsWith('/guest/dashboard')) {
+    // Admin deployment mode
+    console.log('Admin deployment mode detected');
+    
+    // Redirect root to admin
+    if (pathname === '/') {
+      console.log('Redirecting root to admin dashboard');
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     
-    // Ensure admin authentication for ALL admin routes except login
+    // Block guest routes in admin deployment
+    if (pathname.startsWith('/guest') || 
+        pathname === '/register' || 
+        pathname === '/visit') {
+      console.log('Blocking guest route in admin deployment:', pathname);
+      return NextResponse.redirect(new URL('/access-denied', request.url));
+    }
+    
+    // Ensure all non-admin routes redirect to admin (except access-denied and reset-password)
+    if (!pathname.startsWith('/admin') && 
+        !pathname.startsWith('/access-denied') &&
+        !pathname.startsWith('/reset-password-page')) {
+      console.log('Redirecting to admin from:', pathname);
+      return NextResponse.redirect(new URL(`/admin${pathname}`, request.url));
+    }
+    
+    // Admin authentication check
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const isAuthenticated = checkAdminAuthentication(request);
-      console.log('Admin page access check - Authenticated:', isAuthenticated);
+      console.log('Admin auth check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        console.log('Redirecting to login - not authenticated');
+        console.log('Redirecting to admin login');
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     }
   }
   
-  if (appMode === 'guest') {
-    // Allow access to the main landing page ("/")
+  else if (appMode === 'guest') {
+    // Guest deployment mode
+    console.log('Guest deployment mode detected');
+    
+    // Redirect root to guest landing
     if (pathname === '/') {
-      return NextResponse.next();
+      console.log('Redirecting root to guest landing');
+      return NextResponse.redirect(new URL('/guest', request.url));
     }
     
-    // Allow access to guest registration and login pages
-    if (pathname === '/guest/register' || pathname === '/guest/landing') {
-      return NextResponse.next();
+    // Block admin routes in guest deployment
+    if (pathname.startsWith('/admin')) {
+      console.log('Blocking admin route in guest deployment:', pathname);
+      return NextResponse.redirect(new URL('/access-denied', request.url));
     }
     
-    // Ensure guest authentication for protected guest routes
+    // Guest authentication for protected routes
     if (pathname.startsWith('/guest') && 
         pathname !== '/guest/register' && 
-        pathname !== '/guest/landing') {
+        pathname !== '/guest/landing' &&
+        pathname !== '/guest') {
       const isAuthenticated = checkGuestAuthentication(request);
-      console.log('Guest page access check - Authenticated:', isAuthenticated);
+      console.log('Guest auth check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        console.log('Redirecting to guest landing - not authenticated');
+        console.log('Redirecting to guest landing');
         return NextResponse.redirect(new URL('/guest/landing', request.url));
       }
     }
-    
-    // Block admin routes in guest mode
-    if (pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/guest', request.url));
-    }
   }
   
-  // Original admin authentication logic for full mode
-  if (!appMode || appMode === 'full') {
-    // Admin authentication
+  else {
+    // Development or full mode
+    console.log('Development/full mode - allowing flexible routing');
+    
+    // URL-based access control for development
+    const urlAccessControl = checkUrlBasedAccess(request);
+    if (urlAccessControl) {
+      return urlAccessControl;
+    }
+    
+    // Flexible domain-based routing using environment variables
+    if (hostname) {
+      console.log('Checking domain routing for hostname:', hostname);
+      
+      // Get configured domains from environment variables
+      const adminDomain = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const guestDomain = process.env.NEXT_PUBLIC_GUEST_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const baseDomain = process.env.NEXT_PUBLIC_BASE_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      
+      console.log('Domain config:', { 
+        hostname, 
+        adminDomain, 
+        guestDomain, 
+        baseDomain,
+        currentPath: pathname 
+      });
+      
+      // Check if current hostname matches admin domain
+      const isAdminDomain = adminDomain && hostname === adminDomain;
+      const isGuestDomain = guestDomain && hostname === guestDomain;
+      const isBaseDomain = baseDomain && hostname === baseDomain;
+      
+      console.log('Domain detection:', { isAdminDomain, isGuestDomain, isBaseDomain });
+      
+      if (isAdminDomain) {
+        console.log('Admin domain detected:', hostname);
+        // Admin domain should only serve admin routes
+        if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
+          console.log('Redirecting to admin from:', pathname);
+          return NextResponse.redirect(new URL('/admin', request.url));
+        }
+        
+        // Block guest routes on admin domain
+        if (pathname.startsWith('/guest')) {
+          console.log('Blocking guest route on admin domain');
+          return NextResponse.redirect(new URL('/admin', request.url));
+        }
+      } 
+      else if (isGuestDomain) {
+        console.log('Guest domain detected:', hostname);
+        // Guest domain should only serve guest routes
+        if (!pathname.startsWith('/guest') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
+          console.log('Redirecting to guest from:', pathname);
+          return NextResponse.redirect(new URL('/guest', request.url));
+        }
+        
+        // Block admin routes on guest domain
+        if (pathname.startsWith('/admin')) {
+          console.log('Blocking admin route on guest domain');
+          return NextResponse.redirect(new URL('/guest', request.url));
+        }
+      }
+      else if (isBaseDomain || process.env.NODE_ENV === 'development') {
+        console.log('Base/development domain - allowing both routes');
+        // Base domain allows both, redirect root to guest by default
+        if (pathname === '/') {
+          console.log('Redirecting root to guest landing');
+          return NextResponse.redirect(new URL('/guest/landing', request.url));
+        }
+      }
+      else {
+        console.log('Unknown domain, allowing default behavior');
+        // For unknown domains, allow default Next.js behavior
+        if (pathname === '/') {
+          return NextResponse.redirect(new URL('/guest/landing', request.url));
+        }
+      }
+    }
+    
+    // Always allow login page - no authentication required
+    if (pathname === '/admin/login') {
+      console.log('Allowing access to login page');
+      return response;
+    }
+    
+    // Admin authentication for ALL admin routes except login
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const isAuthenticated = checkAdminAuthentication(request);
+      console.log('Admin page access check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
+        console.log('Redirecting to login - not authenticated');
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     }
@@ -165,7 +201,9 @@ export function middleware(request: NextRequest) {
         pathname !== '/guest/register' && 
         pathname !== '/guest/landing') {
       const isAuthenticated = checkGuestAuthentication(request);
+      console.log('Guest page access check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
+        console.log('Redirecting to guest landing - not authenticated');
         return NextResponse.redirect(new URL('/guest/landing', request.url));
       }
     }
@@ -351,11 +389,6 @@ function checkGuestAuthentication(request: NextRequest): boolean {
 
 export const config = {
   matcher: [
-    '/admin/:path*',
-    '/guest/:path*',
-    '/reset-password-page/:path*',
-    '/access-denied',
-    '/api/:path*'
-    // Removed '/' from matcher so it doesn't interfere with landing page
+    '/((?!api|_next/static|_next/image|favicon.ico|static).*)',
   ],
 };
