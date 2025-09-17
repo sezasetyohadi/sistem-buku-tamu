@@ -141,6 +141,7 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       catatan: sanitizedData.keterangan || undefined, // Map keterangan to catatan field for catatan_tambahan column
       tujuan_kunjungan_id: sanitizedData.tujuan_kunjungan_id,
       file_upload: sanitizedData.file_upload || undefined,
+      file_name: sanitizedData.file_name || undefined, // Add original file name
       cara_memperoleh: sanitizedData.cara_memperoleh || undefined,
       cara_salinan: sanitizedData.cara_salinan || undefined
     };
