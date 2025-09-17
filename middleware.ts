@@ -28,20 +28,34 @@ export function middleware(request: NextRequest) {
     return urlAccessControl;
   }
   
-  // Domain-based routing for production deployment
-  if (process.env.NODE_ENV === 'production' && hostname) {
-    console.log('Production mode - checking domain routing');
+  // Flexible domain-based routing using environment variables
+  if (hostname) {
+    console.log('Checking domain routing for hostname:', hostname);
     
-    // Check if domain indicates admin or guest based on actual domains
-    const isAdminDomain = hostname.includes('admin-sistem-buku-tamu') || hostname.includes('admin.');
-    const isGuestDomain = hostname.includes('guest-sistem-buku-tamu') || hostname.includes('guest.');
+    // Get configured domains from environment variables
+    const adminDomain = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const guestDomain = process.env.NEXT_PUBLIC_GUEST_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const baseDomain = process.env.NEXT_PUBLIC_BASE_URL?.replace(/^https?:\/\//, '').replace(/\/$/, '');
     
-    console.log('Domain detection:', { hostname, isAdminDomain, isGuestDomain });
+    console.log('Domain config:', { 
+      hostname, 
+      adminDomain, 
+      guestDomain, 
+      baseDomain,
+      currentPath: pathname 
+    });
+    
+    // Check if current hostname matches admin domain
+    const isAdminDomain = adminDomain && hostname === adminDomain;
+    const isGuestDomain = guestDomain && hostname === guestDomain;
+    const isBaseDomain = baseDomain && hostname === baseDomain;
+    
+    console.log('Domain detection:', { isAdminDomain, isGuestDomain, isBaseDomain });
     
     if (isAdminDomain) {
       console.log('Admin domain detected:', hostname);
       // Admin domain should only serve admin routes
-      if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && pathname !== '/favicon.ico') {
+      if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
         console.log('Redirecting to admin from:', pathname);
         return NextResponse.redirect(new URL('/admin', request.url));
       }
@@ -55,7 +69,7 @@ export function middleware(request: NextRequest) {
     else if (isGuestDomain) {
       console.log('Guest domain detected:', hostname);
       // Guest domain should only serve guest routes
-      if (!pathname.startsWith('/guest') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && pathname !== '/favicon.ico') {
+      if (!pathname.startsWith('/guest') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/static')) {
         console.log('Redirecting to guest from:', pathname);
         return NextResponse.redirect(new URL('/guest', request.url));
       }
@@ -66,12 +80,19 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/guest', request.url));
       }
     }
-    else {
-      console.log('Main domain - allowing both routes');
-      // Main domain allows both, but redirect root to appropriate section
+    else if (isBaseDomain || process.env.NODE_ENV === 'development') {
+      console.log('Base/development domain - allowing both routes');
+      // Base domain allows both, redirect root to guest by default
       if (pathname === '/') {
-        // You can choose default behavior for main domain
-        return NextResponse.redirect(new URL('/guest', request.url));
+        console.log('Redirecting root to guest landing');
+        return NextResponse.redirect(new URL('/guest/landing', request.url));
+      }
+    }
+    else {
+      console.log('Unknown domain, allowing default behavior');
+      // For unknown domains, allow default Next.js behavior
+      if (pathname === '/') {
+        return NextResponse.redirect(new URL('/guest/landing', request.url));
       }
     }
   }

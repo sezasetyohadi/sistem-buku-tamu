@@ -29,74 +29,69 @@ const nextConfig: NextConfig = {
     ADMIN_PORT: process.env.ADMIN_PORT || '3001',
     GUEST_PORT: process.env.GUEST_PORT || '3000',
   },
-  // Conditional redirects based on APP_MODE
+  // Conditional redirects based on environment and domain
   async redirects() {
     const appMode = process.env.APP_MODE;
+    const redirects = [];
     
     // Default redirect for root to guest landing
-    const defaultRedirects = [
-      {
+    if (appMode === 'admin') {
+      redirects.push({
+        source: '/',
+        destination: '/admin',
+        permanent: false,
+      });
+      
+      // Block guest routes in admin mode
+      redirects.push({
+        source: '/guest/:path*',
+        destination: '/admin',
+        permanent: false,
+      });
+    } else if (appMode === 'guest') {
+      redirects.push({
         source: '/',
         destination: '/guest/landing',
         permanent: false,
-      }
-    ];
-    
-    if (appMode === 'admin') {
-      return [
-        {
-          source: '/',
-          destination: '/admin',
-          permanent: false,
-        },
-        {
-          source: '/guest/:path*',
-          destination: '/admin',
-          permanent: false,
-        }
-      ];
+      });
+      
+      // Block admin routes in guest mode
+      redirects.push({
+        source: '/admin/:path*',
+        destination: '/guest',
+        permanent: false,
+      });
+    } else {
+      // Full mode - redirect root to guest landing by default
+      redirects.push({
+        source: '/',
+        destination: '/guest/landing',
+        permanent: false,
+      });
     }
     
-    if (appMode === 'guest') {
-      return [
-        {
-          source: '/',
-          destination: '/guest/landing',
-          permanent: false,
-        },
-        {
-          source: '/admin/:path*',
-          destination: '/guest',
-          permanent: false,
-        }
-      ];
-    }
-    
-    return defaultRedirects;
+    return redirects;
   },
-  // Conditional rewrites for API routes
+  
+  // Conditional rewrites for domain-based routing
   async rewrites() {
+    const rewrites = [];
     const appMode = process.env.APP_MODE;
     
+    // Block API routes based on mode
     if (appMode === 'admin') {
-      return [
-        {
-          source: '/api/guest/:path*',
-          destination: '/api/not-found',
-        }
-      ];
+      rewrites.push({
+        source: '/api/guest/:path*',
+        destination: '/api/not-found',
+      });
+    } else if (appMode === 'guest') {
+      rewrites.push({
+        source: '/api/admin/:path*',
+        destination: '/api/not-found',
+      });
     }
     
-    if (appMode === 'guest') {
-      return [
-        {
-          source: '/api/admin/:path*',
-          destination: '/api/not-found',
-        }
-      ];
-    }
-    
-    return [];
+    return rewrites;
   }
 };
 
