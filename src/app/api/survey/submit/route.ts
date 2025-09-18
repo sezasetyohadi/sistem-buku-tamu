@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { submitSurveyWithIdentity } from '@/backend/services/surveyService';
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
+import { createCaptchaMiddleware } from '@/lib/captcha-verification';
 import { apiLogger } from '@/lib/logger';
 import { 
   validateAndSanitize,
@@ -79,6 +80,35 @@ const SURVEY_SUBMIT_SCHEMA: ValidationSchema = {
 export const POST = withApiMiddleware(async (request, response, context) => {
   try {
     const body = await validateJsonBody(request);
+    
+    // Verify CAPTCHA first
+    const verifyCaptcha = createCaptchaMiddleware({
+      required: true,
+      skipInDevelopment: false // Set to true if you want to skip CAPTCHA in development
+    });
+
+    const captchaResult = await verifyCaptcha(request);
+    
+    if (!captchaResult.success) {
+      apiLogger.warn('CAPTCHA verification failed for survey submission', {
+        operation: 'POST_SURVEY_SUBMIT_CAPTCHA_ERROR',
+        metadata: {
+          requestId: context.requestId,
+          error: captchaResult.error
+        }
+      });
+
+      return response.error(
+        captchaResult.error || 'CAPTCHA verification failed',
+        HttpStatus.BAD_REQUEST,
+        ErrorCodes.VALIDATION_ERROR
+      );
+    }
+
+    apiLogger.info('CAPTCHA verification successful for survey submission', {
+      operation: 'POST_SURVEY_SUBMIT_CAPTCHA_SUCCESS',
+      metadata: { requestId: context.requestId }
+    });
     
     // Validate survey submission data
     const validation = validateSchema(body, SURVEY_SUBMIT_SCHEMA);

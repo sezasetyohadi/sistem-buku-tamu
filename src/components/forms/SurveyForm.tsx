@@ -3,7 +3,9 @@
 import { lazy, Suspense } from 'react';
 
 import Card from '@/components/ui/Card';
+import TurnstileCaptcha from '@/components/ui/TurnstileCaptcha';
 import { useSurveyData, useDropdownState } from '@/hooks/useSurveyForm';
+import { useTurnstileCaptcha } from '@/hooks/useTurnstileCaptcha';
 import { submitSurvey } from '@/lib/survey-api';
 import { showToast } from '@/lib/toast';
 import { SurveySubmission } from '@/types/survey-types';
@@ -45,6 +47,23 @@ export default function SurveyForm() {
     handleDropdownChange
   } = useDropdownState();
 
+  // CAPTCHA hook
+  const {
+    captchaToken,
+    isCaptchaVerified,
+    captchaError,
+    handleCaptchaVerify,
+    handleCaptchaError,
+    handleCaptchaExpire,
+    resetCaptcha,
+    getCaptchaValidationError
+  } = useTurnstileCaptcha({
+    required: true,
+    onVerificationChange: (isVerified) => {
+      console.log('CAPTCHA verification status changed:', isVerified);
+    }
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -53,6 +72,14 @@ export default function SurveyForm() {
       // Validate identity data
       if (!isFormValid()) {
         showToast.validation('Mohon lengkapi semua data identitas responden');
+        setSubmitting(false);
+        return;
+      }
+
+      // Validate CAPTCHA
+      const captchaValidationError = getCaptchaValidationError();
+      if (captchaValidationError) {
+        showToast.validation(captchaValidationError);
         setSubmitting(false);
         return;
       }
@@ -79,19 +106,23 @@ export default function SurveyForm() {
           jenis_layanan: guestIdentity.jenis_layanan || ''
         },
         answers,
-        feedback: feedback.trim()
+        feedback: feedback.trim(),
+        captchaToken: captchaToken || undefined // Add CAPTCHA token to submission
       };
 
       const result = await submitSurvey(submission);
 
       if (result.success) {
         setSubmitted(true);
+        resetCaptcha(); // Reset CAPTCHA on successful submission
       } else {
         showToast.error('Gagal mengirim survey: ' + (result.message || 'Unknown error'));
+        resetCaptcha(); // Reset CAPTCHA on error to allow retry
       }
     } catch (error) {
       console.error('Error submitting survey:', error);
       showToast.error('Terjadi kesalahan saat mengirim survey');
+      resetCaptcha(); // Reset CAPTCHA on error to allow retry
     } finally {
       setSubmitting(false);
     }
@@ -113,7 +144,7 @@ export default function SurveyForm() {
     <>
       <Card variant="elevated" padding="lg">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Survey Kepuasan Layanan</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Survei Kepuasan Layanan</h2>
           <p className="text-gray-800">Berikan penilaian Anda terhadap layanan DISNAKERTRANS Provinsi Jawa Tengah</p>
         </div>
 
@@ -188,13 +219,42 @@ export default function SurveyForm() {
             />
           </div>
 
+          {/* CAPTCHA Section */}
+          <div className="mb-8">
+            <label className="block text-lg font-semibold text-gray-900 mb-4">
+              Verifikasi Keamanan
+            </label>
+            <div className="flex justify-center">
+              <TurnstileCaptcha
+                onVerify={handleCaptchaVerify}
+                onError={handleCaptchaError}
+                onExpire={handleCaptchaExpire}
+                theme="light"
+                size="normal"
+                className="mx-auto"
+                disabled={submitting}
+              />
+            </div>
+            {captchaError && (
+              <p className="text-red-600 text-sm mt-2 text-center">{captchaError}</p>
+            )}
+            {isCaptchaVerified && (
+              <p className="text-green-600 text-sm mt-2 text-center flex items-center justify-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Verifikasi berhasil
+              </p>
+            )}
+          </div>
+
           {/* Submit Button */}
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={submitting || !isFormValid()}
+              disabled={submitting || !isFormValid() || !isCaptchaVerified}
               className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-                submitting || !isFormValid()
+                submitting || !isFormValid() || !isCaptchaVerified
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-green-600 hover:bg-green-700 text-white'
               }`}
@@ -210,9 +270,10 @@ export default function SurveyForm() {
             </button>
           </div>
 
-          {!isFormValid() && questions.length > 0 && (
+          {(!isFormValid() || !isCaptchaVerified) && questions.length > 0 && (
             <p className="text-sm text-gray-500 text-center mt-4">
-              Silakan lengkapi data identitas dan berikan penilaian terhadap pelayanan kami ^^
+              {!isFormValid() && 'Silakan lengkapi data identitas dan berikan penilaian terhadap pelayanan kami ^^'}
+              {isFormValid() && !isCaptchaVerified && 'Silakan selesaikan verifikasi keamanan untuk melanjutkan'}
             </p>
           )}
         </form>

@@ -13,11 +13,11 @@ export default function Survey() {
           {/* Header Section */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold mb-6 bg-badge-blue">
-              <span className="mr-2">📊</span>
+              <span className="mr-2">📋</span>
               Survey Kepuasan
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-              📋 Survey Kepuasan Pelayanan
+            Survei Kepuasan Pelayanan
             </h1>
             <p className="text-xl text-gray-800 max-w-2xl mx-auto">
               Bantu kami meningkatkan kualitas pelayanan dengan memberikan penilaian dan masukan Anda.

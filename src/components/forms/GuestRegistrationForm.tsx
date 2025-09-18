@@ -7,7 +7,9 @@ import React, { useState, useRef } from 'react';
 
 import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
 import { LoadingWrapper } from '@/components/ui/LoadingState';
+import TurnstileCaptcha from '@/components/ui/TurnstileCaptcha';
 import { useApiCall, useMutation } from '@/hooks/useDataFetching';
+import { useTurnstileCaptcha } from '@/hooks/useTurnstileCaptcha';
 import { guestLogger, safeLog } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
 
@@ -50,6 +52,23 @@ export default function GuestRegistrationForm({
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [token, setToken] = useState<string>('');
   const fileUploadRef = useRef<FileUploadRef>(null);
+
+  // CAPTCHA hook
+  const {
+    captchaToken,
+    isCaptchaVerified,
+    captchaError,
+    handleCaptchaVerify,
+    handleCaptchaError,
+    handleCaptchaExpire,
+    resetCaptcha,
+    getCaptchaValidationError
+  } = useTurnstileCaptcha({
+    required: true,
+    onVerificationChange: (isVerified) => {
+      console.log('CAPTCHA verification status changed:', isVerified);
+    }
+  });
 
   // Use API hooks for loading form options
   const {
@@ -258,6 +277,12 @@ export default function GuestRegistrationForm({
 
     // Cara mendapatkan salinan dipindah ke proses jadwalkan
 
+    // Validate CAPTCHA
+    const captchaValidationError = getCaptchaValidationError();
+    if (captchaValidationError) {
+      newErrors.captcha = captchaValidationError;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -292,7 +317,8 @@ export default function GuestRegistrationForm({
         tujuan_kunjungan_lainnya: formData.purpose === '999' ? formData.notes : null,
         cara_memperoleh: formData.cara_memperoleh,
         file_upload: formData.fileUpload || null, // Add file upload URL
-        file_name: formData.fileName || null // Add original file name
+        file_name: formData.fileName || null, // Add original file name
+        captchaToken: captchaToken // Add CAPTCHA token
       };
       
       safeLog.sensitive('Sending data to API', apiFormData);
@@ -351,6 +377,7 @@ export default function GuestRegistrationForm({
           });
           setErrors({});
           fileUploadRef.current?.reset(); // Reset file upload component
+          resetCaptcha(); // Reset CAPTCHA on successful submission
         } else if (result.success) {
           // Registration successful but no token
           console.warn('Registration successful but no token received');
@@ -374,6 +401,7 @@ export default function GuestRegistrationForm({
           });
           setErrors({});
           fileUploadRef.current?.reset(); // Reset file upload component
+          resetCaptcha(); // Reset CAPTCHA on successful submission
         }
         
         // Note: Removed the duplicate onSubmit call here since we're already using it above
@@ -389,6 +417,7 @@ export default function GuestRegistrationForm({
         // Clear any success states if there was an error
         setShowTokenModal(false);
         setToken('');
+        resetCaptcha(); // Reset CAPTCHA on error to allow retry
       }
     }
   };
@@ -683,6 +712,39 @@ export default function GuestRegistrationForm({
           />
         </div>
 
+        {/* CAPTCHA Section */}
+        <div className="w-full">
+          <label className="block text-xs sm:text-sm font-semibold mb-4 text-gray-700">
+            Verifikasi Keamanan
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="flex justify-center">
+            <TurnstileCaptcha
+              onVerify={handleCaptchaVerify}
+              onError={handleCaptchaError}
+              onExpire={handleCaptchaExpire}
+              theme="light"
+              size="normal"
+              className="mx-auto"
+              disabled={submitFormMutation.loading}
+            />
+          </div>
+          {captchaError && (
+            <p className="text-red-500 text-xs sm:text-sm mt-2 text-center">{captchaError}</p>
+          )}
+          {errors.captcha && (
+            <p className="text-red-500 text-xs sm:text-sm mt-2 text-center">{errors.captcha}</p>
+          )}
+          {isCaptchaVerified && (
+            <p className="text-green-600 text-xs sm:text-sm mt-2 text-center flex items-center justify-center">
+              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Verifikasi berhasil
+            </p>
+          )}
+        </div>
+
         <div className="flex flex-col gap-3 sm:gap-4 pt-4 sm:pt-6">
           <LoadingButton
             type="submit"
@@ -691,6 +753,7 @@ export default function GuestRegistrationForm({
             isLoading={submitFormMutation.loading}
             loadingText="Sedang Memproses..."
             className="w-full min-h-[44px] sm:min-h-[48px] text-sm sm:text-base font-semibold"
+            disabled={submitFormMutation.loading || !isCaptchaVerified}
           >
             Daftar Sekarang
           </LoadingButton>

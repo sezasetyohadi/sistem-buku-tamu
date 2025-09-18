@@ -784,8 +784,8 @@ function AdminGuestsManagement() {
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">Daftar Tamu</h3>
               
               {!isLoading && filteredGuests.length > 0 && (
-                <div className="flex items-center">
-                  <span className="text-xs sm:text-sm text-gray-700 mr-2 whitespace-nowrap">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">
                     Tampilkan:
                   </span>
                   <select
@@ -795,19 +795,16 @@ function AdminGuestsManagement() {
                       setItemsPerPage(Number(e.target.value));
                       setCurrentPage(1); // Reset to page 1 when changing items per page
                     }}
-                    className="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 w-14 sm:w-20 bg-white transition-colors"
-                    style={{ 
-                      WebkitAppearance: 'none', 
-                      MozAppearance: 'none',
-                      appearance: 'none',
-                      backgroundImage: 'none'
-                    }}
+                    className="px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white min-w-0 sm:min-w-[80px] transition-colors"
                   >
                     <option value={10}>10</option>
                     <option value={20}>20</option>
                     <option value={50}>50</option>
                     <option value={100}>100</option>
                   </select>
+                  <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
+                    per halaman
+                  </span>
                 </div>
               )}
             </div>

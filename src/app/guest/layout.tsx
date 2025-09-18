@@ -138,7 +138,7 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
       )
     },
     {
-      name: 'Survey',
+      name: 'Survei',
       path: '/guest/survey',
       icon: (
         <svg className="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -274,7 +274,7 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
             <h1 className="text-lg font-semibold text-gray-900 truncate">
               {pathname.includes('/register') && 'Pendaftaran Tamu'}
               {pathname.includes('/status') && 'Status Pengajuan'}
-              {pathname.includes('/survey') && 'Survey'}
+              {pathname.includes('/survey') && 'Survei'}
             </h1>
             <div className="flex items-center space-x-4 flex-shrink-0">
               {/* Notifications */}
