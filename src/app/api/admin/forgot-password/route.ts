@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
     
     // Generate token reset password
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const tokenExpires = new Date(Date.now() + 3600000); // 1 jam dari sekarang
 
     // Hapus token reset password lama jika ada
     await executeQuery(
@@ -55,10 +54,10 @@ export async function POST(request: NextRequest) {
       [admin.id]
     );
 
-    // Simpan token reset password baru
+    // Simpan token reset password baru dengan expires_at 1 jam dari sekarang menggunakan SQL
     await executeQuery(
-      'INSERT INTO password_resets (admin_id, token, expires_at, used_at, created_at) VALUES (?, ?, ?, NULL, NOW())',
-      [admin.id, resetToken, tokenExpires]
+      'INSERT INTO password_resets (admin_id, token, expires_at, used_at, created_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR), NULL, NOW())',
+      [admin.id, resetToken]
     );
 
     // Kirim email dengan link reset password
