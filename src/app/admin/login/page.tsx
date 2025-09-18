@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+import TurnstileCaptcha from '../../../components/ui/TurnstileCaptcha';
+import { useTurnstileCaptcha } from '../../../hooks/useTurnstileCaptcha';
 import PasswordInput from '../../../components/ui/PasswordInput';
 
 export default function LoginPage() {
@@ -20,6 +22,23 @@ export default function LoginPage() {
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
   const [forgotPasswordError, setForgotPasswordError] = useState('');
   const router = useRouter();
+
+  // CAPTCHA hook
+  const {
+    captchaToken,
+    isCaptchaVerified,
+    captchaError,
+    handleCaptchaVerify,
+    handleCaptchaError,
+    handleCaptchaExpire,
+    resetCaptcha,
+    getCaptchaValidationError
+  } = useTurnstileCaptcha({
+    required: true,
+    onVerificationChange: (isVerified) => {
+      console.log('CAPTCHA verification status changed:', isVerified);
+    }
+  });
 
   // Check if already authenticated - redirect to admin dashboard
   useEffect(() => {
@@ -96,6 +115,14 @@ export default function LoginPage() {
       return;
     }
 
+    // Validate CAPTCHA
+    const captchaValidationError = getCaptchaValidationError();
+    if (captchaValidationError) {
+      setError('Silakan selesaikan verifikasi CAPTCHA terlebih dahulu');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
@@ -106,7 +133,8 @@ export default function LoginPage() {
         body: JSON.stringify({
           username: formData.username,
           password: formData.password,
-          rememberMe: formData.rememberMe
+          rememberMe: formData.rememberMe,
+          captchaToken: captchaToken
         }),
       });
 
@@ -131,16 +159,21 @@ export default function LoginPage() {
           detail: { forceRefresh: true } 
         }));
         
+        // Reset CAPTCHA on successful login
+        resetCaptcha();
+        
         // Increased delay to ensure JWT cookies are properly set before redirect
         setTimeout(() => {
           router.replace('/admin');
         }, 300);
       } else {
         setError(result.message || 'Login gagal');
+        resetCaptcha(); // Reset CAPTCHA on error to allow retry
       }
     } catch (error) {
       console.error('Login error:', error);
       setError('Terjadi kesalahan saat login. Silakan coba lagi.');
+      resetCaptcha(); // Reset CAPTCHA on error to allow retry
     } finally {
       setIsLoading(false);
     }
@@ -211,17 +244,19 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center items-center text-white p-12 w-full">
           <div className="text-center">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-6 mx-auto">
-                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
+              <div className="w-30 h-30 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-6 mx-auto">
+                <img 
+                  src="/logo-jateng.svg" 
+                  alt="Logo Jawa Tengah" 
+                  className="w-24 h-24 object-contain"
+                />
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Sistem Buku Tamu
+                DALISTA
               </h1>
               <div className="w-24 h-1 bg-white/50 mx-auto mb-6"></div>
-              <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-md">
-                Kelola data tamu dan survei dengan mudah dan efisien
+              <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-md mx-auto text-center">
+                Digitalisasi Layanan Registrasi Tamu<br />Disnakertrans Jawa Tengah
               </p>
             </div>
             
@@ -347,9 +382,35 @@ export default function LoginPage() {
               </label>
             </div>
 
+            {/* CAPTCHA Section */}
+            <div>
+              <div className="flex justify-center">
+                <TurnstileCaptcha
+                  onVerify={handleCaptchaVerify}
+                  onError={handleCaptchaError}
+                  onExpire={handleCaptchaExpire}
+                  theme="light"
+                  size="normal"
+                  className="mx-auto"
+                  disabled={isLoading}
+                />
+              </div>
+              {captchaError && (
+                <p className="text-red-600 text-sm mt-2 text-center">{captchaError}</p>
+              )}
+              {isCaptchaVerified && (
+                <p className="text-green-600 text-sm mt-2 text-center flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Verifikasi berhasil
+                </p>
+              )}
+            </div>
+
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !isCaptchaVerified}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {isLoading ? (

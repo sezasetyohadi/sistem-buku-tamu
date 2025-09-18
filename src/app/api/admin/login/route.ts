@@ -8,6 +8,7 @@ import {
   ADMIN_LOGIN_SCHEMA,
   SANITIZATION_CONFIGS
 } from '@/lib/validation';
+import { createCaptchaMiddleware } from '@/lib/captcha-verification';
 
 import { getConnection } from '../../../../backend/config/db';
 import { findByUsername, validatePassword } from '../../../../backend/services/adminService';
@@ -20,6 +21,31 @@ export const POST = withApiMiddleware(async (request, apiResponse, context) => {
   
   try {
     const body = await validateJsonBody(request);
+
+    // CAPTCHA verification
+    const verifyCaptcha = createCaptchaMiddleware({
+      required: true,
+      skipInDevelopment: false
+    });
+    
+    const captchaResult = await verifyCaptcha(request);
+    
+    if (!captchaResult.success) {
+      apiLogger.warn('Admin login CAPTCHA verification failed', {
+        operation: 'POST_ADMIN_LOGIN_CAPTCHA_ERROR',
+        metadata: {
+          error: captchaResult.error,
+          ipAddress: context.ipAddress
+        }
+      });
+
+      return apiResponse.error(
+        'Verifikasi CAPTCHA gagal. Silakan coba lagi.',
+        HttpStatus.BAD_REQUEST,
+        ErrorCodes.VALIDATION_ERROR,
+        { captcha: true }
+      );
+    }
 
     // Validate and sanitize input data
     const validation = validateAndSanitize(
