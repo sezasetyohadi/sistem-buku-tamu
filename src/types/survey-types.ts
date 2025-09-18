@@ -84,4 +84,5 @@ export interface SurveySubmission {
     jawaban: number | string;
   }[];
   feedback?: string;
+  captchaToken?: string; // Add CAPTCHA token for verification
 }

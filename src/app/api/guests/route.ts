@@ -16,6 +16,7 @@ import {
 import { createToken } from '@/backend/services/tokenService';
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
+import { createCaptchaMiddleware } from '@/lib/captcha-verification';
 import { ValidationError, DatabaseError, handleDatabaseError } from '@/lib/error-handling';
 import { apiLogger } from '@/lib/logger';
 import { 
@@ -96,6 +97,35 @@ export const POST = withApiMiddleware(async (request, response, context) => {
         bodyKeys: Object.keys(body || {}),
         hasBody: !!body
       }
+    });
+
+    // Verify CAPTCHA first
+    const verifyCaptcha = createCaptchaMiddleware({
+      required: true,
+      skipInDevelopment: false // Set to true if you want to skip CAPTCHA in development
+    });
+
+    const captchaResult = await verifyCaptcha(request);
+    
+    if (!captchaResult.success) {
+      apiLogger.warn('CAPTCHA verification failed for guest registration', {
+        operation: 'POST_GUEST_CAPTCHA_ERROR',
+        metadata: {
+          requestId: context.requestId,
+          error: captchaResult.error
+        }
+      });
+
+      return response.error(
+        captchaResult.error || 'CAPTCHA verification failed',
+        HttpStatus.BAD_REQUEST,
+        ErrorCodes.VALIDATION_ERROR
+      );
+    }
+
+    apiLogger.info('CAPTCHA verification successful for guest registration', {
+      operation: 'POST_GUEST_CAPTCHA_SUCCESS',
+      metadata: { requestId: context.requestId }
     });
     
     // Validate and sanitize input data
