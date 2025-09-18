@@ -88,7 +88,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-blue-600 via-purple-700 to-indigo-800 text-white min-h-screen flex items-center overflow-hidden">
         {/* Enhanced Abstract Wavy Lines with multiple layers - positioned much further from buttons */}
-        <div className="absolute bottom-96 left-0 w-full h-96 opacity-50">
+        <div className="absolute bottom-80 left-0 w-full h-96 opacity-50">
           {/* Multiple animated wavy lines for richer effect - pure white to match bottom waves */}
           <svg className="absolute inset-0 w-full h-full animate-float-wave" viewBox="0 0 1920 400" preserveAspectRatio="none">
             <path d="M0,200 Q480,150 960,220 Q1440,280 1920,200" 
@@ -120,7 +120,7 @@ export default function LandingPage() {
           <div className="absolute bottom-32 right-1/3 w-32 h-32 bg-gradient-to-r from-pink-400 to-red-400 opacity-25 rounded-full blur-2xl"></div>
         </div>
         
-        <div className="container mx-auto px-4 sm:px-6 py-20 relative z-10 max-w-7xl">
+        <div className="container mx-auto px-4 sm:px-6 py-20 pb-32 relative z-10 max-w-7xl">
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
@@ -162,11 +162,11 @@ export default function LandingPage() {
                 <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-24 sm:w-32 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent rounded-full"></div>
               </div>
             </div>
-            
+
             <p className="text-sm sm:text-base md:text-base lg:text-lg mb-8 text-blue-50 max-w-3xl mx-auto leading-relaxed font-medium px-4">
-              Sistem Buku Tamu Digital - Daftarkan kunjungan Anda dengan mudah, 
-              akses layanan ketenagakerjaan dan transmigrasi secara digital
+              Daftarkan kunjungan dan akses layanan Dinas Tenaga Kerja dan Transmigrasi<br />Provinsi Jawa Tengah lebih mudah.
             </p>
+            
             
             {/* CTA buttons - Smaller, more proportional sizing */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
@@ -182,7 +182,6 @@ export default function LandingPage() {
                     <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
                   <span>Pendaftaran Tamu</span>
-                  <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
               </Link>
               
@@ -196,7 +195,6 @@ export default function LandingPage() {
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   <span>Survey Kepuasan</span>
-                  <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
               </Link>
             </div>
