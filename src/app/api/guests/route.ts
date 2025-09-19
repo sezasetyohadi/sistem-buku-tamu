@@ -99,13 +99,13 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       }
     });
 
-    // Verify CAPTCHA first
+    // Verify CAPTCHA first - pass the parsed body
     const verifyCaptcha = createCaptchaMiddleware({
       required: true,
       skipInDevelopment: false // Set to true if you want to skip CAPTCHA in development
     });
 
-    const captchaResult = await verifyCaptcha(request);
+    const captchaResult = await verifyCaptcha({ body, headers: request.headers });
     
     if (!captchaResult.success) {
       apiLogger.warn('CAPTCHA verification failed for guest registration', {

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 import { executeQuery } from '@/backend/config/db';
+import { createCaptchaMiddleware } from '@/lib/captcha-verification';
 import { getFullUrl } from '@/lib/url-utils';
 
 // Konfigurasi transporter nodemailer
@@ -21,11 +22,28 @@ const transporter = nodemailer.createTransport({
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const { email } = body;
     
     if (!email) {
       return NextResponse.json(
         { success: false, message: 'Email diperlukan' },
+        { status: 400 }
+      );
+    }
+
+    // Verify CAPTCHA first
+    const verifyCaptcha = createCaptchaMiddleware({
+      required: true,
+      skipInDevelopment: false // Set to true if you want to skip CAPTCHA in development
+    });
+
+    const captchaResult = await verifyCaptcha({ body, headers: request.headers });
+    
+    if (!captchaResult.success) {
+      console.warn('CAPTCHA verification failed for forgot password');
+      return NextResponse.json(
+        { success: false, message: captchaResult.error || 'CAPTCHA verification failed' },
         { status: 400 }
       );
     }

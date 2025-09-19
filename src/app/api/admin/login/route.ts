@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
+import { createCaptchaMiddleware } from '@/lib/captcha-verification';
 import { apiLogger } from '@/lib/logger';
 import { 
   validateAndSanitize,
@@ -20,6 +21,51 @@ export const POST = withApiMiddleware(async (request, apiResponse, context) => {
   
   try {
     const body = await validateJsonBody(request);
+
+    apiLogger.debug('POST /api/admin/login - Request received', {
+      operation: 'POST_ADMIN_LOGIN_START',
+      metadata: {
+        requestId: context.requestId,
+        bodyKeys: Object.keys(body || {}),
+        hasBody: !!body,
+        ipAddress: context.ipAddress
+      }
+    });
+
+    // Verify CAPTCHA first - pass the parsed body
+    const verifyCaptcha = createCaptchaMiddleware({
+      required: true,
+      skipInDevelopment: false // Set to true if you want to skip CAPTCHA in development
+    });
+
+    const captchaResult = await verifyCaptcha({ body, headers: request.headers });
+    
+    if (!captchaResult.success) {
+      apiLogger.warn('CAPTCHA verification failed for admin login', {
+        operation: 'POST_ADMIN_LOGIN_CAPTCHA_ERROR',
+        metadata: {
+          requestId: context.requestId,
+          username: body?.username,
+          ipAddress: context.ipAddress,
+          error: captchaResult.error
+        }
+      });
+
+      return apiResponse.error(
+        captchaResult.error || 'CAPTCHA verification failed',
+        HttpStatus.BAD_REQUEST,
+        ErrorCodes.VALIDATION_ERROR
+      );
+    }
+
+    apiLogger.info('CAPTCHA verification successful for admin login', {
+      operation: 'POST_ADMIN_LOGIN_CAPTCHA_SUCCESS',
+      metadata: { 
+        requestId: context.requestId,
+        username: body?.username,
+        ipAddress: context.ipAddress
+      }
+    });
 
     // Validate and sanitize input data
     const validation = validateAndSanitize(

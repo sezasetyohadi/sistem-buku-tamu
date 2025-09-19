@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+import TurnstileCaptcha from '@/components/ui/TurnstileCaptcha';
+import { useTurnstileCaptcha } from '@/hooks/useTurnstileCaptcha';
+
 import PasswordInput from '../../../components/ui/PasswordInput';
 
 export default function LoginPage() {
@@ -20,6 +23,40 @@ export default function LoginPage() {
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
   const [forgotPasswordError, setForgotPasswordError] = useState('');
   const router = useRouter();
+
+  // CAPTCHA hook for main login
+  const {
+    captchaToken,
+    isCaptchaVerified,
+    captchaError,
+    handleCaptchaVerify,
+    handleCaptchaError,
+    handleCaptchaExpire,
+    resetCaptcha,
+    getCaptchaValidationError
+  } = useTurnstileCaptcha({
+    required: true,
+    onVerificationChange: (isVerified) => {
+      console.log('Login CAPTCHA verification status changed:', isVerified);
+    }
+  });
+
+  // CAPTCHA hook for forgot password
+  const {
+    captchaToken: forgotCaptchaToken,
+    isCaptchaVerified: isForgotCaptchaVerified,
+    captchaError: forgotCaptchaError,
+    handleCaptchaVerify: handleForgotCaptchaVerify,
+    handleCaptchaError: handleForgotCaptchaError,
+    handleCaptchaExpire: handleForgotCaptchaExpire,
+    resetCaptcha: resetForgotCaptcha,
+    getCaptchaValidationError: getForgotCaptchaValidationError
+  } = useTurnstileCaptcha({
+    required: true,
+    onVerificationChange: (isVerified) => {
+      console.log('Forgot password CAPTCHA verification status changed:', isVerified);
+    }
+  });
 
   // Check if already authenticated - redirect to admin dashboard
   useEffect(() => {
@@ -96,6 +133,14 @@ export default function LoginPage() {
       return;
     }
 
+    // Validate CAPTCHA
+    const captchaValidationError = getCaptchaValidationError();
+    if (captchaValidationError) {
+      setError('Silakan selesaikan verifikasi CAPTCHA');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
@@ -106,7 +151,8 @@ export default function LoginPage() {
         body: JSON.stringify({
           username: formData.username,
           password: formData.password,
-          rememberMe: formData.rememberMe
+          rememberMe: formData.rememberMe,
+          captchaToken: captchaToken // Add CAPTCHA token
         }),
       });
 
@@ -137,10 +183,12 @@ export default function LoginPage() {
         }, 300);
       } else {
         setError(result.message || 'Login gagal');
+        resetCaptcha(); // Reset CAPTCHA on login failure
       }
     } catch (error) {
       console.error('Login error:', error);
       setError('Terjadi kesalahan saat login. Silakan coba lagi.');
+      resetCaptcha(); // Reset CAPTCHA on error
     } finally {
       setIsLoading(false);
     }
@@ -167,13 +215,24 @@ export default function LoginPage() {
       return;
     }
 
+    // Validate CAPTCHA
+    const forgotCaptchaValidationError = getForgotCaptchaValidationError();
+    if (forgotCaptchaValidationError) {
+      setForgotPasswordError('Silakan selesaikan verifikasi CAPTCHA');
+      setIsForgotPasswordLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/admin/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: forgotPasswordEmail }),
+        body: JSON.stringify({ 
+          email: forgotPasswordEmail,
+          captchaToken: forgotCaptchaToken // Add CAPTCHA token
+        }),
       });
 
       const result = await response.json();
@@ -188,10 +247,12 @@ export default function LoginPage() {
         }, 5000);
       } else {
         setForgotPasswordError(result.message || 'Gagal mengirim email reset password');
+        resetForgotCaptcha(); // Reset CAPTCHA on error
       }
     } catch (error) {
       console.error('Forgot password error:', error);
       setForgotPasswordError('Terjadi kesalahan saat mengirim email. Silakan coba lagi.');
+      resetForgotCaptcha(); // Reset CAPTCHA on error
     } finally {
       setIsForgotPasswordLoading(false);
     }
@@ -347,9 +408,35 @@ export default function LoginPage() {
               </label>
             </div>
 
+            {/* CAPTCHA Section */}
+            <div className="w-full">
+              <div className="flex justify-center">
+                <TurnstileCaptcha
+                  onVerify={handleCaptchaVerify}
+                  onError={handleCaptchaError}
+                  onExpire={handleCaptchaExpire}
+                  theme="light"
+                  size="normal"
+                  className="mx-auto"
+                  disabled={isLoading}
+                />
+              </div>
+              {captchaError && (
+                <p className="text-red-500 text-sm mt-2 text-center">{captchaError}</p>
+              )}
+              {isCaptchaVerified && (
+                <p className="text-green-600 text-sm mt-2 text-center flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Verifikasi berhasil
+                </p>
+              )}
+            </div>
+
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !isCaptchaVerified}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {isLoading ? (
@@ -392,6 +479,7 @@ export default function LoginPage() {
                       setForgotPasswordEmail('');
                       setForgotPasswordError('');
                       setForgotPasswordMessage('');
+                      resetForgotCaptcha(); // Reset forgot password CAPTCHA
                     }}
                     className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
                     disabled={isForgotPasswordLoading}
@@ -465,9 +553,35 @@ export default function LoginPage() {
                     </div>
                   </div>
 
+                  {/* CAPTCHA Section for Forgot Password */}
+                  <div className="w-full">
+                    <div className="flex justify-center">
+                      <TurnstileCaptcha
+                        onVerify={handleForgotCaptchaVerify}
+                        onError={handleForgotCaptchaError}
+                        onExpire={handleForgotCaptchaExpire}
+                        theme="light"
+                        size="normal"
+                        className="mx-auto"
+                        disabled={isForgotPasswordLoading}
+                      />
+                    </div>
+                    {forgotCaptchaError && (
+                      <p className="text-red-500 text-sm mt-2 text-center">{forgotCaptchaError}</p>
+                    )}
+                    {isForgotCaptchaVerified && (
+                      <p className="text-green-600 text-sm mt-2 text-center flex items-center justify-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Verifikasi berhasil
+                      </p>
+                    )}
+                  </div>
+
                   <button
                     type="submit"
-                    disabled={isForgotPasswordLoading}
+                    disabled={isForgotPasswordLoading || !isForgotCaptchaVerified}
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isForgotPasswordLoading ? (
@@ -494,6 +608,7 @@ export default function LoginPage() {
                         setForgotPasswordEmail('');
                         setForgotPasswordError('');
                         setForgotPasswordMessage('');
+                        resetForgotCaptcha(); // Reset forgot password CAPTCHA
                       }}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium underline transition-colors duration-200"
                       disabled={isForgotPasswordLoading}

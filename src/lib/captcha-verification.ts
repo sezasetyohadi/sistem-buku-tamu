@@ -120,7 +120,32 @@ export function createCaptchaMiddleware(options?: {
       return { success: true };
     }
     
-    const captchaToken = req.body?.captchaToken;
+    // Handle both NextRequest and parsed body objects
+    let captchaToken: string | undefined;
+    let headers: any = {};
+    
+    if (req.body) {
+      // Case where parsed body is passed directly
+      captchaToken = req.body.captchaToken;
+      headers = req.headers || {};
+    } else if (req.json) {
+      // Case where NextRequest is passed (though this shouldn't happen after our fix)
+      try {
+        const body = await req.json();
+        captchaToken = body.captchaToken;
+        headers = req.headers;
+      } catch (error) {
+        console.error('Error parsing request body for CAPTCHA:', error);
+        return {
+          success: false,
+          error: 'Failed to parse request body'
+        };
+      }
+    } else {
+      // Fallback - try to access body directly
+      captchaToken = req.captchaToken || req.body?.captchaToken;
+      headers = req.headers || {};
+    }
     
     if (!required && !captchaToken) {
       return { success: true };
@@ -134,11 +159,11 @@ export function createCaptchaMiddleware(options?: {
     }
     
     // Get client IP for additional verification
-    const forwarded = req.headers['x-forwarded-for'];
-    const ip = forwarded ? forwarded.split(',')[0] : req.connection?.remoteAddress;
+    const forwarded = headers['x-forwarded-for'] || headers.get?.('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : req.connection?.remoteAddress || req.ip;
     
     return await verifyCaptchaToken({
-      token: captchaToken,
+      token: captchaToken!,
       remoteip: ip
     });
   };
