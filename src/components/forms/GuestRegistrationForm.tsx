@@ -4,6 +4,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
 import { LoadingWrapper } from '@/components/ui/LoadingState';
@@ -52,6 +53,7 @@ export default function GuestRegistrationForm({
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [token, setToken] = useState<string>('');
   const fileUploadRef = useRef<FileUploadRef>(null);
+  const router = useRouter();
 
   // CAPTCHA hook
   const {
@@ -795,6 +797,7 @@ export default function GuestRegistrationForm({
       isOpen={showTokenModal} 
       onClose={() => setShowTokenModal(false)} 
       token={token} 
+      onRedirect={() => router.push('/guest/status')}
     />
     </>
   );
