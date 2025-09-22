@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 import Modal from './Modal';
 
@@ -11,8 +12,15 @@ interface TokenModalProps {
 }
 
 export default function TokenModal({ isOpen, onClose, token }: TokenModalProps) {
+  const router = useRouter();
   // Format token to 14 digits
   const formattedToken = token ? token.substring(0, 15) : '';
+
+  const handleClose = () => {
+    onClose();
+    // Redirect to status page
+    router.push('/guest/status');
+  };
 
   return (
     <Modal
@@ -32,7 +40,7 @@ export default function TokenModal({ isOpen, onClose, token }: TokenModalProps) 
 
         <div className="text-center space-y-2">
           <p className="text-gray-700">
-            Selamat datang di DISNAKERTRANS Jawa Tengah
+            Selamat datang di<br />DALISTA
           </p>
           
           <div className="bg-gray-100 p-4 rounded-lg my-4">
@@ -41,13 +49,13 @@ export default function TokenModal({ isOpen, onClose, token }: TokenModalProps) 
           </div>
           
           <p className="text-gray-500 text-sm">
-            Cek di laman status pengajuan
+            Masukan token ini di laman status pengajuan untuk melihat status registrasi Anda.
           </p>
         </div>
 
         <div className="flex justify-center pt-4">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
           >
             Tutup
