@@ -8,11 +8,19 @@ interface TokenModalProps {
   isOpen: boolean;
   onClose: () => void;
   token: string;
+  onRedirect?: () => void;
 }
 
-export default function TokenModal({ isOpen, onClose, token }: TokenModalProps) {
+export default function TokenModal({ isOpen, onClose, token, onRedirect }: TokenModalProps) {
   // Format token to 14 digits
   const formattedToken = token ? token.substring(0, 15) : '';
+
+  const handleClose = () => {
+    onClose();
+    if (onRedirect) {
+      onRedirect();
+    }
+  };
 
   return (
     <Modal
@@ -47,7 +55,7 @@ export default function TokenModal({ isOpen, onClose, token }: TokenModalProps) 
 
         <div className="flex justify-center pt-4">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
           >
             Tutup
