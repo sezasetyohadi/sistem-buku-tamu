@@ -129,7 +129,7 @@ export default function LandingPage() {
                   href="https://disnakertrans.jatengprov.go.id/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="block relative w-20 h-24 sm:w-24 sm:h-28 bg-white/15 backdrop-blur-lg rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-2 sm:p-3 hover:scale-105 transition-transform duration-500"
+                  className="relative w-20 h-24 sm:w-24 sm:h-28 bg-white/15 backdrop-blur-lg rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-2 sm:p-3 hover:scale-105 transition-transform duration-500"
                   title="Kunjungi Website Resmi Disnakertrans Jateng"
                 >
                   <img 
