@@ -124,21 +124,13 @@ export default function LandingPage() {
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
-              <div className="relative group">
-                <a 
-                  href="https://disnakertrans.jatengprov.go.id/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="relative w-20 h-24 sm:w-24 sm:h-28 bg-white/15 backdrop-blur-lg rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-2 sm:p-3 hover:scale-105 transition-transform duration-500"
-                  title="Kunjungi Website Resmi Disnakertrans Jateng"
-                >
-                  <img 
-                    src="/logo-jateng.svg" 
-                    alt="Logo Provinsi Jawa Tengah" 
-                    className="w-full h-full object-contain filter drop-shadow-xl"
-                    loading="lazy"
-                  />
-                </a>
+              <div className="flex justify-center">
+                <img 
+                  src="/logo-dalista.svg" 
+                  alt="Logo Dalista" 
+                  className="w-24 h-28 sm:w-32 sm:h-36 md:w-44 md:h-48 object-contain"
+                  loading="lazy"
+                />
               </div>
             </div>
             
@@ -153,12 +145,17 @@ export default function LandingPage() {
             {/* Typography with compact spacing */}
             <div className="mb-6">
               <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 leading-tight tracking-tight px-2">
-                <span className="inline-block hover:scale-105 transition-transform duration-500">
+                <span className="inline-block">
                   Selamat Datang di
                 </span>
                 <br />
-                <span className="inline-block bg-gradient-to-r from-orange-300 via-orange-400 to-yellow-300 bg-clip-text text-transparent hover:from-yellow-300 hover:to-orange-400 transition-all duration-700 hover:scale-105 transform">
-                  DALISTA
+                <span className="inline-block">
+                  <img 
+                    src="/logo-dalista-text.svg" 
+                    alt="DALISTA" 
+                    className="h-12 sm:h-16 md:h-12 lg:h-16 xl:h-20 w-auto inline-block filter drop-shadow-lg"
+                    style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(255,165,0,0.4))' }}
+                  />
                 </span>
               </h1>
               <div className="relative">
@@ -171,25 +168,7 @@ export default function LandingPage() {
 
             <p className="text-sm sm:text-base md:text-base lg:text-lg mb-4 text-blue-50 max-w-3xl mx-auto leading-relaxed font-medium px-4">
               Daftarkan kunjungan dan akses layanan Dinas Tenaga Kerja dan Transmigrasi<br />Provinsi Jawa Tengah lebih mudah.
-            </p>
-            
-            <div className="mb-8">
-              <a 
-                href="https://disnakertrans.jatengprov.go.id/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-100 hover:text-white border border-blue-200/30 hover:border-blue-100/50 rounded-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
-              >
-                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
-                </svg>
-                Kunjungi Website Resmi
-                <svg className="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </a>
-            </div>
-            
+            </p>     
             
             {/* CTA buttons - Smaller, more proportional sizing */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
@@ -275,22 +254,19 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           {/* Section header - More moderate sizing for better balance */}
           <div className="text-center mb-20 opacity-0 translate-y-4 transition-all duration-500 ease-out delay-50" data-fade="up">
-            {/* Logo Disnakertrans dalam lingkaran yang dapat diklik */}
+            {/* Logo Disnakertrans yang dapat diklik */}
             <div className="flex justify-center mb-8">
               <a 
                 href="https://disnakertrans.jatengprov.go.id/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group relative w-24 h-24 bg-gradient-to-br from-orange-400 to-red-500 rounded-full p-1 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 title="Kunjungi Website Resmi Disnakertrans Jateng"
               >
-                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-2 group-hover:bg-gray-50 transition-colors duration-300">
-                  <img 
-                    src="/logo-disnakertrans.svg" 
-                    alt="Logo Dinas Tenaga Kerja dan Transmigrasi Jawa Tengah" 
-                    className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
+                <img 
+                  src="/logo-disnakertrans.svg" 
+                  alt="Logo Dinas Tenaga Kerja dan Transmigrasi Jawa Tengah" 
+                  className="w-20 h-20 sm:w-32 sm:h-32 object-contain filter drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                />
               </a>
             </div>
             
@@ -309,48 +285,48 @@ export default function LandingPage() {
           {/* Feature cards - Enhanced with larger spacing and text */}
           <div className="grid md:grid-cols-3 gap-12 max-w-7xl mx-auto mb-24">
             {/* Card 1 */}
-            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-100" data-fade="up">
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-blue-light"></div>
+            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-100 hover:scale-105 hover:-translate-y-2" data-fade="up">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-blue-light group-hover:scale-110 transition-transform duration-500"></div>
               <div className="relative z-10">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 transition-transform bg-gradient-blue">
-                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 bg-gradient-blue">
+                  <svg className="w-10 h-10 group-hover:scale-110 transition-transform duration-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-800 mb-6">Registrasi Tamu</h3>
-                <p className="text-xl text-gray-700 leading-relaxed">
+                <h3 className="text-3xl font-bold text-gray-800 mb-6 group-hover:text-blue-600 transition-colors duration-500">Registrasi Tamu</h3>
+                <p className="text-xl text-gray-700 leading-relaxed group-hover:text-gray-800 transition-colors duration-500">
                   Daftarkan kunjungan Anda ke DISNAKERTRANS Jateng dengan formulir digital yang mudah dan cepat
                 </p>
               </div>
             </div>
 
             {/* Card 2 */}
-            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-150" data-fade="up">
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-green-light"></div>
+            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-150 hover:scale-105 hover:-translate-y-2" data-fade="up">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-green-light group-hover:scale-110 transition-transform duration-500"></div>
               <div className="relative z-10">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 transition-transform bg-gradient-green">
-                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 bg-gradient-green">
+                  <svg className="w-10 h-10 group-hover:scale-110 transition-transform duration-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-800 mb-6">Layanan Ketenagakerjaan</h3>
-                <p className="text-xl text-gray-700 leading-relaxed">
+                <h3 className="text-3xl font-bold text-gray-800 mb-6 group-hover:text-green-600 transition-colors duration-500">Layanan Ketenagakerjaan</h3>
+                <p className="text-xl text-gray-700 leading-relaxed group-hover:text-gray-800 transition-colors duration-500">
                   Akses berbagai layanan ketenagakerjaan dan transmigrasi dengan sistem yang terintegrasi dan efisien
                 </p>
               </div>
             </div>
 
             {/* Card 3 */}
-            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-200" data-fade="up">
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-orange-light"></div>
+            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-200 hover:scale-105 hover:-translate-y-2" data-fade="up">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-orange-light group-hover:scale-110 transition-transform duration-500"></div>
               <div className="relative z-10">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 transition-transform bg-gradient-orange">
-                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 bg-gradient-orange">
+                  <svg className="w-10 h-10 group-hover:scale-110 transition-transform duration-500" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-800 mb-6">Feedback & Evaluasi</h3>
-                <p className="text-xl text-gray-700 leading-relaxed">
+                <h3 className="text-3xl font-bold text-gray-800 mb-6 group-hover:text-orange-600 transition-colors duration-500">Feedback & Evaluasi</h3>
+                <p className="text-xl text-gray-700 leading-relaxed group-hover:text-gray-800 transition-colors duration-500">
                   Berikan penilaian dan masukan untuk terus meningkatkan kualitas pelayanan DISNAKERTRANS Jateng
                 </p>
               </div>
