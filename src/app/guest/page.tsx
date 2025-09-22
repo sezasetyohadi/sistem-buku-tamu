@@ -124,11 +124,21 @@ export default function LandingPage() {
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
-              <div className="flex justify-center items-center bg-white/20 backdrop-blur-lg rounded-3xl p-3 border border-white/25 drop-shadow-2xl w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52">
+              <div className="flex justify-center items-center bg-white/32 backdrop-blur-lg rounded-3xl p-3 border border-white/50 drop-shadow-2xl w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52">
                 <img 
                   src="/logo-dalista.svg" 
                   alt="Logo Dalista" 
-                  className="w-24 h-28 sm:w-32 sm:h-36 md:w-44 md:h-48 object-contain"
+                  className="w-24 h-28 sm:w-32 sm:h-36 md:w-44 md:h-48 object-contain select-none pointer-events-none"
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none',
+                    WebkitTouchCallout: 'none'
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  draggable={false}
                   loading="lazy"
                 />
               </div>
@@ -153,8 +163,18 @@ export default function LandingPage() {
                   <img 
                     src="/logo-dalista-text.svg" 
                     alt="DALISTA" 
-                    className="h-12 sm:h-16 md:h-12 lg:h-16 xl:h-20 w-auto inline-block filter drop-shadow-lg"
-                    style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(255,165,0,0.4))' }}
+                    className="h-12 sm:h-16 md:h-12 lg:h-16 xl:h-20 w-auto inline-block filter drop-shadow-lg select-none pointer-events-none"
+                    style={{
+                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(255,165,0,0.4))',
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none',
+                      MozUserSelect: 'none',
+                      msUserSelect: 'none',
+                      WebkitTouchCallout: 'none'
+                    } as React.CSSProperties}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    draggable={false}
                   />
                 </span>
               </h1>
@@ -266,6 +286,16 @@ export default function LandingPage() {
                   src="/logo-disnakertrans.svg" 
                   alt="Logo Dinas Tenaga Kerja dan Transmigrasi Jawa Tengah" 
                   className="w-20 h-20 sm:w-32 sm:h-32 object-contain filter drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none',
+                    WebkitTouchCallout: 'none'
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  draggable={false}
                 />
               </a>
             </div>
