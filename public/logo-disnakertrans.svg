@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240">
+  <!-- Logo Provinsi Jawa Tengah -->
+  <!-- Background Shield -->
+  <path d="M100 10 L180 40 L180 160 L100 220 L20 160 L20 40 Z" fill="#DC143C" stroke="#000" stroke-width="2"/>
+  
+  <!-- Inner Shield -->
+  <path d="M100 20 L170 45 L170 150 L100 200 L30 150 L30 45 Z" fill="#FFF"/>
+  
+  <!-- Green Mountains -->
+  <path d="M30 45 Q60 25 100 45 Q140 25 170 45 L170 100 Q100 80 30 100 Z" fill="#228B22"/>
+  
+  <!-- Yellow Background -->
+  <rect x="30" y="100" width="140" height="50" fill="#FFD700"/>
+  
+  <!-- Borobudur Temple Silhouette -->
+  <g fill="#000">
+    <!-- Main temple structure -->
+    <rect x="85" y="110" width="30" height="30"/>
+    <rect x="80" y="115" width="40" height="25"/>
+    <rect x="75" y="120" width="50" height="20"/>
+    
+    <!-- Temple spires -->
+    <polygon points="100,110 95,100 105,100"/>
+    <polygon points="90,115 87,108 93,108"/>
+    <polygon points="110,115 107,108 113,108"/>
+    <polygon points="85,120 82,113 88,113"/>
+    <polygon points="115,120 112,113 118,113"/>
+  </g>
+  
+  <!-- Blue Water Waves -->
+  <g fill="#4169E1">
+    <path d="M30 150 Q50 145 70 150 Q90 155 110 150 Q130 145 150 150 Q160 155 170 150 L170 170 L30 170 Z"/>
+    <path d="M30 160 Q45 155 60 160 Q80 165 100 160 Q120 155 140 160 Q155 165 170 160 L170 175 L30 175 Z"/>
+  </g>
+  
+  <!-- Star -->
+  <polygon points="100,35 102,42 109,42 104,47 106,54 100,50 94,54 96,47 91,42 98,42" fill="#FFD700"/>
+  
+  <!-- Rice and Cotton -->
+  <!-- Left side - Rice -->
+  <g fill="#228B22">
+    <path d="M25 90 Q20 85 25 80 Q30 85 35 80 Q40 85 45 80"/>
+    <path d="M20 95 Q15 90 20 85 Q25 90 30 85 Q35 90 40 85"/>
+  </g>
+  
+  <!-- Right side - Cotton -->
+  <g fill="#FFF">
+    <circle cx="160" cy="85" r="3"/>
+    <circle cx="165" cy="88" r="3"/>
+    <circle cx="170" cy="85" r="3"/>
+    <circle cx="175" cy="88" r="3"/>
+  </g>
+  
+  <!-- Text Banner -->
+  <rect x="40" y="180" width="120" height="20" fill="#FFD700" stroke="#000" stroke-width="1"/>
+  <text x="100" y="192" text-anchor="middle" font-family="serif" font-size="8" font-weight="bold">JAWA-TENGAH</text>
+  
+  <!-- Motto Banner -->
+  <path d="M20 210 Q100 205 180 210 Q100 220 20 210" fill="#FFF" stroke="#000" stroke-width="1"/>
+  <text x="100" y="215" text-anchor="middle" font-family="serif" font-size="6" font-weight="normal">PRASETYA ULAH SAKTI BHAKTI PRAJA</text>
+</svg>
