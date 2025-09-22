@@ -56,10 +56,10 @@ export async function POST(
     await executeQuery('START TRANSACTION');
     
     try {
-      // Update the guest record with the scheduled time and new fields
+      // Update the guest record with the scheduled time, new fields, and jadwal_dibuat timestamp
       await executeQuery(
-        'UPDATE daftar_tamu SET jadwal_checkin = ?, bidang_tujuan_id = ?, asn_dituju = ? WHERE id = ?',
-        [scheduledDateTime, bidangTujuanId, asnDituju, guestId]
+        'UPDATE daftar_tamu SET jadwal_checkin = ?, bidang_tujuan_id = ?, asn_dituju = ?, jadwal_dibuat = NOW(), status_kunjungan = ? WHERE id = ?',
+        [scheduledDateTime, bidangTujuanId, asnDituju, 'Terjadwal', guestId]
       );
       
       // Only process cara_salinan if it's provided with values
