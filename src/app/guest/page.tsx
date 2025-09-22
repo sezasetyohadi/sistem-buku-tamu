@@ -125,14 +125,20 @@ export default function LandingPage() {
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
               <div className="relative group">
-                <div className="relative w-20 h-24 sm:w-24 sm:h-28 bg-white/15 backdrop-blur-lg rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-2 sm:p-3 hover:scale-105 transition-transform duration-500">
+                <a 
+                  href="https://disnakertrans.jatengprov.go.id/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block relative w-20 h-24 sm:w-24 sm:h-28 bg-white/15 backdrop-blur-lg rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-2 sm:p-3 hover:scale-105 transition-transform duration-500"
+                  title="Kunjungi Website Resmi Disnakertrans Jateng"
+                >
                   <img 
                     src="/logo-jateng.svg" 
                     alt="Logo Provinsi Jawa Tengah" 
                     className="w-full h-full object-contain filter drop-shadow-xl"
                     loading="lazy"
                   />
-                </div>
+                </a>
               </div>
             </div>
             
@@ -168,9 +174,26 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <p className="text-sm sm:text-base md:text-base lg:text-lg mb-8 text-blue-50 max-w-3xl mx-auto leading-relaxed font-medium px-4">
+            <p className="text-sm sm:text-base md:text-base lg:text-lg mb-4 text-blue-50 max-w-3xl mx-auto leading-relaxed font-medium px-4">
               Daftarkan kunjungan dan akses layanan Dinas Tenaga Kerja dan Transmigrasi<br />Provinsi Jawa Tengah lebih mudah.
             </p>
+            
+            <div className="mb-8">
+              <a 
+                href="https://disnakertrans.jatengprov.go.id/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-100 hover:text-white border border-blue-200/30 hover:border-blue-100/50 rounded-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+              >
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
+                </svg>
+                Kunjungi Website Resmi
+                <svg className="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </a>
+            </div>
             
             
             {/* CTA buttons - Smaller, more proportional sizing */}
@@ -257,6 +280,25 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           {/* Section header - More moderate sizing for better balance */}
           <div className="text-center mb-20 opacity-0 translate-y-4 transition-all duration-500 ease-out delay-50" data-fade="up">
+            {/* Logo Disnakertrans dalam lingkaran yang dapat diklik */}
+            <div className="flex justify-center mb-8">
+              <a 
+                href="https://disnakertrans.jatengprov.go.id/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group relative w-24 h-24 bg-gradient-to-br from-orange-400 to-red-500 rounded-full p-1 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                title="Kunjungi Website Resmi Disnakertrans Jateng"
+              >
+                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-2 group-hover:bg-gray-50 transition-colors duration-300">
+                  <img 
+                    src="/logo-disnakertrans.svg" 
+                    alt="Logo Dinas Tenaga Kerja dan Transmigrasi Jawa Tengah" 
+                    className="w-full h-full object-contain filter group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
+              </a>
+            </div>
+            
             <div className="inline-flex items-center px-6 py-3 rounded-full text-base font-bold mb-6 bg-badge-orange">
               <span className="mr-2">✨</span>
               Layanan Kami
@@ -345,6 +387,17 @@ export default function LandingPage() {
                   >
                     Isi Survey
                   </Link>
+                  <a
+                    href="https://disnakertrans.jatengprov.go.id/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border-2 border-white/50 text-white font-bold py-4 px-10 rounded-2xl text-lg hover:bg-white/10 hover:border-white transition-all duration-300 transform hover:scale-105 min-w-[200px] flex items-center justify-center"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
+                    </svg>
+                    Website Resmi
+                  </a>
                 </div>
               </div>
             </div>
