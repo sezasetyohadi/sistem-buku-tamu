@@ -124,7 +124,7 @@ export default function LandingPage() {
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
-              <div className="flex justify-center">
+              <div className="flex justify-center items-center bg-white/10 backdrop-blur-lg rounded-3xl p-3 border border-white/50 drop-shadow-2xl w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52">
                 <img 
                   src="/logo-dalista.svg" 
                   alt="Logo Dalista" 
@@ -138,7 +138,7 @@ export default function LandingPage() {
             <div className="inline-flex items-center px-4 py-2 sm:px-6 bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-lg rounded-full text-sm font-bold mb-6 border border-green-400/30">
               <span className="w-2 h-2 bg-green-400 rounded-full mr-3 inline-block"></span>
               <span className="bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
-                Sistem Online • Tersedia 24/7
+                Sistem Online 24/7
               </span>
             </div>
             
@@ -343,32 +343,21 @@ export default function LandingPage() {
               <div className="relative z-10">
                 <h3 className="text-3xl md:text-4xl font-bold mb-6">Mulai Sekarang!</h3>
                 <p className="text-lg md:text-xl text-blue-50 mb-10 max-w-3xl mx-auto leading-relaxed">
-                  Bergabunglah dengan ribuan pengguna yang telah merasakan kemudahan layanan digital kami
+                  Silakan pilih layanan berikut untuk melanjutkan
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
                     href="/guest/register"
                     className="bg-white text-blue-600 font-bold py-4 px-10 rounded-2xl text-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl min-w-[200px]"
                   >
-                    Daftar Sekarang
+                    Daftar Tamu
                   </Link>
                   <Link
                     href="/guest/survey"
                     className="border-3 border-white text-white font-bold py-4 px-10 rounded-2xl text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 transform hover:scale-105 min-w-[200px]"
                   >
-                    Isi Survey
+                    Isi Survei
                   </Link>
-                  <a
-                    href="https://disnakertrans.jatengprov.go.id/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="border-2 border-white/50 text-white font-bold py-4 px-10 rounded-2xl text-lg hover:bg-white/10 hover:border-white transition-all duration-300 transform hover:scale-105 min-w-[200px] flex items-center justify-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
-                    </svg>
-                    Website Resmi
-                  </a>
                 </div>
               </div>
             </div>
