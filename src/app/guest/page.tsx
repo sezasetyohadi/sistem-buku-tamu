@@ -124,19 +124,13 @@ export default function LandingPage() {
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
-              <div className="relative group">
-                <a 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block relative w-20 h-24 sm:w-24 sm:h-28 bg-white/15 backdrop-blur-lg rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl border border-white/30 p-2 sm:p-3 hover:scale-105 transition-transform duration-500"
-                >
-                  <img 
-                    src="/logo-jateng.svg" 
-                    alt="Logo Provinsi Jawa Tengah" 
-                    className="w-full h-full object-contain filter drop-shadow-xl"
-                    loading="lazy"
-                  />
-                </a>
+              <div className="flex justify-center">
+                <img 
+                  src="/logo-dalista.svg" 
+                  alt="Logo Dalista" 
+                  className="w-24 h-28 sm:w-32 sm:h-36 md:w-44 md:h-48 object-contain"
+                  loading="lazy"
+                />
               </div>
             </div>
             
@@ -151,15 +145,15 @@ export default function LandingPage() {
             {/* Typography with compact spacing */}
             <div className="mb-6">
               <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 leading-tight tracking-tight px-2">
-                <span className="inline-block hover:scale-105 transition-transform duration-500">
+                <span className="inline-block">
                   Selamat Datang di
                 </span>
                 <br />
-                <span className="inline-block hover:scale-110 hover:-translate-y-2 transition-all duration-500 transform group cursor-pointer">
+                <span className="inline-block">
                   <img 
                     src="/logo-dalista-text.svg" 
                     alt="DALISTA" 
-                    className="h-12 sm:h-16 md:h-12 lg:h-16 xl:h-20 w-auto inline-block filter drop-shadow-lg group-hover:scale-105 transition-transform duration-500"
+                    className="h-12 sm:h-16 md:h-12 lg:h-16 xl:h-20 w-auto inline-block filter drop-shadow-lg"
                     style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(255,165,0,0.4))' }}
                   />
                 </span>
