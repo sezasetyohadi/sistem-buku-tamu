@@ -9,14 +9,18 @@ interface TokenModalProps {
   isOpen: boolean;
   onClose: () => void;
   token: string;
-  onRedirect?: () => void;
 }
 
-export default function TokenModal({ isOpen, onClose, token, onRedirect }: TokenModalProps) {
 export default function TokenModal({ isOpen, onClose, token }: TokenModalProps) {
   const router = useRouter();
   // Format token to 14 digits
   const formattedToken = token ? token.substring(0, 15) : '';
+
+  const handleClose = () => {
+    onClose();
+    // Redirect to status page
+    router.push('/guest/status');
+  };
 
   return (
     <Modal
