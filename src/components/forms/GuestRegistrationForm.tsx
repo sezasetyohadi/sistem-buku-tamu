@@ -4,6 +4,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
 import { LoadingWrapper } from '@/components/ui/LoadingState';
@@ -51,7 +52,9 @@ export default function GuestRegistrationForm({
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [token, setToken] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileUploadRef = useRef<FileUploadRef>(null);
+  const router = useRouter();
 
   // CAPTCHA hook
   const {
@@ -290,13 +293,17 @@ export default function GuestRegistrationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent multiple submissions
-    if (submitFormMutation.loading) {
+    // Prevent multiple submissions - check both states
+    if (submitFormMutation.loading || isSubmitting) {
       console.log('Submission already in progress, preventing duplicate');
       return;
     }
     
-    if (validateForm()) {
+    // Set immediate submission lock
+    setIsSubmitting(true);
+    
+    try {
+      if (validateForm()) {
       // Resolve names from selected IDs
       const selectedEducation = processedEducationOptions.find(e => e.value === formData.education);
       const selectedProfession = processedProfessionOptions.find(p => p.value === formData.profession);
@@ -419,6 +426,12 @@ export default function GuestRegistrationForm({
         setToken('');
         resetCaptcha(); // Reset CAPTCHA on error to allow retry
       }
+    }
+    } catch (outerError) {
+      console.error('Outer form submission error:', outerError);
+    } finally {
+      // Always reset the submission lock
+      setIsSubmitting(false);
     }
   };
 
@@ -726,7 +739,7 @@ export default function GuestRegistrationForm({
               theme="light"
               size="normal"
               className="mx-auto"
-              disabled={submitFormMutation.loading}
+              disabled={submitFormMutation.loading || isSubmitting}
             />
           </div>
           {captchaError && (
@@ -750,10 +763,10 @@ export default function GuestRegistrationForm({
             type="submit"
             variant="primary"
             size="lg"
-            isLoading={submitFormMutation.loading}
+            isLoading={submitFormMutation.loading || isSubmitting}
             loadingText="Sedang Memproses..."
             className="w-full min-h-[44px] sm:min-h-[48px] text-sm sm:text-base font-semibold"
-            disabled={submitFormMutation.loading || !isCaptchaVerified}
+            disabled={submitFormMutation.loading || isSubmitting || !isCaptchaVerified}
           >
             Daftar Sekarang
           </LoadingButton>
@@ -795,6 +808,7 @@ export default function GuestRegistrationForm({
       isOpen={showTokenModal} 
       onClose={() => setShowTokenModal(false)} 
       token={token} 
+      onRedirect={() => router.push('/guest/status')}
     />
     </>
   );
