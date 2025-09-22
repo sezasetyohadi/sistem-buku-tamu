@@ -124,7 +124,7 @@ export default function LandingPage() {
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
-              <div className="flex justify-center items-center bg-white/10 backdrop-blur-lg rounded-3xl p-3 border border-white/50 drop-shadow-2xl w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52">
+              <div className="flex justify-center items-center bg-white/20 backdrop-blur-lg rounded-3xl p-3 border border-white/25 drop-shadow-2xl w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52">
                 <img 
                   src="/logo-dalista.svg" 
                   alt="Logo Dalista" 
