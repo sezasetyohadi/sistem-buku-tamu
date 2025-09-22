@@ -151,8 +151,13 @@ export default function LandingPage() {
                   Selamat Datang di
                 </span>
                 <br />
-                <span className="inline-block bg-gradient-to-r from-orange-300 via-orange-400 to-yellow-300 bg-clip-text text-transparent hover:from-yellow-300 hover:to-orange-400 transition-all duration-700 hover:scale-105 transform">
-                  DALISTA
+                <span className="inline-block hover:scale-105 transition-all duration-700 transform">
+                  <img 
+                    src="/logo-dalista-text.svg" 
+                    alt="DALISTA" 
+                    className="h-12 sm:h-16 md:h-12 lg:h-16 xl:h-20 w-auto inline-block filter drop-shadow-lg"
+                    style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
+                  />
                 </span>
               </h1>
               <div className="relative">
