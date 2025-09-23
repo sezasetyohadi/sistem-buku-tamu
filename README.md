@@ -5,7 +5,6 @@ Aplikasi sistem buku tamu digital yang dilengkapi dengan fitur survei kepuasan p
 ![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## ✨ Fitur Utama
 
@@ -220,18 +219,6 @@ src/
 - **Developer**: GitHub Copilot & Team
 - **Project Type**: Sistem Manajemen Buku Tamu Digital
 - **Organization**: Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah
-
-## 📝 License
-
-Proyek ini menggunakan lisensi MIT. Lihat file [LICENSE](./LICENSE) untuk detail.
-
-## 🆘 Support
-
-Jika Anda mengalami masalah atau memiliki pertanyaan:
-
-1. Periksa [dokumentasi](./API-DOCUMENTATION.md)
-2. Lihat [troubleshooting guide](./ERROR-HANDLING-GUIDE.md)
-3. Buat issue di GitHub repository
 
 ---
 
