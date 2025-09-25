@@ -60,6 +60,31 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Set initial sidebar state based on screen size
+  React.useEffect(() => {
+    const checkScreenSize = () => {
+      const isDesktop = window.innerWidth >= 768; // md breakpoint
+      setSidebarOpen(isDesktop);
+    };
+
+    // Check on mount
+    checkScreenSize();
+
+    // Listen for resize events
+    const handleResize = () => {
+      const isDesktop = window.innerWidth >= 768;
+      // Auto-adjust sidebar based on screen size
+      if (isDesktop) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Enhanced prefetch function that uses the router instance
   const enhancedPrefetch = React.useCallback((path: string) => {
     // Use the fetch-based prefetch
@@ -157,9 +182,9 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
       />
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out overflow-hidden
-        md:relative md:translate-x-0
-        ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0 md:w-16'}
+        fixed inset-y-0 left-0 z-40 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out overflow-hidden
+        md:relative md:translate-x-0 md:z-auto md:bg-white
+        ${sidebarOpen ? 'translate-x-0 w-64 md:bg-white bg-white/95 backdrop-blur-sm' : '-translate-x-full w-64 md:translate-x-0 md:w-16'}
       `}>
         <div className="h-full flex flex-col overflow-hidden">
           {/* Logo with Toggle Button */}
@@ -246,16 +271,19 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
         </div>
       </div>
 
-      {/* Mobile sidebar overlay */}
+      {/* Invisible click area to close sidebar on mobile */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden" 
+          className="fixed inset-0 z-30 md:hidden bg-transparent" 
           onClick={() => setSidebarOpen(false)}
+          style={{ left: '256px' }} // Start after sidebar width
         />
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className={`flex-1 flex flex-col min-h-0 transition-all duration-300 ${
+        sidebarOpen ? 'md:ml-0' : 'md:ml-0'
+      }`}>
         {/* Top header */}
         <div className="flex-shrink-0 flex h-16 bg-white shadow-sm border-b border-gray-200 z-10">
           {/* Mobile menu button */}
