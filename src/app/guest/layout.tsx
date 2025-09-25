@@ -56,7 +56,7 @@ interface GuestLayoutProps {
 }
 
 export default function GuestLayout({ children }: GuestLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = React.useState(true); // Keep default true for desktop
+  const [sidebarOpen, setSidebarOpen] = React.useState(false); // Keep default false for mobile
   const pathname = usePathname();
   const router = useRouter();
 
