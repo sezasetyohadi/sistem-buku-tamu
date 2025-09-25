@@ -140,6 +140,14 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
     return pathname.startsWith(path);
   };
 
+  // Handle navigation click - close sidebar on mobile
+  const handleNavClick = () => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   const menuItems = [
     {
       name: 'Pendaftaran Tamu',
@@ -215,6 +223,7 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
                   href={item.path}
                   prefetch={true} // Enable Next.js prefetching
                   onMouseEnter={() => enhancedPrefetch(item.path)} // Enhanced prefetch on hover
+                  onClick={handleNavClick} // Auto-close sidebar on mobile
                   title={!sidebarOpen ? item.name : undefined} // Tooltip for collapsed state
                   className={`
                     group flex items-center text-sm font-medium transition-all duration-300 relative
