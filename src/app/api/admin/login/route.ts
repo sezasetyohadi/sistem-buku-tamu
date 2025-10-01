@@ -225,7 +225,7 @@ export const POST = withApiMiddleware(async (request, apiResponse, context) => {
       username: admin.username,
       email: admin.email || '',
       nama_lengkap: admin.nama_lengkap || '',
-      is_super_admin: admin.is_super_admin || false
+      bidang_tujuan_id: admin.bidang_tujuan_id || 999
     });
 
     // Create response with admin data (without password)

@@ -3,6 +3,7 @@
 import ExcelJS from 'exceljs';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
 import ServiceManagementModal from '@/components/admin/ServiceManagementModal';
@@ -13,6 +14,7 @@ import { ErrorMessage, TableLoading } from '@/components/ui/loading-states';
 import Modal from '@/components/ui/Modal';
 import { useErrorHandler, useFetch } from '@/hooks/useErrorHandling';
 import { DaftarTamu } from '@/types/database-types';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Debounce hook for search optimization
 function useDebounce<T>(value: T, delay: number): T {
@@ -32,6 +34,23 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 function AdminGuestsManagement() {
+  const router = useRouter();
+  const { user } = useAuth();
+  
+  // Check access permission
+  useEffect(() => {
+    if (user) {
+      // Admin bidang (selain 999 dan 2) dan kepala dinas tidak boleh mengakses guest management
+      if (user.bidang_tujuan_id === 2) {
+        router.replace('/admin/reports');
+        return;
+      } else if (user.bidang_tujuan_id && user.bidang_tujuan_id !== 999 && user.bidang_tujuan_id !== 2) {
+        router.replace('/admin/guest-list');
+        return;
+      }
+    }
+  }, [user, router]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
   const [dateFilter, setDateFilter] = useState('Semua Waktu');

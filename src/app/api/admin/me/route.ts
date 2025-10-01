@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // Get fresh admin data from database including profile picture
     const adminQuery = `
-      SELECT id, username, email, nama_lengkap, is_super_admin, profile_picture, created_at
+      SELECT id, username, email, nama_lengkap, bidang_tujuan_id, profile_picture, created_at
       FROM admin 
       WHERE id = ?
     `;
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         username: admin.username,
         email: admin.email,
         nama_lengkap: admin.nama_lengkap,
-        is_super_admin: admin.is_super_admin,
+        bidang_tujuan_id: admin.bidang_tujuan_id,
         profile_picture: admin.profile_picture,
         created_at: admin.created_at
       }

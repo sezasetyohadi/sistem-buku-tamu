@@ -6,7 +6,7 @@ interface Admin {
   created_at: string;
   email?: string;
   profile_picture?: string;
-  is_super_admin?: boolean;
+  bidang_tujuan_id?: number;
 }
 
 export default Admin;

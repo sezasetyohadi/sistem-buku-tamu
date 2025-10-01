@@ -353,7 +353,7 @@ export async function getAdminByUsername(username: string): Promise<Admin | null
 
 export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
   const query = `
-    INSERT INTO admin (username, password, nama_lengkap, email, is_super_admin)
+    INSERT INTO admin (username, password, nama_lengkap, email, bidang_tujuan_id)
     VALUES (?, ?, ?, ?, ?)
   `;
   
@@ -362,7 +362,7 @@ export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
     adminData.password,
     adminData.nama_lengkap || '',
     adminData.email || '',
-    adminData.is_super_admin || false
+    adminData.bidang_tujuan_id || 999
   ];
 
   const result = await executeQuery<any>(query, params);

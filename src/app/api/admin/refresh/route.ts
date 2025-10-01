@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new tokens
-    if (!admin.id || !admin.username || !admin.email || !admin.nama_lengkap || admin.is_super_admin === undefined) {
+    if (!admin.id || !admin.username || !admin.email || !admin.nama_lengkap || admin.bidang_tujuan_id === undefined) {
       return NextResponse.json({
         success: false,
         message: 'Data admin tidak lengkap'
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       username: admin.username,
       email: admin.email,
       nama_lengkap: admin.nama_lengkap,
-      is_super_admin: admin.is_super_admin
+      bidang_tujuan_id: admin.bidang_tujuan_id
     });
 
     // Create response

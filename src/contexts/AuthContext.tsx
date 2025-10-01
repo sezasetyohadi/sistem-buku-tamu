@@ -17,7 +17,7 @@ interface AdminUser {
   username: string;
   email: string;
   nama_lengkap: string;
-  is_super_admin: boolean;
+  bidang_tujuan_id: number;
   profile_picture?: string | null;
 }
 

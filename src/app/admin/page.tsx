@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -14,6 +16,18 @@ export default function AdminDashboard() {
   });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const { user } = useAuth();
+
+  // Minimal access check - most logic is now in layout
+  useEffect(() => {
+    if (user) {
+      // Only show content for admin resepsionis, others will be redirected by layout
+      if (user.bidang_tujuan_id === 999) {
+        console.log('Dashboard: Admin resepsionis confirmed access');
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchStats();
