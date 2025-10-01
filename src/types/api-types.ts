@@ -101,7 +101,7 @@ export interface LoginResponse {
     username: string;
     nama_lengkap?: string;
     email?: string;
-    is_super_admin?: boolean;
+    bidang_tujuan_id?: number;
   };
   tokens: {
     accessToken: string;

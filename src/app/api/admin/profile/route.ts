@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get admin profile from database
-    const query = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, is_super_admin FROM admin WHERE id = ?';
+    const query = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, bidang_tujuan_id FROM admin WHERE id = ?';
     const result = await executeQuery<Admin[]>(query, [payload.userId]);
 
     if (!result || result.length === 0) {
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         email: admin.email || '',
         profile_picture: admin.profile_picture || null,
         created_at: admin.created_at,
-        is_super_admin: admin.is_super_admin
+        bidang_tujuan_id: admin.bidang_tujuan_id
       }
     });
 
@@ -157,7 +157,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get updated admin data
-    const updatedAdminQuery = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, is_super_admin FROM admin WHERE id = ?';
+    const updatedAdminQuery = 'SELECT id, username, nama_lengkap, email, profile_picture, created_at, updated_at, bidang_tujuan_id FROM admin WHERE id = ?';
     const updatedAdminResult = await executeQuery<Admin[]>(updatedAdminQuery, [payload.userId]);
     const updatedAdmin = updatedAdminResult[0];
 
@@ -171,7 +171,7 @@ export async function PUT(request: NextRequest) {
         email: updatedAdmin.email,
         profile_picture: updatedAdmin.profile_picture,
         created_at: updatedAdmin.created_at,
-        is_super_admin: updatedAdmin.is_super_admin
+        bidang_tujuan_id: updatedAdmin.bidang_tujuan_id
       }
     });
 

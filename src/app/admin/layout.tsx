@@ -69,7 +69,67 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [adminProfilePicture, setAdminProfilePicture] = React.useState<string | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
   const [isProfileLoaded, setIsProfileLoaded] = React.useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
+  const [bidangTujuanId, setBidangTujuanId] = React.useState<number>(999);
+  const [hasRedirected, setHasRedirected] = React.useState(false); // Add redirect tracking
+
+  // Memoize role-based restrictions to avoid recalculation
+  const roleRestrictions = React.useMemo(() => {
+    return {
+      kepala_dinas: {
+        id: 2,
+        allowedPaths: ['/admin/reports', '/admin/guest-list', '/admin/profile'],
+        restrictedPaths: ['/admin', '/admin/guest-management', '/admin/survey'],
+        defaultPath: '/admin/reports'
+      },
+      admin_resepsionis: {
+        id: 999,
+        allowedPaths: ['/admin', '/admin/guest-management', '/admin/reports', '/admin/survey', '/admin/profile'],
+        restrictedPaths: ['/admin/guest-list'], // Explicitly restrict guest-list for resepsionis
+        defaultPath: '/admin'
+      },
+      admin_bidang: {
+        allowedPaths: ['/admin/guest-list', '/admin/reports', '/admin/profile'],
+        restrictedPaths: ['/admin', '/admin/guest-management', '/admin/survey'],
+        defaultPath: '/admin/guest-list'
+      }
+    };
+  }, []);
+
+  // Function to check if redirect is needed
+  const getRedirectPath = React.useCallback((bidangId: number, currentPath: string) => {
+    const restrictions = bidangId === 2 ? roleRestrictions.kepala_dinas :
+                        bidangId === 999 ? roleRestrictions.admin_resepsionis :
+                        roleRestrictions.admin_bidang;
+
+    // Special fix for guest-list access by kadis (bidangId = 2)
+    if (bidangId === 2 && (currentPath === '/admin/guest-list' || currentPath.startsWith('/admin/guest-list'))) {
+      console.log('Layout: Allowing Kadis access to guest-list');
+      return null; // Allow access - no redirect
+    }
+
+    // Check if current path is explicitly restricted
+    const isOnRestrictedPath = restrictions.restrictedPaths.some(path => {
+      if (path === '/admin') {
+        return currentPath === '/admin' || currentPath === '/admin/';
+      }
+      return currentPath.startsWith(path);
+    });
+
+    // Check if current path is in allowed paths
+    const isOnAllowedPath = restrictions.allowedPaths.some(path => {
+      if (path === '/admin') {
+        return currentPath === '/admin' || currentPath === '/admin/';
+      }
+      return currentPath.startsWith(path);
+    });
+
+    // If on restricted path OR not on allowed path, redirect to default
+    if (isOnRestrictedPath || !isOnAllowedPath) {
+      return restrictions.defaultPath;
+    }
+
+    return null;
+  }, [roleRestrictions]);
 
   // Enhanced prefetch function that uses the router instance
   const enhancedPrefetch = React.useCallback((path: string) => {
@@ -120,26 +180,52 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             nama_lengkap: adminData.nama_lengkap, 
             username: adminData.username,
             profile_picture: adminData.profile_picture,
-            is_super_admin: adminData.is_super_admin
+            bidang_tujuan_id: adminData.bidang_tujuan_id
           });
           
-          // Set super admin status
-          setIsSuperAdmin(adminData.is_super_admin || false);
-          
-          // Redirect super admin to reports if they're on the dashboard
-          if (adminData.is_super_admin && (pathname === '/admin' || pathname === '/admin/')) {
-            console.log('Super admin detected, redirecting to reports...');
-            router.replace('/admin/reports');
+          // Check if bidang_tujuan_id changed (user switched roles)
+          const currentBidangId = adminData.bidang_tujuan_id || 999;
+          if (bidangTujuanId !== currentBidangId) {
+            console.log(`Admin Layout: Role changed from ${bidangTujuanId} to ${currentBidangId} - resetting redirect flag`);
+            setHasRedirected(false);
           }
           
-          // Prevent super admin from accessing restricted pages
-          if (adminData.is_super_admin) {
-            const restrictedPaths = ['/admin/guest-management', '/admin/survey'];
-            const isOnRestrictedPath = restrictedPaths.some(path => pathname.startsWith(path));
+          // Set bidang tujuan id
+          setBidangTujuanId(currentBidangId);
+          
+          // Handle redirects based on role with proper checks to prevent loops
+          const redirectPath = getRedirectPath(currentBidangId, pathname);
+          
+          if (redirectPath && redirectPath !== pathname) {
+            console.log(`Admin Layout: Redirecting from ${pathname} to ${redirectPath} for bidang_id ${currentBidangId}`);
             
-            if (isOnRestrictedPath) {
-              console.log('Super admin trying to access restricted path, redirecting to reports...');
-              router.replace('/admin/reports');
+            // Special case for guest-list - never redirect kadis
+            if (pathname.startsWith('/admin/guest-list') && currentBidangId === 2) {
+              console.log('Admin Layout: Special case - allowing kadis to access guest-list');
+              // Continue processing without redirect
+            } else {
+              // Force redirect for unauthorized access regardless of hasRedirected flag
+              const isUnauthorizedAccess = 
+                (currentBidangId === 999 && pathname.startsWith('/admin/guest-list')) ||
+                (currentBidangId === 2 && (pathname === '/admin' || pathname.startsWith('/admin/guest-management') || pathname.startsWith('/admin/survey'))) ||
+                (currentBidangId && currentBidangId !== 999 && currentBidangId !== 2 && 
+                (pathname === '/admin' || pathname.startsWith('/admin/guest-management') || pathname.startsWith('/admin/survey')));
+              
+              if (isUnauthorizedAccess || !hasRedirected) {
+                setHasRedirected(true);
+                
+                // Immediate redirect for unauthorized access
+                if (isUnauthorizedAccess) {
+                  console.log(`Admin Layout: UNAUTHORIZED ACCESS - Force redirecting immediately`);
+                  router.replace(redirectPath);
+                } else {
+                  // Normal redirect with small delay
+                  setTimeout(() => {
+                    router.replace(redirectPath);
+                  }, 50);
+                }
+                return; // Prevent further processing
+              }
             }
           }
           
@@ -215,6 +301,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       // Reset states to ensure fresh fetch
       setIsProfileLoaded(false);
       setIsLoadingProfile(true);
+      setHasRedirected(false); // Reset redirect flag for new navigation
       
       console.log('Admin Layout: Entering admin area, pathname:', pathname);
       
@@ -228,6 +315,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       setAdminProfilePicture(null);
       setIsProfileLoaded(false);
       setIsLoadingProfile(false);
+      setHasRedirected(false); // Reset redirect flag on login page
     }
 
     // Listen for profile updates (both name and picture)
@@ -306,7 +394,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
         </svg>
       ),
-      showForSuperAdmin: false // Hide dashboard for super admin
+      showForSuperAdmin: false, // Hide dashboard for kepala dinas
+      showForResepsionis: true, // Show for admin resepsionis
+      showForBidang: false // Hide for admin bidang
     },
     {
       name: 'Manajemen Tamu',
@@ -316,7 +406,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
         </svg>
       ),
-      showForSuperAdmin: false // Hide guest management for super admin
+      showForSuperAdmin: false, // Hide for kepala dinas
+      showForResepsionis: true, // Show for admin resepsionis
+      showForBidang: false // Hide for admin bidang
+    },
+    {
+      name: 'List Tamu',
+      path: '/admin/guest-list',
+      icon: (
+        <svg className="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clipRule="evenodd"/>
+          <path d="M6 8h8v1H6V8zm0 2h8v1H6v-1z"/>
+        </svg>
+      ),
+      showForSuperAdmin: true, // Show for kepala dinas
+      showForResepsionis: false, // Hide for admin resepsionis (999)
+      showForBidang: true // Show for admin bidang (selain 999)
     },
     {
       name: 'Laporan',
@@ -326,7 +431,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd"/>
         </svg>
       ),
-      showForSuperAdmin: true // Show reports for super admin
+      showForSuperAdmin: true, // Show for kepala dinas
+      showForResepsionis: true, // Show for admin resepsionis
+      showForBidang: true // Show for admin bidang - semua bisa akses laporan
     },
     {
       name: 'Manajemen Survei',
@@ -336,16 +443,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
         </svg>
       ),
-      showForSuperAdmin: false // Hide survey management for super admin
+      showForSuperAdmin: false, // Hide for kepala dinas
+      showForResepsionis: true, // Show for admin resepsionis
+      showForBidang: false // Hide for admin bidang
     }
   ];
 
   // Filter menu items based on admin role
   const filteredMenuItems = menuItems.filter(item => {
-    if (isSuperAdmin) {
+    if (bidangTujuanId === 2) { // Kepala dinas
       return item.showForSuperAdmin;
+    } else if (bidangTujuanId === 999) { // Admin Resepsionis
+      return item.showForResepsionis;
+    } else {
+      // Admin bidang lainnya (selain 999 dan 2)
+      return item.showForBidang;
     }
-    return true; // Normal admin sees all items
   });
 
   return (

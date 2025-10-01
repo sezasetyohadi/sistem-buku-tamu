@@ -101,7 +101,7 @@ export interface Admin {
   nama_lengkap?: string;
   created_at?: string;
   email?: string;
-  is_super_admin?: boolean;
+  bidang_tujuan_id?: number;
 }
 
 // Education Types (sesuai tabel pendidikan_terakhir)

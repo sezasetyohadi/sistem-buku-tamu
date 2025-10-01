@@ -123,7 +123,7 @@ async function createErrorReportsTable() {
   try {
     await executeQuery(`
       CREATE TABLE IF NOT EXISTS error_reports (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INT PRIMARY KEY AUTO_INCREMENT,
         error_id VARCHAR(255) UNIQUE NOT NULL,
         error_type VARCHAR(100) NOT NULL,
         severity VARCHAR(50) NOT NULL,

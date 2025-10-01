@@ -14,7 +14,8 @@ interface AdminProfile {
   nama_lengkap: string;
   role: string;
   created_at: string;
-  is_super_admin: boolean;
+  bidang_tujuan_id: number;
+  bidang_name?: string;
   profile_picture?: string | null;
 }
 
@@ -84,16 +85,61 @@ export default function AdminProfile() {
         const data = await response.json();
         
         if (data.success) {
-          setProfile({
-            id: data.admin.id,
-            username: data.admin.username,
-            email: data.admin.email || adminData.email || '',
-            nama_lengkap: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
-            role: data.admin.is_super_admin ? 'Super Admin' : 'Admin',
-            created_at: data.admin.created_at,
-            is_super_admin: data.admin.is_super_admin,
-            profile_picture: data.admin.profile_picture
-          });
+          // Fetch bidang name based on bidang_tujuan_id
+          const fetchBidangName = async () => {
+            try {
+              const bidangResponse = await fetch(`/api/admin/bidang?id=${data.admin.bidang_tujuan_id}`, {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+              });
+              
+              if (bidangResponse.ok) {
+                const bidangData = await bidangResponse.json();
+                if (bidangData.success && bidangData.bidang) {
+                  // Update profile with the fetched bidang name
+                  setProfile({
+                    id: data.admin.id,
+                    username: data.admin.username,
+                    email: data.admin.email || adminData.email || '',
+                    nama_lengkap: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
+                    role: bidangData.bidang.bidang, // Use actual bidang name as role
+                    created_at: data.admin.created_at,
+                    bidang_tujuan_id: data.admin.bidang_tujuan_id,
+                    bidang_name: bidangData.bidang.bidang,
+                    profile_picture: data.admin.profile_picture
+                  });
+                  return;
+                }
+              }
+              // If bidang fetch fails, fall back to default behavior
+              setProfile({
+                id: data.admin.id,
+                username: data.admin.username,
+                email: data.admin.email || adminData.email || '',
+                nama_lengkap: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
+                role: 'Admin', // Default role
+                created_at: data.admin.created_at,
+                bidang_tujuan_id: data.admin.bidang_tujuan_id,
+                profile_picture: data.admin.profile_picture
+              });
+            } catch (bidangError) {
+              console.error('Error fetching bidang data:', bidangError);
+              // Fall back to default behavior
+              setProfile({
+                id: data.admin.id,
+                username: data.admin.username,
+                email: data.admin.email || adminData.email || '',
+                nama_lengkap: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
+                role: 'Admin', // Default role
+                created_at: data.admin.created_at,
+                bidang_tujuan_id: data.admin.bidang_tujuan_id,
+                profile_picture: data.admin.profile_picture
+              });
+            }
+          };
+          
+          fetchBidangName();
 
           setEditForm({
             fullName: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
@@ -111,17 +157,63 @@ export default function AdminProfile() {
           // Set last modified date
           setLastModified(data.admin.updated_at || data.admin.created_at);
         } else {
-          // Use JWT admin data as fallback
-          setProfile({
-            id: adminData.id,
-            username: adminData.username,
-            email: adminData.email || '',
-            nama_lengkap: adminData.nama_lengkap || 'Administrator',
-            role: adminData.is_super_admin ? 'Super Admin' : 'Admin',
-            created_at: adminData.created_at || new Date().toISOString(),
-            is_super_admin: adminData.is_super_admin,
-            profile_picture: adminData.profile_picture || null
-          });
+          // Use JWT admin data as fallback but still try to get bidang name
+          const fetchBidangName = async () => {
+            try {
+              if (adminData.bidang_tujuan_id) {
+                const bidangResponse = await fetch(`/api/admin/bidang?id=${adminData.bidang_tujuan_id}`, {
+                  method: 'GET',
+                  credentials: 'include',
+                  cache: 'no-store'
+                });
+                
+                if (bidangResponse.ok) {
+                  const bidangData = await bidangResponse.json();
+                  if (bidangData.success && bidangData.bidang) {
+                    // Update profile with the fetched bidang name
+                    setProfile({
+                      id: adminData.id,
+                      username: adminData.username,
+                      email: adminData.email || '',
+                      nama_lengkap: adminData.nama_lengkap || 'Administrator',
+                      role: bidangData.bidang.bidang, // Use actual bidang name as role
+                      created_at: adminData.created_at || new Date().toISOString(),
+                      bidang_tujuan_id: adminData.bidang_tujuan_id,
+                      bidang_name: bidangData.bidang.bidang,
+                      profile_picture: adminData.profile_picture || null
+                    });
+                    return;
+                  }
+                }
+              }
+              // If bidang fetch fails, fall back to default behavior
+              setProfile({
+                id: adminData.id,
+                username: adminData.username,
+                email: adminData.email || '',
+                nama_lengkap: adminData.nama_lengkap || 'Administrator',
+                role: 'Admin', // Default role
+                created_at: adminData.created_at || new Date().toISOString(),
+                bidang_tujuan_id: adminData.bidang_tujuan_id,
+                profile_picture: adminData.profile_picture || null
+              });
+            } catch (bidangError) {
+              console.error('Error fetching bidang data:', bidangError);
+              // Fall back to default behavior
+              setProfile({
+                id: adminData.id,
+                username: adminData.username,
+                email: adminData.email || '',
+                nama_lengkap: adminData.nama_lengkap || 'Administrator',
+                role: 'Admin', // Default role
+                created_at: adminData.created_at || new Date().toISOString(),
+                bidang_tujuan_id: adminData.bidang_tujuan_id,
+                profile_picture: adminData.profile_picture || null
+              });
+            }
+          };
+          
+          fetchBidangName();
 
           setEditForm({
             fullName: adminData.nama_lengkap || 'Administrator',
@@ -771,7 +863,7 @@ export default function AdminProfile() {
                 
                 <div className="flex items-center justify-center mb-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    profile?.is_super_admin 
+                    profile?.role !== 'Admin' 
                       ? 'bg-purple-100 text-purple-800' 
                       : 'bg-blue-100 text-blue-800'
                   }`}>

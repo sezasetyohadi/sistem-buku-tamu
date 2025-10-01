@@ -353,7 +353,7 @@ export async function getAdminByUsername(username: string): Promise<Admin | null
 
 export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
   const query = `
-    INSERT INTO admin (username, password, nama_lengkap, email, is_super_admin)
+    INSERT INTO admin (username, password, nama_lengkap, email, bidang_tujuan_id)
     VALUES (?, ?, ?, ?, ?)
   `;
   
@@ -362,7 +362,7 @@ export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
     adminData.password,
     adminData.nama_lengkap || '',
     adminData.email || '',
-    adminData.is_super_admin || false
+    adminData.bidang_tujuan_id || 999
   ];
 
   const result = await executeQuery<any>(query, params);
@@ -370,7 +370,10 @@ export async function createAdmin(adminData: Partial<Admin>): Promise<number> {
 }
 
 // Get Recent Activities for Dashboard (configurable period)
-export async function getRecentActivities(limit: number = 5, periodDays: number = 1): Promise<any[]> {
+export async function getRecentActivities(limit: number = 5, periodDays: number = 1, bidangTujuanId?: number): Promise<any[]> {
+  // Add department filter if bidangTujuanId is provided
+  const departmentFilter = bidangTujuanId ? 'AND bidang_tujuan_id = ?' : '';
+  
   const query = `
     SELECT 
       id, 
@@ -381,12 +384,15 @@ export async function getRecentActivities(limit: number = 5, periodDays: number 
       waktu_dibuat
     FROM daftar_tamu 
     WHERE waktu_dibuat >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
+    ${departmentFilter}
     ORDER BY waktu_dibuat DESC
     LIMIT ?
   `;
   
   try {
-    const results = await executeQuery<any[]>(query, [limit]);
+    // Add bidangTujuanId to params if it's defined
+    const params = bidangTujuanId ? [bidangTujuanId, limit] : [limit];
+    const results = await executeQuery<any[]>(query, params);
     return Array.isArray(results) ? results : [];
   } catch (error) {
     console.error('Error fetching recent activities:', error);
@@ -459,36 +465,57 @@ export async function getSurveyStatistics(): Promise<any> {
 }
 
 // Enhanced Reports Statistics
-export async function getReportsStatistics(periodDays: number = 7): Promise<any> {
+export async function getReportsStatistics(periodDays: number = 7, bidangTujuanId?: number): Promise<any> {
   try {
+    // Department filter condition
+    const deptFilter = bidangTujuanId ? `AND bidang_tujuan_id = ${bidangTujuanId}` : '';
+    
     // 1. Total visits for current period vs previous period
     const totalVisitsQuery = `
       SELECT 
-        (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as current_total,
-        (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as previous_total
+        (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}) as current_total,
+        (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}) as previous_total
     `;
 
     // 2. Daily average visitors (total registered guests / period days)
     const dailyAverageQuery = `
       SELECT 
         ROUND(COUNT(*) / ${periodDays}, 1) as daily_average,
-        (SELECT ROUND(COUNT(*) / ${periodDays}, 1) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as previous_average
+        (SELECT ROUND(COUNT(*) / ${periodDays}, 1) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_dibuat) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}) as previous_average
       FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
+      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}
     `;
 
     // 3. Average visit duration (check-in to check-out time)
     const avgDurationQuery = `
       SELECT 
         AVG(TIMESTAMPDIFF(MINUTE, waktu_checkin, waktu_checkout)) as avg_duration_minutes,
-        (SELECT AVG(TIMESTAMPDIFF(MINUTE, waktu_checkin, waktu_checkout)) FROM daftar_tamu WHERE waktu_checkout IS NOT NULL AND DATE(waktu_checkin) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_checkin) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)) as previous_avg_duration
+        (SELECT AVG(TIMESTAMPDIFF(MINUTE, waktu_checkin, waktu_checkout)) FROM daftar_tamu WHERE waktu_checkout IS NOT NULL AND DATE(waktu_checkin) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) AND DATE(waktu_checkin) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}) as previous_avg_duration
       FROM daftar_tamu 
       WHERE waktu_checkout IS NOT NULL 
-      AND DATE(waktu_checkin) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
+      AND DATE(waktu_checkin) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}
     `;
 
     // 4. Satisfaction rating from surveys (average urutan_rating, max 4)
-    const satisfactionQuery = `
+    // Add department filter to satisfaction query if necessary
+    // This assumes jawaban_survei has a guest_id that links to daftar_tamu
+    const satisfactionQuery = bidangTujuanId ? `
+      SELECT 
+        AVG(or_current.urutan_rating) as current_rating,
+        COUNT(*) as total_responses,
+        (SELECT AVG(or_prev.urutan_rating) 
+         FROM jawaban_survei js_prev 
+         LEFT JOIN opsi_rating or_prev ON js_prev.jawaban = or_prev.id 
+         LEFT JOIN daftar_tamu dt_prev ON js_prev.guest_id = dt_prev.id
+         WHERE DATE(js_prev.created_at) >= DATE_SUB(NOW(), INTERVAL ${periodDays * 2} DAY) 
+         AND DATE(js_prev.created_at) < DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
+         AND dt_prev.bidang_tujuan_id = ${bidangTujuanId}) as previous_rating
+      FROM jawaban_survei js_current
+      LEFT JOIN opsi_rating or_current ON js_current.jawaban = or_current.id
+      LEFT JOIN daftar_tamu dt_current ON js_current.guest_id = dt_current.id
+      WHERE DATE(js_current.created_at) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
+      AND dt_current.bidang_tujuan_id = ${bidangTujuanId}
+    ` : `
       SELECT 
         AVG(or_current.urutan_rating) as current_rating,
         COUNT(*) as total_responses,
@@ -508,7 +535,7 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
         DATE(waktu_dibuat) as date,
         COUNT(*) as visits
       FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
+      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}
       GROUP BY DATE(waktu_dibuat)
       ORDER BY date ASC
     `;
@@ -518,9 +545,9 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
       SELECT 
         keperluan as category,
         COUNT(id) as count,
-        ROUND((COUNT(id) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY))), 1) as percentage
+        ROUND((COUNT(id) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter})), 1) as percentage
       FROM daftar_tamu 
-      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY)
+      WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${periodDays} DAY) ${deptFilter}
       AND keperluan IS NOT NULL AND keperluan != ''
       GROUP BY keperluan
       ORDER BY count DESC
@@ -538,6 +565,7 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
       WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ${Math.max(periodDays, 30)} DAY)
       AND dt.status_kunjungan IN ('Datang', 'Selesai')
       AND dt.email IS NOT NULL
+      ${deptFilter}
       GROUP BY dt.email, dt.nama, dt.asal_instansi
       ORDER BY visit_count DESC, dt.waktu_dibuat DESC
       LIMIT 5
@@ -634,7 +662,13 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
       serviceCategories: serviceCategoriesData || [],
       
       // Top visitors
-      topVisitors: topVisitorsData || []
+      topVisitors: topVisitorsData || [],
+      
+      // Filter information
+      filterInfo: {
+        filteredByDepartment: !!bidangTujuanId,
+        departmentId: bidangTujuanId || null
+      }
     };
 
   } catch (error) {
@@ -649,7 +683,11 @@ export async function getReportsStatistics(periodDays: number = 7): Promise<any>
       },
       weeklyTrends: [],
       serviceCategories: [],
-      topVisitors: []
+      topVisitors: [],
+      filterInfo: {
+        filteredByDepartment: !!bidangTujuanId,
+        departmentId: bidangTujuanId || null
+      }
     };
   }
 }

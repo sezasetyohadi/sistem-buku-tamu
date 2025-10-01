@@ -25,16 +25,25 @@ ChartJS.register(
 
 interface PdfReportProps {
   data: any;
+  departmentName?: string;
+  filteredByDepartment?: boolean;
+  selectedPeriod?: string;
+  periodLabel?: string;
 }
 
-const PdfReport = ({ data }: PdfReportProps) => {
+const PdfReport = ({ 
+  data, 
+  departmentName = 'Semua Bidang', 
+  filteredByDepartment = false,
+  selectedPeriod = '7',
+  periodLabel = '7 Hari Terakhir'
+}: PdfReportProps) => {
   // Ensure we always have some data to render
   const reportData = data || {
     metrics: {
       totalVisits: { value: 0, growth: 0, label: 'No data available' },
       dailyAverage: { value: 0, growth: 0, label: 'No data available' },
-      avgDuration: { value: '0h', growth: 0, label: 'No data available' },
-      satisfaction: { value: '0/5', growth: 0, label: 'No data available' }
+      avgDuration: { value: '0h', growth: 0, label: 'No data available' }
     },
     topVisitors: [],
     recentActivities: []
@@ -100,6 +109,12 @@ const PdfReport = ({ data }: PdfReportProps) => {
         <h1 style={{ margin: '0', fontSize: '22px', color: '#333', fontWeight: 'bold' }}>
           LAPORAN BUKU TAMU
         </h1>
+        <h2 style={{ margin: '5px 0 0 0', fontSize: '16px', color: '#555', fontWeight: filteredByDepartment ? 'bold' : 'normal' }}>
+          {filteredByDepartment ? `Bidang: ${departmentName}` : 'Semua Bidang'}
+        </h2>
+        <h3 style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#444', fontWeight: 'normal' }}>
+          Periode: {periodLabel}
+        </h3>
         <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
           Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { 
             day: '2-digit', 
@@ -120,7 +135,6 @@ const PdfReport = ({ data }: PdfReportProps) => {
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Total Kunjungan</th>
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Rata-rata Harian</th>
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu Rata-rata</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Tingkat Kepuasan</th>
           </tr>
         </thead>
         <tbody>
@@ -134,16 +148,13 @@ const PdfReport = ({ data }: PdfReportProps) => {
             <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
               {reportData.metrics?.avgDuration?.value ?? '0h'}
             </td>
-            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
-              {reportData.metrics?.satisfaction?.value ?? '0/5'}
-            </td>
           </tr>
         </tbody>
       </table>
 
       {/* Visitor Trends Chart */}
       <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-        Tren Kunjungan (7 Hari Terakhir)
+        Tren Kunjungan ({periodLabel})
       </h3>
       <div style={{ width: '100%', height: '150px', marginBottom: '20px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
         {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 ? (
@@ -295,6 +306,13 @@ const PdfReport = ({ data }: PdfReportProps) => {
         <h4 style={{ margin: '0 0 10px 0', fontSize: '12px' }}>Informasi Sistem</h4>
         <p style={{ margin: '5px 0' }}>Laporan ini dihasilkan dari Sistem Buku Tamu Digital</p>
         <p style={{ margin: '5px 0' }}>Tanggal: {new Date().toLocaleDateString('id-ID')}</p>
+        <p style={{ margin: '5px 0' }}>
+          <strong>Filter Waktu: </strong> {periodLabel}
+        </p>
+        <p style={{ margin: '5px 0' }}>
+          <strong>Filter Bidang: </strong> 
+          {filteredByDepartment ? `Data khusus bidang ${departmentName}` : 'Semua data'}
+        </p>
         <p style={{ margin: '5px 0' }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
       </div>
     </div>
