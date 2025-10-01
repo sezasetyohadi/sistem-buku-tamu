@@ -27,7 +27,6 @@ interface PdfReportProps {
   data: any;
   departmentName?: string;
   filteredByDepartment?: boolean;
-  isSuperAdmin?: boolean;
   selectedPeriod?: string;
   periodLabel?: string;
 }
@@ -36,7 +35,6 @@ const PdfReport = ({
   data, 
   departmentName = 'Semua Bidang', 
   filteredByDepartment = false,
-  isSuperAdmin = false,
   selectedPeriod = '7',
   periodLabel = '7 Hari Terakhir'
 }: PdfReportProps) => {
@@ -45,8 +43,7 @@ const PdfReport = ({
     metrics: {
       totalVisits: { value: 0, growth: 0, label: 'No data available' },
       dailyAverage: { value: 0, growth: 0, label: 'No data available' },
-      avgDuration: { value: '0h', growth: 0, label: 'No data available' },
-      satisfaction: { value: '0/5', growth: 0, label: 'No data available' }
+      avgDuration: { value: '0h', growth: 0, label: 'No data available' }
     },
     topVisitors: [],
     recentActivities: []
@@ -113,11 +110,7 @@ const PdfReport = ({
           LAPORAN BUKU TAMU
         </h1>
         <h2 style={{ margin: '5px 0 0 0', fontSize: '16px', color: '#555', fontWeight: filteredByDepartment ? 'bold' : 'normal' }}>
-          {isSuperAdmin ? (
-            <span style={{ color: '#047857', fontWeight: 'bold' }}>Semua Bidang</span>
-          ) : (
-            filteredByDepartment ? `Bidang: ${departmentName}` : 'Semua Bidang'
-          )}
+          {filteredByDepartment ? `Bidang: ${departmentName}` : 'Semua Bidang'}
         </h2>
         <h3 style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#444', fontWeight: 'normal' }}>
           Periode: {periodLabel}
@@ -142,7 +135,6 @@ const PdfReport = ({
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Total Kunjungan</th>
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Rata-rata Harian</th>
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu Rata-rata</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Tingkat Kepuasan</th>
           </tr>
         </thead>
         <tbody>
@@ -155,9 +147,6 @@ const PdfReport = ({
             </td>
             <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
               {reportData.metrics?.avgDuration?.value ?? '0h'}
-            </td>
-            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
-              {reportData.metrics?.satisfaction?.value ?? '0/5'}
             </td>
           </tr>
         </tbody>
@@ -322,8 +311,7 @@ const PdfReport = ({
         </p>
         <p style={{ margin: '5px 0' }}>
           <strong>Filter Bidang: </strong> 
-          {isSuperAdmin ? 'Seluruh Bidang' : 
-           (filteredByDepartment ? `Data khusus bidang ${departmentName}` : 'Semua data')}
+          {filteredByDepartment ? `Data khusus bidang ${departmentName}` : 'Semua data'}
         </p>
         <p style={{ margin: '5px 0' }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
       </div>
