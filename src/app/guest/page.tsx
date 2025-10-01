@@ -120,15 +120,15 @@ export default function LandingPage() {
           <div className="absolute bottom-32 right-1/3 w-32 h-32 bg-gradient-to-r from-pink-400 to-red-400 opacity-25 rounded-full blur-2xl"></div>
         </div>
         
-        <div className="container mx-auto px-4 sm:px-6 py-20 pb-32 relative z-10 max-w-7xl">
+        <div className="container mx-auto px-4 sm:px-6 py-12 pb-24 relative z-10 max-w-7xl">
           <div className="text-center">
             {/* Logo Section with smaller spacing */}
             <div className="flex justify-center mb-6">
-              <div className="flex justify-center items-center bg-white/32 backdrop-blur-lg rounded-3xl p-3 border border-white/50 drop-shadow-2xl w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52">
+              <div className="flex justify-center items-center bg-white/32 backdrop-blur-lg rounded-3xl p-3 border border-white/50 drop-shadow-2xl w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40">
                 <img 
                   src="/logo-dalista.svg" 
                   alt="Logo Dalista" 
-                  className="w-24 h-28 sm:w-32 sm:h-36 md:w-44 md:h-48 object-contain select-none pointer-events-none"
+                  className="w-16 h-20 sm:w-24 sm:h-28 md:w-32 md:h-36 object-contain select-none pointer-events-none"
                   style={{
                     userSelect: 'none',
                     WebkitUserSelect: 'none',
@@ -154,7 +154,7 @@ export default function LandingPage() {
             
             {/* Typography with compact spacing */}
             <div className="mb-6">
-              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 leading-tight tracking-tight px-2">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 leading-none tracking-tight px-2">
                 <span className="inline-block">
                   Selamat Datang di
                 </span>
@@ -163,7 +163,7 @@ export default function LandingPage() {
                   <img 
                     src="/logo-dalista-text.svg" 
                     alt="DALISTA" 
-                    className="h-12 sm:h-16 md:h-12 lg:h-16 xl:h-20 w-auto inline-block filter drop-shadow-lg select-none pointer-events-none"
+                    className="h-8 sm:h-10 md:h-12 lg:h-14 xl:h-16 w-auto inline-block filter drop-shadow-lg select-none pointer-events-none"
                     style={{
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(255,165,0,0.4))',
                       userSelect: 'none',
@@ -191,7 +191,7 @@ export default function LandingPage() {
             </p>     
             
             {/* CTA buttons - Smaller, more proportional sizing */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4 mb-8">
               <Link
                 href="/guest/register"
                 className="group relative text-white font-bold py-4 px-8 rounded-xl text-base md:text-lg transition-all duration-500 shadow-xl transform hover:scale-105 hover:-translate-y-1 overflow-hidden w-full sm:w-auto sm:min-w-[200px]"
@@ -224,7 +224,7 @@ export default function LandingPage() {
         </div>
         
         {/* Animated wave shape at bottom like image 2 */}
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden">
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden z-0">
           <ScrollWave />
           {/* Multiple wave layers for dynamic effect */}
           <svg className="wave-element relative block w-full h-32 animate-wave-scroll" viewBox="0 0 1200 120" preserveAspectRatio="none">
