@@ -800,7 +800,6 @@ export default function GuestRegistrationForm({
       isOpen={showTokenModal} 
       onClose={() => setShowTokenModal(false)} 
       token={token} 
-      onRedirect={() => router.push('/guest/status')}
     />
     </>
   );

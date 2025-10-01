@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import ExportToExcelButton from '@/components/admin/ExportToExcelButton';
 import QuestionOrderModal from '@/components/admin/QuestionOrderModal';
@@ -13,6 +14,7 @@ import SurveyStatistics from '@/components/admin/SurveyStatistics';
 import SurveyTabs from '@/components/admin/SurveyTabs';
 import { surveyLogger } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SurveyQuestion {
   id?: number;
@@ -61,6 +63,23 @@ interface SurveyResponse {
 }
 
 export default function AdminSurvey() {
+  const router = useRouter();
+  const { user } = useAuth();
+  
+  // Check access permission
+  useEffect(() => {
+    if (user) {
+      // Admin bidang (selain 999 dan 2) dan kepala dinas tidak boleh mengakses survey management
+      if (user.bidang_tujuan_id === 2) {
+        router.replace('/admin/reports');
+        return;
+      } else if (user.bidang_tujuan_id && user.bidang_tujuan_id !== 999 && user.bidang_tujuan_id !== 2) {
+        router.replace('/admin/guest-list');
+        return;
+      }
+    }
+  }, [user, router]);
+
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddQuestion, setShowAddQuestion] = useState(false);
