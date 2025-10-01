@@ -402,6 +402,17 @@ export default function LandingPage() {
           </svg>
         </div>
       </div>
+
+      {/* Copyright Section */}
+      <div className="bg-white py-4">
+        <div className="container mx-auto px-4">
+          <div className="text-left">
+            <p className="text-sm text-gray-500">
+              © 2025 Mhd Zaki AP | SSR Chandra | Lanang BayPam
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
