@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Sistem Buku Tamu Digital - DISNAKERTRANS Jawa Tengah',
+  title: 'Dalista - Digitalisasi Layanan Registrasi Tamu',
   description: 'Sistem Buku Tamu Digital Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah',
 };
 

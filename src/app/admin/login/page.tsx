@@ -272,17 +272,29 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center items-center text-white p-12 w-full">
           <div className="text-center">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-6 mx-auto">
-                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
+              <div className="w-40 h-40 bg-white/35 rounded-full flex items-center justify-center backdrop-blur-sm mb-6 mx-auto">
+                <img 
+                  src="/logo-dalista.svg" 
+                  alt="Logo Dalista" 
+                  className="w-33 h-32 select-none pointer-events-none"
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none',
+                    WebkitTouchCallout: 'none'
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  draggable={false}
+                />
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Sistem Buku Tamu
+                Dalista - Admin
               </h1>
               <div className="w-24 h-1 bg-white/50 mx-auto mb-6"></div>
-              <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-md">
-                Kelola data tamu dan survei dengan mudah dan efisien
+              <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-md mx-auto text-center">
+                Dashboard admin Dalista Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah
               </p>
             </div>
             
@@ -301,9 +313,10 @@ export default function LoginPage() {
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                 <svg className="w-8 h-8 text-blue-100 mb-2 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a3.5 3.5 0 000 1.798V18a1 1 0 11-2 0V6.899a3.5 3.5 0 000-1.798V3a1 1 0 011-1zm0 4a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M7 2a1 1 0 011-1h8a1 1 0 011 1v16a1 1 0 01-1 1H8a1 1 0 01-1-1V2zm2 2h6v2H9V4zm0 4h6v1H9V8zm0 3h6v1H9v-1zm0 3h4v1H9v-1z" clipRule="evenodd" />
                 </svg>
-                <div className="text-sm text-blue-100">Keamanan Terjamin</div>
+                <div className="text-sm text-blue-100">Manajemen Kuesioner</div>
               </div>
             </div>
           </div>
@@ -327,7 +340,7 @@ export default function LoginPage() {
           {/* Login Header */}
           <div className="text-center lg:text-left mb-8">
             <h3 className="text-3xl font-bold text-gray-900 mb-2">Selamat Datang</h3>
-            <p className="text-gray-600">Silakan masuk ke panel administrator</p>
+            <p className="text-gray-600">Silakan masuk ke Dalista - Admin</p>
           </div>
 
           {/* Login Form */}
@@ -423,14 +436,6 @@ export default function LoginPage() {
               </div>
               {captchaError && (
                 <p className="text-red-500 text-sm mt-2 text-center">{captchaError}</p>
-              )}
-              {isCaptchaVerified && (
-                <p className="text-green-600 text-sm mt-2 text-center flex items-center justify-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Verifikasi berhasil
-                </p>
               )}
             </div>
 
@@ -568,14 +573,6 @@ export default function LoginPage() {
                     </div>
                     {forgotCaptchaError && (
                       <p className="text-red-500 text-sm mt-2 text-center">{forgotCaptchaError}</p>
-                    )}
-                    {isForgotCaptchaVerified && (
-                      <p className="text-green-600 text-sm mt-2 text-center flex items-center justify-center">
-                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        Verifikasi berhasil
-                      </p>
                     )}
                   </div>
 
