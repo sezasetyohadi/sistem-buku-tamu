@@ -17,7 +17,7 @@ export interface AdminJWTPayload {
   username: string;
   email: string;
   nama_lengkap: string;
-  is_super_admin: boolean;
+  bidang_tujuan_id: number;
   userType: 'admin';
   iat?: number;
   exp?: number;

@@ -398,7 +398,7 @@ export default function ScheduleModal({
                 style={{ minHeight: '48px' }}
               >
                 <option value="">Pilih bidang tujuan</option>
-                {lookupData?.bidangTujuan?.map((bidang) => (
+                {lookupData?.bidangTujuan?.filter(bidang => bidang.id !== 999).map((bidang) => (
                   <option key={bidang.id} value={bidang.id}>
                     {bidang.bidang}
                   </option>

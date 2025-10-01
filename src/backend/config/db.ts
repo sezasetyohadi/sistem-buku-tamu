@@ -215,7 +215,7 @@ export async function getTujuanKunjunganOptions(): Promise<Array<{ id: number, t
 export async function getBidangTujuanOptions(): Promise<Array<{ id: number, bidang: string }>> {
   try {
     const options = await executeQueryCached<Array<{ id: number, bidang: string }>>(
-      'SELECT id, bidang FROM bidang_tujuan ORDER BY id ASC',
+      'SELECT id, bidang FROM bidang_tujuan WHERE id != 999 ORDER BY id ASC',
       [],
       600000 // 10 minutes cache for lookup data
     );

@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [adminProfilePicture, setAdminProfilePicture] = React.useState<string | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
   const [isProfileLoaded, setIsProfileLoaded] = React.useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = React.useState<boolean>(false);
+  const [bidangTujuanId, setBidangTujuanId] = React.useState<number>(999);
 
   // Enhanced prefetch function that uses the router instance
   const enhancedPrefetch = React.useCallback((path: string) => {
@@ -120,25 +120,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             nama_lengkap: adminData.nama_lengkap, 
             username: adminData.username,
             profile_picture: adminData.profile_picture,
-            is_super_admin: adminData.is_super_admin
+            bidang_tujuan_id: adminData.bidang_tujuan_id
           });
           
-          // Set super admin status
-          setIsSuperAdmin(adminData.is_super_admin || false);
+          // Set bidang tujuan id
+          setBidangTujuanId(adminData.bidang_tujuan_id || 999);
           
-          // Redirect super admin to reports if they're on the dashboard
-          if (adminData.is_super_admin && (pathname === '/admin' || pathname === '/admin/')) {
-            console.log('Super admin detected, redirecting to reports...');
+          // Redirect kepala dinas (bidang_tujuan_id = 2) to reports if they're on the dashboard
+          if (adminData.bidang_tujuan_id === 2 && (pathname === '/admin' || pathname === '/admin/')) {
+            console.log('Kepala dinas detected, redirecting to reports...');
             router.replace('/admin/reports');
           }
           
-          // Prevent super admin from accessing restricted pages
-          if (adminData.is_super_admin) {
+          // Prevent kepala dinas from accessing restricted pages
+          if (adminData.bidang_tujuan_id === 2) {
             const restrictedPaths = ['/admin/guest-management', '/admin/survey'];
             const isOnRestrictedPath = restrictedPaths.some(path => pathname.startsWith(path));
             
             if (isOnRestrictedPath) {
-              console.log('Super admin trying to access restricted path, redirecting to reports...');
+              console.log('Kepala dinas trying to access restricted path, redirecting to reports...');
               router.replace('/admin/reports');
             }
           }
@@ -342,7 +342,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Filter menu items based on admin role
   const filteredMenuItems = menuItems.filter(item => {
-    if (isSuperAdmin) {
+    if (bidangTujuanId === 2) { // Kepala dinas
       return item.showForSuperAdmin;
     }
     return true; // Normal admin sees all items

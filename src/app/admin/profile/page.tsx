@@ -14,7 +14,7 @@ interface AdminProfile {
   nama_lengkap: string;
   role: string;
   created_at: string;
-  is_super_admin: boolean;
+  bidang_tujuan_id: number;
   profile_picture?: string | null;
 }
 
@@ -89,9 +89,9 @@ export default function AdminProfile() {
             username: data.admin.username,
             email: data.admin.email || adminData.email || '',
             nama_lengkap: data.admin.nama_lengkap || adminData.nama_lengkap || 'Administrator',
-            role: data.admin.is_super_admin ? 'Super Admin' : 'Admin',
+            role: data.admin.bidang_tujuan_id === 2 ? 'Kepala Dinas' : 'Admin',
             created_at: data.admin.created_at,
-            is_super_admin: data.admin.is_super_admin,
+            bidang_tujuan_id: data.admin.bidang_tujuan_id,
             profile_picture: data.admin.profile_picture
           });
 
@@ -117,9 +117,9 @@ export default function AdminProfile() {
             username: adminData.username,
             email: adminData.email || '',
             nama_lengkap: adminData.nama_lengkap || 'Administrator',
-            role: adminData.is_super_admin ? 'Super Admin' : 'Admin',
+            role: adminData.bidang_tujuan_id === 2 ? 'Kepala Dinas' : 'Admin',
             created_at: adminData.created_at || new Date().toISOString(),
-            is_super_admin: adminData.is_super_admin,
+            bidang_tujuan_id: adminData.bidang_tujuan_id,
             profile_picture: adminData.profile_picture || null
           });
 
@@ -771,7 +771,7 @@ export default function AdminProfile() {
                 
                 <div className="flex items-center justify-center mb-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    profile?.is_super_admin 
+                    profile?.bidang_tujuan_id === 2
                       ? 'bg-purple-100 text-purple-800' 
                       : 'bg-blue-100 text-blue-800'
                   }`}>
