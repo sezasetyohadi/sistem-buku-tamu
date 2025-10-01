@@ -1,13 +1,71 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import ScrollWave from '@/components/ScrollWave';
 
+// Animation state interface
+interface AnimationState {
+  isVisible: boolean;
+  hasAnimated: boolean;
+}
+
+// Card hover state
+interface CardHoverState {
+  [key: number]: boolean;
+}
+
+// Custom hook for intersection observer
+function useIntersectionObserver() {
+  const [visibleElements, setVisibleElements] = useState<Set<string>>(new Set());
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const observeElement = useCallback((element: Element, id: string) => {
+    if (!observerRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const elementId = entry.target.getAttribute('data-observe-id');
+            if (elementId) {
+              setVisibleElements(prev => {
+                const newSet = new Set(prev);
+                if (entry.isIntersecting) {
+                  newSet.add(elementId);
+                }
+                return newSet;
+              });
+            }
+          });
+        },
+        {
+          threshold: 0.2,
+          rootMargin: '0px'
+        }
+      );
+    }
+
+    element.setAttribute('data-observe-id', id);
+    observerRef.current.observe(element);
+  }, []);
+
+  const unobserveAll = useCallback(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+  }, []);
+
+  return { visibleElements, observeElement, unobserveAll };
+}
+
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [cardHover, setCardHover] = useState<CardHoverState>({});
+  const { visibleElements, observeElement, unobserveAll } = useIntersectionObserver();
+  const sectionsRef = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Handle loading state
   useEffect(() => {
     // Check if the page has already been loaded before (for better UX)
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedLanding');
@@ -23,53 +81,54 @@ export default function LandingPage() {
       setIsLoading(false);
       // Mark that we've visited
       sessionStorage.setItem('hasVisitedLanding', 'true');
-    }, 1000); // Reduced from 1500ms to 1000ms
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Set up intersection observer for fade animations
   useEffect(() => {
-    if (isLoading) {return;}
+    if (isLoading) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const target = entry.target as HTMLElement;
-          target.style.opacity = '1';
-          target.style.transform = 'translateY(0)';
-        }
-      });
-    }, {
-      threshold: 0.2,
-      rootMargin: '0px'
-    });
-    
-    // Observe all elements with fade-up class
-    const elementsToObserve = document.querySelectorAll('[data-fade="up"]');
-    elementsToObserve.forEach(element => {
-      observer.observe(element);
-    });
-
-    // Add hover effects to cards
-    const cards = document.querySelectorAll('.group');
-    cards.forEach(card => {
-      const cardElement = card as HTMLElement;
-      cardElement.addEventListener('mouseenter', () => {
-        cardElement.style.transform = 'translateY(-8px)';
-        cardElement.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
-      });
-      
-      cardElement.addEventListener('mouseleave', () => {
-        cardElement.style.transform = 'translateY(0)';
-        cardElement.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-      });
+    // Observe all sections for fade animation
+    sectionsRef.current.forEach((section, index) => {
+      if (section) {
+        observeElement(section, `section-${index}`);
+      }
     });
 
     return () => {
-      elementsToObserve.forEach(element => {
-        observer.unobserve(element);
-      });
+      unobserveAll();
     };
-  }, [isLoading]);
+  }, [isLoading, observeElement, unobserveAll]);
+
+  // Handle card hover states
+  const handleCardHover = useCallback((cardIndex: number, isHovering: boolean) => {
+    setCardHover(prev => ({
+      ...prev,
+      [cardIndex]: isHovering
+    }));
+  }, []);
+
+  // Get animation classes based on visibility
+  const getAnimationClasses = (sectionId: string, delay: string = '') => {
+    const isVisible = visibleElements.has(sectionId);
+    return `transition-all duration-500 ease-out ${delay} ${
+      isVisible 
+        ? 'opacity-100 translate-y-0' 
+        : 'opacity-0 translate-y-4'
+    }`;
+  };
+
+  // Get card classes based on hover state
+  const getCardClasses = (cardIndex: number) => {
+    const isHovered = cardHover[cardIndex];
+    return `group bg-white rounded-3xl p-10 shadow-xl border border-gray-100 relative overflow-hidden transition-all duration-500 ease-out ${
+      isHovered 
+        ? 'scale-105 -translate-y-2 shadow-2xl' 
+        : 'hover:scale-105 hover:-translate-y-2 hover:shadow-2xl'
+    }`;
+  };
 
   // Loading screen component
   if (isLoading) {
@@ -127,7 +186,7 @@ export default function LandingPage() {
               <div className="flex justify-center items-center bg-white/32 backdrop-blur-lg rounded-3xl p-3 border border-white/50 drop-shadow-2xl w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40">
                 <img 
                   src="/logo-dalista.svg" 
-                  alt="Logo Dalista" 
+                  alt="Logo Dalista - Digitalisasi Layanan Registrasi Tamu"
                   className="w-16 h-20 sm:w-24 sm:h-28 md:w-32 md:h-36 object-contain select-none pointer-events-none"
                   style={{
                     userSelect: 'none',
@@ -140,7 +199,12 @@ export default function LandingPage() {
                   onDragStart={(e) => e.preventDefault()}
                   draggable={false}
                   loading="lazy"
+                  role="img"
+                  aria-describedby="dalista-logo-desc"
                 />
+                <span id="dalista-logo-desc" className="sr-only">
+                  Logo sistem DALISTA untuk digitalisasi layanan registrasi tamu
+                </span>
               </div>
             </div>
             
@@ -273,7 +337,10 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-4 relative z-10">
           {/* Section header - More moderate sizing for better balance */}
-          <div className="text-center mb-20 opacity-0 translate-y-4 transition-all duration-500 ease-out delay-50" data-fade="up">
+          <div 
+            ref={(el) => { sectionsRef.current[0] = el; }}
+            className={`text-center mb-20 ${getAnimationClasses('section-0', 'delay-50')}`}
+          >
             {/* Logo Disnakertrans yang dapat diklik */}
             <div className="flex justify-center mb-8">
               <a 
@@ -315,7 +382,17 @@ export default function LandingPage() {
           {/* Feature cards - Enhanced with larger spacing and text */}
           <div className="grid md:grid-cols-3 gap-12 max-w-7xl mx-auto mb-24">
             {/* Card 1 */}
-            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-100 hover:scale-105 hover:-translate-y-2" data-fade="up">
+            <div 
+              ref={(el) => { sectionsRef.current[1] = el; }}
+              className={`${getCardClasses(1)} ${getAnimationClasses('section-1', 'delay-100')}`}
+              onMouseEnter={() => handleCardHover(1, true)}
+              onMouseLeave={() => handleCardHover(1, false)}
+              onFocus={() => handleCardHover(1, true)}
+              onBlur={() => handleCardHover(1, false)}
+              tabIndex={0}
+              role="article"
+              aria-label="Registrasi Tamu - Layanan pendaftaran kunjungan digital"
+            >
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-blue-light group-hover:scale-110 transition-transform duration-500"></div>
               <div className="relative z-10">
                 <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 bg-gradient-blue">
@@ -331,7 +408,17 @@ export default function LandingPage() {
             </div>
 
             {/* Card 2 */}
-            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-150 hover:scale-105 hover:-translate-y-2" data-fade="up">
+            <div 
+              ref={(el) => { sectionsRef.current[2] = el; }}
+              className={`${getCardClasses(2)} ${getAnimationClasses('section-2', 'delay-150')}`}
+              onMouseEnter={() => handleCardHover(2, true)}
+              onMouseLeave={() => handleCardHover(2, false)}
+              onFocus={() => handleCardHover(2, true)}
+              onBlur={() => handleCardHover(2, false)}
+              tabIndex={0}
+              role="article"
+              aria-label="Layanan Ketenagakerjaan - Akses layanan terintegrasi"
+            >
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-green-light group-hover:scale-110 transition-transform duration-500"></div>
               <div className="relative z-10">
                 <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 bg-gradient-green">
@@ -347,7 +434,17 @@ export default function LandingPage() {
             </div>
 
             {/* Card 3 */}
-            <div className="group bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl border border-gray-100 relative overflow-hidden opacity-0 translate-y-4 ease-out transition-all duration-500 delay-200 hover:scale-105 hover:-translate-y-2" data-fade="up">
+            <div 
+              ref={(el) => { sectionsRef.current[3] = el; }}
+              className={`${getCardClasses(3)} ${getAnimationClasses('section-3', 'delay-200')}`}
+              onMouseEnter={() => handleCardHover(3, true)}
+              onMouseLeave={() => handleCardHover(3, false)}
+              onFocus={() => handleCardHover(3, true)}
+              onBlur={() => handleCardHover(3, false)}
+              tabIndex={0}
+              role="article"
+              aria-label="Feedback & Evaluasi - Sistem penilaian pelayanan"
+            >
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-16 translate-x-16 bg-gradient-orange-light group-hover:scale-110 transition-transform duration-500"></div>
               <div className="relative z-10">
                 <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 transform group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 bg-gradient-orange">
@@ -364,7 +461,10 @@ export default function LandingPage() {
           </div>
 
           {/* CTA Section - More balanced sizing */}
-          <div className="text-center opacity-0 translate-y-4 transition-all duration-500 ease-out delay-250" data-fade="up">
+          <div 
+            ref={(el) => { sectionsRef.current[4] = el; }}
+            className={`text-center ${getAnimationClasses('section-4', 'delay-250')}`}
+          >
             <div className="rounded-3xl p-12 text-white relative overflow-hidden shadow-2xl bg-cta-gradient">
               <div className="absolute inset-0 bg-black opacity-10"></div>
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
