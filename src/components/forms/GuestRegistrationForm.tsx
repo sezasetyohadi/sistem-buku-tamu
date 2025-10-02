@@ -671,8 +671,8 @@ export default function GuestRegistrationForm({
         <div className="w-full">
           <label className="block text-xs sm:text-sm font-semibold mb-2 text-gray-700">
             Catatan Tambahan
-            {formData.purpose === 'other' ? (
-              <span className="text-red-500 font-normal ml-2">*</span>
+            {formData.purpose === '999' ? (
+              <span className="text-red-500 font-normal ml-2">(Wajib)</span>
             ) : (
               <span className="text-gray-500 font-normal ml-2">(Opsional)</span>
             )}
