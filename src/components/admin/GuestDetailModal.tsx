@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 
 import { DaftarTamu } from '@/types/database-types';
 
-import DeleteConfirmationDialog from '../ui/DeleteConfirmationDialog';
+import { DeleteConfirmDialog } from '../ui/DeleteConfirmDialog';
 import Modal from '../ui/Modal';
 
 import ScheduleModal from './ScheduleModal';
@@ -557,7 +557,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
       
       {/* Delete Confirmation Dialog */}
       {guest && (
-        <DeleteConfirmationDialog
+        <DeleteConfirmDialog
           isOpen={isDeleteDialogOpen}
           title="Konfirmasi Hapus Data"
           message="Apakah Anda yakin ingin menghapus tamu ini dari daftar?"
@@ -599,6 +599,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
               setIsSubmitting(false);
             }
           }}
+          variant="detailed"
         />
       )}
     </Modal>

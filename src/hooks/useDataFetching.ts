@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-import { useLoadingState } from '@/components/ui/LoadingState';
+import { useLoadingState } from './useLoadingState';
 import { useApiClient } from '@/lib/api-interceptors';
 import { useErrorRecovery, RetryConfigs } from '@/lib/error-recovery';
 import { logger } from '@/lib/logger';

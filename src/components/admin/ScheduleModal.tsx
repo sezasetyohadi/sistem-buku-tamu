@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { useApiCall } from '@/hooks/useDataFetching';
 
@@ -32,6 +32,9 @@ export default function ScheduleModal({
   currentCaraSalinan = [],
   isEdit = false 
 }: ScheduleModalProps) {
+  // Add ref for tracking initialization
+  const isInitialized = useRef(false);
+
   // Get current date and time as default values
   const now = new Date();
   const [date, setDate] = useState<string>(now.toISOString().split('T')[0]);
@@ -55,43 +58,43 @@ export default function ScheduleModal({
   // Calculate minimum allowed date and time
   const minDate = new Date().toISOString().split('T')[0];
   
-  // Reset form when modal is opened and handle existing schedule if available
-  useEffect(() => {
-    if (isOpen) {
-      if (currentSchedule && isEdit) {
-        // Parse existing schedule if available
-        try {
-          const scheduledDate = new Date(currentSchedule);
-          setDate(scheduledDate.toISOString().split('T')[0]);
-          setHour(String(scheduledDate.getHours()).padStart(2, '0'));
-          setMinute(String(scheduledDate.getMinutes()).padStart(2, '0'));
-        } catch (error) {
-          console.error('Error parsing existing schedule:', error);
-          resetToCurrentTime();
-        }
-        
-        // Set bidang tujuan and ASN data if available
-        if (currentBidangId) {
-          setBidangTujuanId(currentBidangId);
-        }
-        
-        if (currentAsnDituju) {
-          setAsnDituju(currentAsnDituju);
-        }
-        
-        if (currentCaraSalinan && currentCaraSalinan.length > 0) {
-          setCaraSalinan(currentCaraSalinan);
-        }
-      } else {
+  // Initialize form data based on props
+  const initializeFormData = () => {
+    if (currentSchedule && isEdit) {
+      // Parse existing schedule if available
+      try {
+        const scheduledDate = new Date(currentSchedule);
+        setDate(scheduledDate.toISOString().split('T')[0]);
+        setHour(String(scheduledDate.getHours()).padStart(2, '0'));
+        setMinute(String(scheduledDate.getMinutes()).padStart(2, '0'));
+      } catch (error) {
+        console.error('Error parsing existing schedule:', error);
         resetToCurrentTime();
-        setBidangTujuanId(undefined);
-        setAsnDituju('');
-        setCaraSalinan([]);
       }
-      setError(null);
+      
+      // Set bidang tujuan and ASN data if available
+      setBidangTujuanId(currentBidangId);
+      setAsnDituju(currentAsnDituju || '');
+      setCaraSalinan(currentCaraSalinan || []);
+    } else {
+      resetToCurrentTime();
+      setBidangTujuanId(undefined);
+      setAsnDituju('');
+      setCaraSalinan([]);
     }
-  }, [isOpen, currentSchedule, currentBidangId, currentAsnDituju, currentCaraSalinan, isEdit]);
-  
+    setError(null);
+  };
+
+  // Reset form when modal is opened - FIXED VERSION
+  useEffect(() => {
+    if (isOpen && !isInitialized.current) {
+      initializeFormData();
+      isInitialized.current = true;
+    } else if (!isOpen) {
+      isInitialized.current = false;
+    }
+  }, [isOpen]); // Only depend on isOpen
+
   // Helper function to reset time to current time
   const resetToCurrentTime = () => {
     const now = new Date();
@@ -191,16 +194,19 @@ export default function ScheduleModal({
     e.target.select();
   };
   
-  // Handle checkbox changes for cara salinan
-  const handleCaraSalinanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    const isChecked = e.target.checked;
+  // Handle checkbox changes for cara salinan - FIXED VERSION
+  const handleCaraSalinanChange = (optionId: number, isChecked: boolean) => {
+    console.log('Checkbox changed:', { optionId, isChecked, currentCaraSalinan: caraSalinan });
     
-    if (isChecked) {
-      setCaraSalinan(prev => [...prev, value]);
-    } else {
-      setCaraSalinan(prev => prev.filter(id => id !== value));
-    }
+    setCaraSalinan(prev => {
+      if (isChecked) {
+        return prev.includes(optionId) ? prev : [...prev, optionId];
+      } else {
+        return prev.filter(id => id !== optionId);
+      }
+    });
+    
+    setError(null);
   };
 
   // Validate time if the date is today
@@ -398,7 +404,7 @@ export default function ScheduleModal({
                 style={{ minHeight: '48px' }}
               >
                 <option value="">Pilih bidang tujuan</option>
-                {lookupData?.bidangTujuan?.filter(bidang => bidang.id !== 999).map((bidang) => (
+                {lookupData?.bidangTujuan?.map((bidang) => (
                   <option key={bidang.id} value={bidang.id}>
                     {bidang.bidang}
                   </option>
@@ -429,7 +435,7 @@ export default function ScheduleModal({
             </div>
           </div>
           
-          <div>
+<div>
             <div className="flex items-center">
               <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
                 Cara Mendapatkan Salinan
@@ -437,24 +443,50 @@ export default function ScheduleModal({
               <span className="ml-1 text-sm text-gray-500 dark:text-dark-text-secondary">(Opsional)</span>
             </div>
             <div className="mt-1 p-3 bg-gray-50 dark:bg-dark-surface rounded-md border border-gray-200 dark:border-dark-border">
-              {lookupData?.mendapatkanSalinan?.map((option) => (
-                <div key={option.id} className="flex items-center mb-2 last:mb-0">
-                  <input
-                    type="checkbox"
-                    id={`salinan-${option.id}`}
-                    value={option.id}
-                    checked={caraSalinan.includes(option.id)}
-                    onChange={handleCaraSalinanChange}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor={`salinan-${option.id}`} className="ml-2 text-sm text-gray-700 dark:text-dark-text-secondary">
-                    {option.nama_opsi}
-                  </label>
+              {loading ? (
+                <div className="text-sm text-gray-500 dark:text-dark-text-secondary">Memuat opsi...</div>
+              ) : lookupData?.mendapatkanSalinan && lookupData.mendapatkanSalinan.length > 0 ? (
+                <div className="space-y-2">
+                  {lookupData.mendapatkanSalinan.map((option) => {
+                    const isSelected = caraSalinan.includes(option.id);
+                    
+                    return (
+                      <div key={option.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`salinan-${option.id}`}
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            console.log('Native checkbox onChange:', { 
+                              optionId: option.id, 
+                              checked: e.target.checked,
+                              currentState: caraSalinan
+                            });
+                            handleCaraSalinanChange(option.id, e.target.checked);
+                          }}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                        />
+                        <label 
+                          htmlFor={`salinan-${option.id}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            console.log('Label clicked for option:', option.id);
+                            const newCheckedState = !isSelected;
+                            handleCaraSalinanChange(option.id, newCheckedState);
+                          }}
+                          className="ml-2 text-sm text-gray-700 dark:text-dark-text-secondary cursor-pointer select-none"
+                        >
+                          {option.nama_opsi}
+                        </label>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-              
-              {(!lookupData?.mendapatkanSalinan || lookupData.mendapatkanSalinan.length === 0) && !loading && (
-                <p className="text-sm text-gray-500 dark:text-dark-text-secondary italic">Tidak ada opsi tersedia</p>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary italic">
+                  Tidak ada opsi tersedia
+                </p>
               )}
             </div>
           </div>
