@@ -18,6 +18,7 @@ interface AdminUser {
   email: string;
   nama_lengkap: string;
   bidang_tujuan_id: number;
+  nama_bidang?: string;
   profile_picture?: string | null;
 }
 

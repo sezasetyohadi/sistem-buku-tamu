@@ -6,10 +6,20 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || '7'; // Default 7 days
+    const bidangTujuanId = searchParams.get('bidangTujuanId');
+    
+    // Convert bidangTujuanId to number if it exists
+    // Note: special handling for super admin (bidang_tujuan_id = 999)
+    // Super admin either has no bidangTujuanId parameter or it equals 999
+    let departmentId = bidangTujuanId ? parseInt(bidangTujuanId) : undefined;
+    if (departmentId === 999) {
+      // For super admin, don't filter by department (set to undefined)
+      departmentId = undefined;
+    }
     
     const [reportsData, recentActivities] = await Promise.all([
-      getReportsStatistics(parseInt(period)),
-      getRecentActivities(5, parseInt(period))
+      getReportsStatistics(parseInt(period), departmentId),
+      getRecentActivities(5, parseInt(period), departmentId)
     ]);
 
     return NextResponse.json({ 

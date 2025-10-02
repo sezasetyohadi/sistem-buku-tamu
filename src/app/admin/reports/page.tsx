@@ -17,6 +17,7 @@ import { Metadata } from 'next';
 import { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 
+import { useAuth } from '@/contexts/AuthContext';
 import { showToast } from '@/lib/toast';
 
 import PdfReport from './PdfReport';
@@ -41,7 +42,6 @@ interface ReportsData {
     totalVisits: { value: number; growth: number; label: string };
     dailyAverage: { value: number; growth: number; label: string };
     avgDuration: { value: string; growth: number; label: string };
-    satisfaction: { value: string; growth: number; label: string };
   };
   weeklyTrends: Array<{ date: string; visits: number }>;
   serviceCategories: Array<{ category: string; count: number; percentage: number }>;
@@ -62,7 +62,6 @@ const dummyData = {
     totalVisits: { value: 120 },
     dailyAverage: { value: 17 },
     avgDuration: { value: '00:12:30' },
-    satisfaction: { value: '95%' },
   },
   topVisitors: [
     { nama: 'Budi', asal_instansi: 'PT. Maju', visit_count: 5 },
@@ -80,17 +79,76 @@ const dummyData = {
 };
 
 export default function AdminReportsAnalytics() {
+  const { user } = useAuth();
   const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('7'); // Default 7 days
+  const [filterByDepartment, setFilterByDepartment] = useState(true); // Default to filter by department
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
+  const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] = useState(false);
+  const [departmentsList, setDepartmentsList] = useState<Array<{ id: number, bidang: string }>>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
+  
   const pdfRef = useRef<HTMLDivElement>(null);
+  const timeDropdownRef = useRef<HTMLDivElement>(null);
+  const departmentDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Check if the user can access all departments (based on bidang_tujuan_id)
+  const canAccessAllDepartments = user?.bidang_tujuan_id === 999;
+  
+  // Only apply department filter for users with specific department
+  const bidangTujuanId = selectedDepartment || (!canAccessAllDepartments ? user?.bidang_tujuan_id : null);
+  
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (timeDropdownRef.current && !timeDropdownRef.current.contains(event.target as Node)) {
+        setIsTimeDropdownOpen(false);
+      }
+      if (departmentDropdownRef.current && !departmentDropdownRef.current.contains(event.target as Node)) {
+        setIsDepartmentDropdownOpen(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Fetch departments list
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch('/api/lookup');
+        const result = await response.json();
+        
+        if (result.success && result.data.bidangTujuan) {
+          setDepartmentsList(result.data.bidangTujuan);
+          
+          // For users with specific department, force select their department and don't allow changes
+          if (user?.bidang_tujuan_id && user.bidang_tujuan_id !== 999) {
+            console.log('Reports: Auto-selecting department for user:', user.bidang_tujuan_id);
+            setSelectedDepartment(user.bidang_tujuan_id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching departments list:', err);
+      }
+    };
 
+    fetchDepartments();
+  }, [user]);
+  
   useEffect(() => {
     const fetchReportsData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/reports?period=${selectedPeriod}`);
+        
+        // Add department filter if a department is selected
+        const departmentParam = bidangTujuanId ? `&bidangTujuanId=${bidangTujuanId}` : '';
+        const response = await fetch(`/api/reports?period=${selectedPeriod}${departmentParam}`);
         const result = await response.json();
         
         if (result.success) {
@@ -107,7 +165,7 @@ export default function AdminReportsAnalytics() {
     };
 
     fetchReportsData();
-  }, [selectedPeriod]);
+  }, [selectedPeriod, selectedDepartment, bidangTujuanId]);
 
   const handleExportPDF = async () => {
     if (!pdfRef.current) {
@@ -195,7 +253,27 @@ export default function AdminReportsAnalytics() {
       }
       
       pdf.addImage(imgData, 'JPEG', 20, 20, finalWidth, finalHeight);
-      pdf.save('laporan-buku-tamu.pdf');
+      
+      // Create filename with department and period info
+      const periodText = selectedPeriod === '7' ? '7Hari' : 
+                        selectedPeriod === '30' ? '30Hari' : 
+                        selectedPeriod === '90' ? '3Bulan' : '1Tahun';
+      
+      let departmentText = 'AllBidang';
+      
+      if (selectedDepartment) {
+        // Get selected department name and clean it up for the filename
+        const deptName = departmentsList.find(dept => dept.id === selectedDepartment)?.bidang || 
+                          user?.nama_bidang || 'Bidang';
+        departmentText = deptName.replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
+      } else if (canAccessAllDepartments && !selectedDepartment) {
+        departmentText = 'Global';
+      }
+      
+      const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const filename = `laporan-buku-tamu-${departmentText}-${periodText}-${dateStr}.pdf`;
+      
+      pdf.save(filename);
       
       showToast.success('PDF berhasil diekspor!');
       
@@ -216,8 +294,8 @@ export default function AdminReportsAnalytics() {
               <div className="h-4 bg-gray-200 rounded w-2/3"></div>
             </div>
           </div>
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            {[1, 2, 3, 4].map(i => (
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map(i => (
               <div key={i} className="p-6 rounded-lg shadow border animate-pulse">
                 <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
                 <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
@@ -264,36 +342,176 @@ export default function AdminReportsAnalytics() {
                 <h1 className="text-3xl font-bold text-gray-800">Laporan & Analitik</h1>
               </div>
               <p className="text-gray-800">
-                Dashboard analitik dan laporan komprehensif sistem buku tamu
+                Dashboard analitik Dalista
               </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {!selectedDepartment && !canAccessAllDepartments && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                    </svg>
+                    Menampilkan Data Semua Bidang
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex space-x-3">
-              <select 
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-              >
-                <option value="7">7 Hari Terakhir</option>
-                <option value="30">30 Hari Terakhir</option>
-                <option value="90">3 Bulan Terakhir</option>
-                <option value="365">1 Tahun Terakhir</option>
-              </select>
+            <div className="flex space-x-3 items-center">
+              {/* Period filter - Styled as a dropdown button */}
+              <div className="relative inline-block">
+                <button 
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center w-44"
+                  onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                >
+                  <span className="truncate flex-1 text-left" title={selectedPeriod === '7' ? '7 Hari Terakhir' : 
+                                                                selectedPeriod === '30' ? '30 Hari Terakhir' : 
+                                                                selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                                                                '1 Tahun Terakhir'}>{selectedPeriod === '7' ? '7 Hari Terakhir' : 
+                        selectedPeriod === '30' ? '30 Hari Terakhir' : 
+                        selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                        '1 Tahun Terakhir'}</span>
+                  <svg className="w-4 h-4 ml-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                
+                {/* Dropdown menu for time period */}
+                {isTimeDropdownOpen && (
+                  <div 
+                    className="absolute z-10 mt-1 w-44 bg-white border border-gray-300 rounded-lg shadow-lg"
+                    ref={timeDropdownRef}
+                  >
+                    <button 
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '7' ? 'bg-blue-500 text-white' : ''}`}
+                      onClick={() => {
+                        setSelectedPeriod('7');
+                        setIsTimeDropdownOpen(false);
+                      }}
+                    >
+                      7 Hari Terakhir
+                    </button>
+                    <button 
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '30' ? 'bg-blue-500 text-white' : ''}`}
+                      onClick={() => {
+                        setSelectedPeriod('30');
+                        setIsTimeDropdownOpen(false);
+                      }}
+                    >
+                      30 Hari Terakhir
+                    </button>
+                    <button 
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '90' ? 'bg-blue-500 text-white' : ''}`}
+                      onClick={() => {
+                        setSelectedPeriod('90');
+                        setIsTimeDropdownOpen(false);
+                      }}
+                    >
+                      3 Bulan Terakhir
+                    </button>
+                    <button 
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '365' ? 'bg-blue-500 text-white' : ''}`}
+                      onClick={() => {
+                        setSelectedPeriod('365');
+                        setIsTimeDropdownOpen(false);
+                      }}
+                    >
+                      1 Tahun Terakhir
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Department filter */}
+              {canAccessAllDepartments ? (
+                <div className="relative inline-block">
+                  <button 
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center w-48"
+                    onClick={() => setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)}
+                  >
+                    <svg className="w-5 h-5 mr-2 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd" />
+                    </svg>
+                    <span className="truncate text-left flex-1" 
+                      title={selectedDepartment 
+                        ? departmentsList.find(dept => dept.id === selectedDepartment)?.bidang || 'Bidang Terpilih' 
+                        : 'Semua Bidang'}>
+                      {selectedDepartment 
+                        ? departmentsList.find(dept => dept.id === selectedDepartment)?.bidang || 'Bidang Terpilih' 
+                        : 'Semua Bidang'}
+                    </span>
+                    <svg className="w-4 h-4 ml-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  {isDepartmentDropdownOpen && (
+                    <div 
+                      className="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                      ref={departmentDropdownRef}
+                    >
+                      <button 
+                        className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedDepartment === null ? 'bg-blue-500 text-white' : ''}`}
+                        onClick={() => {
+                          setSelectedDepartment(null);
+                          setIsDepartmentDropdownOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-9a1 1 0 011 1v4a1 1 0 11-2 0v-4a1 1 0 011-1zm0-4a1 1 0 100 2a1 1 0 000-2z" clipRule="evenodd" />
+                          </svg>
+                          <span>Semua Bidang</span>
+                        </div>
+                      </button>
+                      
+                      {departmentsList.map(dept => (
+                        <button 
+                          key={dept.id}
+                          className={`block w-full text-left px-4 py-2 hover:bg-gray-100 truncate ${selectedDepartment === dept.id ? 'bg-blue-500 text-white' : ''}`}
+                          onClick={() => {
+                            setSelectedDepartment(dept.id);
+                            setIsDepartmentDropdownOpen(false);
+                          }}
+                          title={dept.bidang}
+                        >
+                          {dept.bidang}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative inline-block">
+                  <button 
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg flex items-center w-48 cursor-default"
+                    disabled
+                  >
+                    <svg className="w-5 h-5 mr-2 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-blue-700 font-medium truncate flex-1" title={user?.nama_bidang || 'Bidang Anda'}>
+                      {user?.nama_bidang || 'Bidang Anda'}
+                    </span>
+                  </button>
+                </div>
+              )}
+              
+              {/* Export PDF Button */}
               <button 
-                className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300"
+                className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300 flex items-center"
                 style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)' }}
                 onClick={handleExportPDF}
               >
-                <svg className="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
-                Export PDF
+                <span>Export PDF</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Key Metrics */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="p-6 rounded-lg shadow border" style={{ backgroundColor: '#EBF4FF', borderColor: '#BFDBFE' }}>
             <div className="flex items-center justify-between">
               <div>
@@ -366,29 +584,7 @@ export default function AdminReportsAnalytics() {
             </div>
           </div>
 
-          <div className="p-6 rounded-lg shadow border" style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-800">Tingkat Kepuasan</h3>
-                <p className="text-3xl font-bold text-gray-800">{data?.metrics.satisfaction.value || '0/10'}</p>
-                <p className="text-sm text-gray-900 flex items-center">
-                  <svg className={`w-4 h-4 mr-1 ${(data?.metrics.satisfaction.growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d={
-                      (data?.metrics.satisfaction.growth || 0) >= 0 
-                        ? 'M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z'
-                        : 'M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 112 0v11.586l2.293-2.293a1 1 0 011.414 0z'
-                    } clipRule="evenodd"/>
-                  </svg>
-                  {data?.metrics.satisfaction.label || 'No data'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              </div>
-            </div>
-          </div>
+
         </div>
 
         {/* Charts Section */}
@@ -399,7 +595,10 @@ export default function AdminReportsAnalytics() {
               <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586L14.586 7H12z" clipRule="evenodd" />
               </svg>
-              <h3 className="text-lg font-bold text-gray-800">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                <svg className="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
                 Tren Kunjungan ({selectedPeriod === '7' ? '7 Hari Terakhir' : 
                                  selectedPeriod === '30' ? '30 Hari Terakhir' :
                                  selectedPeriod === '90' ? '3 Bulan Terakhir' : '1 Tahun Terakhir'})
@@ -654,7 +853,22 @@ export default function AdminReportsAnalytics() {
             backgroundColor: 'white',
             fontFamily: 'Arial, sans-serif'
           }}>
-            <PdfReport data={data && data.metrics ? data : dummyData} />
+            <PdfReport 
+              data={data && data.metrics ? data : dummyData}
+              departmentName={
+                selectedDepartment 
+                  ? departmentsList.find(dept => dept.id === selectedDepartment)?.bidang || user?.nama_bidang || 'Bidang Terpilih'
+                  : 'Semua Bidang'
+              }
+              filteredByDepartment={!!selectedDepartment}
+              selectedPeriod={selectedPeriod}
+              periodLabel={
+                selectedPeriod === '7' ? '7 Hari Terakhir' : 
+                selectedPeriod === '30' ? '30 Hari Terakhir' : 
+                selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                '1 Tahun Terakhir'
+              }
+            />
           </div>
         </div>
       </div>

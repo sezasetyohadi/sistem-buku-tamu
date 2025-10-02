@@ -84,7 +84,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       admin_resepsionis: {
         id: 999,
         allowedPaths: ['/admin', '/admin/guest-management', '/admin/reports', '/admin/survey', '/admin/profile'],
-        restrictedPaths: ['/admin/guest-list'],
+        restrictedPaths: ['/admin/guest-list'], // Explicitly restrict guest-list for resepsionis
         defaultPath: '/admin'
       },
       admin_bidang: {
@@ -100,6 +100,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const restrictions = bidangId === 2 ? roleRestrictions.kepala_dinas :
                         bidangId === 999 ? roleRestrictions.admin_resepsionis :
                         roleRestrictions.admin_bidang;
+
+    // Special fix for guest-list access by kadis (bidangId = 2)
+    if (bidangId === 2 && (currentPath === '/admin/guest-list' || currentPath.startsWith('/admin/guest-list'))) {
+      console.log('Layout: Allowing Kadis access to guest-list');
+      return null; // Allow access - no redirect
+    }
 
     // Check if current path is explicitly restricted
     const isOnRestrictedPath = restrictions.restrictedPaths.some(path => {
@@ -193,27 +199,33 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           if (redirectPath && redirectPath !== pathname) {
             console.log(`Admin Layout: Redirecting from ${pathname} to ${redirectPath} for bidang_id ${currentBidangId}`);
             
-            // Force redirect for unauthorized access regardless of hasRedirected flag
-            const isUnauthorizedAccess = 
-              (currentBidangId === 999 && pathname.startsWith('/admin/guest-list')) ||
-              (currentBidangId === 2 && (pathname === '/admin' || pathname.startsWith('/admin/guest-management') || pathname.startsWith('/admin/survey'))) ||
-              (currentBidangId && currentBidangId !== 999 && currentBidangId !== 2 && 
-               (pathname === '/admin' || pathname.startsWith('/admin/guest-management') || pathname.startsWith('/admin/survey')));
-            
-            if (isUnauthorizedAccess || !hasRedirected) {
-              setHasRedirected(true);
+            // Special case for guest-list - never redirect kadis
+            if (pathname.startsWith('/admin/guest-list') && currentBidangId === 2) {
+              console.log('Admin Layout: Special case - allowing kadis to access guest-list');
+              // Continue processing without redirect
+            } else {
+              // Force redirect for unauthorized access regardless of hasRedirected flag
+              const isUnauthorizedAccess = 
+                (currentBidangId === 999 && pathname.startsWith('/admin/guest-list')) ||
+                (currentBidangId === 2 && (pathname === '/admin' || pathname.startsWith('/admin/guest-management') || pathname.startsWith('/admin/survey'))) ||
+                (currentBidangId && currentBidangId !== 999 && currentBidangId !== 2 && 
+                (pathname === '/admin' || pathname.startsWith('/admin/guest-management') || pathname.startsWith('/admin/survey')));
               
-              // Immediate redirect for unauthorized access
-              if (isUnauthorizedAccess) {
-                console.log(`Admin Layout: UNAUTHORIZED ACCESS - Force redirecting immediately`);
-                router.replace(redirectPath);
-              } else {
-                // Normal redirect with small delay
-                setTimeout(() => {
+              if (isUnauthorizedAccess || !hasRedirected) {
+                setHasRedirected(true);
+                
+                // Immediate redirect for unauthorized access
+                if (isUnauthorizedAccess) {
+                  console.log(`Admin Layout: UNAUTHORIZED ACCESS - Force redirecting immediately`);
                   router.replace(redirectPath);
-                }, 50);
+                } else {
+                  // Normal redirect with small delay
+                  setTimeout(() => {
+                    router.replace(redirectPath);
+                  }, 50);
+                }
+                return; // Prevent further processing
               }
-              return; // Prevent further processing
             }
           }
           
