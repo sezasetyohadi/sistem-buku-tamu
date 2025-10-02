@@ -110,7 +110,7 @@ const PdfReport = ({
           LAPORAN BUKU TAMU
         </h1>
         <h2 style={{ margin: '5px 0 0 0', fontSize: '16px', color: '#555', fontWeight: filteredByDepartment ? 'bold' : 'normal' }}>
-          {filteredByDepartment ? `Bidang: ${departmentName}` : 'Semua Bidang'}
+          {filteredByDepartment ? `${departmentName}` : 'Semua Bidang'}
         </h2>
         <h3 style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#444', fontWeight: 'normal' }}>
           Periode: {periodLabel}

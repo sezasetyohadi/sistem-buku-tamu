@@ -9,7 +9,7 @@ import GuestDetailModal from '@/components/admin/GuestDetailModal';
 import ServiceManagementModal from '@/components/admin/ServiceManagementModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
-import DeleteConfirmationDialog from '@/components/ui/DeleteConfirmationDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { ErrorMessage, TableLoading } from '@/components/ui/loading-states';
 import Modal from '@/components/ui/Modal';
 import { useErrorHandler, useFetch } from '@/hooks/useErrorHandling';
@@ -1191,7 +1191,7 @@ function AdminGuestsManagement() {
 
       {/* Delete Confirmation Dialog */}
       {guestToDelete && (
-        <DeleteConfirmationDialog
+        <DeleteConfirmDialog
           isOpen={isDeleteDialogOpen}
           title="Konfirmasi Hapus Data"
           message="Apakah Anda yakin ingin menghapus tamu ini dari daftar?"
@@ -1237,6 +1237,7 @@ function AdminGuestsManagement() {
               setIsDeleting(false);
             }
           }}
+          variant="detailed"
         />
       )}
 

@@ -2,8 +2,7 @@
 
 import React from 'react';
 
-import { TableSkeleton, LoadingButton } from '@/components/ui/Loading';
-import { LoadingWrapper } from '@/components/ui/LoadingState';
+import { TableLoading, LoadingButton } from '@/components/ui/loading-states';
 import { useApiCall, useMutation } from '@/hooks/useDataFetching';
 import { showToast } from '@/lib/toast';
 import { formatDate } from '@/lib/utils';
@@ -65,20 +64,16 @@ export default function GuestDataTable() {
   };
 
   return (
-    <LoadingWrapper
-      isLoading={isLoading}
-      error={error}
-      isEmpty={!guests || guests.length === 0}
-      loadingComponent={
+    <>
+      {isLoading ? (
         <div className="container mx-auto p-4">
           <div className="flex justify-between items-center mb-6">
             <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
             <div className="h-10 w-20 bg-gray-200 rounded animate-pulse"></div>
           </div>
-          <TableSkeleton rows={5} columns={6} />
+          <TableLoading rows={5} columns={6} />
         </div>
-      }
-      errorComponent={
+      ) : error ? (
         <div className="container mx-auto p-4">
           <div className="my-8 p-6 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center mb-4">
@@ -92,14 +87,12 @@ export default function GuestDataTable() {
               variant="secondary" 
               onClick={fetchGuests}
               isLoading={isLoading}
-              loadingText="Retrying..."
             >
               Try Again
             </LoadingButton>
           </div>
         </div>
-      }
-      emptyComponent={
+      ) : (!guests || guests.length === 0) ? (
         <div className="container mx-auto p-4">
           <div className="text-center my-12">
             <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -112,14 +105,12 @@ export default function GuestDataTable() {
             <LoadingButton 
               onClick={fetchGuests}
               isLoading={isLoading}
-              loadingText="Refreshing..."
             >
               Refresh
             </LoadingButton>
           </div>
         </div>
-      }
-    >
+      ) : (
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Guest List</h2>
@@ -127,7 +118,6 @@ export default function GuestDataTable() {
             onClick={fetchGuests} 
             size="sm"
             isLoading={isLoading}
-            loadingText="Refreshing..."
           >
             Refresh
           </LoadingButton>
@@ -162,7 +152,6 @@ export default function GuestDataTable() {
                         size="sm"
                         onClick={() => handleCheckout(guest.id)}
                         isLoading={checkoutLoading}
-                        loadingText="Checking out..."
                       >
                         Check Out
                       </LoadingButton>
@@ -174,6 +163,7 @@ export default function GuestDataTable() {
           </table>
         </div>
       </div>
-    </LoadingWrapper>
+      )}
+    </>
   );
 }

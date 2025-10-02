@@ -6,8 +6,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { FormSkeleton, LoadingButton } from '@/components/ui/Loading';
-import { LoadingWrapper } from '@/components/ui/LoadingState';
+import { FormLoading, LoadingButton } from '@/components/ui/loading-states';
 import TurnstileCaptcha from '@/components/ui/TurnstileCaptcha';
 import { useApiCall, useMutation } from '@/hooks/useDataFetching';
 import { useTurnstileCaptcha } from '@/hooks/useTurnstileCaptcha';
@@ -437,22 +436,19 @@ export default function GuestRegistrationForm({
 
   return (
     <>
-      <LoadingWrapper
-        isLoading={optionsLoading}
-        error={optionsError}
-        loadingComponent={<FormSkeleton />}
-        errorComponent={
-          <div className="text-center p-8">
-            <p className="text-red-600 mb-4">Gagal memuat form. Silakan coba lagi.</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Muat Ulang
-            </button>
-          </div>
-        }
-      >
+      {optionsLoading ? (
+        <FormLoading fields={6} showTitle={true} showButton={true} />
+      ) : optionsError ? (
+        <div className="text-center p-8">
+          <p className="text-red-600 mb-4">Gagal memuat form. Silakan coba lagi.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Muat Ulang
+          </button>
+        </div>
+      ) : (
         <Card 
           variant={isInModal ? 'default' : 'elevated'} 
           padding={isInModal ? 'sm' : 'md'}
@@ -756,7 +752,6 @@ export default function GuestRegistrationForm({
             variant="primary"
             size="lg"
             isLoading={submitFormMutation.loading || isSubmitting}
-            loadingText="Sedang Memproses..."
             className="w-full min-h-[44px] sm:min-h-[48px] text-sm sm:text-base font-semibold"
             disabled={submitFormMutation.loading || isSubmitting || !isCaptchaVerified}
           >
@@ -793,7 +788,7 @@ export default function GuestRegistrationForm({
         </div>
         </form>
       </Card>
-      </LoadingWrapper>
+      )}
 
     {/* Token Success Modal */}
     <TokenModal 
