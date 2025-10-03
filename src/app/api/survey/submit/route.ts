@@ -87,7 +87,8 @@ export const POST = withApiMiddleware(async (request, response, context) => {
       skipInDevelopment: false // Set to true if you want to skip CAPTCHA in development
     });
 
-    const captchaResult = await verifyCaptcha(request);
+    // Pass the parsed body instead of the request object
+    const captchaResult = await verifyCaptcha({ body, headers: request.headers });
     
     if (!captchaResult.success) {
       apiLogger.warn('CAPTCHA verification failed for survey submission', {

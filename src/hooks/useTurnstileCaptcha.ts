@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 interface UseTurnstileCaptchaProps {
   required?: boolean;
   onVerificationChange?: (isVerified: boolean) => void;
+  onReset?: () => void;
 }
 
 interface UseTurnstileCaptchaReturn {
@@ -18,7 +19,8 @@ interface UseTurnstileCaptchaReturn {
 
 export function useTurnstileCaptcha({
   required = true,
-  onVerificationChange
+  onVerificationChange,
+  onReset
 }: UseTurnstileCaptchaProps = {}): UseTurnstileCaptchaReturn {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
@@ -44,7 +46,7 @@ export function useTurnstileCaptcha({
     console.log('CAPTCHA token expired');
     setCaptchaToken(null);
     setIsCaptchaVerified(false);
-    setCaptchaError('CAPTCHA expired. Please verify again.');
+    setCaptchaError('CAPTCHA kadaluarsa. Silakan verifikasi ulang.');
     onVerificationChange?.(false);
   }, [onVerificationChange]);
 
@@ -53,11 +55,12 @@ export function useTurnstileCaptcha({
     setIsCaptchaVerified(false);
     setCaptchaError(null);
     onVerificationChange?.(false);
-  }, [onVerificationChange]);
+    onReset?.(); // Call external reset callback if provided
+  }, [onVerificationChange, onReset]);
 
   const getCaptchaValidationError = useCallback((): string | null => {
     if (required && !isCaptchaVerified) {
-      return 'Please complete the CAPTCHA verification';
+      return 'Silakan selesaikan verifikasi keamanan terlebih dahulu';
     }
     return null;
   }, [required, isCaptchaVerified]);

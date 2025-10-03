@@ -33,14 +33,14 @@ export async function verifyCaptchaToken({
     console.error('TURNSTILE_SECRET_KEY is not configured');
     return {
       success: false,
-      error: 'CAPTCHA verification not configured'
+      error: 'Verifikasi CAPTCHA tidak dikonfigurasi'
     };
   }
 
   if (!token) {
     return {
       success: false,
-      error: 'CAPTCHA token is required'
+      error: 'Token CAPTCHA diperlukan'
     };
   }
 
@@ -77,16 +77,16 @@ export async function verifyCaptchaToken({
       console.warn('CAPTCHA verification failed:', errorCodes);
       
       // Map error codes to user-friendly messages
-      let errorMessage = 'CAPTCHA verification failed';
+      let errorMessage = 'Verifikasi CAPTCHA gagal';
       
       if (errorCodes.includes('timeout-or-duplicate')) {
-        errorMessage = 'CAPTCHA token has expired or already been used';
+        errorMessage = 'Token CAPTCHA telah kedaluwarsa atau sudah digunakan';
       } else if (errorCodes.includes('invalid-input-response')) {
-        errorMessage = 'Invalid CAPTCHA token';
+        errorMessage = 'Token CAPTCHA tidak valid';
       } else if (errorCodes.includes('missing-input-response')) {
-        errorMessage = 'CAPTCHA token is missing';
+        errorMessage = 'Token CAPTCHA tidak ada';
       } else if (errorCodes.includes('internal-error')) {
-        errorMessage = 'CAPTCHA verification service error';
+        errorMessage = 'Kesalahan layanan verifikasi CAPTCHA';
       }
       
       return {
@@ -99,7 +99,7 @@ export async function verifyCaptchaToken({
     console.error('Error verifying CAPTCHA:', error);
     return {
       success: false,
-      error: 'Failed to verify CAPTCHA. Please try again.'
+      error: 'Gagal memverifikasi CAPTCHA. Silakan coba lagi.'
     };
   }
 }
@@ -124,12 +124,12 @@ export function createCaptchaMiddleware(options?: {
     let captchaToken: string | undefined;
     let headers: any = {};
     
-    if (req.body) {
+    if (req.body && typeof req.body === 'object') {
       // Case where parsed body is passed directly
       captchaToken = req.body.captchaToken;
       headers = req.headers || {};
-    } else if (req.json) {
-      // Case where NextRequest is passed (though this shouldn't happen after our fix)
+    } else if (req.json && typeof req.json === 'function') {
+      // Case where NextRequest is passed
       try {
         const body = await req.json();
         captchaToken = body.captchaToken;
@@ -138,12 +138,12 @@ export function createCaptchaMiddleware(options?: {
         console.error('Error parsing request body for CAPTCHA:', error);
         return {
           success: false,
-          error: 'Failed to parse request body'
+          error: 'Gagal mem-parsing request body'
         };
       }
     } else {
-      // Fallback - try to access body directly
-      captchaToken = req.captchaToken || req.body?.captchaToken;
+      // Fallback - try to access captchaToken directly
+      captchaToken = req.captchaToken;
       headers = req.headers || {};
     }
     
@@ -154,7 +154,7 @@ export function createCaptchaMiddleware(options?: {
     if (required && !captchaToken) {
       return {
         success: false,
-        error: 'CAPTCHA verification is required'
+        error: 'Verifikasi CAPTCHA diperlukan'
       };
     }
     
