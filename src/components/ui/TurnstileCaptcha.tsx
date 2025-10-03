@@ -12,6 +12,11 @@ interface TurnstileCaptchaProps {
   disabled?: boolean;
 }
 
+export interface TurnstileCaptchaRef {
+  reset: () => void;
+  getResponse: () => string;
+}
+
 declare global {
   interface Window {
     turnstile?: {
@@ -24,7 +29,7 @@ declare global {
   }
 }
 
-export default function TurnstileCaptcha({
+const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptchaProps>(({
   onVerify,
   onError,
   onExpire,
@@ -32,7 +37,7 @@ export default function TurnstileCaptcha({
   size = 'normal',
   className = '',
   disabled = false
-}: TurnstileCaptchaProps) {
+}: TurnstileCaptchaProps, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -62,7 +67,7 @@ export default function TurnstileCaptcha({
 
       script.onerror = () => {
         console.error('Failed to load Turnstile script');
-        onError?.('Failed to load CAPTCHA. Please check your internet connection.');
+        onError?.('Gagal memuat CAPTCHA. Silakan periksa koneksi internet Anda.');
       };
 
       document.head.appendChild(script);
@@ -80,7 +85,7 @@ export default function TurnstileCaptcha({
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
     if (!siteKey) {
       console.error('NEXT_PUBLIC_TURNSTILE_SITE_KEY is not defined');
-      onError?.('CAPTCHA configuration error');
+      onError?.('Kesalahan konfigurasi CAPTCHA');
       return;
     }
 
@@ -95,7 +100,7 @@ export default function TurnstileCaptcha({
         },
         'error-callback': (error: string) => {
           console.error('Turnstile error:', error);
-          onError?.(error || 'CAPTCHA verification failed');
+          onError?.(error || 'Verifikasi CAPTCHA gagal. Silakan coba lagi.');
         },
         'expired-callback': () => {
           console.log('Turnstile token expired');
@@ -107,7 +112,7 @@ export default function TurnstileCaptcha({
       console.log('Turnstile widget rendered with ID:', widgetIdRef.current);
     } catch (error) {
       console.error('Error rendering Turnstile widget:', error);
-      onError?.('Failed to initialize CAPTCHA');
+      onError?.('Gagal menginisialisasi CAPTCHA');
     }
   }, [isLoaded, onVerify, onError, onExpire, theme, size, disabled, isRendered]);
 
@@ -124,11 +129,7 @@ export default function TurnstileCaptcha({
         if (containerRef.current) {
           containerRef.current.style.display = 'block';
         }
-        try {
-          window.turnstile?.reset(widgetIdRef.current);
-        } catch (error) {
-          console.error('Error resetting Turnstile widget:', error);
-        }
+        resetWidget();
       }
     }
   }, [disabled, isRendered]);
@@ -147,10 +148,11 @@ export default function TurnstileCaptcha({
   }, []);
 
   // Public methods for external control
-  const reset = () => {
-    if (widgetIdRef.current && window.turnstile) {
+  const resetWidget = () => {
+    if (widgetIdRef.current && window.turnstile && isRendered) {
       try {
         window.turnstile.reset(widgetIdRef.current);
+        console.log('Turnstile widget reset successfully');
       } catch (error) {
         console.error('Error resetting Turnstile widget:', error);
       }
@@ -158,7 +160,7 @@ export default function TurnstileCaptcha({
   };
 
   const getResponse = () => {
-    if (widgetIdRef.current && window.turnstile) {
+    if (widgetIdRef.current && window.turnstile && isRendered) {
       try {
         return window.turnstile.getResponse(widgetIdRef.current);
       } catch (error) {
@@ -169,12 +171,18 @@ export default function TurnstileCaptcha({
     return '';
   };
 
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    reset: resetWidget,
+    getResponse
+  }), [resetWidget, getResponse]);
+
   if (!isLoaded) {
     return (
       <div className={`flex items-center justify-center p-4 bg-gray-100 border border-gray-300 rounded-lg ${className}`}>
         <div className="flex items-center space-x-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-          <span className="text-sm text-gray-600">Loading CAPTCHA...</span>
+          <span className="text-sm text-gray-600">Memuat verifikasi keamanan...</span>
         </div>
       </div>
     );
@@ -189,15 +197,14 @@ export default function TurnstileCaptcha({
       />
       {disabled && (
         <div className="flex items-center justify-center p-4 bg-gray-100 border border-gray-300 rounded-lg">
-          <span className="text-sm text-gray-500">CAPTCHA disabled</span>
+          <span className="text-sm text-gray-500">Verifikasi keamanan dinonaktifkan</span>
         </div>
       )}
     </div>
   );
-}
+});
 
-// Export type for external use
-export type TurnstileCaptchaRef = {
-  reset: () => void;
-  getResponse: () => string;
-};
+TurnstileCaptcha.displayName = 'TurnstileCaptcha';
+
+export default TurnstileCaptcha;
+

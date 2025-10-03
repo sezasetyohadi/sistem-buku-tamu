@@ -1,9 +1,9 @@
 'use client';
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 
 import Card from '@/components/ui/Card';
-import TurnstileCaptcha from '@/components/ui/TurnstileCaptcha';
+import TurnstileCaptcha, { TurnstileCaptchaRef } from '@/components/ui/TurnstileCaptcha';
 import { useSurveyData, useDropdownState } from '@/hooks/useSurveyForm';
 import { useTurnstileCaptcha } from '@/hooks/useTurnstileCaptcha';
 import { submitSurvey } from '@/lib/survey-api';
@@ -19,6 +19,9 @@ const QuestionCard = lazy(() => import('../guest/QuestionCard'));
 const SubmissionSuccess = lazy(() => import('../guest/SubmissionSuccess'));
 
 export default function SurveyForm() {
+  // Ref for CAPTCHA component
+  const captchaRef = useRef<TurnstileCaptchaRef>(null);
+  
   // Use the custom hooks for state management
   const {
     questions,
@@ -61,6 +64,10 @@ export default function SurveyForm() {
     required: true,
     onVerificationChange: (isVerified) => {
       console.log('CAPTCHA verification status changed:', isVerified);
+    },
+    onReset: () => {
+      // Reset the CAPTCHA widget when called from hook
+      captchaRef.current?.reset();
     }
   });
 
@@ -226,6 +233,7 @@ export default function SurveyForm() {
             </label>
             <div className="flex justify-center">
               <TurnstileCaptcha
+                ref={captchaRef}
                 onVerify={handleCaptchaVerify}
                 onError={handleCaptchaError}
                 onExpire={handleCaptchaExpire}
