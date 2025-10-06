@@ -408,7 +408,7 @@ export async function getGuestStatistics(): Promise<any> {
   const thisMonthGuestsQuery = 'SELECT COUNT(*) as thisMonth FROM daftar_tamu WHERE MONTH(waktu_dibuat) = MONTH(CURDATE()) AND YEAR(waktu_dibuat) = YEAR(CURDATE())';
   
   // Dashboard statistics for admin
-  const todayCheckInQuery = 'SELECT COUNT(*) as count FROM daftar_tamu WHERE DATE(waktu_checkin) = CURDATE()';
+  const todayCheckInQuery = 'SELECT COUNT(*) as count FROM daftar_tamu WHERE status_kunjungan = "Terjadwal" AND DATE(jadwal_checkin) = CURDATE()';
   const todayCheckOutQuery = 'SELECT COUNT(*) as count FROM daftar_tamu WHERE DATE(waktu_checkout) = CURDATE()';
   const currentlyVisitingQuery = 'SELECT COUNT(*) as count FROM daftar_tamu WHERE status_kunjungan = "Datang" AND DATE(waktu_checkin) = CURDATE() AND waktu_checkout IS NULL';
   
