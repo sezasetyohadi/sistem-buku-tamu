@@ -172,15 +172,9 @@ export default function LoginPage() {
         
         console.log(`Login successful${formData.rememberMe ? ' (Remember Me enabled for 7 days)' : ' (24 hour session)'}, redirecting to admin dashboard`);
         
-        // Trigger a profile refresh in the layout after login
-        window.dispatchEvent(new CustomEvent('adminProfileUpdated', { 
-          detail: { forceRefresh: true } 
-        }));
-        
-        // Increased delay to ensure JWT cookies are properly set before redirect
-        setTimeout(() => {
-          router.replace('/admin');
-        }, 300);
+        // Force refresh to clear any state conflicts between roles
+        console.log('Login: Refreshing page to clear state conflicts');
+        window.location.href = '/admin';
       } else {
         setError(result.message || 'Login gagal');
         resetCaptcha(); // Reset CAPTCHA on login failure

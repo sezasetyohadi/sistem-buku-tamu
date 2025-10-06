@@ -2,9 +2,11 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
+import dynamic from 'next/dynamic';
 
 import AuthGuard from '../../components/auth/AuthGuard';
 import { SectionErrorBoundary } from '../../components/error/ErrorBoundary';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { getAdminData, clearAdminSessionAndRedirect } from '../../lib/utils';
 
 interface AdminLayoutProps {
@@ -62,6 +64,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [isMounted, setIsMounted] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const [adminName, setAdminName] = React.useState<string>('');
@@ -71,6 +74,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isProfileLoaded, setIsProfileLoaded] = React.useState(false);
   const [bidangTujuanId, setBidangTujuanId] = React.useState<number>(999);
   const [hasRedirected, setHasRedirected] = React.useState(false); // Add redirect tracking
+
+  // Handle client-side mounting to prevent hydration mismatch
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Memoize role-based restrictions to avoid recalculation
   const roleRestrictions = React.useMemo(() => {
@@ -168,6 +176,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }, [pathname, enhancedPrefetch]);
 
   React.useEffect(() => {
+    // Only run after component is mounted to prevent hydration mismatch
+    if (!isMounted) return;
+
     // Get admin session data when component mounts
     const fetchAdminData = async (retryCount = 0) => {
       try {
@@ -185,9 +196,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           
           // Check if bidang_tujuan_id changed (user switched roles)
           const currentBidangId = adminData.bidang_tujuan_id || 999;
-          if (bidangTujuanId !== currentBidangId) {
-            console.log(`Admin Layout: Role changed from ${bidangTujuanId} to ${currentBidangId} - resetting redirect flag`);
-            setHasRedirected(false);
+          if (bidangTujuanId !== currentBidangId && bidangTujuanId !== 999) {
+            console.log(`Admin Layout: Role changed from ${bidangTujuanId} to ${currentBidangId} - refreshing page to clear state`);
+            // Force refresh when role changes to prevent navigation conflicts
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
+            return;
           }
           
           // Set bidang tujuan id
@@ -217,12 +232,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 // Immediate redirect for unauthorized access
                 if (isUnauthorizedAccess) {
                   console.log(`Admin Layout: UNAUTHORIZED ACCESS - Force redirecting immediately`);
-                  router.replace(redirectPath);
+                  if (typeof window !== 'undefined') {
+                    window.location.href = redirectPath;
+                  }
                 } else {
-                  // Normal redirect with small delay
-                  setTimeout(() => {
-                    router.replace(redirectPath);
-                  }, 50);
+                  // Use window.location for more reliable redirect
+                  console.log(`Admin Layout: Using window.location for redirect to avoid React router issues`);
+                  if (typeof window !== 'undefined') {
+                    window.location.href = redirectPath;
+                  }
                 }
                 return; // Prevent further processing
               }
@@ -346,11 +364,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return () => {
       window.removeEventListener('adminProfileUpdated', handleProfileUpdate as EventListener);
     };
-  }, [router, pathname]);
+  }, [router, pathname, isMounted]);
 
   // Don't apply layout to login page
   if (pathname === '/admin/login') {
     return <>{children}</>;
+  }
+
+  // Show loading state before mounting to prevent hydration mismatch
+  if (!isMounted) {
+    return <LoadingSpinner />;
   }
 
   // Function to handle logout
@@ -371,8 +394,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       console.error('Error during logout:', error);
     }
     
-    // Redirect to login page regardless of API response
-    router.push('/admin/login');
+    // Force refresh to clear all state and redirect to login
+    console.log('Logout: Refreshing page to clear all state');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/admin/login';
+    }
   };
 
   // Function to check if menu item is active
@@ -463,7 +489,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <AuthGuard>
-      <div className="h-screen flex bg-gray-50 overflow-hidden">
+      <div className="h-screen flex bg-gray-50 overflow-hidden" suppressHydrationWarning={true}>
       {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out overflow-hidden

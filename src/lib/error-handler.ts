@@ -64,33 +64,53 @@ export class GlobalErrorHandler {
     // Handle unhandled promise rejections
     if (typeof window !== 'undefined') {
       window.addEventListener('unhandledrejection', (event) => {
-        logger.error('Unhandled promise rejection:', {
-          reason: event.reason,
-          promise: event.promise,
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-        });
+        // Filter out hydration-related promise rejections
+        const reasonString = String(event.reason);
+        const isHydrationRelated = reasonString.includes('Hydration') || 
+                                   reasonString.includes('hydration') ||
+                                   reasonString.includes('server rendered') ||
+                                   reasonString.includes('text didn\'t match');
+        
+        if (!isHydrationRelated) {
+          logger.error('Unhandled promise rejection:', {
+            reason: event.reason,
+            promise: event.promise,
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+          });
+          
+          // Show user-friendly message
+          showToast.error('Terjadi kesalahan tidak terduga. Silakan coba lagi.');
+        }
 
         // Prevent default browser error handling
         event.preventDefault();
-
-        // Show user-friendly message
-        showToast.error('Terjadi kesalahan tidak terduga. Silakan coba lagi.');
       });
 
       // Handle general JavaScript errors
       window.addEventListener('error', (event) => {
-        logger.error('Global JavaScript error:', {
-          message: event.message,
-          filename: event.filename,
-          lineno: event.lineno,
-          colno: event.colno,
-          error: event.error,
-          url: window.location.href,
-        });
-
-        // Show user-friendly message for unexpected errors
-        if (!event.message.includes('Script error')) {
+        // Filter out hydration and development-only errors
+        const isHydrationError = event.message && (
+          event.message.includes('Hydration failed') ||
+          event.message.includes('hydration') ||
+          event.message.includes('server rendered text')
+        );
+        
+        const isScriptError = event.message && event.message.includes('Script error');
+        const isNextDevError = event.filename && event.filename.includes('_next');
+        
+        // Only log non-hydration, non-script, non-Next.js development errors
+        if (!isHydrationError && !isScriptError && !isNextDevError && event.message) {
+          logger.error('Global JavaScript error:', {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            error: event.error ? event.error.message : null,
+            url: window.location.href,
+          });
+          
+          // Show user-friendly message for unexpected errors
           showToast.error('Terjadi kesalahan pada halaman. Silakan muat ulang.');
         }
       });
