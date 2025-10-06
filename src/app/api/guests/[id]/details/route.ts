@@ -45,17 +45,19 @@ export async function GET(
       console.error('Error fetching memperoleh informasi data:', error);
     }
 
-    // Get cara mendapatkan salinan selections
+    // Get cara mendapatkan salinan selections with IDs
     let caraSalinan: string[] = [];
+    let caraSalinanIds: number[] = [];
     try {
       const salinanQuery = `
-        SELECT m.nama_opsi 
+        SELECT m.id, m.nama_opsi 
         FROM jawaban_mendapatkan_salinan j
         JOIN mendapatkan_salinan m ON j.cara_salinan_id = m.id
         WHERE j.tamu_id = ?
       `;
-      const salinanResult = await executeQuery<Array<{ nama_opsi: string }>>(salinanQuery, [guestId]);
+      const salinanResult = await executeQuery<Array<{ id: number; nama_opsi: string }>>(salinanQuery, [guestId]);
       caraSalinan = salinanResult.map(item => item.nama_opsi);
+      caraSalinanIds = salinanResult.map(item => item.id);
     } catch (error) {
       console.error('Error fetching mendapatkan salinan data:', error);
     }
@@ -64,7 +66,8 @@ export async function GET(
     const guestWithDetails = {
       ...guest,
       cara_memperoleh_informasi: caraMendapatkanInformasi,
-      cara_mendapatkan_salinan: caraSalinan
+      cara_mendapatkan_salinan: caraSalinan,
+      cara_mendapatkan_salinan_ids: caraSalinanIds
     };
 
     return NextResponse.json({ 

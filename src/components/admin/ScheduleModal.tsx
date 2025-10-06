@@ -42,7 +42,7 @@ export default function ScheduleModal({
   const [minute, setMinute] = useState<string>(String(now.getMinutes()).padStart(2, '0'));
   const [bidangTujuanId, setBidangTujuanId] = useState<number | undefined>(currentBidangId);
   const [asnDituju, setAsnDituju] = useState<string>(currentAsnDituju || '');
-  const [caraSalinan, setCaraSalinan] = useState<number[]>(currentCaraSalinan);
+  const [caraSalinan, setCaraSalinan] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -60,6 +60,14 @@ export default function ScheduleModal({
   
   // Initialize form data based on props
   const initializeFormData = () => {
+    console.log('Initializing form data:', {
+      isEdit,
+      currentSchedule,
+      currentBidangId,
+      currentAsnDituju,
+      currentCaraSalinan
+    });
+    
     if (currentSchedule && isEdit) {
       // Parse existing schedule if available
       try {
@@ -75,7 +83,11 @@ export default function ScheduleModal({
       // Set bidang tujuan and ASN data if available
       setBidangTujuanId(currentBidangId);
       setAsnDituju(currentAsnDituju || '');
-      setCaraSalinan(currentCaraSalinan || []);
+      
+      // Ensure currentCaraSalinan is properly set
+      const salinanArray = Array.isArray(currentCaraSalinan) ? currentCaraSalinan : [];
+      console.log('Setting caraSalinan from props:', salinanArray);
+      setCaraSalinan([...salinanArray]); // Create new array to force re-render
     } else {
       resetToCurrentTime();
       setBidangTujuanId(undefined);
@@ -88,12 +100,28 @@ export default function ScheduleModal({
   // Reset form when modal is opened - FIXED VERSION
   useEffect(() => {
     if (isOpen && !isInitialized.current) {
+      console.log('Modal opened, initializing form data');
       initializeFormData();
       isInitialized.current = true;
     } else if (!isOpen) {
+      console.log('Modal closed, resetting initialization flag');
       isInitialized.current = false;
     }
   }, [isOpen]); // Only depend on isOpen
+
+  // Update state when props change
+  useEffect(() => {
+    if (isOpen) {
+      const salinanArray = Array.isArray(currentCaraSalinan) ? currentCaraSalinan : [];
+      console.log('Props changed - updating caraSalinan:', salinanArray);
+      setCaraSalinan([...salinanArray]);
+    }
+  }, [currentCaraSalinan, isOpen]);
+
+  // Debug effect to track caraSalinan changes
+  useEffect(() => {
+    console.log('CaraSalinan state changed:', caraSalinan);
+  }, [caraSalinan]);
 
   // Helper function to reset time to current time
   const resetToCurrentTime = () => {
@@ -194,19 +222,29 @@ export default function ScheduleModal({
     e.target.select();
   };
   
-  // Handle checkbox changes for cara salinan - FIXED VERSION
+  // Handle checkbox changes for cara salinan - IMPROVED VERSION
   const handleCaraSalinanChange = (optionId: number, isChecked: boolean) => {
     console.log('Checkbox changed:', { optionId, isChecked, currentCaraSalinan: caraSalinan });
     
     setCaraSalinan(prev => {
+      let newState;
       if (isChecked) {
-        return prev.includes(optionId) ? prev : [...prev, optionId];
+        // Add to array if not already present
+        newState = prev.includes(optionId) ? prev : [...prev, optionId];
       } else {
-        return prev.filter(id => id !== optionId);
+        // Remove from array
+        newState = prev.filter(id => id !== optionId);
       }
+      console.log('State transition:', { prev, newState, optionId, isChecked });
+      return newState;
     });
     
     setError(null);
+    
+    // Force re-render by updating a dummy state
+    setTimeout(() => {
+      console.log('Current caraSalinan after update:', caraSalinan);
+    }, 100);
   };
 
   // Validate time if the date is today
@@ -436,46 +474,71 @@ export default function ScheduleModal({
           </div>
           
 <div>
-            <div className="flex items-center">
-              <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
+            <div className="flex items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary">
                 Cara Mendapatkan Salinan
               </label>
-              <span className="ml-1 text-sm text-gray-500 dark:text-dark-text-secondary">(Opsional)</span>
+              <span className="ml-2 text-sm text-gray-500 dark:text-dark-text-secondary">(Opsional)</span>
             </div>
             <div className="mt-1 p-3 bg-gray-50 dark:bg-dark-surface rounded-md border border-gray-200 dark:border-dark-border">
               {loading ? (
                 <div className="text-sm text-gray-500 dark:text-dark-text-secondary">Memuat opsi...</div>
               ) : lookupData?.mendapatkanSalinan && lookupData.mendapatkanSalinan.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {lookupData.mendapatkanSalinan.map((option) => {
                     const isSelected = caraSalinan.includes(option.id);
                     
                     return (
-                      <div key={option.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`salinan-${option.id}`}
-                          checked={isSelected}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            console.log('Native checkbox onChange:', { 
+                      <div key={`salinan-option-${option.id}`} className="flex items-center hover:bg-gray-100 dark:hover:bg-dark-hover p-3 rounded-lg transition-colors duration-200">
+                        <div 
+                          className={`
+                            relative flex items-center justify-center w-5 h-5 border-2 rounded cursor-pointer transition-all duration-200
+                            ${isSelected 
+                              ? 'bg-blue-600 border-blue-600 text-white' 
+                              : 'bg-white border-gray-300 hover:border-blue-500'
+                            }
+                          `}
+                          onClick={() => {
+                            console.log('Custom checkbox clicked:', { 
                               optionId: option.id, 
-                              checked: e.target.checked,
+                              currentlySelected: isSelected,
                               currentState: caraSalinan
                             });
-                            handleCaraSalinanChange(option.id, e.target.checked);
+                            handleCaraSalinanChange(option.id, !isSelected);
                           }}
-                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                        />
+                        >
+                          {isSelected && (
+                            <svg 
+                              className="w-3 h-3 text-white font-bold" 
+                              fill="currentColor" 
+                              viewBox="0 0 20 20"
+                            >
+                              <path 
+                                fillRule="evenodd" 
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                clipRule="evenodd" 
+                              />
+                            </svg>
+                          )}
+                          {/* Hidden native checkbox for accessibility and form submission */}
+                          <input
+                            type="checkbox"
+                            id={`salinan-${option.id}`}
+                            name="cara_salinan"
+                            value={option.id}
+                            checked={isSelected}
+                            onChange={() => {}} // Controlled by the div click
+                            className="sr-only"
+                            tabIndex={-1}
+                          />
+                        </div>
                         <label 
                           htmlFor={`salinan-${option.id}`}
+                          className="ml-3 text-sm text-gray-700 dark:text-dark-text-secondary cursor-pointer select-none flex-1 font-medium"
                           onClick={(e) => {
                             e.preventDefault();
-                            console.log('Label clicked for option:', option.id);
-                            const newCheckedState = !isSelected;
-                            handleCaraSalinanChange(option.id, newCheckedState);
+                            handleCaraSalinanChange(option.id, !isSelected);
                           }}
-                          className="ml-2 text-sm text-gray-700 dark:text-dark-text-secondary cursor-pointer select-none"
                         >
                           {option.nama_opsi}
                         </label>

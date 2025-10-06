@@ -55,6 +55,7 @@ export interface DaftarTamu {
   catatan_tambahan?: string;
   cara_memperoleh_informasi?: string[]; // Array of cara memperoleh informasi names
   cara_mendapatkan_salinan?: string[]; // Array of cara mendapatkan salinan names
+  cara_mendapatkan_salinan_ids?: number[]; // Array of cara mendapatkan salinan IDs
   token?: string; // Token for guest identification
 }
 

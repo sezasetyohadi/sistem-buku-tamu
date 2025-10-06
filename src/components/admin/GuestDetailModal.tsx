@@ -540,17 +540,21 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
       {guest && (
         <ScheduleModal
           isOpen={isScheduleModalOpen}
-          onClose={() => setIsScheduleModalOpen(false)}
+          onClose={() => {
+            console.log('Closing schedule modal');
+            setIsScheduleModalOpen(false);
+          }}
           onSchedule={handleSchedule}
           guestId={guest.id || 0}
           currentSchedule={guest.jadwal_checkin || undefined}
           currentBidangId={guest.bidang_tujuan_id}
           currentAsnDituju={guest.asn_dituju}
-          currentCaraSalinan={guest.cara_mendapatkan_salinan?.map((cara: string) => {
-            // This is just a placeholder - in a real app, you'd need to map the text back to IDs
-            // This might need updating based on your actual implementation
-            return 0;
-          })}
+          currentCaraSalinan={(() => {
+            const ids = guest.cara_mendapatkan_salinan_ids || [];
+            console.log('Passing cara salinan IDs to ScheduleModal:', ids);
+            console.log('Guest cara mendapatkan salinan names:', guest.cara_mendapatkan_salinan);
+            return ids;
+          })()}
           isEdit={guest.status_kunjungan === 'Terjadwal'}
         />
       )}
