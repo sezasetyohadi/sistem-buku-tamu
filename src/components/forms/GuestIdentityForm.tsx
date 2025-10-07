@@ -29,6 +29,21 @@ export default function GuestIdentityForm({
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previousEmailRef = useRef<string>('');
 
+  // Helper function to validate birth date
+  const validateBirthDate = (dateString: string): boolean => {
+    if (!dateString) return true; // Allow empty dates
+    
+    const inputDate = new Date(dateString);
+    const today = new Date();
+    const minDate = new Date('1920-01-01');
+    
+    // Check if date is valid
+    if (isNaN(inputDate.getTime())) return false;
+    
+    // Check if date is within range
+    return inputDate >= minDate && inputDate <= today;
+  };
+
   // Handle email lookup with debounce
   const handleEmailChange = async (email: string) => {
     // First update the state with the current input value
@@ -206,8 +221,47 @@ export default function GuestIdentityForm({
               type="date"
               className="w-full px-3 py-3 text-base text-gray-900 bg-white border border-gray-300 rounded-lg min-h-[48px]"
               value={guestIdentity?.tanggal_lahir || ''}
-              onChange={e => updateGuestIdentity('tanggal_lahir', e.target.value)}
+              onChange={e => {
+                const inputDate = e.target.value;
+                
+                if (validateBirthDate(inputDate)) {
+                  updateGuestIdentity('tanggal_lahir', inputDate);
+                } else if (inputDate) {
+                  showToast.error('Tanggal lahir harus antara tahun 1920 hingga hari ini');
+                  // Clear the invalid input
+                  e.target.value = '';
+                  updateGuestIdentity('tanggal_lahir', '');
+                }
+              }}
+              onBlur={e => {
+                const inputDate = e.target.value;
+                
+                if (inputDate && !validateBirthDate(inputDate)) {
+                  showToast.error('Tanggal lahir tidak valid. Silakan pilih tanggal antara tahun 1920 hingga hari ini');
+                  e.target.value = '';
+                  updateGuestIdentity('tanggal_lahir', '');
+                }
+              }}
+              onInput={e => {
+                // Additional validation on input to prevent typing invalid years
+                const target = e.target as HTMLInputElement;
+                const value = target.value;
+                
+                // If user types an obviously invalid year (like more than 4 digits in year position)
+                if (value.length >= 4) {
+                  const yearMatch = value.match(/^(\d{4})/);
+                  if (yearMatch) {
+                    const year = parseInt(yearMatch[1]);
+                    if (year > new Date().getFullYear() || year < 1920) {
+                      target.value = '';
+                      showToast.error('Tahun lahir harus antara 1920 hingga ' + new Date().getFullYear());
+                    }
+                  }
+                }
+              }}
               placeholder="Tanggal Lahir"
+              min="1920-01-01"
+              max={new Date().toISOString().split('T')[0]}
               required
               disabled={loading}
             />

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { submitSurveyWithIdentity } from '@/backend/services/surveyService';
+import { isDisposableEmail, getDisposableEmailError } from '@/lib/disposable-email-domains';
 import { withApiMiddleware, validateJsonBody } from '@/lib/api-middleware';
 import { ErrorCodes, HttpStatus } from '@/lib/api-response';
 import { createCaptchaMiddleware } from '@/lib/captcha-verification';
@@ -30,6 +31,10 @@ const SURVEY_SUBMIT_SCHEMA: ValidationSchema = {
       
       if (!identity.email || typeof identity.email !== 'string') {
         return 'Email wajib diisi';
+      }
+      
+      if (isDisposableEmail(identity.email)) {
+        return getDisposableEmailError(identity.email);
       }
       
       if (!identity.nomor_telp || typeof identity.nomor_telp !== 'string') {
