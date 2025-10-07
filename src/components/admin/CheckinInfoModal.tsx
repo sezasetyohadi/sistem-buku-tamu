@@ -84,13 +84,25 @@ export default function CheckinInfoModal({
   }, [isOpen]);
 
   const handleCaraSalinanChange = (caraSalinanId: number, checked: boolean) => {
+    console.log('Checkbox changed:', { caraSalinanId, checked, currentCaraSalinan: selectedCaraSalinan });
+    
     setSelectedCaraSalinan(prev => {
+      let newState;
       if (checked) {
-        return [...prev, caraSalinanId];
+        // Add to array if not already present
+        newState = prev.includes(caraSalinanId) ? prev : [...prev, caraSalinanId];
       } else {
-        return prev.filter(id => id !== caraSalinanId);
+        // Remove from array
+        newState = prev.filter(id => id !== caraSalinanId);
       }
+      console.log('State transition:', { prev, newState, caraSalinanId, checked });
+      return newState;
     });
+    
+    // Force re-render by updating a dummy state
+    setTimeout(() => {
+      console.log('Current selectedCaraSalinan after update:', selectedCaraSalinan);
+    }, 100);
   };
 
   const validateForm = () => {
@@ -190,34 +202,70 @@ export default function CheckinInfoModal({
 
           {/* Cara Mendapatkan Salinan (Opsional) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Cara Mendapatkan Salinan <span className="text-gray-500">(Opsional)</span>
-            </label>
-            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <div className="flex items-center mb-3">
+              <label className="text-sm font-medium text-gray-700">
+                Cara Mendapatkan Salinan
+              </label>
+              <span className="ml-2 text-sm text-gray-500">(Opsional)</span>
+            </div>
+            <div className="mt-1 p-3 bg-gray-50 rounded-md border border-gray-200">
               {isLoadingData ? (
-                <p className="text-sm text-gray-500 italic">Memuat data cara mendapatkan salinan...</p>
+                <div className="text-sm text-gray-500">Memuat data cara mendapatkan salinan...</div>
               ) : caraSalinanList.length === 0 ? (
                 <p className="text-sm text-gray-500 italic">Tidak ada data cara mendapatkan salinan</p>
               ) : (
-                caraSalinanList.map((cara) => (
-                  <label key={cara.id} className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedCaraSalinan.includes(cara.id)}
-                      onChange={(e) => handleCaraSalinanChange(cara.id, e.target.checked)}
-                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                      disabled={isSubmitting || isLoading || isLoadingData}
-                    />
-                    <span className="text-sm text-gray-700">{cara.nama_opsi}</span>
-                  </label>
-                ))
+                <div className="space-y-2">
+                  {caraSalinanList.map((cara) => {
+                    const isSelected = selectedCaraSalinan.includes(cara.id);
+                    
+                    return (
+                      <div key={`salinan-option-${cara.id}`} className="flex items-center hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200">
+                        <div 
+                          className={`
+                            flex items-center justify-center w-5 h-5 border-2 rounded cursor-pointer transition-all duration-200
+                            ${isSelected 
+                              ? 'bg-blue-600 border-blue-600 text-white' 
+                              : 'bg-white border-gray-300 hover:border-blue-500'
+                            }
+                          `}
+                          onClick={() => {
+                            if (!isSubmitting && !isLoading && !isLoadingData) {
+                              handleCaraSalinanChange(cara.id, !isSelected);
+                            }
+                          }}
+                        >
+                          {isSelected && (
+                            <svg 
+                              className="w-3 h-3 text-white" 
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              viewBox="0 0 24 24"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                d="M5 13l4 4L19 7" 
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <label 
+                          className="ml-3 text-sm text-gray-700 cursor-pointer select-none flex-1 font-medium"
+                          onClick={() => {
+                            if (!isSubmitting && !isLoading && !isLoadingData) {
+                              handleCaraSalinanChange(cara.id, !isSelected);
+                            }
+                          }}
+                        >
+                          {cara.nama_opsi}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
-            {selectedCaraSalinan.length > 0 && (
-              <p className="mt-2 text-sm text-blue-600">
-                {selectedCaraSalinan.length} cara dipilih
-              </p>
-            )}
           </div>
         </div>
 
@@ -235,11 +283,11 @@ export default function CheckinInfoModal({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || isLoading || isLoadingData}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+            className="px-4 py-2 bg-green-200 text-green-800 rounded-md hover:bg-green-300 transition-colors disabled:bg-green-100 disabled:text-green-500 disabled:cursor-not-allowed flex items-center"
           >
             {isSubmitting || isLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-green-800" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
