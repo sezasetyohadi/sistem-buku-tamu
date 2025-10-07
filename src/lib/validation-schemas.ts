@@ -18,6 +18,7 @@ export const GUEST_REGISTRATION_SCHEMA: ValidationSchema = {
     required: true,
     email: true,
     maxLength: 100,
+    allowDisposableEmail: false,  // Block disposable emails
     message: 'Email wajib diisi dengan format yang valid'
   },
   phone: {

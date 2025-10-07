@@ -5,6 +5,7 @@
 
 import validator from 'validator';
 
+import { isDisposableEmail, getDisposableEmailError } from '@/lib/disposable-email-domains';
 import { ValidationError } from '@/lib/error-handling';
 import { logger } from '@/lib/logger';
 
@@ -31,6 +32,7 @@ export interface ValidationRule {
   integer?: boolean;
   min?: number;
   max?: number;
+  allowDisposableEmail?: boolean;  // New rule to allow/block disposable emails
   custom?: (value: any, data?: Record<string, any>) => string | null;
   message?: string;
 }
@@ -56,6 +58,7 @@ export const VALIDATION_PATTERNS = {
 export const DEFAULT_MESSAGES = {
   REQUIRED: 'Field ini wajib diisi',
   EMAIL_INVALID: 'Format email tidak valid',
+  EMAIL_DISPOSABLE: 'Email sementara tidak diizinkan. Gunakan email permanen.',
   PHONE_INVALID: 'Format nomor telepon tidak valid',
   URL_INVALID: 'Format URL tidak valid',
   MIN_LENGTH: (min: number) => `Minimal ${min} karakter`,
@@ -105,6 +108,11 @@ export function validateField(
     // Email validation
     if (rule.email && !VALIDATION_PATTERNS.EMAIL.test(val)) {
       return rule.message || DEFAULT_MESSAGES.EMAIL_INVALID;
+    }
+
+    // Disposable email validation (default: block disposable emails)
+    if (rule.email && rule.allowDisposableEmail !== true && isDisposableEmail(val)) {
+      return rule.message || getDisposableEmailError(val);
     }
 
     // Phone validation

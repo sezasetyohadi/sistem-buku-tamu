@@ -10,6 +10,7 @@ import { FormLoading, LoadingButton } from '@/components/ui/loading-states';
 import TurnstileCaptcha from '@/components/ui/TurnstileCaptcha';
 import { useApiCall, useMutation } from '@/hooks/useDataFetching';
 import { useTurnstileCaptcha } from '@/hooks/useTurnstileCaptcha';
+import { isDisposableEmail, getDisposableEmailError } from '@/lib/disposable-email-domains';
 import { guestLogger, safeLog } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
 
@@ -230,6 +231,8 @@ export default function GuestRegistrationForm({
       newErrors.email = 'Email harus diisi';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Format email tidak valid';
+    } else if (isDisposableEmail(formData.email)) {
+      newErrors.email = getDisposableEmailError(formData.email);
     }
 
     if (!formData.phone.trim()) {
