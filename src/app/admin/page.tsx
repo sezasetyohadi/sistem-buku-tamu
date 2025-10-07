@@ -203,7 +203,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-4 sm:p-6 xl:p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-200 transition-all duration-300 transform hover:scale-[1.02]">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-blue-600 transition-colors">Daftar Tamu</h3>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-blue-600 transition-colors">Manajemen Tamu</h3>
                   <p className="text-sm sm:text-base text-gray-600 leading-relaxed">Kelola data tamu</p>
                 </div>
                 <div className="w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300 ml-4 sm:ml-6 flex-shrink-0">
@@ -235,8 +235,8 @@ export default function AdminDashboard() {
             <div className="bg-white p-4 sm:p-6 xl:p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-purple-200 transition-all duration-300 transform hover:scale-[1.02]">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-purple-600 transition-colors">Survey</h3>
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">Kelola survei dan feedback</p>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-purple-600 transition-colors">Kelola Survei</h3>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">Manajemen survei dan responden</p>
                 </div>
                 <div className="w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center group-hover:from-purple-200 group-hover:to-purple-300 transition-all duration-300 ml-4 sm:ml-6 flex-shrink-0">
                   <svg className="w-6 h-6 sm:w-7 sm:h-7 xl:w-8 xl:h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">

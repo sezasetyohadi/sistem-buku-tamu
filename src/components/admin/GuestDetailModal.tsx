@@ -6,6 +6,7 @@ import { DaftarTamu } from '@/types/database-types';
 import { DeleteConfirmDialog } from '../ui/DeleteConfirmDialog';
 import Modal from '../ui/Modal';
 
+import CheckinInfoModal from './CheckinInfoModal';
 import ScheduleModal from './ScheduleModal';
 
 
@@ -47,6 +48,7 @@ interface GuestDetailModalProps {
 
 export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest, onGuestUpdate, isEditMode = false }: GuestDetailModalProps) {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isCheckinInfoModalOpen, setIsCheckinInfoModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [guest, setGuest] = useState<DaftarTamu | null>(initialGuest);
@@ -142,14 +144,39 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
   };
   
   const handleCheckin = async () => {
+    // Check if bidang tujuan and ASN info are missing
+    if (!guest?.bidang_tujuan_id || !guest?.asn_dituju) {
+      setIsCheckinInfoModalOpen(true);
+      return;
+    }
+
+    // If info is complete, proceed with normal checkin
+    await performCheckin();
+  };
+
+  const performCheckin = async (bidangTujuanId?: number, asnDituju?: string, caraSalinan?: number[]) => {
     try {
       setIsSubmitting(true);
       
-      const response = await fetch(`/api/guests/${guest.id}/checkin`, {
+      const requestBody: any = {};
+      
+      // Add additional info if provided
+      if (bidangTujuanId) {
+        requestBody.bidangTujuanId = bidangTujuanId;
+      }
+      if (asnDituju) {
+        requestBody.asnDituju = asnDituju;
+      }
+      if (caraSalinan && caraSalinan.length > 0) {
+        requestBody.caraSalinan = caraSalinan;
+      }
+      
+      const response = await fetch(`/api/guests/${guest?.id}/checkin`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: Object.keys(requestBody).length > 0 ? JSON.stringify(requestBody) : undefined
       });
       
       const result = await response.json();
@@ -167,10 +194,18 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
         updatedGuest = {
           ...guest,
           waktu_checkin: result.data.waktu_checkin,
-          status_kunjungan: result.data.status_kunjungan
+          status_kunjungan: result.data.status_kunjungan,
+          bidang_tujuan_id: result.data.bidang_tujuan_id || guest.bidang_tujuan_id,
+          bidang_tujuan: result.data.bidang_tujuan || guest.bidang_tujuan,
+          asn_dituju: result.data.asn_dituju || guest.asn_dituju,
+          cara_mendapatkan_salinan: result.data.cara_mendapatkan_salinan || guest.cara_mendapatkan_salinan,
+          cara_mendapatkan_salinan_ids: result.data.cara_mendapatkan_salinan_ids || guest.cara_mendapatkan_salinan_ids
         };
         setGuest(updatedGuest);
       }
+      
+      // Close checkin info modal if it was open
+      setIsCheckinInfoModalOpen(false);
       
       // Trigger refresh of guest data in the parent component with updated data
       if (onGuestUpdate) {
@@ -182,6 +217,10 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCheckinInfoConfirm = async (bidangTujuanId: number, asnDituju: string, caraSalinan?: number[]) => {
+    await performCheckin(bidangTujuanId, asnDituju, caraSalinan);
   };
   
   const handleCheckout = async () => {
@@ -232,10 +271,10 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
   
   const formatStatusBadge = (status?: string) => {
     const statusColors = {
-      'Menunggu': 'bg-yellow-100 text-yellow-800',
+      'Menunggu': 'bg-gray-100 text-gray-800',
       'Terjadwal': 'bg-orange-100 text-orange-800',
-      'Datang': 'bg-blue-100 text-blue-800',
-      'Selesai': 'bg-green-100 text-green-800'
+      'Datang': 'bg-green-100 text-green-800',
+      'Selesai': 'bg-purple-100 text-purple-800'
     };
     
     const statusTooltips = {
@@ -264,7 +303,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? 'Edit Tamu' : 'Detail Tamu'} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditMode ? 'Detail Tamu' : 'Detail Tamu'} size="lg">
       <div className="space-y-6">
         {/* Header with avatar and basic info */}
         <div className="flex items-center pb-4 border-b border-gray-200">
@@ -556,6 +595,17 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
             return ids;
           })()}
           isEdit={guest.status_kunjungan === 'Terjadwal'}
+        />
+      )}
+      
+      {/* Checkin Info Modal */}
+      {guest && (
+        <CheckinInfoModal
+          isOpen={isCheckinInfoModalOpen}
+          onClose={() => setIsCheckinInfoModalOpen(false)}
+          onConfirm={handleCheckinInfoConfirm}
+          guestName={guest.nama}
+          isLoading={isSubmitting}
         />
       )}
       
