@@ -10,6 +10,7 @@ import { FormLoading, LoadingButton } from '@/components/ui/loading-states';
 import TurnstileCaptcha from '@/components/ui/TurnstileCaptcha';
 import { useApiCall, useMutation } from '@/hooks/useDataFetching';
 import { useTurnstileCaptcha } from '@/hooks/useTurnstileCaptcha';
+import { isDisposableEmail, getDisposableEmailError } from '@/lib/disposable-email-domains';
 import { guestLogger, safeLog } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
 
@@ -181,41 +182,45 @@ export default function GuestRegistrationForm({
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     
-    if (type === 'checkbox' && name === 'cara_memperoleh') {
-      const checkbox = e.target as HTMLInputElement;
-      const numericValue = parseInt(value); // Convert to number since we're storing IDs
-      
-      const updatedValues = checkbox.checked 
-        ? [...(formData[name as keyof typeof formData] as number[]), numericValue]
-        : (formData[name as keyof typeof formData] as number[]).filter(item => item !== numericValue);
-      
-      setFormData(prev => ({
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
         ...prev,
-        [name]: updatedValues
+        [name]: ''
       }));
+    }
+  };
+
+  // Dedicated handler for cara_memperoleh checkboxes
+  const handleCaraMemperolehChange = (optionId: number, isChecked: boolean) => {
+    console.log('Checkbox clicked:', { optionId, isChecked, currentState: formData.cara_memperoleh });
+    
+    setFormData(prev => {
+      const updatedValues = isChecked 
+        ? [...prev.cara_memperoleh, optionId]
+        : prev.cara_memperoleh.filter(id => id !== optionId);
       
-      // Clear error when at least one option is selected
-      if (updatedValues.length > 0 && errors[name]) {
-        setErrors(prev => ({
-          ...prev,
-          [name]: ''
-        }));
-      }
-    } else {
-      setFormData(prev => ({
+      console.log('Updated cara_memperoleh:', updatedValues);
+      
+      return {
         ...prev,
-        [name]: value
+        cara_memperoleh: updatedValues
+      };
+    });
+    
+    // Clear error when at least one option is selected
+    if (isChecked && errors.cara_memperoleh) {
+      setErrors(prev => ({
+        ...prev,
+        cara_memperoleh: ''
       }));
-      
-      // Clear error when user starts typing
-      if (errors[name]) {
-        setErrors(prev => ({
-          ...prev,
-          [name]: ''
-        }));
-      }
     }
   };
 
@@ -230,6 +235,8 @@ export default function GuestRegistrationForm({
       newErrors.email = 'Email harus diisi';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Format email tidak valid';
+    } else if (isDisposableEmail(formData.email)) {
+      newErrors.email = getDisposableEmailError(formData.email);
     }
 
     if (!formData.phone.trim()) {
@@ -387,7 +394,7 @@ export default function GuestRegistrationForm({
         } else if (result.success) {
           // Registration successful but no token
           console.warn('Registration successful but no token received');
-          showToast.success('Registrasi berhasil! Namun token tidak dapat dibuat.');
+          showToast.success('Registrasi berhasil!');
           
           // Reset form
           setFormData({
@@ -643,25 +650,52 @@ export default function GuestRegistrationForm({
           </h3>
           <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-5">Pilih minimal satu opsi</p>
           <div className="space-y-4 sm:space-y-5">
-            {memperolehOptions.map((option) => (
-              <div key={option.id} className="checkbox-container flex items-start checkbox-layout gap-3 p-2.5 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200">
-                <input
-                  type="checkbox"
-                  name="cara_memperoleh"
-                  value={option.id.toString()}
-                  checked={formData.cara_memperoleh.includes(option.id)}
-                  onChange={handleInputChange}
-                  className="w-4 h-4 mt-1 cursor-pointer flex-shrink-0"
-                  id={`cara_memperoleh_${option.id}`}
-                />
-                <label 
-                  htmlFor={`cara_memperoleh_${option.id}`}
-                  className="text-sm sm:text-base text-gray-700 leading-relaxed cursor-pointer select-none flex-1 break-words overflow-wrap-break-word"
-                >
-                  {option.nama_opsi}
-                </label>
-              </div>
-            ))}
+            {memperolehOptions.map((option) => {
+              const isSelected = formData.cara_memperoleh.includes(option.id);
+              
+              return (
+                <div key={option.id} className="flex items-start gap-3 p-2.5 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200">
+                  <div
+                    className={`
+                      relative flex items-center justify-center w-5 h-5 border-2 rounded cursor-pointer transition-all duration-200
+                      ${isSelected 
+                        ? 'bg-blue-600 border-blue-600 text-white' 
+                        : 'bg-white border-gray-300 hover:border-blue-500'
+                      }
+                    `}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleCaraMemperolehChange(option.id, !isSelected);
+                    }}
+                  >
+                    {isSelected && (
+                      <svg 
+                        className="w-3 h-3 text-white font-bold" 
+                        fill="currentColor" 
+                        viewBox="0 0 20 20"
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div 
+                    className="text-sm sm:text-base text-gray-700 leading-relaxed cursor-pointer select-none flex-1 break-words overflow-wrap-break-word font-medium"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleCaraMemperolehChange(option.id, !isSelected);
+                    }}
+                  >
+                    {option.nama_opsi}
+                  </div>
+                </div>
+              );
+            })}
           </div>
           {errors.cara_memperoleh && (
             <p className="text-red-500 text-xs sm:text-sm mt-4 font-medium">{errors.cara_memperoleh}</p>

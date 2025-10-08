@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { useAdminIdleLogout } from '@/hooks/useIdleDetection';
 import { authLogger, safeLog } from '@/lib/logger';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ interface AuthGuardProps {
 export default function AuthGuard({ children }: AuthGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -20,7 +22,15 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const shouldEnableIdleDetection = isAuthenticated && pathname !== '/admin/login';
   useAdminIdleLogout(shouldEnableIdleDetection);
 
+  // Handle client-side mounting to prevent hydration mismatch
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Only run auth check after component is mounted
+    if (!isMounted) return;
+
     const checkAuth = async () => {
       try {
         // Always allow login page without authentication
@@ -37,6 +47,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           const response = await fetch('/api/admin/me', {
             method: 'GET',
             credentials: 'include', // Include cookies
+            cache: 'no-cache' // Prevent caching to get fresh auth status
           });
 
           if (response.ok) {
@@ -47,44 +58,53 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             } else {
               authLogger.debug('JWT authentication failed:', result.message);
               setIsAuthenticated(false);
-              router.replace('/admin/login');
+              // Use window.location for immediate redirect to prevent loops
+              if (typeof window !== 'undefined') {
+                window.location.href = '/admin/login';
+              }
+              return;
             }
           } else {
             authLogger.debug('JWT authentication request failed with status:', response.status);
             setIsAuthenticated(false);
-            router.replace('/admin/login');
+            // Use window.location for immediate redirect to prevent loops
+            if (typeof window !== 'undefined') {
+              window.location.href = '/admin/login';
+            }
+            return;
           }
         } catch (fetchError) {
           authLogger.error('Error checking JWT authentication:', fetchError);
           setIsAuthenticated(false);
-          router.replace('/admin/login');
+          // Use window.location for immediate redirect to prevent loops
+          if (typeof window !== 'undefined') {
+            window.location.href = '/admin/login';
+          }
+          return;
         }
       } catch (error) {
         authLogger.error('Auth check error:', error);
         setIsAuthenticated(false);
         if (pathname !== '/admin/login') {
-          router.replace('/admin/login');
+          // Use window.location for immediate redirect to prevent loops
+          if (typeof window !== 'undefined') {
+            window.location.href = '/admin/login';
+          }
+          return;
         }
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(checkAuth, 100);
+    // Small delay to ensure proper mounting
+    const timer = setTimeout(checkAuth, 50);
     return () => clearTimeout(timer);
-  }, [pathname, router]);
+  }, [pathname, router, isMounted]);
 
-  // Show loading spinner while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-blue-600 font-medium">Memverifikasi akses...</p>
-        </div>
-      </div>
-    );
+  // Show loading spinner while checking authentication or not yet mounted
+  if (!isMounted || isLoading) {
+    return <LoadingSpinner />;
   }
 
   // For login page, always render content without any admin layout

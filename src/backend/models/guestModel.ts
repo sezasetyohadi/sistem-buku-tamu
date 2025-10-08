@@ -47,6 +47,8 @@ export interface Guest {
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
+  bidang_tujuan_id?: number;
+  asn_dituju?: string;
   catatan_tambahan?: string;
   status_kunjungan?: VisitStatus;
   jadwal_checkin?: Date;
@@ -94,6 +96,8 @@ export interface GuestUpdate {
   profesi?: string;
   asal_instansi?: string;
   keperluan?: string;
+  bidang_tujuan_id?: number;
+  asn_dituju?: string;
   catatan_tambahan?: string;
   status_kunjungan?: VisitStatus;
   jadwal_checkin?: Date;
@@ -151,6 +155,7 @@ export const GUEST_QUERIES = {
   DELETE: 'DELETE FROM daftar_tamu WHERE id = ?',
   SET_STATUS: 'UPDATE daftar_tamu SET status_kunjungan = ? WHERE id = ?',
   SET_CHECKIN: 'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang" WHERE id = ?',
+  SET_CHECKIN_WITH_INFO: 'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang", bidang_tujuan_id = ?, asn_dituju = ? WHERE id = ?',
   SET_CHECKOUT: 'UPDATE daftar_tamu SET waktu_checkout = ?, status_kunjungan = "Selesai" WHERE id = ?',
   SET_SCHEDULE: 'UPDATE daftar_tamu SET jadwal_checkin = ?, jadwal_dibuat = NOW(), status_kunjungan = "Terjadwal" WHERE id = ?',
   GET_EDUCATION_OPTIONS: 'SELECT * FROM pendidikan_terakhir ORDER BY id',
@@ -210,6 +215,83 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error updating guest check-in:', error);
+    return {
+      success: false,
+      message: `Error updating check-in status: ${errorMessage}`,
+    };
+  }
+}
+
+/**
+ * Mengupdate status check-in tamu dengan informasi tambahan bidang tujuan dan ASN
+ * 
+ * @description Fungsi ini mengubah status tamu menjadi "Datang" dan mencatat waktu check-in
+ * beserta informasi bidang tujuan dan ASN yang ditemui. Digunakan ketika tamu check-in
+ * dan perlu melengkapi informasi yang belum ada.
+ * 
+ * @param {number} guestId - ID unik tamu yang akan di-check-in
+ * @param {Date} checkInTime - Waktu check-in tamu
+ * @param {number} bidangTujuanId - ID bidang tujuan yang dikunjungi
+ * @param {string} asnDituju - Nama ASN yang ditemui
+ * 
+ * @returns {Promise<ResultData>} Promise yang resolve dengan hasil operasi
+ * - success: true jika berhasil, false jika gagal
+ * - message: Pesan hasil operasi
+ * - data: Data tamu yang telah diupdate (jika berhasil)
+ * 
+ * @throws {Error} Jika terjadi error database atau validasi
+ * 
+ * @example
+ * ```typescript
+ * const result = await updateGuestCheckInWithInfo(123, new Date(), 1, 'Budi Santoso');
+ * if (result.success) {
+ *   console.log('Check-in berhasil:', result.data);
+ * } else {
+ *   console.error('Check-in gagal:', result.message);
+ * }
+ * ```
+ */
+export async function updateGuestCheckInWithInfo(
+  guestId: number, 
+  checkInTime: Date, 
+  bidangTujuanId: number, 
+  asnDituju: string
+): Promise<ResultData> {
+  try {
+    // Check if guest exists
+    const rows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
+    
+    if (!rows || rows.length === 0) {
+      return {
+        success: false,
+        message: `Tamu dengan ID ${guestId} tidak ditemukan`,
+      };
+    }
+
+    const guest = rows[0];
+    
+    // Check if guest already has bidang_tujuan_id and asn_dituju
+    // If they already have the info, use the simple checkin to preserve existing data
+    if (guest.bidang_tujuan_id && guest.asn_dituju) {
+      // Use the simple check-in to avoid overwriting existing data
+      await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkInTime, guestId]);
+    } else {
+      // Update with new information
+      await executeQuery(GUEST_QUERIES.SET_CHECKIN_WITH_INFO, [checkInTime, bidangTujuanId, asnDituju, guestId]);
+    }
+    
+    // Get the updated guest data
+    const updatedRows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
+    const updatedGuest = updatedRows[0];
+    
+    return {
+      success: true,
+      message: 'Tamu berhasil ditandai datang',
+      data: updatedGuest
+    };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error updating guest check-in with info:', error);
     return {
       success: false,
       message: `Error updating check-in status: ${errorMessage}`,

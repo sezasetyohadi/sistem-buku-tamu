@@ -89,11 +89,11 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail({
       from: process.env.SMTP_USER || 'noreply@sistem-buku-tamu.com',
       to: email,
-      subject: 'Reset Password - Sistem Buku Tamu',
+      subject: 'Reset Password - Dalista Admin',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #ffffff;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #3b82f6; margin: 0;">Sistem Buku Tamu</h1>
+            <h1 style="color: #3b82f6; margin: 0;">Dalista Admin</h1>
             <p style="color: #6b7280; margin: 5px 0;">Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah</p>
           </div>
           

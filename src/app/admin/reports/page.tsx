@@ -148,10 +148,23 @@ export default function AdminReportsAnalytics() {
         
         // Add department filter if a department is selected
         const departmentParam = bidangTujuanId ? `&bidangTujuanId=${bidangTujuanId}` : '';
-        const response = await fetch(`/api/reports?period=${selectedPeriod}${departmentParam}`);
+        const url = `/api/reports?period=${selectedPeriod}${departmentParam}`;
+        
+        console.log('Reports: Fetching data from URL:', url);
+        console.log('Reports: Current user bidang_tujuan_id:', user?.bidang_tujuan_id);
+        console.log('Reports: Selected department:', selectedDepartment);
+        console.log('Reports: Computed bidangTujuanId:', bidangTujuanId);
+        
+        const response = await fetch(url);
         const result = await response.json();
         
+        console.log('Reports: API response:', result);
+        console.log('Reports: API response data:', JSON.stringify(result.data, null, 2));
+        
         if (result.success) {
+          console.log('Reports: Setting data state:', result.data);
+          console.log('Reports: Statistics in data:', result.data?.statistics);
+          console.log('Reports: Recent activities count:', result.data?.recentActivities?.length);
           setData(result.data);
         } else {
           setError(result.message || 'Failed to fetch reports data');

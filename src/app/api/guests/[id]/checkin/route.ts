@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { updateGuestCheckIn, Guest } from '@/backend/models/guestModel';
+import { updateGuestCheckIn, updateGuestCheckInWithInfo, Guest } from '@/backend/models/guestModel';
 
 export async function PATCH(
   request: NextRequest,
@@ -18,15 +18,35 @@ export async function PATCH(
       );
     }
 
+    // Parse request body for additional checkin information
+    const body = await request.json().catch(() => ({}));
+    const { bidangTujuanId, asnDituju, caraSalinan } = body;
+
     // Perform check-in operation
     const now = new Date();
-    const result = await updateGuestCheckIn(guestId, now);
+    let result;
+
+    // Check if additional information is provided
+    if (bidangTujuanId && asnDituju) {
+      // Use checkin with additional information
+      result = await updateGuestCheckInWithInfo(guestId, now, bidangTujuanId, asnDituju);
+    } else {
+      // Use simple checkin (preserves existing bidang_tujuan_id and asn_dituju)
+      result = await updateGuestCheckIn(guestId, now);
+    }
 
     if (!result.success) {
       return NextResponse.json(
         { success: false, message: result.message || 'Gagal melakukan check-in tamu' },
         { status: 500 }
       );
+    }
+
+    // Handle cara mendapatkan salinan if provided
+    if (caraSalinan && Array.isArray(caraSalinan) && caraSalinan.length > 0) {
+      // TODO: Implement cara salinan handling if needed
+      // For now, we'll just log it
+      console.log('Cara mendapatkan salinan selected:', caraSalinan);
     }
 
     // Return success response with updated guest data
@@ -36,7 +56,9 @@ export async function PATCH(
       message: 'Tamu berhasil ditandai datang',
       data: {
         waktu_checkin: updatedGuest.waktu_checkin,
-        status_kunjungan: updatedGuest.status_kunjungan
+        status_kunjungan: updatedGuest.status_kunjungan,
+        bidang_tujuan_id: updatedGuest.bidang_tujuan_id,
+        asn_dituju: updatedGuest.asn_dituju
       }
     });
   } catch (error: any) {

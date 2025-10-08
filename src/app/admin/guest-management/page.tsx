@@ -54,12 +54,6 @@ function AdminGuestsManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
   const [dateFilter, setDateFilter] = useState('Semua Waktu');
-  const [stats, setStats] = useState({
-    totalGuests: 0,
-    todayCheckIn: 0,
-    todayCheckOut: 0,
-    currentlyVisiting: 0
-  });
   const [guests, setGuests] = useState<DaftarTamu[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,28 +78,52 @@ function AdminGuestsManagement() {
   
   // Memoized date filters for better performance
   const dateFilters = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
     
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
+    // Today range
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     
+    // Week range (Monday to Sunday)
     const startOfWeek = new Date(today);
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
+    const dayOfWeek = today.getDay();
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
+    startOfWeek.setDate(today.getDate() - daysFromMonday);
     startOfWeek.setHours(0, 0, 0, 0);
     
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
     
-    const startOfYear = new Date(today.getFullYear(), 0, 1);
-    startOfYear.setHours(0, 0, 0, 0);
+    // Month range
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     
-    return { today, endOfToday, startOfWeek, startOfMonth, startOfYear };
+    // Year range
+    const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        
+    return { 
+      today, 
+      endOfToday, 
+      startOfWeek, 
+      endOfWeek,
+      startOfMonth, 
+      endOfMonth,
+      startOfYear, 
+      endOfYear 
+    };
   }, []);
   
-  // Optimized filter function with better memoization
+  // Status priority mapping for automatic sorting
+  const statusPriority = useMemo(() => ({
+    'Menunggu': 1,
+    'Terjadwal': 2,
+    'Datang': 3,
+    'Selesai': 4
+  }), []);
+
+  // Optimized filter and sort function with better memoization
   const filteredGuests = useMemo(() => {
     let filtered = guests;
     
@@ -117,7 +135,8 @@ function AdminGuestsManagement() {
       });
     }
     
-    return filtered.filter(guest => {
+    // Filter guests based on criteria
+    const filteredData = filtered.filter(guest => {
       // Filter by status
       if (statusFilter !== 'Semua Status') {
         if (statusFilter === 'Proses' && guest.status_kunjungan !== 'Datang') {
@@ -129,25 +148,63 @@ function AdminGuestsManagement() {
       
       // Filter by date (using optimized date filters)
       if (dateFilter !== 'Semua Waktu') {
-        const visitDate = guest.waktu_checkin ? new Date(guest.waktu_checkin) : null;
-        if (!visitDate) {return false;}
+        // Use waktu_dibuat (registration time) for date filtering, fallback to waktu_checkin
+        const dateToFilter = guest.waktu_dibuat || guest.waktu_checkin;
         
-        const { today, endOfToday, startOfWeek, startOfMonth, startOfYear } = dateFilters;
+        if (!dateToFilter) {
+          // console.log('No date found for guest:', guest.nama, guest.id);
+          return false;
+        }
+        
+        const filterDate = new Date(dateToFilter);
+        
+        // Validate date
+        if (isNaN(filterDate.getTime())) {
+          // console.log('Invalid date for guest:', guest.nama, dateToFilter);
+          return false;
+        }
+        
+        const { 
+          today, 
+          endOfToday, 
+          startOfWeek, 
+          endOfWeek,
+          startOfMonth, 
+          endOfMonth,
+          startOfYear, 
+          endOfYear 
+        } = dateFilters;
+        
         
         switch (dateFilter) {
           case 'Hari Ini':
-            if (visitDate < today || visitDate > endOfToday) {return false;}
+            if (filterDate < today || filterDate > endOfToday) {
+              return false;
+            }
             break;
           case 'Minggu Ini':
-            if (visitDate < startOfWeek || visitDate > endOfToday) {return false;}
+            if (filterDate < startOfWeek || filterDate > endOfWeek) {
+              return false;
+            }
             break;
           case 'Bulan Ini':
-            if (visitDate < startOfMonth || visitDate > endOfToday) {return false;}
+            if (filterDate < startOfMonth || filterDate > endOfMonth) {
+              // console.log(`${guest.nama} filtered out by Bulan Ini:`, {
+              //   filterDate: filterDate.toISOString(),
+              //   startOfMonth: startOfMonth.toISOString(),
+              //   endOfMonth: endOfMonth.toISOString()
+              // });
+              return false;
+            }
             break;
           case 'Tahun Ini':
-            if (visitDate < startOfYear || visitDate > endOfToday) {return false;}
+            if (filterDate < startOfYear || filterDate > endOfYear) {
+              return false;
+            }
             break;
         }
+        
+        // console.log(`${guest.nama} passed ${dateFilter} filter`);
       }
       
       // Filter by search term (using debounced value)
@@ -170,7 +227,24 @@ function AdminGuestsManagement() {
       
       return true;
     });
-  }, [guests, statusFilter, dateFilter, debouncedSearchTerm, dateFilters]);
+
+    // Automatic sorting: First by status priority, then by ID (ascending)
+    return filteredData.sort((a, b) => {
+      // Get status priority (default to 999 for unknown statuses to put them at the end)
+      const aPriority = statusPriority[a.status_kunjungan as keyof typeof statusPriority] || 999;
+      const bPriority = statusPriority[b.status_kunjungan as keyof typeof statusPriority] || 999;
+      
+      // First sort by status priority
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+      
+      // If same status, sort by ID (ascending - newest first if IDs are incrementing)
+      const aId = a.id || 0;
+      const bId = b.id || 0;
+      return aId - bId;
+    });
+  }, [guests, statusFilter, dateFilter, debouncedSearchTerm, dateFilters, statusPriority]);
   
   // Optimized pagination calculation with memoization
   const paginationData = useMemo(() => {
@@ -348,8 +422,9 @@ function AdminGuestsManagement() {
         { header: 'Profesi', key: 'profesi', width: 20 },
         { header: 'Bidang Tujuan', key: 'bidang_tujuan', width: 25 },
         { header: 'Keperluan', key: 'keperluan', width: 40 },
-        { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
         { header: 'Waktu Daftar', key: 'waktu_dibuat', width: 20 },
+        { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
+        { header: 'Waktu Selesai', key: 'waktu_checkout', width: 20 },
       ];
       
       // We'll format dates manually for better control over the display
@@ -369,8 +444,9 @@ function AdminGuestsManagement() {
           bidang_tujuan: guest.bidang_tujuan || '-',
           keperluan: guest.keperluan || '-',
           // Use empty string for dates initially
+          waktu_dibuat: '',
           waktu_checkin: '',
-          waktu_dibuat: ''
+          waktu_checkout: ''
         });
         
         // Then set date values directly with proper formatting
@@ -430,6 +506,34 @@ function AdminGuestsManagement() {
           }
         }
         
+        if (guest.waktu_checkout) {
+          try {
+            // Parse the date string directly
+            const checkoutDate = new Date(guest.waktu_checkout);
+            
+            if (!isNaN(checkoutDate.getTime())) {
+              // Format the date as a string in the desired format
+              const day = String(checkoutDate.getDate()).padStart(2, '0');
+              const month = String(checkoutDate.getMonth() + 1).padStart(2, '0');
+              const year = checkoutDate.getFullYear();
+              const hours = String(checkoutDate.getHours()).padStart(2, '0');
+              const minutes = String(checkoutDate.getMinutes()).padStart(2, '0');
+              const seconds = String(checkoutDate.getSeconds()).padStart(2, '0');
+              
+              const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+              
+              // Set the cell value as a string with the formatted date
+              const cell = row.getCell('waktu_checkout');
+              cell.value = formattedDate;
+              
+              // For debugging
+              console.log('Checkout date formatted:', formattedDate);
+            }
+          } catch (e) {
+            console.error('Error parsing checkout date:', e);
+          }
+        }
+        
         rowIndex++;
       });
       
@@ -486,30 +590,6 @@ function AdminGuestsManagement() {
   const fetchData = async () => {
     try {
       setError(null); // Clear previous errors
-      
-      // Fetch statistics
-      const statsResponse = await fetch('/api/statistics');
-      if (!statsResponse.ok) {
-        throw new Error(`HTTP error! Status: ${statsResponse.status}`);
-      }
-      
-      // Parse JSON with error handling for statistics
-      let statsData;
-      try {
-        statsData = await statsResponse.json();
-      } catch (parseError) {
-        console.error('Error parsing statistics JSON response:', parseError);
-        throw new Error('Invalid JSON response from statistics endpoint');
-      }
-      
-      if (statsData && statsData.success && statsData.data) {
-        setStats({
-          totalGuests: statsData.data.totalGuests || 0,
-          todayCheckIn: statsData.data.todayCheckIn || 0,
-          todayCheckOut: statsData.data.todayCheckOut || 0,
-          currentlyVisiting: statsData.data.currentlyVisiting || 0
-        });
-      }
       
       // Fetch guest list with timestamp to prevent caching
       const timestamp = new Date().getTime();
@@ -614,65 +694,6 @@ function AdminGuestsManagement() {
           </div>
         )}
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
-              </svg>
-            </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Tamu</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{isLoading ? '...' : stats.totalGuests}</p>
-            </div>
-          </div>
-        </div>
-
-          <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200 min-w-0">
-            <div className="flex items-center">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
-                </svg>
-              </div>
-              <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Terjadwal Hari Ini</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? '...' : stats.todayCheckIn}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200 min-w-0">
-            <div className="flex items-center">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                </svg>
-              </div>
-              <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Selesai Hari Ini</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? '...' : stats.todayCheckOut}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200 min-w-0">
-            <div className="flex items-center">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Proses Hari Ini</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{isLoading ? '...' : stats.currentlyVisiting}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Action Buttons - Pastel Version */}
         <div className="flex flex-wrap gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6 lg:mb-8">
           <button
@@ -735,7 +756,7 @@ function AdminGuestsManagement() {
               <div className="flex-1 relative min-w-0">
                 <input
                   type="text"
-                  placeholder="Cari nama, NIK, instansi, atau token..."
+                  placeholder="Cari nama, instansi, atau token..."
                   value={searchTerm}
                   onChange={(e) => {
                     const newSearchTerm = e.target.value;
@@ -854,17 +875,16 @@ function AdminGuestsManagement() {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <table className="w-full min-w-[1000px] table-fixed">{/* Fixed table layout for better performance */}
+            <div>
+              <table className="w-full">{/* Fixed table layout for better performance */}
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Tamu</th>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell min-w-[150px]">Instansi</th>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell min-w-[150px]">Tujuan</th>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell min-w-[120px]">Kedatangan</th>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">Status</th>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">Token</th>
-                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">Aksi</th>
+                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamu</th>
+                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Instansi</th>
+                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Kedatangan</th>
+                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Token</th>
+                    <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -907,12 +927,7 @@ function AdminGuestsManagement() {
                       >
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs sm:text-sm font-bold text-red-600">
-                                {guest.nama.split(' ').map(n => n[0]).join('').toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1 overflow-hidden">
+                            <div className="min-w-0 flex-1 overflow-hidden">
                               <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{guest.nama}</div>
                               <div className="text-xs text-gray-500 hidden sm:block">ID: {guest.id}</div>
                               <div className="text-xs text-gray-500 sm:hidden block truncate">{guest.asal_instansi || guest.keperluan || '-'}</div>
@@ -920,10 +935,7 @@ function AdminGuestsManagement() {
                           </div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden sm:table-cell">
-                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.asal_instansi || '-'}</div>
-                        </td>
-                        <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden md:table-cell">
-                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">{guest.bidang_tujuan || '-'}</div>
+                          <div className="text-xs sm:text-sm text-gray-900 truncate">{guest.asal_instansi || '-'}</div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden lg:table-cell">
                           <div className="text-xs sm:text-sm text-gray-900">
@@ -939,8 +951,8 @@ function AdminGuestsManagement() {
                         </td>
                          <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap">
                            <span className={`inline-flex px-1.5 sm:px-2 py-1 text-xs font-semibold rounded-full ${
-                             guest.status_kunjungan === 'Datang' ? 'bg-blue-100 text-blue-800' :
-                             guest.status_kunjungan === 'Selesai' ? 'bg-green-100 text-green-800' :
+                             guest.status_kunjungan === 'Datang' ? 'bg-green-100 text-green-800' :
+                             guest.status_kunjungan === 'Selesai' ? 'bg-purple-100 text-purple-800' :
                              guest.status_kunjungan === 'Terjadwal' ? 'bg-orange-100 text-orange-800' :
                              'bg-gray-100 text-gray-800'
                            }`}>
@@ -953,12 +965,12 @@ function AdminGuestsManagement() {
                            </span>
                          </td>
                           <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap">
-                            <div className="text-xs sm:text-sm text-gray-900 max-w-[120px]">
+                            <div className="text-xs sm:text-sm text-gray-900">
                               {guest.token ? (
                                 <div className="flex items-center space-x-1">
                                   <code 
                                     className="px-1 sm:px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-mono cursor-help flex-shrink-0"
-                                    title={`Token lengkap: ${guest.token}`}
+                                    title={`${guest.token}`}
                                   >
                                     {guest.token.substring(0, 6)}...
                                   </code>
@@ -1013,36 +1025,6 @@ function AdminGuestsManagement() {
                           </td>
                          <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                           <div className="flex space-x-1">
-                            <button 
-                              className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors" 
-                              title={guest.status_kunjungan === 'Menunggu' ? 'Jadwalkan' : 
-                                     guest.status_kunjungan === 'Terjadwal' ? 'Edit Jadwal' : 'Edit'}
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                  const response = await fetch(`/api/guests/${guest.id}/details`);
-                                  const result = await response.json();
-                                  
-                                  if (result.success) {
-                                    setSelectedGuest(result.data);
-                                  } else {
-                                    setSelectedGuest(guest);
-                                  }
-                                  
-                                  // Set edit mode based on guest status
-                                  setIsEditMode(true);
-                                  setIsDetailModalOpen(true);
-                                } catch (error) {
-                                  console.error('Error selecting guest for edit:', error);
-                                  setSelectedGuest(guest);
-                                  setIsDetailModalOpen(true);
-                                }
-                              }}
-                            >
-                              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                              </svg>
-                            </button>
                             <button 
                               className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors" 
                               title="Hapus"
