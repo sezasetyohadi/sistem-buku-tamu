@@ -484,26 +484,21 @@ export default function ScheduleModal({
               {loading ? (
                 <div className="text-sm text-gray-500 dark:text-dark-text-secondary">Memuat opsi...</div>
               ) : lookupData?.mendapatkanSalinan && lookupData.mendapatkanSalinan.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-1">
                   {lookupData.mendapatkanSalinan.map((option) => {
                     const isSelected = caraSalinan.includes(option.id);
                     
                     return (
-                      <div key={`salinan-option-${option.id}`} className="flex items-center hover:bg-gray-100 dark:hover:bg-dark-hover p-3 rounded-lg transition-colors duration-200">
+                      <div key={`salinan-option-${option.id}`} className="flex items-center hover:bg-gray-100 dark:hover:bg-dark-hover p-2 rounded-lg transition-colors duration-200">
                         <div 
                           className={`
-                            relative flex items-center justify-center w-5 h-5 border-2 rounded cursor-pointer transition-all duration-200
+                            flex items-center justify-center w-5 h-5 border-2 rounded cursor-pointer transition-all duration-200
                             ${isSelected 
                               ? 'bg-blue-600 border-blue-600 text-white' 
                               : 'bg-white border-gray-300 hover:border-blue-500'
                             }
                           `}
                           onClick={() => {
-                            console.log('Custom checkbox clicked:', { 
-                              optionId: option.id, 
-                              currentlySelected: isSelected,
-                              currentState: caraSalinan
-                            });
                             handleCaraSalinanChange(option.id, !isSelected);
                           }}
                         >
@@ -520,23 +515,10 @@ export default function ScheduleModal({
                               />
                             </svg>
                           )}
-                          {/* Hidden native checkbox for accessibility and form submission */}
-                          <input
-                            type="checkbox"
-                            id={`salinan-${option.id}`}
-                            name="cara_salinan"
-                            value={option.id}
-                            checked={isSelected}
-                            onChange={() => {}} // Controlled by the div click
-                            className="sr-only"
-                            tabIndex={-1}
-                          />
                         </div>
                         <label 
-                          htmlFor={`salinan-${option.id}`}
                           className="ml-3 text-sm text-gray-700 dark:text-dark-text-secondary cursor-pointer select-none flex-1 font-medium"
-                          onClick={(e) => {
-                            e.preventDefault();
+                          onClick={() => {
                             handleCaraSalinanChange(option.id, !isSelected);
                           }}
                         >

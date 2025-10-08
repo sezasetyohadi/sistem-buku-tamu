@@ -102,20 +102,7 @@ function AdminGuestsManagement() {
     // Year range
     const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
     const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-    
-    // Debug logging
-    // console.log('Date Filters Debug:', {
-    //   now: now.toISOString(),
-    //   today: today.toISOString(),
-    //   endOfToday: endOfToday.toISOString(),
-    //   startOfWeek: startOfWeek.toISOString(),
-    //   endOfWeek: endOfWeek.toISOString(),
-    //   startOfMonth: startOfMonth.toISOString(),
-    //   endOfMonth: endOfMonth.toISOString(),
-    //   startOfYear: startOfYear.toISOString(),
-    //   endOfYear: endOfYear.toISOString()
-    // });
-    
+        
     return { 
       today, 
       endOfToday, 
@@ -188,33 +175,15 @@ function AdminGuestsManagement() {
           endOfYear 
         } = dateFilters;
         
-        // Debug logging for date comparison
-        // console.log(`Filter Debug for ${guest.nama}:`, {
-        //   dateFilter,
-        //   filterDate: filterDate.toISOString(),
-        //   dateToFilter,
-        //   waktu_dibuat: guest.waktu_dibuat,
-        //   waktu_checkin: guest.waktu_checkin
-        // });
         
         switch (dateFilter) {
           case 'Hari Ini':
             if (filterDate < today || filterDate > endOfToday) {
-              // console.log(`${guest.nama} filtered out by Hari Ini:`, {
-              //   filterDate: filterDate.toISOString(),
-              //   today: today.toISOString(),
-              //   endOfToday: endOfToday.toISOString()
-              // });
               return false;
             }
             break;
           case 'Minggu Ini':
             if (filterDate < startOfWeek || filterDate > endOfWeek) {
-              // console.log(`${guest.nama} filtered out by Minggu Ini:`, {
-              //   filterDate: filterDate.toISOString(),
-              //   startOfWeek: startOfWeek.toISOString(),
-              //   endOfWeek: endOfWeek.toISOString()
-              // });
               return false;
             }
             break;
@@ -230,11 +199,6 @@ function AdminGuestsManagement() {
             break;
           case 'Tahun Ini':
             if (filterDate < startOfYear || filterDate > endOfYear) {
-              // console.log(`${guest.nama} filtered out by Tahun Ini:`, {
-              //   filterDate: filterDate.toISOString(),
-              //   startOfYear: startOfYear.toISOString(),
-              //   endOfYear: endOfYear.toISOString()
-              // });
               return false;
             }
             break;
@@ -458,8 +422,9 @@ function AdminGuestsManagement() {
         { header: 'Profesi', key: 'profesi', width: 20 },
         { header: 'Bidang Tujuan', key: 'bidang_tujuan', width: 25 },
         { header: 'Keperluan', key: 'keperluan', width: 40 },
-        { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
         { header: 'Waktu Daftar', key: 'waktu_dibuat', width: 20 },
+        { header: 'Waktu Datang', key: 'waktu_checkin', width: 20 },
+        { header: 'Waktu Selesai', key: 'waktu_checkout', width: 20 },
       ];
       
       // We'll format dates manually for better control over the display
@@ -479,8 +444,9 @@ function AdminGuestsManagement() {
           bidang_tujuan: guest.bidang_tujuan || '-',
           keperluan: guest.keperluan || '-',
           // Use empty string for dates initially
+          waktu_dibuat: '',
           waktu_checkin: '',
-          waktu_dibuat: ''
+          waktu_checkout: ''
         });
         
         // Then set date values directly with proper formatting
@@ -537,6 +503,34 @@ function AdminGuestsManagement() {
             }
           } catch (e) {
             console.error('Error parsing creation date:', e);
+          }
+        }
+        
+        if (guest.waktu_checkout) {
+          try {
+            // Parse the date string directly
+            const checkoutDate = new Date(guest.waktu_checkout);
+            
+            if (!isNaN(checkoutDate.getTime())) {
+              // Format the date as a string in the desired format
+              const day = String(checkoutDate.getDate()).padStart(2, '0');
+              const month = String(checkoutDate.getMonth() + 1).padStart(2, '0');
+              const year = checkoutDate.getFullYear();
+              const hours = String(checkoutDate.getHours()).padStart(2, '0');
+              const minutes = String(checkoutDate.getMinutes()).padStart(2, '0');
+              const seconds = String(checkoutDate.getSeconds()).padStart(2, '0');
+              
+              const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+              
+              // Set the cell value as a string with the formatted date
+              const cell = row.getCell('waktu_checkout');
+              cell.value = formattedDate;
+              
+              // For debugging
+              console.log('Checkout date formatted:', formattedDate);
+            }
+          } catch (e) {
+            console.error('Error parsing checkout date:', e);
           }
         }
         

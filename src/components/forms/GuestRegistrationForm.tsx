@@ -394,7 +394,7 @@ export default function GuestRegistrationForm({
         } else if (result.success) {
           // Registration successful but no token
           console.warn('Registration successful but no token received');
-          showToast.success('Registrasi berhasil! Namun token tidak dapat dibuat.');
+          showToast.success('Registrasi berhasil!');
           
           // Reset form
           setFormData({
