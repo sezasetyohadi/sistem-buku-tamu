@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
-import Modal from '@/components/ui/Modal';
+import Modal from '../ui/Modal';
+import DeleteRatingModal from './DeleteRatingModal';
+import AddRatingModal from './AddRatingModal';
 
 interface RatingType {
   id: number;
@@ -47,7 +49,6 @@ export default function SurveyQuestionModal({
   const [ratingTypes, setRatingTypes] = useState<RatingType[]>([]);
   const [isLoadingRatingTypes, setIsLoadingRatingTypes] = useState(false);
   const [showNewTypeDialog, setShowNewTypeDialog] = useState(false);
-  const [newTypeData, setNewTypeData] = useState({ name: '', options: [''] });
   const [questionData, setQuestionData] = useState<SurveyQuestion>({
     pertanyaan: '',
     tipe_pertanyaan: 'rating',
@@ -59,6 +60,7 @@ export default function SurveyQuestionModal({
   const [extraAnswers, setExtraAnswers] = useState<
   { jenis_rating_id?: number }[]>([]);
   const [pendingExtraAnswerIdx, setPendingExtraAnswerIdx] = useState<number | null>(null);
+  const [showDeleteRatingModal, setShowDeleteRatingModal] = useState(false);
 
   // Fetch rating types when modal is opened or question type changes
   useEffect(() => {
@@ -142,6 +144,37 @@ export default function SurveyQuestionModal({
       toast.error('Gagal memuat jenis rating');
     } finally {
       setIsLoadingRatingTypes(false);
+    }
+  };
+
+  // Handler when rating is deleted - refresh the rating types list
+  const handleRatingDeleted = () => {
+    fetchRatingTypes();
+  };
+
+  // Handler when new rating is added
+  const handleRatingAdded = (newRating: RatingType) => {
+    setRatingTypes(prev => [...prev, newRating]);
+  };
+
+  // Handler when rating is assigned to dropdown
+  const handleRatingAssigned = (ratingId: number, pendingIdx: number | null) => {
+    if (pendingIdx !== null) {
+      // Assign to extra answer dropdown
+      setExtraAnswers(list =>
+        list.map((item, i) =>
+          i === pendingIdx
+            ? { ...item, jenis_rating_id: ratingId }
+            : item
+        )
+      );
+      setPendingExtraAnswerIdx(null);
+    } else {
+      // Assign to main dropdown
+      setQuestionData(prev => ({
+        ...prev,
+        jenis_rating_id: ratingId
+      }));
     }
   };
 
@@ -276,6 +309,8 @@ export default function SurveyQuestionModal({
                 if (e.target.value === 'add_new') {
                   setShowNewTypeDialog(true);
                   setPendingExtraAnswerIdx(null); // null artinya dropdown utama
+                } else if (e.target.value === 'delete_rating') {
+                  setShowDeleteRatingModal(true);
                 } else {
                   setQuestionData({
                     ...questionData,
@@ -299,6 +334,7 @@ export default function SurveyQuestionModal({
                 ))
               )}
               <option value="add_new">Tambah Rating</option>
+              <option value="delete_rating">Hapus Rating</option>
             </select>
           </div>
 
@@ -319,6 +355,8 @@ export default function SurveyQuestionModal({
                 if (e.target.value === 'add_new') {
                   setShowNewTypeDialog(true);
                   setPendingExtraAnswerIdx(idx); // untuk extraAnswers
+                } else if (e.target.value === 'delete_rating') {
+                  setShowDeleteRatingModal(true);
                 } else {
                   setExtraAnswers(list =>
                     list.map((item, i) =>
@@ -342,6 +380,7 @@ export default function SurveyQuestionModal({
                   </option>
                 ))}
               <option value="add_new">Tambah Rating</option>
+              <option value="delete_rating">Hapus Rating</option>
             </select>
           </div>
           {/* Tombol hapus */}
@@ -452,157 +491,21 @@ export default function SurveyQuestionModal({
         </div>
       </div>
 
-      {/* Modal untuk menambah jenis rating baru */}
-      {showNewTypeDialog && (
-        <Modal isOpen={showNewTypeDialog} onClose={() => setShowNewTypeDialog(false)} title="Tambah Rating Baru" size="sm">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Judul Rating</label>
-              <input
-                type="text"
-                value={newTypeData.name}
-                onChange={e => setNewTypeData({ ...newTypeData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Masukan Judul Rating"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Opsi Rating</label>
-              {newTypeData.options.map((opt, idx) => (
-                <div key={idx} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={opt}
-                    onChange={e => setNewTypeData(data => ({
-                      ...data,
-                      options: data.options.map((o, i) => i === idx ? e.target.value : o)
-                    }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                    placeholder={`Opsi ${idx + 1}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setNewTypeData(data => ({
-                      ...data,
-                      options: data.options.filter((_, i) => i !== idx)
-                    }))}
-                    className="px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                    disabled={newTypeData.options.length <= 1}
-                  >×</button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={async () => {
-                  // Get the current rating type id (if available, only after rating type is created)
-                  // For new rating type, we don't have jenis_rating_id yet, so just add to local state
-                  if (!newTypeData.name.trim()) {
-                    toast.error('Isi judul rating terlebih dahulu sebelum menambah opsi!');
-                    return;
-                  }
-                  // If this is a new rating type (not yet saved), just add to local state
-                  if (!pendingExtraAnswerIdx && !ratingTypes.some(rt => rt.nama_rating === newTypeData.name)) {
-                    setNewTypeData(data => ({
-                      ...data,
-                      options: [...data.options, '']
-                    }));
-                    return;
-                  }
-                  // Otherwise, add to database
-                  // Find the jenis_rating_id for this rating type
-                  const ratingType = ratingTypes.find(rt => rt.nama_rating === newTypeData.name);
-                  if (!ratingType) {
-                    toast.error('Jenis rating belum tersimpan di database!');
-                    return;
-                  }
-                  // Determine next urutan_rating
-                  const urutan_rating = newTypeData.options.length + 1;
-                  const res = await fetch('/api/survey/rating-options', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      jenis_rating_id: ratingType.id,
-                      skala_rating: '', // You may want to prompt user for the new option value
-                      urutan_rating
-                    })
-                  });
-                  const data = await res.json();
-                  if (data.success && data.data?.id) {
-                    setNewTypeData(prev => ({
-                      ...prev,
-                      options: [...prev.options, ''] // You may want to use the value from user input
-                    }));
-                    toast.success('Opsi berhasil ditambahkan ke database!');
-                  } else {
-                    toast.error('Gagal menambah opsi ke database');
-                  }
-                }}
-                className="mt-2 px-3 py-1 border border-blue-500 text-blue-600 rounded hover:bg-blue-50"
-              >+ Tambah Opsi</button>
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowNewTypeDialog(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-              >Batal</button>
-              <button
-                type="button"
-                onClick={async () => {
-                  // Validasi
-                  if (!newTypeData.name.trim()) {
-                    toast.error('Judul rating wajib diisi');
-                    return;
-                  }
-                  if (newTypeData.options.some(opt => !opt.trim())) {
-                    toast.error('Semua opsi rating wajib diisi');
-                    return;
-                  }
-                  // Simpan ke backend (atau local state jika belum ada backend)
-                  const res = await fetch('/api/survey/rating-types', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      nama_rating: newTypeData.name,
-                      options: newTypeData.options
-                    })
-                  });
-                  const data = await res.json();
-                  if (data.success && data.data?.id) {
-                    // Tambahkan ke ratingTypes
-                    setRatingTypes(prev => [...prev, {
-                      id: data.data.id,
-                      nama_rating: newTypeData.name
-                    }]);
-                    // Set ke dropdown yang sedang aktif
-                    if (pendingExtraAnswerIdx !== null) {
-                      setExtraAnswers(list =>
-                        list.map((item, i) =>
-                          i === pendingExtraAnswerIdx
-                            ? { ...item, jenis_rating_id: data.data.id }
-                            : item
-                        )
-                      );
-                      setPendingExtraAnswerIdx(null);
-                    } else {
-                      setQuestionData(prev => ({
-                        ...prev,
-                        jenis_rating_id: data.data.id
-                      }));
-                    }
-                    setShowNewTypeDialog(false);
-                    setNewTypeData({ name: '', options: [''] });
-                    toast.success('Jenis rating berhasil ditambahkan!');
-                  } else {
-                    toast.error('Gagal menambah jenis rating');
-                  }
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >Simpan</button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Add Rating Modal */}
+      <AddRatingModal
+        isOpen={showNewTypeDialog}
+        onClose={() => setShowNewTypeDialog(false)}
+        onRatingAdded={handleRatingAdded}
+        pendingExtraAnswerIdx={pendingExtraAnswerIdx}
+        onRatingAssigned={handleRatingAssigned}
+      />
+
+      {/* Delete Rating Modal */}
+      <DeleteRatingModal
+        isOpen={showDeleteRatingModal}
+        onClose={() => setShowDeleteRatingModal(false)}
+        onRatingDeleted={handleRatingDeleted}
+      />
     </Modal>
   );
 }

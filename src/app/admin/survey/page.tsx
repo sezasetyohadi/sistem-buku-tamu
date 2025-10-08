@@ -520,8 +520,8 @@ export default function AdminSurvey() {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-800">Survey Management</h1>
-              <p className="text-gray-600 mt-1">Kelola pertanyaan untuk survey tamu</p>
+              <h1 className="text-2xl font-semibold text-gray-800">Manajemen Survei</h1>
+              <p className="text-gray-600 mt-1">Kelola pertanyaan untuk survei tamu</p>
             </div>
             <div className="flex space-x-3">
               <ExportToExcelButton 
