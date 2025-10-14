@@ -213,19 +213,19 @@ export async function deleteGuest(id: number): Promise<boolean> {
 
     // 1. Delete related records from jawaban_memperoleh_informasi
     await executeQuery('DELETE FROM jawaban_memperoleh_informasi WHERE tamu_id = ?', [id]);
-    console.log('Deleted related records from jawaban_memperoleh_informasi');
+    //console.log('Deleted related records from jawaban_memperoleh_informasi');
 
     // 2. Delete related records from jawaban_mendapatkan_salinan
     await executeQuery('DELETE FROM jawaban_mendapatkan_salinan WHERE tamu_id = ?', [id]);
-    console.log('Deleted related records from jawaban_mendapatkan_salinan');
+    //console.log('Deleted related records from jawaban_mendapatkan_salinan');
 
     // 3. Delete any related survey responses (if there are any)
     try {
       await executeQuery('DELETE FROM jawaban_survei WHERE tamu_id = ?', [id]);
-      console.log('Deleted related records from jawaban_survei');
+      //console.log('Deleted related records from jawaban_survei');
     } catch (err) {
       // Table might not have tamu_id column, which is ok
-      console.log('No survey responses linked to this guest or table structure differs');
+      //console.log('No survey responses linked to this guest or table structure differs');
     }
 
     // 4. Finally delete the guest record itself
@@ -235,11 +235,11 @@ export async function deleteGuest(id: number): Promise<boolean> {
     // Commit the transaction if everything is successful
     if (result.affectedRows > 0) {
       await executeQuery('COMMIT');
-      console.log('Guest deleted successfully with all related records');
+      //console.log('Guest deleted successfully with all related records');
       return true;
     } else {
       await executeQuery('ROLLBACK');
-      console.log('Guest not found, rolled back transaction');
+      //console.log('Guest not found, rolled back transaction');
       return false;
     }
   } catch (error) {
@@ -467,13 +467,13 @@ export async function getSurveyStatistics(): Promise<any> {
 // Enhanced Reports Statistics
 export async function getReportsStatistics(periodDays: number = 7, bidangTujuanId?: number): Promise<any> {
   try {
-    console.log('getReportsStatistics called with:', { periodDays, bidangTujuanId });
+    //console.log('getReportsStatistics called with:', { periodDays, bidangTujuanId });
     
     // Department filter condition and parameters
     const deptFilter = bidangTujuanId ? 'AND bidang_tujuan_id = ?' : '';
     const deptParams = bidangTujuanId ? [bidangTujuanId] : [];
     
-    console.log('Department filter:', { deptFilter, deptParams });
+    //console.log('Department filter:', { deptFilter, deptParams });
     
     // 1. Total visits for current period vs previous period
     const totalVisitsQuery = `
@@ -567,7 +567,7 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
     `;
     const topVisitorsParams = bidangTujuanId ? [Math.max(periodDays, 30), bidangTujuanId] : [Math.max(periodDays, 30)];
 
-    console.log('Executing queries with bidang_tujuan_id:', bidangTujuanId);
+    //console.log('Executing queries with bidang_tujuan_id:', bidangTujuanId);
     
     const [
       totalVisitsData, 
@@ -587,17 +587,17 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       executeQuery<any[]>(topVisitorsQuery, topVisitorsParams)
     ]);
 
-    console.log('Query results:');
-    console.log('- totalVisitsData:', totalVisitsData);
-    console.log('- dailyAverageData:', dailyAverageData);
-    console.log('- avgDurationData:', avgDurationData);
-    console.log('- satisfactionData:', satisfactionData);
-    console.log('- trendsData:', trendsData);
-    console.log('- serviceCategoriesData:', serviceCategoriesData);
-    console.log('- topVisitorsData:', topVisitorsData);
+    //console.log('Query results:');
+    //console.log('- totalVisitsData:', totalVisitsData);
+    //console.log('- dailyAverageData:', dailyAverageData);
+    //console.log('- avgDurationData:', avgDurationData);
+    //console.log('- satisfactionData:', satisfactionData);
+    //console.log('- trendsData:', trendsData);
+    //console.log('- serviceCategoriesData:', serviceCategoriesData);
+    //console.log('- topVisitorsData:', topVisitorsData);
 
     // Debug logging to understand data types
-    console.log('Raw data from queries:', {
+    /* console.log('Raw data from queries:', {
       totalVisits: totalVisitsData[0],
       dailyAverage: dailyAverageData[0],
       avgDuration: avgDurationData[0],
@@ -605,9 +605,9 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       trends: trendsData,
       serviceCategories: serviceCategoriesData,
       topVisitors: topVisitorsData
-    });
+    }); */
     
-    console.log('Query parameters used:', {
+    /* console.log('Query parameters used:', {
       totalVisitsParams,
       dailyAverageParams,
       avgDurationParams,
@@ -615,7 +615,7 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       trendsParams,
       serviceCategoriesParams,
       topVisitorsParams
-    });
+    }); */
 
     // Calculate percentage changes - ensure proper number conversion
     const currentTotal = parseInt(totalVisitsData[0]?.current_total) || 0;

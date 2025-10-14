@@ -95,7 +95,7 @@ const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptchaProps>(
         theme: theme,
         size: size,
         callback: (token: string) => {
-          console.log('Turnstile verification successful:', token);
+          //console.log('Turnstile verification successful:', token);
           onVerify(token);
         },
         'error-callback': (error: string) => {
@@ -103,13 +103,13 @@ const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptchaProps>(
           onError?.(error || 'Verifikasi CAPTCHA gagal. Silakan coba lagi.');
         },
         'expired-callback': () => {
-          console.log('Turnstile token expired');
+          //console.log('Turnstile token expired');
           onExpire?.();
         }
       });
 
       setIsRendered(true);
-      console.log('Turnstile widget rendered with ID:', widgetIdRef.current);
+      //console.log('Turnstile widget rendered with ID:', widgetIdRef.current);
     } catch (error) {
       console.error('Error rendering Turnstile widget:', error);
       onError?.('Gagal menginisialisasi CAPTCHA');
@@ -152,7 +152,7 @@ const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptchaProps>(
     if (widgetIdRef.current && window.turnstile && isRendered) {
       try {
         window.turnstile.reset(widgetIdRef.current);
-        console.log('Turnstile widget reset successfully');
+        //console.log('Turnstile widget reset successfully');
       } catch (error) {
         console.error('Error resetting Turnstile widget:', error);
       }

@@ -17,15 +17,15 @@ export async function GET(request: NextRequest) {
       departmentId = undefined;
     }
     
-    console.log('Reports API: Getting statistics for period:', period, 'departmentId:', departmentId);
+    //console.log('Reports API: Getting statistics for period:', period, 'departmentId:', departmentId);
     
     const [reportsData, recentActivities] = await Promise.all([
       getReportsStatistics(parseInt(period), departmentId),
       getRecentActivities(5, parseInt(period), departmentId)
     ]);
 
-    console.log('Reports API: Statistics result:', JSON.stringify(reportsData, null, 2));
-    console.log('Reports API: Recent activities count:', recentActivities?.length);
+    //console.log('Reports API: Statistics result:', JSON.stringify(reportsData, null, 2));
+    //console.log('Reports API: Recent activities count:', recentActivities?.length);
 
     return NextResponse.json({ 
       success: true, 

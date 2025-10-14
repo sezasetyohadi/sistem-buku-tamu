@@ -209,37 +209,37 @@ export class SecureFileUpload {
     userId?: string
   ): Promise<{ success: boolean; url?: string; filename?: string; path?: string; error?: string }> {
     try {
-      console.log('🔍 Starting file upload process for:', file.name);
+      //console.log('🔍 Starting file upload process for:', file.name);
       
       // Validate file
-      console.log('✅ Validating file...');
+      //console.log('✅ Validating file...');
       const validation = await this.validateFile(file);
       if (!validation.isValid) {
-        console.log('❌ File validation failed:', validation.error);
+        //console.log('❌ File validation failed:', validation.error);
         return { success: false, error: validation.error };
       }
-      console.log('✅ File validation passed');
+      //console.log('✅ File validation passed');
 
       // Generate secure filename and R2 key
       const secureFilename = this.generateSecureFilename(file.name, userId);
       const fileExtension = extname(file.name).toLowerCase().substring(1); // Remove the dot
 
-      console.log('📝 Generated filenames:', {
+      /* console.log('📝 Generated filenames:', {
         original: file.name,
         secure: secureFilename,
         extension: fileExtension
-      });
+      }); */
 
       // Check if Cloudflare R2 is configured
       const hasR2Config = process.env.CF_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && 
                          process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET;
 
       if (hasR2Config) {
-        console.log('☁️ Using Cloudflare R2 storage...');
+        //console.log('☁️ Using Cloudflare R2 storage...');
         try {
           const r2Key = generateFileKey(category, userId || 'guest', fileExtension);
           const uploadResult = await uploadToR2(file, r2Key, file.type);
-          console.log('✅ Upload to R2 successful:', uploadResult.url);
+          //console.log('✅ Upload to R2 successful:', uploadResult.url);
           
           return {
             success: true,
@@ -251,11 +251,11 @@ export class SecureFileUpload {
           console.error('💥 Cloudflare R2 upload failed, falling back to local storage:', r2Error);
         }
       } else {
-        console.log('⚠️ Cloudflare R2 not configured, using local storage...');
+        //console.log('⚠️ Cloudflare R2 not configured, using local storage...');
       }
 
       // Fallback to local storage
-      console.log('💾 Using local storage fallback...');
+      //console.log('💾 Using local storage fallback...');
       await this.ensureSecureDirectories();
 
       // Determine upload directory
@@ -270,7 +270,7 @@ export class SecureFileUpload {
       await writeFile(filePath, buffer);
 
       const localUrl = `/uploads/${category}/${secureFilename}`;
-      console.log('✅ Local upload successful:', localUrl);
+      //console.log('✅ Local upload successful:', localUrl);
 
       return {
         success: true,
@@ -305,7 +305,7 @@ export class SecureFileUpload {
         
         if (stats.mtime.getTime() < maxAge) {
           await unlink(filePath);
-          console.log(`Cleaned up old temp file: ${file}`);
+          //console.log(`Cleaned up old temp file: ${file}`);
         }
       }
     } catch (error) {
@@ -317,24 +317,24 @@ export class SecureFileUpload {
 // API route handler for file uploads
 export async function handleFileUpload(request: NextRequest): Promise<NextResponse> {
   try {
-    console.log('🔄 File upload request received');
+    //console.log('🔄 File upload request received');
     
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const category = (formData.get('category') as string) || 'documents';
     const userId = formData.get('userId') as string;
 
-    console.log('📋 Upload request details:', {
+    /* console.log('📋 Upload request details:', {
       hasFile: !!file,
       fileName: file?.name,
       fileSize: file?.size,
       fileType: file?.type,
       category,
       userId
-    });
+    }); */
 
     if (!file) {
-      console.log('❌ No file provided in request');
+      //console.log('❌ No file provided in request');
       return NextResponse.json(
         { success: false, error: 'No file provided' },
         { status: 400 }
@@ -343,22 +343,22 @@ export async function handleFileUpload(request: NextRequest): Promise<NextRespon
 
     // Validate category
     if (!['profiles', 'documents', 'temp'].includes(category)) {
-      console.log('❌ Invalid category:', category);
+      //console.log('❌ Invalid category:', category);
       return NextResponse.json(
         { success: false, error: 'Invalid category' },
         { status: 400 }
       );
     }
 
-    console.log('🔍 Starting file validation...');
+    //console.log('🔍 Starting file validation...');
     const result = await SecureFileUpload.uploadFile(file, category as any, userId);
 
-    console.log('📤 Upload result:', {
+    /* console.log('📤 Upload result:', {
       success: result.success,
       hasUrl: !!result.url,
       hasFilename: !!result.filename,
       error: result.error
-    });
+    }); */
 
     if (result.success) {
       return NextResponse.json({
@@ -368,7 +368,7 @@ export async function handleFileUpload(request: NextRequest): Promise<NextRespon
         path: result.path
       });
     } else {
-      console.log('❌ Upload failed:', result.error);
+      //console.log('❌ Upload failed:', result.error);
       return NextResponse.json(
         { success: false, error: result.error },
         { status: 400 }

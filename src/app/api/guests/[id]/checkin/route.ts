@@ -46,7 +46,7 @@ export async function PATCH(
     if (caraSalinan && Array.isArray(caraSalinan) && caraSalinan.length > 0) {
       // TODO: Implement cara salinan handling if needed
       // For now, we'll just log it
-      console.log('Cara mendapatkan salinan selected:', caraSalinan);
+      //console.log('Cara mendapatkan salinan selected:', caraSalinan);
     }
 
     // Return success response with updated guest data

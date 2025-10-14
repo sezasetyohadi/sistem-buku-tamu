@@ -67,7 +67,7 @@ export async function verifyCaptchaToken({
     const result: TurnstileVerificationResponse = await response.json();
 
     if (result.success) {
-      console.log('CAPTCHA verification successful');
+      //console.log('CAPTCHA verification successful');
       return {
         success: true,
         data: result
@@ -116,7 +116,7 @@ export function createCaptchaMiddleware(options?: {
   return async function verifyCaptcha(req: any): Promise<VerifyCaptchaResult> {
     // Skip verification in development if configured
     if (skipInDevelopment && process.env.NODE_ENV === 'development') {
-      console.log('Skipping CAPTCHA verification in development mode');
+      //console.log('Skipping CAPTCHA verification in development mode');
       return { success: true };
     }
     

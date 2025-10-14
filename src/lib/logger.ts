@@ -92,7 +92,7 @@ class Logger {
   debug(message: string, ...args: any[]): void {
     if (this.shouldLog('debug')) {
       const [formattedMessage, ...formattedArgs] = this.formatMessage('debug', message, ...args);
-      console.log(formattedMessage, ...formattedArgs);
+      //console.log(formattedMessage, ...formattedArgs);
     }
   }
 

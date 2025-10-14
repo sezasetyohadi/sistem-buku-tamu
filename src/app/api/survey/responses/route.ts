@@ -4,7 +4,7 @@ import { executeQuery } from '@/backend/config/db';
 
 export async function GET() {
   try {
-    console.log('Starting to fetch survey responses...');
+    //console.log('Starting to fetch survey responses...');
     
     // Query to get survey responses with identity information
     // Based on the actual disnaker.sql structure (latest version)
@@ -31,9 +31,9 @@ export async function GET() {
       ORDER BY jis.created_at DESC
     `;
     
-    console.log('Executing main query...');
+    //console.log('Executing main query...');
     const responses = await executeQuery<any[]>(query);
-    console.log(`Found ${responses.length} survey responses`);
+    //console.log(`Found ${responses.length} survey responses`);
 
     // For each respondent, get their survey answers
     const responsesWithAnswers = await Promise.all(
@@ -96,8 +96,8 @@ export async function GET() {
             });
           });
 
-          console.log(`Response ${response.id} - Kinerja ratings:`, kinerjaRatings);
-          console.log(`Response ${response.id} - Kepentingan ratings:`, kepentinganRatings);
+          //console.log(`Response ${response.id} - Kinerja ratings:`, kinerjaRatings);
+          //console.log(`Response ${response.id} - Kepentingan ratings:`, kepentinganRatings);
 
           return {
             ...response,
@@ -115,7 +115,7 @@ export async function GET() {
       })
     );
 
-    console.log('Successfully processed all responses');
+    //console.log('Successfully processed all responses');
     return NextResponse.json({
       success: true,
       data: responsesWithAnswers

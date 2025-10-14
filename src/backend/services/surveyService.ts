@@ -101,7 +101,7 @@ export async function getAllQuestionsForAdmin(): Promise<QuestionWithRatingOptio
     const is_required = Number(question.is_required) === 1 || question.is_required === true;
     
     // Debug log
-    console.log(`getAllQuestionsForAdmin - Question ID ${question.id} - is_required from DB:`, question.is_required, 'type:', typeof question.is_required, 'converted to:', is_required);
+    //console.log(`getAllQuestionsForAdmin - Question ID ${question.id} - is_required from DB:`, question.is_required, 'type:', typeof question.is_required, 'converted to:', is_required);
 
     return {
       id: question.id,
@@ -297,7 +297,7 @@ export async function getQuestionById(questionId: number): Promise<QuestionWithR
   const is_required = Number(question.is_required) === 1 || question.is_required === true;
   
   // Debug log
-  console.log(`getQuestionById - Question ID ${questionId} - is_required from DB:`, question.is_required, 'type:', typeof question.is_required, 'converted to:', is_required);
+  //console.log(`getQuestionById - Question ID ${questionId} - is_required from DB:`, question.is_required, 'type:', typeof question.is_required, 'converted to:', is_required);
 
   return {
     id: question.id,

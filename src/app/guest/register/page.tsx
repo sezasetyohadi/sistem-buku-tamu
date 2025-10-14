@@ -24,11 +24,11 @@ export default function Register() {
       const result = await response.json();
 
       if (result.success) {
-        console.log('Guest registered:', result.data);
+        //console.log('Guest registered:', result.data);
         
         // Token is now included in the result.data from the API
         if (result.data?.token) {
-          console.log('Token created automatically:', result.data.token);
+          //console.log('Token created automatically:', result.data.token);
           return {
             success: true,
             data: result.data  // Return the data structure as expected by the form

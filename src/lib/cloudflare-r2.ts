@@ -24,7 +24,7 @@ export async function uploadToR2(
   contentType?: string
 ): Promise<UploadResult> {
   try {
-    console.log('🚀 Starting R2 upload with key:', key);
+    //console.log('🚀 Starting R2 upload with key:', key);
     
     let buffer: Buffer;
     let fileContentType: string;
@@ -32,16 +32,16 @@ export async function uploadToR2(
     if (file instanceof File) {
       buffer = Buffer.from(await file.arrayBuffer());
       fileContentType = contentType || file.type;
-      console.log('📁 File details:', {
+      /*console.log('📁 File details:', {
         name: file.name,
         size: file.size,
         type: file.type,
         bufferSize: buffer.length
-      });
+      }); */
     } else {
       buffer = file;
       fileContentType = contentType || 'application/octet-stream';
-      console.log('📦 Buffer upload, size:', buffer.length);
+      //console.log('📦 Buffer upload, size:', buffer.length);
     }
 
     // Check environment configuration
@@ -52,7 +52,7 @@ export async function uploadToR2(
       hasBucket: !!process.env.R2_BUCKET,
       hasPublicUrl: !!process.env.R2_PUBLIC_URL
     };
-    console.log('🔧 R2 Configuration check:', config);
+    //console.log('🔧 R2 Configuration check:', config);
 
     if (!process.env.CF_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY || !process.env.R2_BUCKET) {
       throw new Error('Missing required Cloudflare R2 environment variables');
@@ -65,15 +65,15 @@ export async function uploadToR2(
       ContentType: fileContentType,
     });
 
-    console.log('📤 Executing R2 upload command...');
+    //console.log('📤 Executing R2 upload command...');
     await r2Client.send(command);
-    console.log('✅ R2 upload completed successfully');
+    //console.log('✅ R2 upload completed successfully');
 
     // Construct the public URL using custom domain
     const publicUrl = process.env.R2_PUBLIC_URL || `https://${process.env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET}`;
     const url = `${publicUrl}/${key}`;
 
-    console.log('🔗 Generated public URL:', url);
+    //console.log('🔗 Generated public URL:', url);
 
     return { url, key };
   } catch (error) {

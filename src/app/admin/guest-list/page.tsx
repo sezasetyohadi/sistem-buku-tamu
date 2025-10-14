@@ -21,18 +21,18 @@ export default function GuestListPage() {
   useEffect(() => {
     // Only run this effect once when user is loaded
     if (user && accessLoading) {
-      console.log('Guest-list: Checking access for user:', user.username, 'bidang_tujuan_id:', user.bidang_tujuan_id);
+      //console.log('Guest-list: Checking access for user:', user.username, 'bidang_tujuan_id:', user.bidang_tujuan_id);
       
       // Admin resepsionis (999) shouldn't access this page - redirect once
       if (user.bidang_tujuan_id === 999) {
-        console.log('Guest-list: Admin resepsionis detected - redirect to dashboard');
+        //console.log('Guest-list: Admin resepsionis detected - redirect to dashboard');
         toast.error('Anda tidak memiliki akses ke halaman ini');
         router.replace('/admin');
         return;
       }
       
       // For kepala dinas (2) and admin bidang - allow access
-      console.log('Guest-list: Confirmed access for bidang_tujuan_id:', user.bidang_tujuan_id);
+      //console.log('Guest-list: Confirmed access for bidang_tujuan_id:', user.bidang_tujuan_id);
       setAccessLoading(false);
     } else if (!user && !accessLoading) {
       // Reset if user becomes null

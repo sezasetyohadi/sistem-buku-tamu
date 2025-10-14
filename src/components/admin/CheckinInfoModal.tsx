@@ -47,14 +47,14 @@ export default function CheckinInfoModal({
         const response = await fetch('/api/lookup');
         const result = await response.json();
         
-        console.log('Lookup API response:', result);
+        //console.log('Lookup API response:', result);
         
         if (result.success) {
           const bidangData = result.data.bidangTujuan || [];
           const salinanData = result.data.mendapatkanSalinan || [];
           
-          console.log('Bidang Tujuan data:', bidangData);
-          console.log('Cara Mendapatkan Salinan data:', salinanData);
+          //console.log('Bidang Tujuan data:', bidangData);
+          //console.log('Cara Mendapatkan Salinan data:', salinanData);
           
           setBidangTujuanList(bidangData);
           setCaraSalinanList(salinanData);
@@ -84,7 +84,7 @@ export default function CheckinInfoModal({
   }, [isOpen]);
 
   const handleCaraSalinanChange = (caraSalinanId: number, checked: boolean) => {
-    console.log('Checkbox changed:', { caraSalinanId, checked, currentCaraSalinan: selectedCaraSalinan });
+    //console.log('Checkbox changed:', { caraSalinanId, checked, currentCaraSalinan: selectedCaraSalinan });
     
     setSelectedCaraSalinan(prev => {
       let newState;
@@ -95,13 +95,13 @@ export default function CheckinInfoModal({
         // Remove from array
         newState = prev.filter(id => id !== caraSalinanId);
       }
-      console.log('State transition:', { prev, newState, caraSalinanId, checked });
+      //console.log('State transition:', { prev, newState, caraSalinanId, checked });
       return newState;
     });
     
     // Force re-render by updating a dummy state
     setTimeout(() => {
-      console.log('Current selectedCaraSalinan after update:', selectedCaraSalinan);
+      //console.log('Current selectedCaraSalinan after update:', selectedCaraSalinan);
     }, 100);
   };
 

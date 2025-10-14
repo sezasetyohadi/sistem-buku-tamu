@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   const hostname = request.nextUrl.hostname;
   const requestUrl = request.nextUrl.origin;
   
-  console.log('Middleware - Path:', pathname, 'Mode:', appMode, 'Host:', hostname, 'Origin:', requestUrl);
+  //console.log('Middleware - Path:', pathname, 'Mode:', appMode, 'Host:', hostname, 'Origin:', requestUrl);
   
   // Create response with security headers
   const response = NextResponse.next();
@@ -37,16 +37,16 @@ export function middleware(request: NextRequest) {
   const detectedMode = detectModeFromSubdomain(hostname);
   const finalMode = detectedMode || appMode;
   
-  console.log('Mode detection - ENV:', appMode, 'Subdomain:', detectedMode, 'Final:', finalMode);
+  //console.log('Mode detection - ENV:', appMode, 'Subdomain:', detectedMode, 'Final:', finalMode);
 
   // Mode-specific routing logic
   if (finalMode === 'admin') {
     // Admin deployment mode
-    console.log('Admin mode detected');
+    //console.log('Admin mode detected');
     
     // Redirect root to admin
     if (pathname === '/') {
-      console.log('Redirecting root to admin dashboard');
+      //console.log('Redirecting root to admin dashboard');
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     
@@ -54,7 +54,7 @@ export function middleware(request: NextRequest) {
     if (pathname.startsWith('/guest') || 
         pathname === '/register' || 
         pathname === '/visit') {
-      console.log('Blocking guest route in admin mode:', pathname);
+      //console.log('Blocking guest route in admin mode:', pathname);
       return NextResponse.redirect(new URL('/access-denied', request.url));
     }
     
@@ -62,16 +62,16 @@ export function middleware(request: NextRequest) {
     if (!pathname.startsWith('/admin') && 
         !pathname.startsWith('/access-denied') &&
         !pathname.startsWith('/reset-password-page')) {
-      console.log('Redirecting to admin from:', pathname);
+      //console.log('Redirecting to admin from:', pathname);
       return NextResponse.redirect(new URL(`/admin${pathname}`, request.url));
     }
     
     // Admin authentication check
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const isAuthenticated = checkAdminAuthentication(request);
-      console.log('Admin auth check - Authenticated:', isAuthenticated);
+      //console.log('Admin auth check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        console.log('Redirecting to admin login');
+        //console.log('Redirecting to admin login');
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     }
@@ -79,17 +79,17 @@ export function middleware(request: NextRequest) {
   
   else if (finalMode === 'guest') {
     // Guest deployment mode
-    console.log('Guest mode detected');
+    //console.log('Guest mode detected');
     
     // Redirect root to guest landing
     if (pathname === '/') {
-      console.log('Redirecting root to guest landing');
+      //console.log('Redirecting root to guest landing');
       return NextResponse.redirect(new URL('/guest', request.url));
     }
     
     // Block admin routes in guest deployment
     if (pathname.startsWith('/admin')) {
-      console.log('Blocking admin route in guest mode:', pathname);
+      //console.log('Blocking admin route in guest mode:', pathname);
       return NextResponse.redirect(new URL('/access-denied', request.url));
     }
     
@@ -99,9 +99,9 @@ export function middleware(request: NextRequest) {
         pathname !== '/guest/landing' &&
         pathname !== '/guest') {
       const isAuthenticated = checkGuestAuthentication(request);
-      console.log('Guest auth check - Authenticated:', isAuthenticated);
+      //console.log('Guest auth check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        console.log('Redirecting to guest landing');
+        //console.log('Redirecting to guest landing');
         return NextResponse.redirect(new URL('/guest/landing', request.url));
       }
     }
@@ -109,26 +109,26 @@ export function middleware(request: NextRequest) {
   
   else {
     // Development or full mode
-    console.log('Development/full mode - allowing flexible routing');
+    //console.log('Development/full mode - allowing flexible routing');
     
     // Default routing for development
     if (pathname === '/') {
-      console.log('Redirecting root to guest landing');
+      //console.log('Redirecting root to guest landing');
       return NextResponse.redirect(new URL('/guest/landing', request.url));
     }
     
     // Always allow login page - no authentication required
     if (pathname === '/admin/login') {
-      console.log('Allowing access to login page');
+      //console.log('Allowing access to login page');
       return response;
     }
     
     // Admin authentication for ALL admin routes except login
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const isAuthenticated = checkAdminAuthentication(request);
-      console.log('Admin page access check - Authenticated:', isAuthenticated);
+      //console.log('Admin page access check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        console.log('Redirecting to login - not authenticated');
+        //console.log('Redirecting to login - not authenticated');
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     }
@@ -138,9 +138,9 @@ export function middleware(request: NextRequest) {
         pathname !== '/guest/register' && 
         pathname !== '/guest/landing') {
       const isAuthenticated = checkGuestAuthentication(request);
-      console.log('Guest page access check - Authenticated:', isAuthenticated);
+      //console.log('Guest page access check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        console.log('Redirecting to guest landing - not authenticated');
+        //console.log('Redirecting to guest landing - not authenticated');
         return NextResponse.redirect(new URL('/guest/landing', request.url));
       }
     }
@@ -209,17 +209,17 @@ function checkUrlBasedAccess(request: NextRequest): NextResponse | null {
   const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL;
   const guestUrl = process.env.NEXT_PUBLIC_GUEST_URL;
   
-  console.log('URL Access Control:', {
+  /* console.log('URL Access Control:', {
     requestUrl,
     adminUrl,
     guestUrl,
     pathname
-  });
+  }); */
 
   // Check admin routes access
   if (pathname.startsWith('/admin')) {
     if (adminUrl && requestUrl !== adminUrl.replace(/\/$/, '')) {
-      console.log('Blocking admin access - wrong URL:', requestUrl, 'expected:', adminUrl);
+      //console.log('Blocking admin access - wrong URL:', requestUrl, 'expected:', adminUrl);
       
       // Allow access-denied page to load
       if (pathname === '/access-denied') {
@@ -233,7 +233,7 @@ function checkUrlBasedAccess(request: NextRequest): NextResponse | null {
   // Check guest routes access
   if (pathname.startsWith('/guest')) {
     if (guestUrl && requestUrl !== guestUrl.replace(/\/$/, '')) {
-      console.log('Blocking guest access - wrong URL:', requestUrl, 'expected:', guestUrl);
+      //console.log('Blocking guest access - wrong URL:', requestUrl, 'expected:', guestUrl);
       
       // Allow access-denied page to load
       if (pathname === '/access-denied') {
@@ -248,7 +248,7 @@ function checkUrlBasedAccess(request: NextRequest): NextResponse | null {
   if (pathname.startsWith('/reset-password-page')) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (appUrl && requestUrl !== appUrl.replace(/\/$/, '')) {
-      console.log('Blocking reset password access - wrong URL:', requestUrl, 'expected:', appUrl);
+      //console.log('Blocking reset password access - wrong URL:', requestUrl, 'expected:', appUrl);
       
       // Allow access-denied page to load
       if (pathname === '/access-denied') {
@@ -315,7 +315,7 @@ function checkAdminAuthentication(request: NextRequest): boolean {
     // Get JWT token from cookie
     const accessToken = request.cookies.get('admin_access_token')?.value;
     
-    console.log('Middleware admin auth check - Token exists:', !!accessToken);
+    //console.log('Middleware admin auth check - Token exists:', !!accessToken);
     
     if (!accessToken) {
       return false;
@@ -325,11 +325,11 @@ function checkAdminAuthentication(request: NextRequest): boolean {
     const payload = verifyToken(accessToken, 'admin-panel');
     
     if (!payload || payload.userType !== 'admin') {
-      console.log('Middleware admin auth check - Token verification failed');
+      //console.log('Middleware admin auth check - Token verification failed');
       return false;
     }
 
-    console.log('Middleware admin auth check - Token valid for user:', payload.username);
+    //console.log('Middleware admin auth check - Token valid for user:', payload.username);
     return true;
     
   } catch (error) {
@@ -343,7 +343,7 @@ function checkGuestAuthentication(request: NextRequest): boolean {
     // Get JWT token from cookie
     const accessToken = request.cookies.get('guest_access_token')?.value;
     
-    console.log('Middleware guest auth check - Token exists:', !!accessToken);
+    //console.log('Middleware guest auth check - Token exists:', !!accessToken);
     
     if (!accessToken) {
       return false;
@@ -353,11 +353,11 @@ function checkGuestAuthentication(request: NextRequest): boolean {
     const payload = verifyToken(accessToken, 'guest-portal');
     
     if (!payload || payload.userType !== 'guest') {
-      console.log('Middleware guest auth check - Token verification failed');
+      //console.log('Middleware guest auth check - Token verification failed');
       return false;
     }
 
-    console.log('Middleware guest auth check - Token valid for guest:', payload.guestId);
+    //console.log('Middleware guest auth check - Token valid for guest:', payload.guestId);
     return true;
     
   } catch (error) {

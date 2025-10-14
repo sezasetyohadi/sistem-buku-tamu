@@ -49,7 +49,7 @@ const prefetchRoute = (path: string) => {
       'Cache-Control': 'max-age=300' // 5 minute browser cache
     }
   }).catch((error) => {
-    console.debug('Prefetch failed for:', path, error);
+    //console.debug('Prefetch failed for:', path, error);
     // Remove failed cache entry
     routeCache.delete(path);
     prefetchTimestamps.delete(path);
@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     // Special fix for guest-list access by kadis (bidangId = 2)
     if (bidangId === 2 && (currentPath === '/admin/guest-list' || currentPath.startsWith('/admin/guest-list'))) {
-      console.log('Layout: Allowing Kadis access to guest-list');
+      //console.log('Layout: Allowing Kadis access to guest-list');
       return null; // Allow access - no redirect
     }
 
@@ -183,21 +183,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const fetchAdminData = async (retryCount = 0) => {
       try {
         setIsLoadingProfile(true);
-        console.log(`Admin Layout: Fetching admin data (attempt ${retryCount + 1})...`);
+        //console.log(`Admin Layout: Fetching admin data (attempt ${retryCount + 1})...`);
         const adminData = await getAdminData();
         
         if (adminData) {
-          console.log('Admin Layout: Got admin data:', { 
+          /* console.log('Admin Layout: Got admin data:', { 
             nama_lengkap: adminData.nama_lengkap, 
             username: adminData.username,
             profile_picture: adminData.profile_picture,
             bidang_tujuan_id: adminData.bidang_tujuan_id
-          });
+          }); */
           
           // Check if bidang_tujuan_id changed (user switched roles)
           const currentBidangId = adminData.bidang_tujuan_id || 999;
           if (bidangTujuanId !== currentBidangId && bidangTujuanId !== 999) {
-            console.log(`Admin Layout: Role changed from ${bidangTujuanId} to ${currentBidangId} - refreshing page to clear state`);
+            //console.log(`Admin Layout: Role changed from ${bidangTujuanId} to ${currentBidangId} - refreshing page to clear state`);
             // Force refresh when role changes to prevent navigation conflicts
             if (typeof window !== 'undefined') {
               window.location.reload();
@@ -212,11 +212,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           const redirectPath = getRedirectPath(currentBidangId, pathname);
           
           if (redirectPath && redirectPath !== pathname) {
-            console.log(`Admin Layout: Redirecting from ${pathname} to ${redirectPath} for bidang_id ${currentBidangId}`);
+            //console.log(`Admin Layout: Redirecting from ${pathname} to ${redirectPath} for bidang_id ${currentBidangId}`);
             
             // Special case for guest-list - never redirect kadis
             if (pathname.startsWith('/admin/guest-list') && currentBidangId === 2) {
-              console.log('Admin Layout: Special case - allowing kadis to access guest-list');
+              //console.log('Admin Layout: Special case - allowing kadis to access guest-list');
               // Continue processing without redirect
             } else {
               // Force redirect for unauthorized access regardless of hasRedirected flag
@@ -231,13 +231,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 
                 // Immediate redirect for unauthorized access
                 if (isUnauthorizedAccess) {
-                  console.log(`Admin Layout: UNAUTHORIZED ACCESS - Force redirecting immediately`);
+                  //console.log(`Admin Layout: UNAUTHORIZED ACCESS - Force redirecting immediately`);
                   if (typeof window !== 'undefined') {
                     window.location.href = redirectPath;
                   }
                 } else {
                   // Use window.location for more reliable redirect
-                  console.log(`Admin Layout: Using window.location for redirect to avoid React router issues`);
+                  //console.log(`Admin Layout: Using window.location for redirect to avoid React router issues`);
                   if (typeof window !== 'undefined') {
                     window.location.href = redirectPath;
                   }
@@ -265,7 +265,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           }
           
           setIsProfileLoaded(true);
-          console.log('Admin Layout: Profile loaded successfully');
+          //console.log('Admin Layout: Profile loaded successfully');
           
           // Preload common admin routes after profile load
           setTimeout(() => {
@@ -277,18 +277,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             });
           }, 100); // Small delay to not interfere with initial page load
         } else {
-          console.log(`Admin Layout: No admin data found (attempt ${retryCount + 1})`);
+          //console.log(`Admin Layout: No admin data found (attempt ${retryCount + 1})`);
           
           // Retry up to 3 times with increasing delays (for JWT cookie timing issues)
           if (retryCount < 2) {
             const delay = (retryCount + 1) * 200; // 200ms, 400ms
-            console.log(`Admin Layout: Retrying in ${delay}ms...`);
+            //console.log(`Admin Layout: Retrying in ${delay}ms...`);
             setTimeout(() => {
               fetchAdminData(retryCount + 1);
             }, delay);
             return; // Don't set loading to false yet
           } else {
-            console.log('Admin Layout: Max retries reached, redirecting to login');
+            //console.log('Admin Layout: Max retries reached, redirecting to login');
             // If no admin data after retries, redirect to login
             router.push('/admin/login');
           }
@@ -299,13 +299,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         // Retry on error too (might be network issue)
         if (retryCount < 2) {
           const delay = (retryCount + 1) * 200;
-          console.log(`Admin Layout: Error occurred, retrying in ${delay}ms...`);
+          //console.log(`Admin Layout: Error occurred, retrying in ${delay}ms...`);
           setTimeout(() => {
             fetchAdminData(retryCount + 1);
           }, delay);
           return;
         } else {
-          console.log('Admin Layout: Max retries reached after error, clearing session');
+          //console.log('Admin Layout: Max retries reached after error, clearing session');
           clearAdminSessionAndRedirect(router);
         }
       } finally {
@@ -321,13 +321,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       setIsLoadingProfile(true);
       setHasRedirected(false); // Reset redirect flag for new navigation
       
-      console.log('Admin Layout: Entering admin area, pathname:', pathname);
+      //console.log('Admin Layout: Entering admin area, pathname:', pathname);
       
       // Always fetch admin data when entering admin area
       fetchAdminData();
     } else {
       // On login page, reset all profile states
-      console.log('Admin Layout: On login page, resetting profile states');
+      //console.log('Admin Layout: On login page, resetting profile states');
       setAdminName('');
       setAdminInitial('');
       setAdminProfilePicture(null);
@@ -386,7 +386,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       });
       
       if (response.ok) {
-        console.log('Logout successful');
+        //console.log('Logout successful');
       } else {
         console.error('Logout API failed, but proceeding with redirect');
       }
@@ -395,7 +395,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
     
     // Force refresh to clear all state and redirect to login
-    console.log('Logout: Refreshing page to clear all state');
+    //console.log('Logout: Refreshing page to clear all state');
     if (typeof window !== 'undefined') {
       window.location.href = '/admin/login';
     }

@@ -104,8 +104,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
       const result = await response.json();
       
       // Debug: Log the API response
-      console.log('Schedule API response:', result);
-      console.log('cara_mendapatkan_salinan from API:', result.data?.cara_mendapatkan_salinan);
+      //console.log('Schedule API response:', result);
+      //console.log('cara_mendapatkan_salinan from API:', result.data?.cara_mendapatkan_salinan);
       
       if (!result.success) {
         throw new Error(result.message || 'Failed to schedule visit');
@@ -580,7 +580,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
         <ScheduleModal
           isOpen={isScheduleModalOpen}
           onClose={() => {
-            console.log('Closing schedule modal');
+            //console.log('Closing schedule modal');
             setIsScheduleModalOpen(false);
           }}
           onSchedule={handleSchedule}
@@ -590,8 +590,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           currentAsnDituju={guest.asn_dituju}
           currentCaraSalinan={(() => {
             const ids = guest.cara_mendapatkan_salinan_ids || [];
-            console.log('Passing cara salinan IDs to ScheduleModal:', ids);
-            console.log('Guest cara mendapatkan salinan names:', guest.cara_mendapatkan_salinan);
+            //console.log('Passing cara salinan IDs to ScheduleModal:', ids);
+            //console.log('Guest cara mendapatkan salinan names:', guest.cara_mendapatkan_salinan);
             return ids;
           })()}
           isEdit={guest.status_kunjungan === 'Terjadwal'}

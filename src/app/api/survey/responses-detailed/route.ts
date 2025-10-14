@@ -4,7 +4,7 @@ import { executeQuery } from '@/backend/config/db';
 
 export async function GET() {
   try {
-    console.log('Fetching survey responses with detailed rating info...');
+    //console.log('Fetching survey responses with detailed rating info...');
     
     // Get all survey responses with identity information
     const identityQuery = `
@@ -31,7 +31,7 @@ export async function GET() {
     `;
     
     const responses = await executeQuery<any[]>(identityQuery);
-    console.log(`Found ${responses.length} survey responses`);
+    //console.log(`Found ${responses.length} survey responses`);
 
     // For each respondent, get their detailed survey answers with rating type information
     const responsesWithDetailedAnswers = await Promise.all(
@@ -93,7 +93,7 @@ export async function GET() {
       })
     );
 
-    console.log('Successfully processed all responses with detailed rating info');
+    //console.log('Successfully processed all responses with detailed rating info');
     return NextResponse.json({
       success: true,
       data: responsesWithDetailedAnswers

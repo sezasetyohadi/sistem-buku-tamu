@@ -40,12 +40,12 @@ export default function QuestionCard({
   };
   
   // Debug output
-  console.log(`Rendering question ${question.id}:`, {
+  /* console.log(`Rendering question ${question.id}:`, {
     question,
     isTextQuestion,
     hasMultipleRatingTypes,
     ratingTypeName: getRatingTypeName(question.jenis_rating_id)
-  });
+  }); */
 
   return (
     <div className="bg-gray-50 rounded-lg p-6">
@@ -77,7 +77,7 @@ export default function QuestionCard({
         <div className="space-y-4">
           {question.ratingOptions?.map((ratingGroup: any, groupIndex: number) => {
             // Debug each rating group structure
-            console.log(`Rating group for question ${question.id}:`, ratingGroup);
+            //console.log(`Rating group for question ${question.id}:`, ratingGroup);
             
             return (
               <div key={`${question.id}-rating-${ratingGroup.rating_type_id}`} className="border border-gray-200 rounded-lg p-4 bg-white">
@@ -103,7 +103,7 @@ export default function QuestionCard({
                     <option value="">Pilih {getRatingTypeName(ratingGroup.rating_type_id)}...</option>
                     {ratingGroup.options?.map((option: any) => {
                       // Debug each option
-                      console.log(`Option for rating group ${ratingGroup.rating_type_id}:`, option);
+                      //console.log(`Option for rating group ${ratingGroup.rating_type_id}:`, option);
                       
                       const optionId = option.id;
                       // For multiple rating types, the skala_rating should contain the values we want
@@ -168,7 +168,7 @@ export default function QuestionCard({
               }...
             </option>
             {question.ratingOptions?.map((option: any) => {
-              console.log('Single rating option:', option);
+              //console.log('Single rating option:', option);
               
               const optionId = option.id;
               // Use skala_rating directly which contains values like "Sangat Sesuai"

@@ -60,13 +60,13 @@ export default function ScheduleModal({
   
   // Initialize form data based on props
   const initializeFormData = () => {
-    console.log('Initializing form data:', {
+    /* console.log('Initializing form data:', {
       isEdit,
       currentSchedule,
       currentBidangId,
       currentAsnDituju,
       currentCaraSalinan
-    });
+    }); */
     
     if (currentSchedule && isEdit) {
       // Parse existing schedule if available
@@ -86,7 +86,7 @@ export default function ScheduleModal({
       
       // Ensure currentCaraSalinan is properly set
       const salinanArray = Array.isArray(currentCaraSalinan) ? currentCaraSalinan : [];
-      console.log('Setting caraSalinan from props:', salinanArray);
+      //console.log('Setting caraSalinan from props:', salinanArray);
       setCaraSalinan([...salinanArray]); // Create new array to force re-render
     } else {
       resetToCurrentTime();
@@ -100,11 +100,11 @@ export default function ScheduleModal({
   // Reset form when modal is opened - FIXED VERSION
   useEffect(() => {
     if (isOpen && !isInitialized.current) {
-      console.log('Modal opened, initializing form data');
+      //console.log('Modal opened, initializing form data');
       initializeFormData();
       isInitialized.current = true;
     } else if (!isOpen) {
-      console.log('Modal closed, resetting initialization flag');
+      //console.log('Modal closed, resetting initialization flag');
       isInitialized.current = false;
     }
   }, [isOpen]); // Only depend on isOpen
@@ -113,14 +113,14 @@ export default function ScheduleModal({
   useEffect(() => {
     if (isOpen) {
       const salinanArray = Array.isArray(currentCaraSalinan) ? currentCaraSalinan : [];
-      console.log('Props changed - updating caraSalinan:', salinanArray);
+      //console.log('Props changed - updating caraSalinan:', salinanArray);
       setCaraSalinan([...salinanArray]);
     }
   }, [currentCaraSalinan, isOpen]);
 
   // Debug effect to track caraSalinan changes
   useEffect(() => {
-    console.log('CaraSalinan state changed:', caraSalinan);
+    //console.log('CaraSalinan state changed:', caraSalinan);
   }, [caraSalinan]);
 
   // Helper function to reset time to current time
@@ -224,7 +224,7 @@ export default function ScheduleModal({
   
   // Handle checkbox changes for cara salinan - IMPROVED VERSION
   const handleCaraSalinanChange = (optionId: number, isChecked: boolean) => {
-    console.log('Checkbox changed:', { optionId, isChecked, currentCaraSalinan: caraSalinan });
+    //console.log('Checkbox changed:', { optionId, isChecked, currentCaraSalinan: caraSalinan });
     
     setCaraSalinan(prev => {
       let newState;
@@ -235,7 +235,7 @@ export default function ScheduleModal({
         // Remove from array
         newState = prev.filter(id => id !== optionId);
       }
-      console.log('State transition:', { prev, newState, optionId, isChecked });
+      //console.log('State transition:', { prev, newState, optionId, isChecked });
       return newState;
     });
     
@@ -243,7 +243,7 @@ export default function ScheduleModal({
     
     // Force re-render by updating a dummy state
     setTimeout(() => {
-      console.log('Current caraSalinan after update:', caraSalinan);
+      //console.log('Current caraSalinan after update:', caraSalinan);
     }, 100);
   };
 

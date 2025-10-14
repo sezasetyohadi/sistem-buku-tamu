@@ -167,7 +167,7 @@ export class EnvironmentValidator {
     }
 
     this.validatedConfig = config as EnvironmentConfig;
-    console.log('✅ Environment validation successful');
+    //console.log('✅ Environment validation successful');
     
     return this.validatedConfig;
   }
@@ -307,7 +307,7 @@ if (typeof process !== 'undefined' && process.env) {
   if (process.env.NODE_ENV === 'production') {
     try {
       envValidator.validateEnvironment();
-      console.log('🔒 Production environment validated successfully');
+      //console.log('🔒 Production environment validated successfully');
     } catch (error) {
       console.error('🚨 Critical: Environment validation failed during startup');
       console.error('   Application cannot start safely with current configuration');
@@ -323,7 +323,7 @@ if (typeof process !== 'undefined' && process.env) {
   } else if (process.env.VALIDATE_ENV === 'true') {
     try {
       envValidator.validateEnvironment();
-      console.log('✅ Development environment validation passed');
+      //console.log('✅ Development environment validation passed');
     } catch (error) {
       console.warn('⚠️  Environment validation failed:', error);
       console.warn('   Continuing in development mode...');

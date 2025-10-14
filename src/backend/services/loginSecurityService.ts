@@ -133,7 +133,7 @@ export class LoginSecurityService {
       [lockUntil, username]
     );
 
-    console.log(`🔒 Account ${username} locked until ${lockUntil.toISOString()}`);
+    //console.log(`🔒 Account ${username} locked until ${lockUntil.toISOString()}`);
   }
 
   /**
@@ -162,7 +162,7 @@ export class LoginSecurityService {
         LIMIT ?
       `, [unlockedCount]);
 
-      console.log(`🔓 Auto-unlocked ${unlockedCount} expired accounts`);
+      //console.log(`🔓 Auto-unlocked ${unlockedCount} expired accounts`);
     }
   }
 

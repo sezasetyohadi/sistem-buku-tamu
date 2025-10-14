@@ -305,7 +305,7 @@ export default function AdminSurvey() {
         multiple_rating_types: question.multiple_rating_types
       };
 
-      console.log('Adding question with is_required:', requestData.is_required, typeof requestData.is_required);
+      //console.log('Adding question with is_required:', requestData.is_required, typeof requestData.is_required);
 
       const response = await fetch('/api/survey/questions', {
         method: 'POST',
@@ -343,7 +343,7 @@ export default function AdminSurvey() {
         multiple_rating_types: question.multiple_rating_types
       };
 
-      console.log('Updating question with is_required:', requestBody.is_required, typeof requestBody.is_required);
+      //console.log('Updating question with is_required:', requestBody.is_required, typeof requestBody.is_required);
 
       const response = await fetch(`/api/survey/questions/${question.id}`, {
         method: 'PUT',
