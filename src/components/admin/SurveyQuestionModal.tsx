@@ -79,7 +79,7 @@ export default function SurveyQuestionModal({
           ? true 
           : Boolean(Number(initialQuestion.is_required));
           
-        console.log('Loading question - is_required from DB:', initialQuestion.is_required, 'converted to:', processedIsRequired);
+        //console.log('Loading question - is_required from DB:', initialQuestion.is_required, 'converted to:', processedIsRequired);
           
         setQuestionData({
           ...initialQuestion,
@@ -212,7 +212,7 @@ export default function SurveyQuestionModal({
       };
       
       // Debug log to check data being sent
-      console.log('Submitting question with is_required:', questionToSubmit.is_required, typeof questionToSubmit.is_required);
+      //console.log('Submitting question with is_required:', questionToSubmit.is_required, typeof questionToSubmit.is_required);
       
       // Call parent handler
       await onAddQuestion(questionToSubmit);

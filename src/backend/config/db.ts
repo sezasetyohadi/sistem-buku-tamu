@@ -95,7 +95,7 @@ export async function executeQuery<T>(
     
     // Log query stats every 100 queries in development
     if (process.env.NODE_ENV === 'development' && queryCount % 100 === 0) {
-      console.log(`📊 Query Stats: ${queryCount} total, ${slowQueryCount} slow queries`);
+      //console.log(`📊 Query Stats: ${queryCount} total, ${slowQueryCount} slow queries`);
     }
     
     return results as T;
@@ -155,7 +155,7 @@ export async function testConnection(): Promise<boolean> {
   try {
     const connection = await getConnection();
     connection.release();
-    console.log('Database connected successfully');
+    //console.log('Database connected successfully');
     return true;
   } catch (error) {
     console.error('Database connection failed:', error);
@@ -269,7 +269,7 @@ export function getDatabaseStats() {
 
 export function clearQueryCache() {
   queryCache.clear();
-  console.log('🧹 Query cache cleared');
+  //console.log('🧹 Query cache cleared');
 }
 
 // Pool health monitoring

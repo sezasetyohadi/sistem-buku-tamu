@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     if (user) {
       // Only show content for admin resepsionis, others will be redirected by layout
       if (user.bidang_tujuan_id === 999) {
-        console.log('Dashboard: Admin resepsionis confirmed access');
+        //console.log('Dashboard: Admin resepsionis confirmed access');
       }
     }
   }, [user]);
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
         const data = result.data || {};
         
         // Log what we're receiving for debugging
-        console.log('Stats data received:', data);
+        //console.log('Stats data received:', data);
         
         // Set stats with values from backend
         setStats({

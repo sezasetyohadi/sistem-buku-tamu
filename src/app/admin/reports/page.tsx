@@ -129,7 +129,7 @@ export default function AdminReportsAnalytics() {
           
           // For users with specific department, force select their department and don't allow changes
           if (user?.bidang_tujuan_id && user.bidang_tujuan_id !== 999) {
-            console.log('Reports: Auto-selecting department for user:', user.bidang_tujuan_id);
+            //console.log('Reports: Auto-selecting department for user:', user.bidang_tujuan_id);
             setSelectedDepartment(user.bidang_tujuan_id);
           }
         }
@@ -150,21 +150,21 @@ export default function AdminReportsAnalytics() {
         const departmentParam = bidangTujuanId ? `&bidangTujuanId=${bidangTujuanId}` : '';
         const url = `/api/reports?period=${selectedPeriod}${departmentParam}`;
         
-        console.log('Reports: Fetching data from URL:', url);
-        console.log('Reports: Current user bidang_tujuan_id:', user?.bidang_tujuan_id);
-        console.log('Reports: Selected department:', selectedDepartment);
-        console.log('Reports: Computed bidangTujuanId:', bidangTujuanId);
+        //console.log('Reports: Fetching data from URL:', url);
+        //console.log('Reports: Current user bidang_tujuan_id:', user?.bidang_tujuan_id);
+        //console.log('Reports: Selected department:', selectedDepartment);
+        //console.log('Reports: Computed bidangTujuanId:', bidangTujuanId);
         
         const response = await fetch(url);
         const result = await response.json();
         
-        console.log('Reports: API response:', result);
-        console.log('Reports: API response data:', JSON.stringify(result.data, null, 2));
+        //console.log('Reports: API response:', result);
+        //console.log('Reports: API response data:', JSON.stringify(result.data, null, 2));
         
         if (result.success) {
-          console.log('Reports: Setting data state:', result.data);
-          console.log('Reports: Statistics in data:', result.data?.statistics);
-          console.log('Reports: Recent activities count:', result.data?.recentActivities?.length);
+          //console.log('Reports: Setting data state:', result.data);
+          //console.log('Reports: Statistics in data:', result.data?.statistics);
+          //console.log('Reports: Recent activities count:', result.data?.recentActivities?.length);
           setData(result.data);
         } else {
           setError(result.message || 'Failed to fetch reports data');

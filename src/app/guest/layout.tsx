@@ -42,7 +42,7 @@ const prefetchRoute = (path: string) => {
       'Cache-Control': 'max-age=300' // 5 minute browser cache
     }
   }).catch((error) => {
-    console.debug('Prefetch failed for:', path, error);
+    //console.debug('Prefetch failed for:', path, error);
     // Remove failed cache entry
     routeCache.delete(path);
     prefetchTimestamps.delete(path);

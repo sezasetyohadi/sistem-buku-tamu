@@ -63,7 +63,7 @@ export default function SurveyForm() {
   } = useTurnstileCaptcha({
     required: true,
     onVerificationChange: (isVerified) => {
-      console.log('CAPTCHA verification status changed:', isVerified);
+      //console.log('CAPTCHA verification status changed:', isVerified);
     },
     onReset: () => {
       // Reset the CAPTCHA widget when called from hook

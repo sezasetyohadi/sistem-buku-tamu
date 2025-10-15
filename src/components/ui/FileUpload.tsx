@@ -121,7 +121,7 @@ const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({
     formData.append('userId', 'guest');
 
     try {
-      console.log('🚀 Starting file upload:', file.name);
+      //console.log('🚀 Starting file upload:', file.name);
       
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -130,11 +130,11 @@ const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({
 
       const result = await response.json();
       
-      console.log('📡 Upload response:', {
+      /* console.log('📡 Upload response:', {
         status: response.status,
         ok: response.ok,
         result
-      });
+      }); */
 
       if (!response.ok) {
         console.error('❌ Upload failed with status:', response.status, result);
@@ -154,7 +154,7 @@ const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({
   const processFile = async (file: File) => {
     const validationError = validateFile(file);
     if (validationError) {
-      console.log('❌ File validation failed:', validationError);
+      //console.log('❌ File validation failed:', validationError);
       onFileSelect?.(null);
       return;
     }
@@ -162,10 +162,10 @@ const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({
     setUploading(true);
 
     try {
-      console.log('📁 Processing file:', file.name);
+      //console.log('📁 Processing file:', file.name);
       const uploadResult = await uploadFile(file);
       
-      console.log('📤 Upload completed:', uploadResult);
+      //console.log('📤 Upload completed:', uploadResult);
       
       if (uploadResult.success && uploadResult.url) {
         const fileData = {
@@ -174,7 +174,7 @@ const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({
         };
         setUploadedFile(fileData);
         onFileSelect?.(file, uploadResult.url, file.name); // Tambahkan nama file asli
-        console.log('✅ File upload successful:', uploadResult.url);
+        //console.log('✅ File upload successful:', uploadResult.url);
       } else {
         console.error('❌ Upload failed:', uploadResult.error);
         onFileSelect?.(null);

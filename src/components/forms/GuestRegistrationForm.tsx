@@ -69,7 +69,7 @@ export default function GuestRegistrationForm({
   } = useTurnstileCaptcha({
     required: true,
     onVerificationChange: (isVerified) => {
-      console.log('CAPTCHA verification status changed:', isVerified);
+      //console.log('CAPTCHA verification status changed:', isVerified);
     }
   });
 
@@ -92,9 +92,9 @@ export default function GuestRegistrationForm({
   // Debug: Log the API response
   React.useEffect(() => {
     if (formOptions) {
-      console.log('Form options loaded:', formOptions);
-      console.log('Professions:', formOptions.professions);
-      console.log('Education levels:', formOptions.educationLevels);
+      //console.log('Form options loaded:', formOptions);
+      //console.log('Professions:', formOptions.professions);
+      //console.log('Education levels:', formOptions.educationLevels);
     }
   }, [formOptions]);
 
@@ -139,8 +139,8 @@ export default function GuestRegistrationForm({
 
   // Debug processed options
   React.useEffect(() => {
-    console.log('Processed profession options:', processedProfessionOptions);
-    console.log('Processed education options:', processedEducationOptions);
+    //console.log('Processed profession options:', processedProfessionOptions);
+    //console.log('Processed education options:', processedEducationOptions);
   }, [processedProfessionOptions, processedEducationOptions]);
 
   const memperolehOptions = React.useMemo(() => 
@@ -200,14 +200,14 @@ export default function GuestRegistrationForm({
 
   // Dedicated handler for cara_memperoleh checkboxes
   const handleCaraMemperolehChange = (optionId: number, isChecked: boolean) => {
-    console.log('Checkbox clicked:', { optionId, isChecked, currentState: formData.cara_memperoleh });
+    //console.log('Checkbox clicked:', { optionId, isChecked, currentState: formData.cara_memperoleh });
     
     setFormData(prev => {
       const updatedValues = isChecked 
         ? [...prev.cara_memperoleh, optionId]
         : prev.cara_memperoleh.filter(id => id !== optionId);
       
-      console.log('Updated cara_memperoleh:', updatedValues);
+      //console.log('Updated cara_memperoleh:', updatedValues);
       
       return {
         ...prev,
@@ -301,7 +301,7 @@ export default function GuestRegistrationForm({
     
     // Prevent multiple submissions - check both states
     if (submitFormMutation.loading || isSubmitting) {
-      console.log('Submission already in progress, preventing duplicate');
+      //console.log('Submission already in progress, preventing duplicate');
       return;
     }
     
@@ -336,38 +336,38 @@ export default function GuestRegistrationForm({
       
       safeLog.sensitive('Sending data to API', apiFormData);
       
-      console.log('[DEBUG] Form data values:');
-      console.log('- formData.education:', formData.education);
-      console.log('- formData.profession:', formData.profession);
-      console.log('- formData.purpose:', formData.purpose);
+      //console.log('[DEBUG] Form data values:');
+      //console.log('- formData.education:', formData.education);
+      //console.log('- formData.profession:', formData.profession);
+      //console.log('- formData.purpose:', formData.purpose);
       
-      console.log('[DEBUG] About to submit form, checking required fields:');
-      console.log('- nama:', apiFormData.nama);
-      console.log('- email:', apiFormData.email);
-      console.log('- phone:', apiFormData.phone);
-      console.log('- pendidikan_terakhir_id:', apiFormData.pendidikan_terakhir_id);
-      console.log('- profesi_id:', apiFormData.profesi_id);
-      console.log('- tujuan_kunjungan_id:', apiFormData.tujuan_kunjungan_id);
-      console.log('- tujuan_kunjungan_lainnya:', apiFormData.tujuan_kunjungan_lainnya);
+      //console.log('[DEBUG] About to submit form, checking required fields:');
+      //console.log('- nama:', apiFormData.nama);
+      //console.log('- email:', apiFormData.email);
+      //console.log('- phone:', apiFormData.phone);
+      //console.log('- pendidikan_terakhir_id:', apiFormData.pendidikan_terakhir_id);
+      //console.log('- profesi_id:', apiFormData.profesi_id);
+      //console.log('- tujuan_kunjungan_id:', apiFormData.tujuan_kunjungan_id);
+      //console.log('- tujuan_kunjungan_lainnya:', apiFormData.tujuan_kunjungan_lainnya);
       
       try {
         let result;
         
         // If onSubmit prop is provided, use that instead of direct API call
         if (onSubmit) {
-          console.log('[DEBUG] Using onSubmit prop for form submission');
+          //console.log('[DEBUG] Using onSubmit prop for form submission');
           result = await onSubmit(apiFormData);
         } else {
-          console.log('[DEBUG] Using direct API call for form submission');
+          //console.log('[DEBUG] Using direct API call for form submission');
           result = await submitFormMutation.mutate(apiFormData);
         }
         
-        console.log('API Response:', result); // Debug log
-        console.log('Response status success:', result.success);
-        console.log('Response data:', result.data);
+        //console.log('API Response:', result); // Debug log
+        //console.log('Response status success:', result.success);
+        //console.log('Response data:', result.data);
         
         if (result.success && result.data?.token?.token) {
-          console.log('Token found, showing success modal');
+          //console.log('Token found, showing success modal');
           setToken(result.data.token.token);
           setShowTokenModal(true);
           showToast.success('Registrasi berhasil! Token Anda telah dibuat.');

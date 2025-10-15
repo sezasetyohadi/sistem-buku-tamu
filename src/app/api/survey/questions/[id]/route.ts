@@ -42,7 +42,7 @@ export async function PUT(
       multiple_rating_types // Add support for multiple rating types
     } = body;
     
-    console.log('API received is_required for update:', is_required, typeof is_required);
+    //console.log('API received is_required for update:', is_required, typeof is_required);
     
     // Update the question with all new parameters (removed kolom parameter)
     await updateQuestion(

@@ -182,7 +182,7 @@ export const GUEST_QUERIES = {
  * ```typescript
  * const result = await updateGuestCheckIn(123, new Date());
  * if (result.success) {
- *   console.log('Check-in berhasil:', result.data);
+ *   //console.log('Check-in berhasil:', result.data);
  * } else {
  *   console.error('Check-in gagal:', result.message);
  * }
@@ -245,7 +245,7 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
  * ```typescript
  * const result = await updateGuestCheckInWithInfo(123, new Date(), 1, 'Budi Santoso');
  * if (result.success) {
- *   console.log('Check-in berhasil:', result.data);
+ *   //console.log('Check-in berhasil:', result.data);
  * } else {
  *   console.error('Check-in gagal:', result.message);
  * }
@@ -319,7 +319,7 @@ export async function updateGuestCheckInWithInfo(
  * ```typescript
  * const result = await updateGuestCheckOut(123, new Date());
  * if (result.success) {
- *   console.log('Check-out berhasil:', result.data);
+ *   //console.log('Check-out berhasil:', result.data);
  * } else {
  *   console.error('Check-out gagal:', result.message);
  * }

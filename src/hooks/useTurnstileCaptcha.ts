@@ -27,7 +27,7 @@ export function useTurnstileCaptcha({
   const [captchaError, setCaptchaError] = useState<string | null>(null);
 
   const handleCaptchaVerify = useCallback((token: string) => {
-    console.log('CAPTCHA verified with token:', token);
+    //console.log('CAPTCHA verified with token:', token);
     setCaptchaToken(token);
     setIsCaptchaVerified(true);
     setCaptchaError(null);
@@ -43,7 +43,7 @@ export function useTurnstileCaptcha({
   }, [onVerificationChange]);
 
   const handleCaptchaExpire = useCallback(() => {
-    console.log('CAPTCHA token expired');
+    //console.log('CAPTCHA token expired');
     setCaptchaToken(null);
     setIsCaptchaVerified(false);
     setCaptchaError('CAPTCHA kadaluarsa. Silakan verifikasi ulang.');

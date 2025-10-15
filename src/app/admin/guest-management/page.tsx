@@ -152,7 +152,7 @@ function AdminGuestsManagement() {
         const dateToFilter = guest.waktu_dibuat || guest.waktu_checkin;
         
         if (!dateToFilter) {
-          // console.log('No date found for guest:', guest.nama, guest.id);
+          // //console.log('No date found for guest:', guest.nama, guest.id);
           return false;
         }
         
@@ -160,7 +160,7 @@ function AdminGuestsManagement() {
         
         // Validate date
         if (isNaN(filterDate.getTime())) {
-          // console.log('Invalid date for guest:', guest.nama, dateToFilter);
+          // //console.log('Invalid date for guest:', guest.nama, dateToFilter);
           return false;
         }
         
@@ -189,7 +189,7 @@ function AdminGuestsManagement() {
             break;
           case 'Bulan Ini':
             if (filterDate < startOfMonth || filterDate > endOfMonth) {
-              // console.log(`${guest.nama} filtered out by Bulan Ini:`, {
+              // //console.log(`${guest.nama} filtered out by Bulan Ini:`, {
               //   filterDate: filterDate.toISOString(),
               //   startOfMonth: startOfMonth.toISOString(),
               //   endOfMonth: endOfMonth.toISOString()
@@ -204,7 +204,7 @@ function AdminGuestsManagement() {
             break;
         }
         
-        // console.log(`${guest.nama} passed ${dateFilter} filter`);
+        // //console.log(`${guest.nama} passed ${dateFilter} filter`);
       }
       
       // Filter by search term (using debounced value)
@@ -320,7 +320,7 @@ function AdminGuestsManagement() {
       }
     } catch (error) {
       // Silently fail - this is just for prefetching
-      console.debug('Prefetch failed for guest', guestId, error);
+      //console.debug('Prefetch failed for guest', guestId, error);
     }
   }, []);
   const handleGuestUpdateOptimistic = useCallback(async (updatedGuest?: DaftarTamu) => {
@@ -471,7 +471,7 @@ function AdminGuestsManagement() {
               cell.value = formattedDate;
               
               // For debugging
-              console.log('Checkin date formatted:', formattedDate);
+              //console.log('Checkin date formatted:', formattedDate);
             }
           } catch (e) {
             console.error('Error parsing checkin date:', e);
@@ -499,7 +499,7 @@ function AdminGuestsManagement() {
               cell.value = formattedDate;
               
               // For debugging
-              console.log('Created date formatted:', formattedDate);
+              //console.log('Created date formatted:', formattedDate);
             }
           } catch (e) {
             console.error('Error parsing creation date:', e);
@@ -527,7 +527,7 @@ function AdminGuestsManagement() {
               cell.value = formattedDate;
               
               // For debugging
-              console.log('Checkout date formatted:', formattedDate);
+              //console.log('Checkout date formatted:', formattedDate);
             }
           } catch (e) {
             console.error('Error parsing checkout date:', e);

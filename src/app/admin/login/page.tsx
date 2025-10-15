@@ -37,7 +37,7 @@ export default function LoginPage() {
   } = useTurnstileCaptcha({
     required: true,
     onVerificationChange: (isVerified) => {
-      console.log('Login CAPTCHA verification status changed:', isVerified);
+      //console.log('Login CAPTCHA verification status changed:', isVerified);
     }
   });
 
@@ -54,7 +54,7 @@ export default function LoginPage() {
   } = useTurnstileCaptcha({
     required: true,
     onVerificationChange: (isVerified) => {
-      console.log('Forgot password CAPTCHA verification status changed:', isVerified);
+      //console.log('Forgot password CAPTCHA verification status changed:', isVerified);
     }
   });
 
@@ -71,7 +71,7 @@ export default function LoginPage() {
         if (response.ok) {
           const result = await response.json();
           if (result.success) {
-            console.log('User already authenticated, redirecting to admin dashboard');
+            //console.log('User already authenticated, redirecting to admin dashboard');
             router.replace('/admin');
           }
         }
@@ -170,10 +170,10 @@ export default function LoginPage() {
           localStorage.removeItem('admin_remembered_credentials');
         }
         
-        console.log(`Login successful${formData.rememberMe ? ' (Remember Me enabled for 7 days)' : ' (24 hour session)'}, redirecting to admin dashboard`);
+        //console.log(`Login successful${formData.rememberMe ? ' (Remember Me enabled for 7 days)' : ' (24 hour session)'}, redirecting to admin dashboard`);
         
         // Force refresh to clear any state conflicts between roles
-        console.log('Login: Refreshing page to clear state conflicts');
+        //console.log('Login: Refreshing page to clear state conflicts');
         window.location.href = '/admin';
       } else {
         setError(result.message || 'Login gagal');

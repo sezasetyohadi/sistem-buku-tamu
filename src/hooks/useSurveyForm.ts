@@ -88,8 +88,8 @@ export function useSurveyData() {
           fetchLookupData()
         ]);
 
-        console.log('Questions from API:', questionsData);
-        console.log('Rating options from API:', ratingsData);
+        //console.log('Questions from API:', questionsData);
+        //console.log('Rating options from API:', ratingsData);
 
         setQuestions(questionsData);
         setRatingOptions(ratingsData);

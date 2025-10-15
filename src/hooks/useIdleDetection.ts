@@ -92,7 +92,7 @@ export function useAdminIdleLogout(enabled: boolean = true) {
   const router = useRouter();
 
   const handleLogout = useCallback(async () => {
-    console.log('Admin idle timeout - logging out after 20 minutes');
+    //console.log('Admin idle timeout - logging out after 20 minutes');
     
     try {
       // Call logout API to clear JWT cookies
