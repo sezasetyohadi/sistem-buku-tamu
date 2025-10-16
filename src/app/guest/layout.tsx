@@ -162,12 +162,9 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
       name: 'Status Pengajuan',
       path: '/guest/status',
       icon: (
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
-          alt="Status Pengajuan"
-          className="w-4.5 h-4.5"
-          style={{ filter: isActive('/guest/status') ? 'invert(34%) sepia(98%) saturate(749%) hue-rotate(100deg) brightness(95%) contrast(92%)' : 'none' }}
-        />
+        <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+        </svg>
       )
     },
     {
@@ -265,7 +262,9 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
                       {/* Desktop collapsed view - perfectly centered icon */}
                       <div className="hidden md:flex md:w-full md:h-full md:items-center md:justify-center">
                         <span className={`transition-all duration-300 w-5 h-5 ${
-                          isActive(item.path) ? 'text-white' : 'text-gray-700 group-hover:text-gray-800'
+                          isActive(item.path) 
+                            ? 'text-white' // Aktif - warna putih untuk semua ikon 
+                            : 'text-gray-700 group-hover:text-gray-800' // Default untuk semua ikon
                         }`}>
                           {item.icon}
                         </span>
