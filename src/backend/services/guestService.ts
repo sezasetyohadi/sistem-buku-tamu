@@ -1,4 +1,5 @@
 import { guestLogger, dbLogger, safeLog } from '../../lib/logger';
+import { getIndonesiaTime } from '../../lib/timezone-utils';
 import { DaftarTamu, JawabanSurvei, GuestFormData, SurveyFormData, DatabaseResult, 
          PertanyaanSurvei, OpsiJawaban, PendidikanTerakhir, Profesi, Admin } from '../../types/database-types';
 import { executeQuery } from '../config/db';
@@ -88,15 +89,18 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       ? tujuanKunjungan
       : formData.keperluan || 'Kunjungan umum';
     
-    // Insert query - Updated to match the actual table schema and include catatan_tambahan
+    // Create consistent timestamp for waktu_dibuat (Indonesia timezone)
+    const jakartaTime = getIndonesiaTime();
+    
+    // Insert query - Updated to include explicit waktu_dibuat for consistency
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir_id, 
-       profesi_id, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload, file_name) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?, ?)
+       profesi_id, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload, file_name, waktu_dibuat) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?, ?, ?)
     `;
     
-    // Parameter with all needed fields including catatan_tambahan
+    // Parameter with all needed fields including explicit waktu_dibuat
     const params = [
       formData.nama,
       formData.email,
@@ -109,7 +113,8 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       keperluan,
       formData.catatan || null, // Save notes to catatan_tambahan column
       formData.file_upload || null,
-      formData.file_name || null // Add original filename
+      formData.file_name || null, // Add original filename
+      jakartaTime // Explicit timestamp for consistency
     ];
 
     const result = await executeQuery<any>(query, params);

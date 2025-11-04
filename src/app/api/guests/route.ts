@@ -19,6 +19,7 @@ import { ErrorCodes, HttpStatus } from '@/lib/api-response';
 import { createCaptchaMiddleware } from '@/lib/captcha-verification';
 import { ValidationError, DatabaseError, handleDatabaseError } from '@/lib/error-handling';
 import { apiLogger } from '@/lib/logger';
+import { getIndonesiaTime } from '@/lib/timezone-utils';
 import { 
   validateAndSanitize,
   GUEST_REGISTRATION_SCHEMA,
@@ -89,6 +90,20 @@ export const GET = withApiMiddleware(async (request, response, context) => {
 export const POST = withApiMiddleware(async (request, response, context) => {
   try {
     const body = await validateJsonBody(request);
+    
+    // Log timezone info for debugging in production
+    if (process.env.NODE_ENV === 'production') {
+      const currentTime = getIndonesiaTime();
+      apiLogger.debug('POST /api/guests - Timezone check', {
+        operation: 'POST_GUEST_TIMEZONE_CHECK',
+        metadata: {
+          requestId: context.requestId,
+          currentTime: currentTime.toISOString(),
+          timezone: currentTime.toLocaleString("en-US", {timeZone: "Asia/Jakarta"}),
+          TZ: process.env.TZ
+        }
+      });
+    }
     
     apiLogger.debug('POST /api/guests - Request received', {
       operation: 'POST_GUEST_START',

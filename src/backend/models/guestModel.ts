@@ -1,6 +1,7 @@
 import { RowDataPacket } from 'mysql2';
 
 import { executeQuery } from '../config/db';
+import { getIndonesiaTime } from '../../lib/timezone-utils';
 
 /**
  * Enum untuk jenis kelamin tamu
@@ -167,9 +168,10 @@ export const GUEST_QUERIES = {
  * 
  * @description Fungsi ini mengubah status tamu menjadi "Datang" dan mencatat waktu check-in.
  * Digunakan ketika tamu tiba di lokasi dan melakukan check-in.
+ * Menggunakan timezone Indonesia (WIB) untuk konsistensi dengan waktu_dibuat.
  * 
  * @param {number} guestId - ID unik tamu yang akan di-check-in
- * @param {Date} checkInTime - Waktu check-in tamu
+ * @param {Date} checkInTime - Waktu check-in tamu (opsional, default: waktu sekarang WIB)
  * 
  * @returns {Promise<ResultData>} Promise yang resolve dengan hasil operasi
  * - success: true jika berhasil, false jika gagal
@@ -180,7 +182,7 @@ export const GUEST_QUERIES = {
  * 
  * @example
  * ```typescript
- * const result = await updateGuestCheckIn(123, new Date());
+ * const result = await updateGuestCheckIn(123);
  * if (result.success) {
  *   //console.log('Check-in berhasil:', result.data);
  * } else {
@@ -188,7 +190,7 @@ export const GUEST_QUERIES = {
  * }
  * ```
  */
-export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Promise<ResultData> {
+export async function updateGuestCheckIn(guestId: number, checkInTime?: Date): Promise<ResultData> {
   try {
     // Check if guest exists
     const rows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
@@ -200,8 +202,11 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
       };
     }
 
+    // Use consistent Indonesia timezone for check-in time
+    const checkinTime = checkInTime || getIndonesiaTime();
+
     // Update the guest's check-in time and status
-    await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkInTime, guestId]);
+    await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkinTime, guestId]);
     
     // Get the updated guest data
     const updatedRows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
@@ -228,9 +233,10 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
  * @description Fungsi ini mengubah status tamu menjadi "Datang" dan mencatat waktu check-in
  * beserta informasi bidang tujuan dan ASN yang ditemui. Digunakan ketika tamu check-in
  * dan perlu melengkapi informasi yang belum ada.
+ * Menggunakan timezone Indonesia (WIB) untuk konsistensi dengan waktu_dibuat.
  * 
  * @param {number} guestId - ID unik tamu yang akan di-check-in
- * @param {Date} checkInTime - Waktu check-in tamu
+ * @param {Date} checkInTime - Waktu check-in tamu (opsional, default: waktu sekarang WIB)
  * @param {number} bidangTujuanId - ID bidang tujuan yang dikunjungi
  * @param {string} asnDituju - Nama ASN yang ditemui
  * 
@@ -243,7 +249,7 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
  * 
  * @example
  * ```typescript
- * const result = await updateGuestCheckInWithInfo(123, new Date(), 1, 'Budi Santoso');
+ * const result = await updateGuestCheckInWithInfo(123, undefined, 1, 'Budi Santoso');
  * if (result.success) {
  *   //console.log('Check-in berhasil:', result.data);
  * } else {
@@ -253,9 +259,9 @@ export async function updateGuestCheckIn(guestId: number, checkInTime: Date): Pr
  */
 export async function updateGuestCheckInWithInfo(
   guestId: number, 
-  checkInTime: Date, 
-  bidangTujuanId: number, 
-  asnDituju: string
+  checkInTime?: Date, 
+  bidangTujuanId?: number, 
+  asnDituju?: string
 ): Promise<ResultData> {
   try {
     // Check if guest exists
@@ -270,14 +276,20 @@ export async function updateGuestCheckInWithInfo(
 
     const guest = rows[0];
     
+    // Use consistent Indonesia timezone for check-in time
+    const checkinTime = checkInTime || getIndonesiaTime();
+    
     // Check if guest already has bidang_tujuan_id and asn_dituju
     // If they already have the info, use the simple checkin to preserve existing data
     if (guest.bidang_tujuan_id && guest.asn_dituju) {
       // Use the simple check-in to avoid overwriting existing data
-      await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkInTime, guestId]);
-    } else {
+      await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkinTime, guestId]);
+    } else if (bidangTujuanId && asnDituju) {
       // Update with new information
-      await executeQuery(GUEST_QUERIES.SET_CHECKIN_WITH_INFO, [checkInTime, bidangTujuanId, asnDituju, guestId]);
+      await executeQuery(GUEST_QUERIES.SET_CHECKIN_WITH_INFO, [checkinTime, bidangTujuanId, asnDituju, guestId]);
+    } else {
+      // No additional info provided, use simple checkin
+      await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkinTime, guestId]);
     }
     
     // Get the updated guest data
@@ -304,9 +316,10 @@ export async function updateGuestCheckInWithInfo(
  * 
  * @description Fungsi ini mengubah status tamu menjadi "Selesai" dan mencatat waktu check-out.
  * Tamu harus dalam status "Datang" sebelum bisa di-check-out.
+ * Menggunakan timezone Indonesia (WIB) untuk konsistensi dengan waktu_dibuat dan checkin.
  * 
  * @param {number} guestId - ID unik tamu yang akan di-check-out
- * @param {Date} checkOutTime - Waktu check-out tamu
+ * @param {Date} checkOutTime - Waktu check-out tamu (opsional, default: waktu sekarang WIB)
  * 
  * @returns {Promise<ResultData>} Promise yang resolve dengan hasil operasi
  * - success: true jika berhasil, false jika gagal
@@ -317,7 +330,7 @@ export async function updateGuestCheckInWithInfo(
  * 
  * @example
  * ```typescript
- * const result = await updateGuestCheckOut(123, new Date());
+ * const result = await updateGuestCheckOut(123);
  * if (result.success) {
  *   //console.log('Check-out berhasil:', result.data);
  * } else {
@@ -325,7 +338,7 @@ export async function updateGuestCheckInWithInfo(
  * }
  * ```
  */
-export async function updateGuestCheckOut(guestId: number, checkOutTime: Date): Promise<ResultData> {
+export async function updateGuestCheckOut(guestId: number, checkOutTime?: Date): Promise<ResultData> {
   try {
     // Check if guest exists
     const rows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);
@@ -347,8 +360,11 @@ export async function updateGuestCheckOut(guestId: number, checkOutTime: Date): 
       };
     }
     
+    // Use consistent Indonesia timezone for check-out time
+    const checkoutTime = checkOutTime || getIndonesiaTime();
+    
     // Update the guest's check-out time and status
-    await executeQuery(GUEST_QUERIES.SET_CHECKOUT, [checkOutTime, guestId]);
+    await executeQuery(GUEST_QUERIES.SET_CHECKOUT, [checkoutTime, guestId]);
     
     // Get the updated guest data
     const updatedRows = await executeQuery<RowDataPacket[]>(GUEST_QUERIES.GET_BY_ID, [guestId]);

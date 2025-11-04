@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/backend/config/db';
 import { GUEST_QUERIES } from '@/backend/models/guestModel';
 import { apiLogger } from '@/lib/logger';
+import { getIndonesiaTime } from '@/lib/timezone-utils';
 
 export async function POST(
   request: NextRequest,
@@ -34,9 +35,9 @@ export async function POST(
       return NextResponse.json({ success: false, message: 'Jadwal waktu kunjungan diperlukan' }, { status: 400 });
     }
 
-    // Validate the date is not in the past
+    // Validate the date is not in the past (using Indonesia timezone for consistency)
     const scheduledDateTime = new Date(body.scheduledDateTime);
-    const now = new Date();
+    const now = getIndonesiaTime();
     
     if (scheduledDateTime < now) {
       return NextResponse.json({ 
@@ -56,10 +57,11 @@ export async function POST(
     await executeQuery('START TRANSACTION');
     
     try {
-      // Update the guest record with the scheduled time, new fields, and jadwal_dibuat timestamp
+      // Update the guest record with the scheduled time, new fields, and jadwal_dibuat timestamp (using Indonesia time)
+      const jadwalDibuat = getIndonesiaTime();
       await executeQuery(
-        'UPDATE daftar_tamu SET jadwal_checkin = ?, bidang_tujuan_id = ?, asn_dituju = ?, jadwal_dibuat = NOW(), status_kunjungan = ? WHERE id = ?',
-        [scheduledDateTime, bidangTujuanId, asnDituju, 'Terjadwal', guestId]
+        'UPDATE daftar_tamu SET jadwal_checkin = ?, bidang_tujuan_id = ?, asn_dituju = ?, jadwal_dibuat = ?, status_kunjungan = ? WHERE id = ?',
+        [scheduledDateTime, bidangTujuanId, asnDituju, jadwalDibuat, 'Terjadwal', guestId]
       );
       
       // Only process cara_salinan if it's provided with values
@@ -108,7 +110,7 @@ export async function POST(
         message: 'Jadwal kunjungan berhasil diatur',
         data: {
           scheduledDateTime,
-          jadwal_dibuat: updatedGuest?.jadwal_dibuat || new Date().toISOString(),
+          jadwal_dibuat: updatedGuest?.jadwal_dibuat || jadwalDibuat.toISOString(),
           status_kunjungan: 'Terjadwal',
           bidang_tujuan_id: updatedGuest?.bidang_tujuan_id || bidangTujuanId,
           bidang_tujuan: updatedGuest?.bidang_tujuan || null,

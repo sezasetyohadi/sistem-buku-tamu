@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateGuestCheckIn, updateGuestCheckInWithInfo, Guest } from '@/backend/models/guestModel';
 import { saveMendapatkanSalinanAnswers } from '@/backend/services/guestService';
 import { executeQuery } from '@/backend/config/db';
+import { getIndonesiaTime } from '@/lib/timezone-utils';
 
 export async function PATCH(
   request: NextRequest,
@@ -24,17 +25,17 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const { bidangTujuanId, asnDituju, caraSalinan } = body;
 
-    // Perform check-in operation
-    const now = new Date();
+    // Perform check-in operation with consistent Indonesia timezone
+    const checkinTime = getIndonesiaTime();
     let result;
 
     // Check if additional information is provided
     if (bidangTujuanId && asnDituju) {
       // Use checkin with additional information
-      result = await updateGuestCheckInWithInfo(guestId, now, bidangTujuanId, asnDituju);
+      result = await updateGuestCheckInWithInfo(guestId, checkinTime, bidangTujuanId, asnDituju);
     } else {
       // Use simple checkin (preserves existing bidang_tujuan_id and asn_dituju)
-      result = await updateGuestCheckIn(guestId, now);
+      result = await updateGuestCheckIn(guestId, checkinTime);
     }
 
     if (!result.success) {

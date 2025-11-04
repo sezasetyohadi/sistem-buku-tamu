@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { executeQuery } from '../config/db';
+import { getIndonesiaTime } from '../../lib/timezone-utils';
 
 // Interface for token data
 export interface TokenData {
@@ -22,20 +23,24 @@ export async function createToken(tamuId: number): Promise<TokenData> {
     // Generate a random token
     const token = generateToken();
     
-    // Insert token into database
+    // Use consistent Indonesia timezone for created_at
+    const createdAt = getIndonesiaTime();
+    
+    // Insert token into database with explicit created_at
     const result = await executeQuery<any>(
-      `INSERT INTO tamu_token (tamu_id, token, is_active) 
-       VALUES (?, ?, 1)`,
-      [tamuId, token]
+      `INSERT INTO tamu_token (tamu_id, token, is_active, created_at) 
+       VALUES (?, ?, 1, ?)`,
+      [tamuId, token, createdAt]
     );
     
-    // Return token data
+    // Return token data with consistent Indonesia timezone
+    const tokenCreatedAt = getIndonesiaTime();
     const tokenData: TokenData = {
       id: result.insertId,
       tamu_id: tamuId,
       token: token,
       is_active: true,
-      created_at: new Date()
+      created_at: tokenCreatedAt
     };
     
     return tokenData;

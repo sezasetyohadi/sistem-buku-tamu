@@ -1,7 +1,10 @@
 /**
  * Environment Variable Validation System
  * Ensures all required environment variables are properly configured for production
+ * Including timezone validation for consistent timestamps
  */
+
+import { getIndonesiaTime, logTimeWithTimezone } from './timezone-utils';
 
 interface EnvironmentConfig {
   // Database Configuration
@@ -15,6 +18,9 @@ interface EnvironmentConfig {
   JWT_SECRET: string;
   NODE_ENV: 'development' | 'production' | 'test';
   HTTPS_ENFORCED?: boolean;
+  
+  // Timezone Configuration
+  TZ?: string;
   
   // Optional Configuration
   TOKEN_CLEANUP_KEY?: string;
@@ -78,6 +84,20 @@ const ENV_VALIDATION_RULES: Record<keyof EnvironmentConfig, ValidationRule> = {
     required: false,
     validator: (value) => value === undefined || ['true', 'false'].includes(value?.toLowerCase()),
     errorMessage: 'HTTPS_ENFORCED must be true or false'
+  },
+  TZ: {
+    required: false,
+    validator: (value) => {
+      if (!value) return true;
+      // Validate that it's a recognized timezone
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: value });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    errorMessage: 'TZ must be a valid timezone identifier (e.g., Asia/Jakarta)'
   },
   TOKEN_CLEANUP_KEY: {
     required: false,
@@ -152,6 +172,9 @@ export class EnvironmentValidator {
     if (config.NODE_ENV === 'production') {
       this.validateProductionRequirements(config, errors, warnings);
     }
+
+    // Timezone validation
+    this.validateTimezone(warnings);
 
     // Log warnings
     if (warnings.length > 0) {
@@ -230,6 +253,45 @@ export class EnvironmentValidator {
       isValid: true,
       value: processedValue
     };
+  }
+
+  /**
+   * Validate timezone configuration
+   */
+  private validateTimezone(warnings: string[]): void {
+    try {
+      // Check if TZ environment variable is set
+      const tzEnv = process.env.TZ;
+      
+      if (!tzEnv) {
+        warnings.push('TZ environment variable not set - using system timezone');
+      } else if (tzEnv !== 'Asia/Jakarta') {
+        warnings.push(`TZ is set to '${tzEnv}' - recommended to use 'Asia/Jakarta' for consistency`);
+      }
+      
+      // Test timezone functionality
+      const now = new Date();
+      const indonesiaTime = getIndonesiaTime();
+      
+      // Basic validation - check if Indonesia time conversion works
+      const indonesiaTimeString = indonesiaTime.toLocaleString("en-US", {timeZone: "Asia/Jakarta"});
+      if (!indonesiaTimeString || indonesiaTimeString === 'Invalid Date') {
+        warnings.push('Timezone conversion to Asia/Jakarta failed - timestamps may be inconsistent');
+      }
+      
+      // Log timezone info in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('=== Timezone Validation ===');
+        console.log('TZ Environment:', tzEnv);
+        console.log('System Timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+        logTimeWithTimezone('Current Time', now);
+        logTimeWithTimezone('Indonesia Time', indonesiaTime);
+        console.log('========================');
+      }
+      
+    } catch (error) {
+      warnings.push(`Timezone validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**

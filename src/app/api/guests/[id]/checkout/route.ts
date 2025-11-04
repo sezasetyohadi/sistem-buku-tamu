@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { executeQuery } from '@/backend/config/db';
 import { updateGuestCheckOut, Guest } from '@/backend/models/guestModel';
+import { getIndonesiaTime } from '@/lib/timezone-utils';
 
 export async function POST(
   request: NextRequest,
@@ -22,9 +23,9 @@ export async function POST(
     const body = await request.json();
     const deactivateToken = body?.deactivateToken;
 
-    // Perform check-out operation
-    const now = new Date();
-    const result = await updateGuestCheckOut(guestId, now);
+    // Perform check-out operation with consistent Indonesia timezone
+    const checkoutTime = getIndonesiaTime();
+    const result = await updateGuestCheckOut(guestId, checkoutTime);
 
     // Jika sukses dan flag deactivateToken true, update tamu_token
     if (result.success && deactivateToken) {
