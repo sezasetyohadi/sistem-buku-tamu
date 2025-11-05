@@ -141,10 +141,50 @@ export async function getTokenStatus(token: string): Promise<{ tamuId: number; s
       status = 'scheduled';
     }
 
+    // Get cara memperoleh informasi selections
+    let caraMendapatkanInformasi: string[] = [];
+    try {
+      const informasiQuery = `
+        SELECT m.nama_opsi 
+        FROM jawaban_memperoleh_informasi j
+        JOIN memperoleh_informasi m ON j.cara_memperoleh_id = m.id
+        WHERE j.tamu_id = ?
+      `;
+      const informasiResult = await executeQuery<Array<{ nama_opsi: string }>>(informasiQuery, [tokenData.tamu_id]);
+      caraMendapatkanInformasi = informasiResult.map(item => item.nama_opsi);
+    } catch (error) {
+      console.error('Error fetching memperoleh informasi data:', error);
+    }
+
+    // Get cara mendapatkan salinan selections
+    let caraSalinan: string[] = [];
+    let caraSalinanIds: number[] = [];
+    try {
+      const salinanQuery = `
+        SELECT m.id, m.nama_opsi 
+        FROM jawaban_mendapatkan_salinan j
+        JOIN mendapatkan_salinan m ON j.cara_salinan_id = m.id
+        WHERE j.tamu_id = ?
+      `;
+      const salinanResult = await executeQuery<Array<{ id: number; nama_opsi: string }>>(salinanQuery, [tokenData.tamu_id]);
+      caraSalinan = salinanResult.map(item => item.nama_opsi);
+      caraSalinanIds = salinanResult.map(item => item.id);
+    } catch (error) {
+      console.error('Error fetching mendapatkan salinan data:', error);
+    }
+
+    // Add the additional information to the guest object
+    const guestWithDetails = {
+      ...guest,
+      cara_memperoleh_informasi: caraMendapatkanInformasi,
+      cara_mendapatkan_salinan: caraSalinan,
+      cara_mendapatkan_salinan_ids: caraSalinanIds
+    };
+
     return {
       tamuId: tokenData.tamu_id,
       status: status,
-      details: guest
+      details: guestWithDetails
     };
   } catch (error) {
     console.error('Error getting token status:', error);
