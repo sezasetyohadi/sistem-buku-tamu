@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import GuestDetailModal from '@/components/admin/GuestDetailModal';
 import ServiceManagementModal from '@/components/admin/ServiceManagementModal';
+import ExportDataModal from '@/components/admin/ExportDataModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import GuestRegistrationForm from '@/components/forms/GuestRegistrationForm';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
@@ -69,6 +70,7 @@ function AdminGuestsManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   // Performance optimization: Debounced search
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -715,20 +717,12 @@ function AdminGuestsManagement() {
             <span className="whitespace-nowrap">Tambah Layanan</span>
           </button>
           <button 
-            onClick={handleExportData}
-            disabled={isExporting}
-            className="bg-green-200 text-green-800 px-3 sm:px-4 lg:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-1 sm:space-x-2 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed">
-            {isExporting ? (
-              <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-              </svg>
-            )}
-            <span className="whitespace-nowrap">{isExporting ? 'Mengekspor...' : 'Export Data'}</span>
+            onClick={() => setIsExportModalOpen(true)}
+            className="bg-green-200 text-green-800 px-3 sm:px-4 lg:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-green-300 transition-colors flex items-center space-x-1 sm:space-x-2 min-w-0">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+            <span className="whitespace-nowrap">Export Data</span>
           </button>
           <button 
             onClick={handleRefresh}
@@ -1228,6 +1222,13 @@ function AdminGuestsManagement() {
         isOpen={isServiceModalOpen}
         onClose={() => setIsServiceModalOpen(false)}
         onServiceAdded={handleRefresh}
+      />
+
+      {/* Export Data Modal */}
+      <ExportDataModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        guests={guests}
       />
       </div>
     </div>
