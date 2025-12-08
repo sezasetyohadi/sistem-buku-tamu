@@ -128,14 +128,15 @@ const PdfReport = ({
       </div>
 
       {/* Statistics Table */}
-      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-        Statistik Kunjungan
-      </h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
+      <div style={{ pageBreakInside: 'avoid' }}>
+        <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
+          Statistik Kunjungan
+        </h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
         <thead>
           <tr>
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Total Kunjungan</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Rata-rata Harian</th>
+            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Rerata Tamu Harian</th>
             <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu Rata-rata</th>
           </tr>
         </thead>
@@ -153,8 +154,10 @@ const PdfReport = ({
           </tr>
         </tbody>
       </table>
+      </div>
 
       {/* Visitor Trends Chart */}
+      <div style={{ pageBreakInside: 'avoid' }}>
       <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
         Tren Kunjungan ({periodLabel})
       </h3>
@@ -181,9 +184,9 @@ const PdfReport = ({
                   tension: 0.2, // Less curve smoothing
                   pointBackgroundColor: 'rgb(59, 130, 246)',
                   pointBorderColor: '#ffffff',
-                  pointBorderWidth: 1, // Thinner point border
-                  pointRadius: 2, // Smaller points
-                  pointHoverRadius: 3, // Smaller hover
+                  pointBorderWidth: 2, // Thicker point border
+                  pointRadius: 4, // Bigger points
+                  pointHoverRadius: 4, // Bigger hover
                 },
               ],
             }}
@@ -201,8 +204,8 @@ const PdfReport = ({
               },
               elements: {
                 point: {
-                  radius: 2, // Smaller points
-                  hoverRadius: 2,
+                  radius: 4, // Bigger points
+                  hoverRadius: 4,
                 },
                 line: {
                   borderWidth: 1, // Thinner lines
@@ -250,12 +253,13 @@ const PdfReport = ({
           </div>
         )}
       </div>
+      </div>
 
       {/* Daily Visit Details */}
       {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 && (
-        <div style={{ marginTop: '10px', marginBottom: '20px', padding: '10px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#333', fontWeight: 'bold' }}>Detail Kunjungan per Hari:</h4>
-          <div style={{ fontSize: '11px', color: '#555', lineHeight: '1.6' }}>
+        <div style={{ marginTop: '10px', marginBottom: '20px', padding: '12px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#333', fontWeight: 'bold' }}>Detail Kunjungan per Hari:</h4>
+          <div style={{ fontSize: '14px', color: '#555', lineHeight: '1.8' }}>
             {reportData.weeklyTrends.map((item: any, idx: number) => {
               const date = new Date(item.date);
               const formattedDate = date.toLocaleDateString('id-ID', { 
@@ -264,8 +268,8 @@ const PdfReport = ({
                 year: 'numeric' 
               });
               return (
-                <div key={idx} style={{ marginBottom: '3px' }}>
-                  <strong>{formattedDate}:</strong> {item.visits} kunjungan
+                <div key={idx} style={{ marginBottom: '5px', pageBreakInside: 'avoid' }}>
+                  <strong style={{ fontSize: '14px' }}>{formattedDate}:</strong> {item.visits} kunjungan
                 </div>
               );
             })}
@@ -275,7 +279,7 @@ const PdfReport = ({
 
       {/* Service Categories Pie Chart */}
       {reportData.serviceCategories && reportData.serviceCategories.length > 0 && (
-        <>
+        <div style={{ pageBreakInside: 'avoid' }}>
           <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
             Kategori Layanan Populer
           </h3>
@@ -343,62 +347,11 @@ const PdfReport = ({
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
-      {/* Top Visitors Table */}
-      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-        Tamu Paling Aktif
-      </h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
-        <thead>
-          <tr>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Nama</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Instansi</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Jumlah Kunjungan</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visitorsToShow.map((visitor: any, idx: number) => (
-            <tr key={idx}>
-              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{visitor.nama}</td>
-              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{visitor.asal_instansi}</td>
-              <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>{visitor.visit_count}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Recent Activities Table */}
-      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-        Aktivitas Terbaru
-      </h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
-        <thead>
-          <tr>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Nama</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Instansi</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Keperluan</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Tanggapan</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu</th>
-          </tr>
-        </thead>
-        <tbody>
-          {activitiesToShow.map((activity: any, idx: number) => (
-            <tr key={idx}>
-              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.nama}</td>
-              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.asal_instansi}</td>
-              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.keperluan}</td>
-              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>{activity.tanggapan}</td>
-              <td style={{ border: '1px solid #999', padding: '8px', fontSize: '11px' }}>
-                {new Date(activity.waktu_dibuat).toLocaleDateString('id-ID')}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
       {/* Footer */}
+      <div style={{ pageBreakInside: 'avoid' }}>
       <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ddd', backgroundColor: '#f9f9f9', fontSize: '10px' }}>
         <h4 style={{ margin: '0 0 10px 0', fontSize: '12px' }}>Informasi Sistem</h4>
         <p style={{ margin: '5px 0' }}>Laporan ini dihasilkan dari Sistem Buku Tamu Digital</p>
@@ -411,6 +364,7 @@ const PdfReport = ({
           {filteredByDepartment ? `Data khusus bidang ${departmentName}` : 'Semua data'}
         </p>
         <p style={{ margin: '5px 0' }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
+      </div>
       </div>
     </div>
   );
