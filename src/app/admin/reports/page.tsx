@@ -6,6 +6,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -15,7 +16,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Metadata } from 'next';
 import { useState, useEffect, useRef } from 'react';
-import { Line } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { showToast } from '@/lib/toast';
@@ -28,6 +29,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -270,7 +272,8 @@ export default function AdminReportsAnalytics() {
       // Create filename with department and period info
       const periodText = selectedPeriod === '7' ? '7Hari' : 
                         selectedPeriod === '30' ? '30Hari' : 
-                        selectedPeriod === '90' ? '3Bulan' : '1Tahun';
+                        selectedPeriod === '90' ? '3Bulan' : 
+                        selectedPeriod === '180' ? '6Bulan' : '1Tahun';
       
       let departmentText = 'AllBidang';
       
@@ -378,9 +381,11 @@ export default function AdminReportsAnalytics() {
                   <span className="truncate flex-1 text-left" title={selectedPeriod === '7' ? '7 Hari Terakhir' : 
                                                                 selectedPeriod === '30' ? '30 Hari Terakhir' : 
                                                                 selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                                                                selectedPeriod === '180' ? '6 Bulan Terakhir' : 
                                                                 '1 Tahun Terakhir'}>{selectedPeriod === '7' ? '7 Hari Terakhir' : 
                         selectedPeriod === '30' ? '30 Hari Terakhir' : 
                         selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                        selectedPeriod === '180' ? '6 Bulan Terakhir' : 
                         '1 Tahun Terakhir'}</span>
                   <svg className="w-4 h-4 ml-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -419,6 +424,15 @@ export default function AdminReportsAnalytics() {
                       }}
                     >
                       3 Bulan Terakhir
+                    </button>
+                    <button 
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '180' ? 'bg-blue-500 text-white' : ''}`}
+                      onClick={() => {
+                        setSelectedPeriod('180');
+                        setIsTimeDropdownOpen(false);
+                      }}
+                    >
+                      6 Bulan Terakhir
                     </button>
                     <button 
                       className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '365' ? 'bg-blue-500 text-white' : ''}`}
@@ -614,7 +628,8 @@ export default function AdminReportsAnalytics() {
                 </svg>
                 Tren Kunjungan ({selectedPeriod === '7' ? '7 Hari Terakhir' : 
                                  selectedPeriod === '30' ? '30 Hari Terakhir' :
-                                 selectedPeriod === '90' ? '3 Bulan Terakhir' : '1 Tahun Terakhir'})
+                                 selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                                 selectedPeriod === '180' ? '6 Bulan Terakhir' : '1 Tahun Terakhir'})
               </h3>
             </div>
             <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
@@ -715,28 +730,95 @@ export default function AdminReportsAnalytics() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center mb-4">
               <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
               </svg>
               <h3 className="text-lg font-bold text-gray-800">Kategori Layanan Populer</h3>
             </div>
-            <div className="space-y-4">
+            <div className="h-64 flex items-center justify-center">
               {data?.serviceCategories && data.serviceCategories.length > 0 ? (
-                data.serviceCategories.map((category, i) => {
-                  const colors = ['#3D5DC3', '#22C55E', '#F29442', '#8B5CF6', '#EF4444'];
-                  return (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: colors[i % colors.length] }}></div>
-                        <span className="ml-3 text-sm text-gray-900">{category.category || 'Tidak Kategori'}</span>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">{category.percentage}%</span>
-                    </div>
-                  );
-                })
+                <Pie
+                  data={{
+                    labels: data.serviceCategories.map((cat: any) => cat.category || 'Tidak Kategori'),
+                    datasets: [
+                      {
+                        label: 'Kategori Layanan',
+                        data: data.serviceCategories.map((cat: any) => cat.count),
+                        backgroundColor: [
+                          '#3D5DC3',
+                          '#22C55E',
+                          '#F29442',
+                          '#8B5CF6',
+                          '#EF4444',
+                        ],
+                        borderColor: [
+                          '#2563EB',
+                          '#16A34A',
+                          '#EA580C',
+                          '#7C3AED',
+                          '#DC2626',
+                        ],
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom' as const,
+                        labels: {
+                          padding: 15,
+                          font: {
+                            size: 12,
+                          },
+                          generateLabels: (chart) => {
+                            const datasets = chart.data.datasets;
+                            if (datasets.length === 0) return [];
+                            
+                            const data = datasets[0].data as number[];
+                            const labels = chart.data.labels as string[];
+                            const backgroundColor = datasets[0].backgroundColor as string[];
+                            
+                            const total = data.reduce((acc: number, val: number) => acc + val, 0);
+                            
+                            return labels.map((label, i) => {
+                              const value = data[i];
+                              const percentage = ((value / total) * 100).toFixed(1);
+                              return {
+                                text: `${label}: ${percentage}%`,
+                                fillStyle: backgroundColor[i],
+                                hidden: false,
+                                index: i,
+                              };
+                            });
+                          },
+                        },
+                        onClick: () => {
+                          return false;
+                        },
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function (context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = (context.dataset.data as number[]).reduce(
+                              (acc: number, val: number) => acc + val,
+                              0
+                            );
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
               ) : (
                 <div className="text-center py-8">
                   <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
                   </svg>
                   <p className="text-gray-500">Belum ada data kategori layanan</p>
                 </div>
@@ -879,6 +961,7 @@ export default function AdminReportsAnalytics() {
                 selectedPeriod === '7' ? '7 Hari Terakhir' : 
                 selectedPeriod === '30' ? '30 Hari Terakhir' : 
                 selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                selectedPeriod === '180' ? '6 Bulan Terakhir' : 
                 '1 Tahun Terakhir'
               }
             />

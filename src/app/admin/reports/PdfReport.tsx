@@ -4,19 +4,21 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
   Filler
 } from 'chart.js';
 import React from 'react';
-import { Line } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -156,7 +158,7 @@ const PdfReport = ({
       <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
         Tren Kunjungan ({periodLabel})
       </h3>
-      <div style={{ width: '100%', height: '150px', marginBottom: '20px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
+      <div style={{ width: '100%', height: '150px', marginBottom: '10px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
         {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 ? (
           <Line
             data={{
@@ -248,6 +250,101 @@ const PdfReport = ({
           </div>
         )}
       </div>
+
+      {/* Daily Visit Details */}
+      {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 && (
+        <div style={{ marginTop: '10px', marginBottom: '20px', padding: '10px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#333', fontWeight: 'bold' }}>Detail Kunjungan per Hari:</h4>
+          <div style={{ fontSize: '11px', color: '#555', lineHeight: '1.6' }}>
+            {reportData.weeklyTrends.map((item: any, idx: number) => {
+              const date = new Date(item.date);
+              const formattedDate = date.toLocaleDateString('id-ID', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              });
+              return (
+                <div key={idx} style={{ marginBottom: '3px' }}>
+                  <strong>{formattedDate}:</strong> {item.visits} kunjungan
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Service Categories Pie Chart */}
+      {reportData.serviceCategories && reportData.serviceCategories.length > 0 && (
+        <>
+          <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
+            Kategori Layanan Populer
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
+            {/* Pie Chart */}
+            <div style={{ width: '250px', height: '250px', flexShrink: 0 }}>
+              <Pie
+                data={{
+                  labels: reportData.serviceCategories.map((cat: any) => cat.category || 'Tidak Kategori'),
+                  datasets: [
+                    {
+                      label: 'Kategori Layanan',
+                      data: reportData.serviceCategories.map((cat: any) => cat.count),
+                      backgroundColor: [
+                        '#3D5DC3',
+                        '#22C55E',
+                        '#F29442',
+                        '#8B5CF6',
+                        '#EF4444',
+                      ],
+                      borderColor: '#ffffff',
+                      borderWidth: 2,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  animation: false,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
+                    tooltip: {
+                      enabled: false,
+                    },
+                  },
+                }}
+              />
+            </div>
+            
+            {/* Legend */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '12px' }}>
+                {reportData.serviceCategories.map((category: any, idx: number) => {
+                  const colors = ['#3D5DC3', '#22C55E', '#F29442', '#8B5CF6', '#EF4444'];
+                  const total = reportData.serviceCategories.reduce((sum: number, cat: any) => sum + cat.count, 0);
+                  const percentage = ((category.count / total) * 100).toFixed(1);
+                  
+                  return (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        backgroundColor: colors[idx % colors.length],
+                        marginRight: '10px',
+                        borderRadius: '2px'
+                      }}></div>
+                      <span style={{ fontSize: '14px', color: '#333' }}>
+                        <strong>{category.category || 'Tidak Kategori'}:</strong> {category.count} ({percentage}%)
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Top Visitors Table */}
       <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
