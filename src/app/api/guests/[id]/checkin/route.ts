@@ -22,18 +22,26 @@ export async function PATCH(
 
     // Parse request body for additional checkin information
     const body = await request.json().catch(() => ({}));
-    const { bidangTujuanId, asnDituju, caraSalinan } = body;
+    const { bidangTujuanId, asnDituju, layananId, caraSalinan } = body;
 
     // Perform check-in operation
     const now = new Date();
     let result;
 
     // Check if additional information is provided
-    if (bidangTujuanId && asnDituju) {
-      // Use checkin with additional information
-      result = await updateGuestCheckInWithInfo(guestId, now, bidangTujuanId, asnDituju);
+    if (bidangTujuanId && asnDituju && layananId) {
+      // Use checkin with additional information including layanan
+      result = await updateGuestCheckInWithInfo(guestId, now, bidangTujuanId, asnDituju, layananId);
+    } else if (bidangTujuanId && asnDituju) {
+      // Bidang provided but no layanan (bidang without services)
+      // Update bidang and asn only, without layanan
+      await executeQuery(
+        'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang", bidang_tujuan_id = ?, asn_dituju = ? WHERE id = ?',
+        [now, bidangTujuanId, asnDituju, guestId]
+      );
+      result = await updateGuestCheckIn(guestId, now);
     } else {
-      // Use simple checkin (preserves existing bidang_tujuan_id and asn_dituju)
+      // Use simple checkin (preserves existing data)
       result = await updateGuestCheckIn(guestId, now);
     }
 
@@ -89,6 +97,7 @@ export async function PATCH(
         waktu_checkin: updatedGuest.waktu_checkin,
         status_kunjungan: updatedGuest.status_kunjungan,
         bidang_tujuan_id: updatedGuest.bidang_tujuan_id,
+        layanan_disnaker_id: updatedGuest.layanan_disnaker_id,
         asn_dituju: updatedGuest.asn_dituju,
         cara_mendapatkan_salinan,
         cara_mendapatkan_salinan_ids

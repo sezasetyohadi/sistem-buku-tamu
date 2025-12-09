@@ -6,7 +6,7 @@ import Modal from '../ui/Modal';
 interface CheckinInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (bidangTujuanId: number, asnDituju: string, caraSalinan?: number[]) => void;
+  onConfirm: (bidangTujuanId: number, asnDituju: string, layananId?: number, caraSalinan?: number[]) => void;
   guestName: string;
   isLoading?: boolean;
 }
@@ -14,6 +14,12 @@ interface CheckinInfoModalProps {
 interface BidangTujuan {
   id: number;
   bidang: string;
+}
+
+interface LayananDisnaker {
+  id: number;
+  nama_layanan: string;
+  bidang_id: number;
 }
 
 interface CaraMendapatkanSalinan {
@@ -29,8 +35,10 @@ export default function CheckinInfoModal({
   isLoading = false 
 }: CheckinInfoModalProps) {
   const [bidangTujuanList, setBidangTujuanList] = useState<BidangTujuan[]>([]);
+  const [layananDisnakerList, setLayananDisnakerList] = useState<LayananDisnaker[]>([]);
   const [caraSalinanList, setCaraSalinanList] = useState<CaraMendapatkanSalinan[]>([]);
   const [selectedBidangId, setSelectedBidangId] = useState<number>(0);
+  const [selectedLayananId, setSelectedLayananId] = useState<number>(0);
   const [asnDituju, setAsnDituju] = useState('');
   const [selectedCaraSalinan, setSelectedCaraSalinan] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,12 +59,15 @@ export default function CheckinInfoModal({
         
         if (result.success) {
           const bidangData = result.data.bidangTujuan || [];
+          const layananData = result.data.layananDisnaker || [];
           const salinanData = result.data.mendapatkanSalinan || [];
           
           //console.log('Bidang Tujuan data:', bidangData);
+          //console.log('Layanan Disnaker data:', layananData);
           //console.log('Cara Mendapatkan Salinan data:', salinanData);
           
           setBidangTujuanList(bidangData);
+          setLayananDisnakerList(layananData);
           setCaraSalinanList(salinanData);
         } else {
           console.error('Failed to fetch lookup data:', result.message);
@@ -77,11 +88,18 @@ export default function CheckinInfoModal({
   useEffect(() => {
     if (isOpen) {
       setSelectedBidangId(0);
+      setSelectedLayananId(0);
       setAsnDituju('');
       setSelectedCaraSalinan([]);
       setErrors({});
     }
   }, [isOpen]);
+
+  // Reset layanan and ASN when bidang changes
+  useEffect(() => {
+    setSelectedLayananId(0);
+    setAsnDituju('');
+  }, [selectedBidangId]);
 
   const handleCaraSalinanChange = (caraSalinanId: number, checked: boolean) => {
     //console.log('Checkbox changed:', { caraSalinanId, checked, currentCaraSalinan: selectedCaraSalinan });
@@ -105,11 +123,19 @@ export default function CheckinInfoModal({
     }, 100);
   };
 
+  // Check if selected bidang has any layanan options
+  const hasLayananOptions = selectedBidangId > 0 && layananDisnakerList.filter(l => l.bidang_id === selectedBidangId).length > 0;
+
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!selectedBidangId || selectedBidangId === 0) {
       newErrors.bidangTujuan = 'Bidang tujuan harus dipilih';
+    }
+
+    // Only validate layanan if the selected bidang has layanan options
+    if (hasLayananOptions && (!selectedLayananId || selectedLayananId === 0)) {
+      newErrors.layananDiberikan = 'Layanan diberikan harus dipilih';
     }
 
     if (!asnDituju.trim()) {
@@ -127,7 +153,9 @@ export default function CheckinInfoModal({
 
     setIsSubmitting(true);
     try {
-      await onConfirm(selectedBidangId, asnDituju.trim(), selectedCaraSalinan.length > 0 ? selectedCaraSalinan : undefined);
+      // Only pass layananId if bidang has layanan options
+      const layananIdToPass = hasLayananOptions ? selectedLayananId : undefined;
+      await onConfirm(selectedBidangId, asnDituju.trim(), layananIdToPass, selectedCaraSalinan.length > 0 ? selectedCaraSalinan : undefined);
     } catch (error) {
       console.error('Error in checkin info submit:', error);
     } finally {
@@ -179,6 +207,38 @@ export default function CheckinInfoModal({
             )}
           </div>
 
+          {/* Layanan Diberikan - Only show if bidang is selected and has layanan options */}
+          {selectedBidangId > 0 && layananDisnakerList.filter(l => l.bidang_id === selectedBidangId).length > 0 && (
+            <div>
+              <label htmlFor="layananDiberikan" className="block text-sm font-medium text-gray-700 mb-2">
+                Layanan Diberikan <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="layananDiberikan"
+                value={selectedLayananId}
+                onChange={(e) => setSelectedLayananId(Number(e.target.value))}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                  errors.layananDiberikan ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+                disabled={isSubmitting || isLoading || isLoadingData}
+              >
+                <option value={0}>
+                  {isLoadingData ? 'Memuat data...' : 'Pilih Layanan Diberikan'}
+                </option>
+                {layananDisnakerList
+                  .filter(layanan => layanan.bidang_id === selectedBidangId)
+                  .map((layanan) => (
+                    <option key={layanan.id} value={layanan.id}>
+                      {layanan.nama_layanan}
+                    </option>
+                  ))}
+              </select>
+              {errors.layananDiberikan && (
+                <p className="mt-1 text-sm text-red-600">{errors.layananDiberikan}</p>
+              )}
+            </div>
+          )}
+
           {/* Menemui (ASN) */}
           <div>
             <label htmlFor="asnDituju" className="block text-sm font-medium text-gray-700 mb-2">
@@ -193,7 +253,7 @@ export default function CheckinInfoModal({
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
                 errors.asnDituju ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
-              disabled={isSubmitting || isLoading || isLoadingData}
+              disabled={!selectedBidangId || isSubmitting || isLoading || isLoadingData}
             />
             {errors.asnDituju && (
               <p className="mt-1 text-sm text-red-600">{errors.asnDituju}</p>

@@ -48,6 +48,7 @@ export async function POST(
     // Extract additional fields from request body
     const bidangTujuanId = body.bidangTujuanId ? parseInt(body.bidangTujuanId) : null;
     const asnDituju = body.asnDituju || null;
+    const layananId = body.layananId ? parseInt(body.layananId) : null;
     const caraSalinan = body.caraSalinan || [];
     
     // Make caraSalinan optional - removed validation that required at least one option
@@ -58,8 +59,8 @@ export async function POST(
     try {
       // Update the guest record with the scheduled time, new fields, and jadwal_dibuat timestamp
       await executeQuery(
-        'UPDATE daftar_tamu SET jadwal_checkin = ?, bidang_tujuan_id = ?, asn_dituju = ?, jadwal_dibuat = NOW(), status_kunjungan = ? WHERE id = ?',
-        [scheduledDateTime, bidangTujuanId, asnDituju, 'Terjadwal', guestId]
+        'UPDATE daftar_tamu SET jadwal_checkin = ?, bidang_tujuan_id = ?, layanan_disnaker_id = ?, asn_dituju = ?, jadwal_dibuat = NOW(), status_kunjungan = ? WHERE id = ?',
+        [scheduledDateTime, bidangTujuanId, layananId, asnDituju, 'Terjadwal', guestId]
       );
       
       // Only process cara_salinan if it's provided with values
@@ -84,7 +85,7 @@ export async function POST(
       
       // Get updated guest data with jadwal_dibuat
       const updatedGuestData = await executeQuery<any[]>(
-        'SELECT dt.jadwal_checkin, dt.jadwal_dibuat, dt.status_kunjungan, dt.bidang_tujuan_id, bt.bidang as bidang_tujuan, dt.asn_dituju FROM daftar_tamu dt LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id WHERE dt.id = ?',
+        'SELECT dt.jadwal_checkin, dt.jadwal_dibuat, dt.status_kunjungan, dt.bidang_tujuan_id, bt.bidang as bidang_tujuan, dt.layanan_disnaker_id, ld.nama_layanan as layanan_disnaker, dt.asn_dituju FROM daftar_tamu dt LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id LEFT JOIN layanan_disnaker ld ON dt.layanan_disnaker_id = ld.id WHERE dt.id = ?',
         [guestId]
       );
       
@@ -112,6 +113,8 @@ export async function POST(
           status_kunjungan: 'Terjadwal',
           bidang_tujuan_id: updatedGuest?.bidang_tujuan_id || bidangTujuanId,
           bidang_tujuan: updatedGuest?.bidang_tujuan || null,
+          layanan_disnaker_id: updatedGuest?.layanan_disnaker_id || layananId,
+          layanan_disnaker: updatedGuest?.layanan_disnaker || null,
           asn_dituju: updatedGuest?.asn_dituju || asnDituju,
           cara_mendapatkan_salinan // Using the expected field name
         }
