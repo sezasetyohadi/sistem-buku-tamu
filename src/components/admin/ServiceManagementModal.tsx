@@ -10,6 +10,18 @@ interface Service {
   tujuan: string;
 }
 
+interface Bidang {
+  id: number;
+  bidang: string;
+}
+
+interface LayananBidang {
+  id: number;
+  nama_layanan: string;
+  bidang_id: number;
+  bidang: string;
+}
+
 interface ServiceManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,6 +33,9 @@ export default function ServiceManagementModal({
   onClose,
   onServiceAdded
 }: ServiceManagementModalProps) {
+  const [activeTab, setActiveTab] = useState<'umum' | 'bidang'>('umum');
+  
+  // Layanan Umum states
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,12 +43,33 @@ export default function ServiceManagementModal({
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Layanan Bidang states
+  const [bidangList, setBidangList] = useState<Bidang[]>([]);
+  const [selectedBidangId, setSelectedBidangId] = useState<number | null>(null);
+  const [layananBidang, setLayananBidang] = useState<LayananBidang[]>([]);
+  const [newLayananName, setNewLayananName] = useState('');
+  const [editingLayanan, setEditingLayanan] = useState<LayananBidang | null>(null);
+  const [isLoadingBidang, setIsLoadingBidang] = useState(false);
+  const [isLoadingLayanan, setIsLoadingLayanan] = useState(false);
+  const [isSubmittingLayanan, setIsSubmittingLayanan] = useState(false);
+
   // Fetch services when modal opens
   useEffect(() => {
     if (isOpen) {
-      fetchServices();
+      if (activeTab === 'umum') {
+        fetchServices();
+      } else {
+        fetchBidang();
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, activeTab]);
+
+  // Fetch layanan when bidang is selected
+  useEffect(() => {
+    if (selectedBidangId && activeTab === 'bidang') {
+      fetchLayananBidang(selectedBidangId);
+    }
+  }, [selectedBidangId, activeTab]);
 
   const fetchServices = async () => {
     setIsLoading(true);
@@ -174,8 +210,171 @@ export default function ServiceManagementModal({
   const handleClose = () => {
     setNewServiceName('');
     setEditingService(null);
+    setNewLayananName('');
+    setEditingLayanan(null);
+    setSelectedBidangId(null);
     setError(null);
+    setActiveTab('umum');
     onClose();
+  };
+
+  // ========== Layanan Bidang Functions ==========
+
+  const fetchBidang = async () => {
+    setIsLoadingBidang(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/bidang');
+      const result = await response.json();
+      
+      if (result.success) {
+        setBidangList(result.data || []);
+      } else {
+        setError(result.message || 'Gagal mengambil data bidang');
+      }
+    } catch (error) {
+      console.error('Error fetching bidang:', error);
+      setError('Terjadi kesalahan saat mengambil data bidang');
+    } finally {
+      setIsLoadingBidang(false);
+    }
+  };
+
+  const fetchLayananBidang = async (bidangId: number) => {
+    setIsLoadingLayanan(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/layanan-bidang?bidang_id=${bidangId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setLayananBidang(result.data || []);
+      } else {
+        setError(result.message || 'Gagal mengambil data layanan');
+      }
+    } catch (error) {
+      console.error('Error fetching layanan:', error);
+      setError('Terjadi kesalahan saat mengambil data layanan');
+    } finally {
+      setIsLoadingLayanan(false);
+    }
+  };
+
+  const handleAddLayanan = async () => {
+    if (!newLayananName.trim()) {
+      toast.error('Nama layanan harus diisi');
+      return;
+    }
+
+    if (!selectedBidangId) {
+      toast.error('Pilih bidang terlebih dahulu');
+      return;
+    }
+
+    setIsSubmittingLayanan(true);
+    
+    try {
+      const response = await fetch('/api/layanan-bidang', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          nama_layanan: newLayananName.trim(),
+          bidang_id: selectedBidangId
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Layanan berhasil ditambahkan');
+        setNewLayananName('');
+        await fetchLayananBidang(selectedBidangId);
+        onServiceAdded?.();
+      } else {
+        toast.error(result.message || 'Gagal menambahkan layanan');
+      }
+    } catch (error) {
+      console.error('Error adding layanan:', error);
+      toast.error('Terjadi kesalahan saat menambahkan layanan');
+    } finally {
+      setIsSubmittingLayanan(false);
+    }
+  };
+
+  const handleEditLayanan = async () => {
+    if (!editingLayanan || !editingLayanan.nama_layanan.trim()) {
+      toast.error('Nama layanan harus diisi');
+      return;
+    }
+
+    setIsSubmittingLayanan(true);
+    
+    try {
+      const response = await fetch('/api/layanan-bidang', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingLayanan.id,
+          nama_layanan: editingLayanan.nama_layanan.trim(),
+          bidang_id: editingLayanan.bidang_id
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Layanan berhasil diperbarui');
+        setEditingLayanan(null);
+        if (selectedBidangId) {
+          await fetchLayananBidang(selectedBidangId);
+        }
+        onServiceAdded?.();
+      } else {
+        toast.error(result.message || 'Gagal memperbarui layanan');
+      }
+    } catch (error) {
+      console.error('Error updating layanan:', error);
+      toast.error('Terjadi kesalahan saat memperbarui layanan');
+    } finally {
+      setIsSubmittingLayanan(false);
+    }
+  };
+
+  const handleDeleteLayanan = async (layanan: LayananBidang) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus layanan "${layanan.nama_layanan}"?`)) {
+      return;
+    }
+
+    setIsSubmittingLayanan(true);
+    
+    try {
+      const response = await fetch(`/api/layanan-bidang?id=${layanan.id}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Layanan berhasil dihapus');
+        if (selectedBidangId) {
+          await fetchLayananBidang(selectedBidangId);
+        }
+        onServiceAdded?.();
+      } else {
+        toast.error(result.message || 'Gagal menghapus layanan');
+      }
+    } catch (error) {
+      console.error('Error deleting layanan:', error);
+      toast.error('Terjadi kesalahan saat menghapus layanan');
+    } finally {
+      setIsSubmittingLayanan(false);
+    }
   };
 
   return (
@@ -195,129 +394,323 @@ export default function ServiceManagementModal({
           </div>
         )}
 
-        {/* Add New Service */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Tambah Layanan Baru</h3>
-          <div className="flex space-x-3">
-            <input
-              type="text"
-              value={newServiceName}
-              onChange={(e) => setNewServiceName(e.target.value)}
-              placeholder="Masukkan nama layanan"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              disabled={isSubmitting}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddService()}
-            />
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px space-x-8" aria-label="Tabs">
             <button
-              onClick={handleAddService}
-              disabled={isSubmitting || !newServiceName.trim()}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              onClick={() => setActiveTab('umum')}
+              className={`
+                whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
+                ${activeTab === 'umum'
+                  ? 'border-red-600 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
             >
-              {isSubmitting ? (
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-              )}
-              <span>{isSubmitting ? 'Menambah...' : 'Tambah'}</span>
+              Layanan Umum
             </button>
-          </div>
+            <button
+              onClick={() => setActiveTab('bidang')}
+              className={`
+                whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
+                ${activeTab === 'bidang'
+                  ? 'border-red-600 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              Layanan Bidang
+            </button>
+          </nav>
         </div>
 
-        {/* Services List */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Layanan</h3>
-          
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-600"></div>
-            </div>
-          ) : services.filter(service => service.id !== 999).length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <p>Belum ada layanan yang tersedia</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {services.filter(service => service.id !== 999).map((service) => (
-                <div
-                  key={service.id}
-                  className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        {/* Tab Content */}
+        {activeTab === 'umum' ? (
+          <>
+            {/* Add New Service */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Tambah Layanan Baru</h3>
+              <div className="flex space-x-3">
+                <input
+                  type="text"
+                  value={newServiceName}
+                  onChange={(e) => setNewServiceName(e.target.value)}
+                  placeholder="Masukkan nama layanan"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  disabled={isSubmitting}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddService()}
+                />
+                <button
+                  onClick={handleAddService}
+                  disabled={isSubmitting || !newServiceName.trim()}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  {editingService?.id === service.id ? (
-                    <div className="flex-1 flex items-center space-x-3">
-                      <input
-                        type="text"
-                        value={editingService.tujuan}
-                        onChange={(e) => setEditingService({ ...editingService, tujuan: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                        disabled={isSubmitting}
-                        onKeyPress={(e) => e.key === 'Enter' && handleEditService()}
-                      />
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={handleEditService}
-                          disabled={isSubmitting}
-                          className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
-                          title="Simpan"
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => setEditingService(null)}
-                          disabled={isSubmitting}
-                          className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
-                          title="Batal"
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
+                  {isSubmitting ? (
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  <span>{isSubmitting ? 'Menambah...' : 'Tambah'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Services List */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Layanan</h3>
+              
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-600"></div>
+                </div>
+              ) : services.filter(service => service.id !== 999).length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p>Belum ada layanan yang tersedia</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {services.filter(service => service.id !== 999).map((service) => (
+                    <div
+                      key={service.id}
+                      className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      {editingService?.id === service.id ? (
+                        <div className="flex-1 flex items-center space-x-3">
+                          <input
+                            type="text"
+                            value={editingService.tujuan}
+                            onChange={(e) => setEditingService({ ...editingService, tujuan: e.target.value })}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            disabled={isSubmitting}
+                            onKeyPress={(e) => e.key === 'Enter' && handleEditService()}
+                          />
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={handleEditService}
+                              disabled={isSubmitting}
+                              className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
+                              title="Simpan"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => setEditingService(null)}
+                              disabled={isSubmitting}
+                              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                              title="Batal"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center flex-1">
+                            <span className="text-sm font-medium text-gray-900 mr-2">#{service.id}</span>
+                            <span className="text-gray-700">{service.tujuan}</span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => setEditingService(service)}
+                              disabled={isSubmitting}
+                              className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition-colors disabled:opacity-50"
+                              title="Edit"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteService(service)}
+                              disabled={isSubmitting}
+                              className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                              title="Hapus"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Bidang Dropdown */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Pilih Bidang</h3>
+              {isLoadingBidang ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-red-600"></div>
+                </div>
+              ) : (
+                <select
+                  value={selectedBidangId || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedBidangId(value ? Number(value) : null);
+                    setLayananBidang([]);
+                    setNewLayananName('');
+                    setEditingLayanan(null);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="">-- Pilih Bidang --</option>
+                  {bidangList.map((bidang) => (
+                    <option key={bidang.id} value={bidang.id}>
+                      {bidang.bidang}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Add New Layanan Bidang */}
+            {selectedBidangId && (
+              <>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Tambah Layanan Baru</h3>
+                  <div className="flex space-x-3">
+                    <input
+                      type="text"
+                      value={newLayananName}
+                      onChange={(e) => setNewLayananName(e.target.value)}
+                      placeholder="Masukkan nama layanan"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      disabled={isSubmittingLayanan}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddLayanan()}
+                    />
+                    <button
+                      onClick={handleAddLayanan}
+                      disabled={isSubmittingLayanan || !newLayananName.trim()}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                    >
+                      {isSubmittingLayanan ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      <span>{isSubmittingLayanan ? 'Menambah...' : 'Tambah'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Layanan Bidang List */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Layanan</h3>
+                  
+                  {isLoadingLayanan ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-600"></div>
+                    </div>
+                  ) : layananBidang.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <p>Belum ada layanan di bidang ini</p>
                     </div>
                   ) : (
-                    <>
-                      <div className="flex items-center flex-1">
-                        <span className="text-sm font-medium text-gray-900 mr-2">#{service.id}</span>
-                        <span className="text-gray-700">{service.tujuan}</span>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setEditingService(service)}
-                          disabled={isSubmitting}
-                          className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition-colors disabled:opacity-50"
-                          title="Edit"
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {layananBidang.map((layanan) => (
+                        <div
+                          key={layanan.id}
+                          className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteService(service)}
-                          disabled={isSubmitting}
-                          className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
-                          title="Hapus"
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
-                    </>
+                          {editingLayanan?.id === layanan.id ? (
+                            <div className="flex-1 flex items-center space-x-3">
+                              <input
+                                type="text"
+                                value={editingLayanan.nama_layanan}
+                                onChange={(e) => setEditingLayanan({ ...editingLayanan, nama_layanan: e.target.value })}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                disabled={isSubmittingLayanan}
+                                onKeyPress={(e) => e.key === 'Enter' && handleEditLayanan()}
+                              />
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={handleEditLayanan}
+                                  disabled={isSubmittingLayanan}
+                                  className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
+                                  title="Simpan"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => setEditingLayanan(null)}
+                                  disabled={isSubmittingLayanan}
+                                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                  title="Batal"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center flex-1">
+                                <span className="text-sm font-medium text-gray-900 mr-2">#{layanan.id}</span>
+                                <span className="text-gray-700">{layanan.nama_layanan}</span>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => setEditingLayanan(layanan)}
+                                  disabled={isSubmittingLayanan}
+                                  className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition-colors disabled:opacity-50"
+                                  title="Edit"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLayanan(layanan)}
+                                  disabled={isSubmittingLayanan}
+                                  className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                                  title="Hapus"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </>
+            )}
+          </>
+        )}
 
         {/* Close Button */}
         <div className="flex justify-end pt-4 border-t border-gray-200">
