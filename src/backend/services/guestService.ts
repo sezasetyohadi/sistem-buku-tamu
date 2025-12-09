@@ -567,7 +567,37 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
     `;
     const topVisitorsParams = bidangTujuanId ? [Math.max(periodDays, 30), bidangTujuanId] : [Math.max(periodDays, 30)];
 
-    //console.log('Executing queries with bidang_tujuan_id:', bidangTujuanId);
+    // 8. Layanan Diberikan statistics (layanan_disnaker_id aggregation)
+    const layananDiberikanQuery = `
+      SELECT 
+        COALESCE(ld.nama_layanan, 'Belum terdata') as layanan_name,
+        COUNT(*) as count,
+        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY) ${deptFilter})), 1) as percentage
+      FROM daftar_tamu dt
+      LEFT JOIN layanan_disnaker ld ON dt.layanan_disnaker_id = ld.id
+      WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY) ${deptFilter}
+      GROUP BY dt.layanan_disnaker_id, ld.nama_layanan
+      ORDER BY count DESC
+    `;
+    const layananDiberikanParams = bidangTujuanId ? [periodDays, bidangTujuanId, periodDays, bidangTujuanId] : [periodDays, periodDays];
+
+    // 9. Bidang Tujuan statistics (most visited departments) - no department filter (show all)
+    const bidangTujuanQuery = `
+      SELECT 
+        bt.bidang as bidang_name,
+        COUNT(*) as count,
+        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY))), 1) as percentage
+      FROM daftar_tamu dt
+      LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
+      WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY)
+      GROUP BY dt.bidang_tujuan_id, bt.bidang
+      ORDER BY count DESC
+    `;
+    const bidangTujuanParams = [periodDays, periodDays];
+
+    console.log('Executing queries with bidang_tujuan_id:', bidangTujuanId);
+    console.log('layananDiberikanParams:', layananDiberikanParams);
+    console.log('bidangTujuanParams:', bidangTujuanParams);
     
     const [
       totalVisitsData, 
@@ -576,7 +606,9 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       satisfactionData, 
       trendsData, 
       serviceCategoriesData, 
-      topVisitorsData
+      topVisitorsData,
+      layananDiberikanData,
+      bidangTujuanData
     ] = await Promise.all([
       executeQuery<any[]>(totalVisitsQuery, totalVisitsParams),
       executeQuery<any[]>(dailyAverageQuery, dailyAverageParams),
@@ -584,17 +616,16 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       executeQuery<any[]>(satisfactionQuery, satisfactionParams),
       executeQuery<any[]>(trendsQuery, trendsParams),
       executeQuery<any[]>(serviceCategoriesQuery, serviceCategoriesParams),
-      executeQuery<any[]>(topVisitorsQuery, topVisitorsParams)
+      executeQuery<any[]>(topVisitorsQuery, topVisitorsParams),
+      executeQuery<any[]>(layananDiberikanQuery, layananDiberikanParams),
+      executeQuery<any[]>(bidangTujuanQuery, bidangTujuanParams)
     ]);
 
-    //console.log('Query results:');
-    //console.log('- totalVisitsData:', totalVisitsData);
-    //console.log('- dailyAverageData:', dailyAverageData);
-    //console.log('- avgDurationData:', avgDurationData);
-    //console.log('- satisfactionData:', satisfactionData);
-    //console.log('- trendsData:', trendsData);
-    //console.log('- serviceCategoriesData:', serviceCategoriesData);
-    //console.log('- topVisitorsData:', topVisitorsData);
+    console.log('Query results:');
+    console.log('- layananDiberikanData:', layananDiberikanData);
+    console.log('- bidangTujuanData:', bidangTujuanData);
+    console.log('- serviceCategoriesData:', serviceCategoriesData);
+    console.log('- topVisitorsData:', topVisitorsData);
 
     // Debug logging to understand data types
     /* console.log('Raw data from queries:', {
@@ -678,8 +709,14 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       // Chart data
       weeklyTrends: trendsData || [],
       
-      // Service categories with percentages
+      // Service categories with percentages (Permintaan Layanan)
       serviceCategories: serviceCategoriesData || [],
+      
+      // Layanan Diberikan statistics
+      layananDiberikan: layananDiberikanData || [],
+      
+      // Bidang Tujuan statistics (most visited departments)
+      bidangTujuan: bidangTujuanData || [],
       
       // Top visitors
       topVisitors: topVisitorsData || [],
@@ -703,6 +740,8 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       },
       weeklyTrends: [],
       serviceCategories: [],
+      layananDiberikan: [],
+      bidangTujuan: [],
       topVisitors: [],
       filterInfo: {
         filteredByDepartment: !!bidangTujuanId,

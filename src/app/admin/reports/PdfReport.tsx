@@ -281,7 +281,7 @@ const PdfReport = ({
       {reportData.serviceCategories && reportData.serviceCategories.length > 0 && (
         <div style={{ pageBreakInside: 'avoid' }}>
           <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-            Kategori Layanan Populer
+            Permintaan Layanan
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
             {/* Pie Chart */}
@@ -340,6 +340,158 @@ const PdfReport = ({
                       }}></div>
                       <span style={{ fontSize: '14px', color: '#333' }}>
                         <strong>{category.category || 'Tidak Kategori'}:</strong> {category.count} ({percentage}%)
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Layanan Diberikan Pie Chart */}
+      {reportData.layananDiberikan && reportData.layananDiberikan.length > 0 && (
+        <div style={{ pageBreakInside: 'avoid' }}>
+          <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
+            Layanan Diberikan
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
+            {/* Pie Chart */}
+            <div style={{ width: '250px', height: '250px', flexShrink: 0 }}>
+              <Pie
+                data={{
+                  labels: reportData.layananDiberikan.map((layanan: any) => layanan.layanan_name || 'Belum terdata'),
+                  datasets: [
+                    {
+                      label: 'Layanan Diberikan',
+                      data: reportData.layananDiberikan.map((layanan: any) => layanan.count),
+                      backgroundColor: [
+                        '#10B981',
+                        '#3B82F6',
+                        '#F59E0B',
+                        '#EF4444',
+                        '#8B5CF6',
+                        '#EC4899',
+                        '#14B8A6',
+                        '#F97316',
+                      ],
+                      borderColor: '#ffffff',
+                      borderWidth: 2,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  animation: false,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
+                    tooltip: {
+                      enabled: false,
+                    },
+                  },
+                }}
+              />
+            </div>
+            
+            {/* Legend */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '12px' }}>
+                {reportData.layananDiberikan.map((layanan: any, idx: number) => {
+                  const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+                  const total = reportData.layananDiberikan.reduce((sum: number, lay: any) => sum + lay.count, 0);
+                  const percentage = ((layanan.count / total) * 100).toFixed(1);
+                  
+                  return (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        backgroundColor: colors[idx % colors.length],
+                        marginRight: '10px',
+                        borderRadius: '2px'
+                      }}></div>
+                      <span style={{ fontSize: '14px', color: '#333' }}>
+                        <strong>{layanan.layanan_name || 'Belum terdata'}:</strong> {layanan.count} ({percentage}%)
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bidang Tujuan Pie Chart */}
+      {reportData.bidangTujuan && reportData.bidangTujuan.length > 0 && (
+        <div style={{ pageBreakInside: 'avoid' }}>
+          <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
+            Sering Dikunjungi
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
+            {/* Pie Chart */}
+            <div style={{ width: '250px', height: '250px', flexShrink: 0 }}>
+              <Pie
+                data={{
+                  labels: reportData.bidangTujuan.map((bidang: any) => bidang.bidang_name || 'Tidak Diketahui'),
+                  datasets: [
+                    {
+                      label: 'Bidang Tujuan',
+                      data: reportData.bidangTujuan.map((bidang: any) => bidang.count),
+                      backgroundColor: [
+                        '#8B5CF6',
+                        '#EC4899',
+                        '#06B6D4',
+                        '#F59E0B',
+                        '#EF4444',
+                        '#10B981',
+                        '#3B82F6',
+                        '#F97316',
+                      ],
+                      borderColor: '#ffffff',
+                      borderWidth: 2,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  animation: false,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
+                    tooltip: {
+                      enabled: false,
+                    },
+                  },
+                }}
+              />
+            </div>
+            
+            {/* Legend */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '12px' }}>
+                {reportData.bidangTujuan.map((bidang: any, idx: number) => {
+                  const colors = ['#8B5CF6', '#EC4899', '#06B6D4', '#F59E0B', '#EF4444', '#10B981', '#3B82F6', '#F97316'];
+                  const total = reportData.bidangTujuan.reduce((sum: number, bid: any) => sum + bid.count, 0);
+                  const percentage = ((bidang.count / total) * 100).toFixed(1);
+                  
+                  return (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        backgroundColor: colors[idx % colors.length],
+                        marginRight: '10px',
+                        borderRadius: '2px'
+                      }}></div>
+                      <span style={{ fontSize: '14px', color: '#333' }}>
+                        <strong>{bidang.bidang_name || 'Tidak Diketahui'}:</strong> {bidang.count} ({percentage}%)
                       </span>
                     </div>
                   );
