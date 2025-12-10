@@ -298,6 +298,6 @@ export class SurveyExportService {
   static getExcelFileName(): string {
     const currentDate = new Date();
     const formattedDate = format(currentDate, 'dd-MM-yyyy');
-    return `Survey_Kepuasan_${formattedDate}.xlsx`;
+    return `Survey Kepuasan ${formattedDate}.xlsx`;
   }
 }

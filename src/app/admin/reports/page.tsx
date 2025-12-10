@@ -195,6 +195,14 @@ export default function AdminReportsAnalytics() {
     try {
       const element = pdfRef.current;
       
+      // Find page sections
+      const page1Section = element.querySelector('[data-pdf-page="1"]') as HTMLElement;
+      const page2Section = element.querySelector('[data-pdf-page="2"]') as HTMLElement;
+      
+      if (!page1Section || !page2Section) {
+        throw new Error('PDF sections not found');
+      }
+      
       // Temporarily make the element visible for canvas capture
       const originalStyle = {
         position: element.style.position,
@@ -216,41 +224,7 @@ export default function AdminReportsAnalytics() {
       // Wait a moment for content to finish rendering
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const rect = element.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) {
-        throw new Error(`Element has zero dimensions: ${rect.width}x${rect.height}`);
-      }
-      
-      // Create canvas with the element's actual dimensions
-      const canvas = await html2canvas(element, { 
-        scale: 1,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        foreignObjectRendering: false, // Faster rendering
-        imageTimeout: 15000,
-        removeContainer: true
-      });
-      
-      // Restore original styles immediately
-      element.style.position = originalStyle.position;
-      element.style.left = originalStyle.left;
-      element.style.visibility = originalStyle.visibility;
-      element.style.zIndex = originalStyle.zIndex;
-      
-      if (canvas.width === 0 || canvas.height === 0) {
-        throw new Error(`Canvas has zero dimensions: ${canvas.width}x${canvas.height}`);
-      }
-      
-      const imgData = canvas.toDataURL('image/jpeg', 0.85);
-      
-      if (!imgData || imgData === 'data:,' || imgData.length < 100) {
-        throw new Error('Failed to generate valid image data from canvas');
-      }
-      
+      // Create PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'pt',
@@ -259,19 +233,57 @@ export default function AdminReportsAnalytics() {
       
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 40;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // If image is too tall, scale it down to fit the page
-      let finalWidth = imgWidth;
-      let finalHeight = imgHeight;
+      // Capture Page 1 (Statistics, Line graph, Daily details)
+      const canvas1 = await html2canvas(page1Section, { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: page1Section.scrollWidth,
+        height: page1Section.scrollHeight,
+        foreignObjectRendering: false,
+        imageTimeout: 15000,
+        removeContainer: true
+      });
       
-      if (imgHeight > pageHeight - 40) {
-        finalHeight = pageHeight - 40;
-        finalWidth = (canvas.width * finalHeight) / canvas.height;
-      }
+      const imgData1 = canvas1.toDataURL('image/jpeg', 0.85);
+      const img1Width = pageWidth - 40;
+      const img1Height = (canvas1.height * img1Width) / canvas1.width;
       
-      pdf.addImage(imgData, 'JPEG', 20, 20, finalWidth, finalHeight);
+      // Add page 1
+      pdf.addImage(imgData1, 'JPEG', 20, 20, img1Width, Math.min(img1Height, pageHeight - 40));
+      
+      // Add new page for pie charts
+      pdf.addPage();
+      
+      // Capture Page 2 (Pie charts)
+      const canvas2 = await html2canvas(page2Section, { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: page2Section.scrollWidth,
+        height: page2Section.scrollHeight,
+        foreignObjectRendering: false,
+        imageTimeout: 15000,
+        removeContainer: true
+      });
+      
+      const imgData2 = canvas2.toDataURL('image/jpeg', 0.85);
+      const img2Width = pageWidth - 40;
+      const img2Height = (canvas2.height * img2Width) / canvas2.width;
+      
+      // Add page 2
+      pdf.addImage(imgData2, 'JPEG', 20, 20, img2Width, Math.min(img2Height, pageHeight - 40));
+      
+      // Restore original styles
+      element.style.position = originalStyle.position;
+      element.style.left = originalStyle.left;
+      element.style.visibility = originalStyle.visibility;
+      element.style.zIndex = originalStyle.zIndex;
       
       // Create filename with department and period info
       const periodText = selectedPeriod === '7' ? '7Hari' : 
@@ -1043,20 +1055,20 @@ export default function AdminReportsAnalytics() {
           </div>
         </div>
 
-        {/* Konten PDF tersembunyi */}
+        {/* Konten PDF tersembunyi untuk export */}
         <div style={{
-          position: 'relative',
-          left: '0px',
+          position: 'fixed',
+          left: '-9999px',
           top: '0',
-          visibility: 'visible',
-          margin: '20px 0'
+          visibility: 'hidden'
         }}>
           <div ref={pdfRef} data-pdf-content style={{ 
-            width: '794px',  // A4 width in pixels at 96 DPI
-            minHeight: '1123px', // A4 height in pixels at 96 DPI
-            padding: '40px',
-            backgroundColor: 'white',
-            fontFamily: 'Arial, sans-serif'
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '20px',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            flexWrap: 'wrap'
           }}>
             <PdfReport 
               data={data && data.metrics ? data : dummyData}
@@ -1070,10 +1082,10 @@ export default function AdminReportsAnalytics() {
               periodLabel={
                 selectedPeriod === '7' ? '7 Hari Terakhir' : 
                 selectedPeriod === '30' ? '30 Hari Terakhir' : 
-                selectedPeriod === '90' ? '3 Bulan Terakhir' : 
-                selectedPeriod === '180' ? '6 Bulan Terakhir' : 
-                '1 Tahun Terakhir'
-              }
+              selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+              selectedPeriod === '180' ? '6 Bulan Terakhir' : 
+              '1 Tahun Terakhir'
+            }
             />
           </div>
         </div>

@@ -94,195 +94,211 @@ const PdfReport = ({
   }
 
   return (
-    <div style={{ 
-      fontFamily: 'Arial, sans-serif', 
-      fontSize: '12px', 
-      color: '#333', 
-      padding: '30px', 
-      background: '#fff',
-      minWidth: '794px',
-      width: '794px',
-      height: 'auto',
-      border: '1px solid #ddd',
-      boxSizing: 'border-box'
-    }}>
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '2px solid #333', paddingBottom: '15px' }}>
-        <h1 style={{ margin: '0', fontSize: '22px', color: '#333', fontWeight: 'bold' }}>
-          LAPORAN BUKU TAMU
-        </h1>
-        <h2 style={{ margin: '5px 0 0 0', fontSize: '16px', color: '#555', fontWeight: filteredByDepartment ? 'bold' : 'normal' }}>
-          {filteredByDepartment ? `${departmentName}` : 'Semua Bidang'}
-        </h2>
-        <h3 style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#444', fontWeight: 'normal' }}>
-          Periode: {periodLabel}
-        </h3>
-        <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
-          Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { 
-            day: '2-digit', 
-            month: 'long', 
-            year: 'numeric',
-            weekday: 'long'
-          })}
-        </p>
-      </div>
+    <>
+      {/* Page 1: Header, Statistics, Line Chart, Daily Details */}
+      <div data-pdf-page="1" style={{ 
+        fontFamily: 'Arial, sans-serif', 
+        fontSize: '12px', 
+        color: '#333', 
+        padding: '30px', 
+        background: '#fff',
+        minWidth: '794px',
+        width: '794px',
+        minHeight: '1123px',
+        border: '1px solid #ddd',
+        boxSizing: 'border-box'
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '2px solid #333', paddingBottom: '15px' }}>
+          <h1 style={{ margin: '0', fontSize: '22px', color: '#333', fontWeight: 'bold' }}>
+            LAPORAN BUKU TAMU
+          </h1>
+          <h2 style={{ margin: '5px 0 0 0', fontSize: '16px', color: '#555', fontWeight: filteredByDepartment ? 'bold' : 'normal' }}>
+            {filteredByDepartment ? `${departmentName}` : 'Semua Bidang'}
+          </h2>
+          <h3 style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#444', fontWeight: 'normal' }}>
+            Periode: {periodLabel}
+          </h3>
+          <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
+            Tanggal Cetak: {new Date().toLocaleDateString('id-ID', { 
+              day: '2-digit', 
+              month: 'long', 
+              year: 'numeric',
+              weekday: 'long'
+            })}
+          </p>
+        </div>
 
-      {/* Statistics Table */}
-      <div style={{ pageBreakInside: 'avoid' }}>
+        {/* Statistics Table */}
+        <div style={{ pageBreakInside: 'avoid' }}>
+          <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
+            Statistik Kunjungan
+          </h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
+          <thead>
+            <tr>
+              <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Total Kunjungan</th>
+              <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Rerata Tamu Harian</th>
+              <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu Rata-rata</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
+                {reportData.metrics?.totalVisits?.value ?? '0'}
+              </td>
+              <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
+                {reportData.metrics?.dailyAverage?.value ?? '0'}
+              </td>
+              <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
+                {reportData.metrics?.avgDuration?.value ?? '0h'}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        {/* Visitor Trends Chart */}
+        <div style={{ pageBreakInside: 'avoid' }}>
         <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-          Statistik Kunjungan
+          Tren Kunjungan ({periodLabel})
         </h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
-        <thead>
-          <tr>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Total Kunjungan</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Rerata Tamu Harian</th>
-            <th style={{ border: '1px solid #999', padding: '8px', background: '#f5f5f5', fontSize: '11px' }}>Waktu Rata-rata</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
-              {reportData.metrics?.totalVisits?.value ?? '0'}
-            </td>
-            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
-              {reportData.metrics?.dailyAverage?.value ?? '0'}
-            </td>
-            <td style={{ border: '1px solid #999', padding: '8px', textAlign: 'center', fontSize: '11px' }}>
-              {reportData.metrics?.avgDuration?.value ?? '0h'}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      </div>
-
-      {/* Visitor Trends Chart */}
-      <div style={{ pageBreakInside: 'avoid' }}>
-      <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-        Tren Kunjungan ({periodLabel})
-      </h3>
-      <div style={{ width: '100%', height: '150px', marginBottom: '10px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
-        {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 ? (
-          <Line
-            data={{
-              labels: reportData.weeklyTrends.map((item: any) => {
-                const date = new Date(item.date);
-                return date.toLocaleDateString('id-ID', { 
-                  weekday: 'short', 
-                  month: 'short', 
-                  day: 'numeric' 
-                });
-              }),
-              datasets: [
-                {
-                  label: 'Kunjungan',
-                  data: reportData.weeklyTrends.map((item: any) => item.visits),
-                  borderColor: 'rgb(59, 130, 246)',
-                  backgroundColor: 'rgba(59, 130, 246, 0.05)', // Lighter background
-                  borderWidth: 1.5, // Thinner border
-                  fill: true,
-                  tension: 0.2, // Less curve smoothing
-                  pointBackgroundColor: 'rgb(59, 130, 246)',
-                  pointBorderColor: '#ffffff',
-                  pointBorderWidth: 2, // Thicker point border
-                  pointRadius: 4, // Bigger points
-                  pointHoverRadius: 4, // Bigger hover
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: false, // Disable animations for PDF
-              plugins: {
-                legend: {
-                  display: false,
-                },
-                tooltip: {
-                  enabled: false, // Disable tooltips for PDF
-                },
-              },
-              elements: {
-                point: {
-                  radius: 4, // Bigger points
-                  hoverRadius: 4,
-                },
-                line: {
-                  borderWidth: 1, // Thinner lines
-                },
-              },
-              scales: {
-                x: {
-                  grid: {
+        <div style={{ width: '100%', height: '150px', marginBottom: '10px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
+          {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 ? (
+            <Line
+              data={{
+                labels: reportData.weeklyTrends.map((item: any) => {
+                  const date = new Date(item.date);
+                  return date.toLocaleDateString('id-ID', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                  });
+                }),
+                datasets: [
+                  {
+                    label: 'Kunjungan',
+                    data: reportData.weeklyTrends.map((item: any) => item.visits),
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)', // Lighter background
+                    borderWidth: 1.5, // Thinner border
+                    fill: true,
+                    tension: 0.2, // Less curve smoothing
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2, // Thicker point border
+                    pointRadius: 4, // Bigger points
+                    pointHoverRadius: 4, // Bigger hover
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false, // Disable animations for PDF
+                plugins: {
+                  legend: {
                     display: false,
                   },
-                  ticks: {
-                    color: '#374151',
-                    font: {
-                      size: 9, // Smaller font
+                  tooltip: {
+                    enabled: false, // Disable tooltips for PDF
+                  },
+                },
+                elements: {
+                  point: {
+                    radius: 4, // Bigger points
+                    hoverRadius: 4,
+                  },
+                  line: {
+                    borderWidth: 1, // Thinner lines
+                  },
+                },
+                scales: {
+                  x: {
+                    grid: {
+                      display: false,
+                    },
+                    ticks: {
+                      color: '#374151',
+                      font: {
+                        size: 9, // Smaller font
+                      },
+                    },
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: {
+                      color: 'rgba(0, 0, 0, 0.05)', // Lighter grid
+                      lineWidth: 0.5, // Thinner grid lines
+                    },
+                    ticks: {
+                      color: '#374151',
+                      font: {
+                        size: 9, // Smaller font
+                      },
+                      stepSize: 1,
                     },
                   },
                 },
-                y: {
-                  beginAtZero: true,
-                  grid: {
-                    color: 'rgba(0, 0, 0, 0.05)', // Lighter grid
-                    lineWidth: 0.5, // Thinner grid lines
-                  },
-                  ticks: {
-                    color: '#374151',
-                    font: {
-                      size: 9, // Smaller font
-                    },
-                    stepSize: 1,
-                  },
+                interaction: {
+                  intersect: false,
+                  mode: 'index' as const,
                 },
-              },
-              interaction: {
-                intersect: false,
-                mode: 'index' as const,
-              },
-            }}
-          />
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ margin: '0', fontSize: '14px' }}>Tidak ada data trend tersedia</p>
-              <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>Data akan muncul setelah ada aktivitas kunjungan</p>
+              }}
+            />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ margin: '0', fontSize: '14px' }}>Tidak ada data trend tersedia</p>
+                <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>Data akan muncul setelah ada aktivitas kunjungan</p>
+              </div>
+            </div>
+          )}
+        </div>
+        </div>
+
+        {/* Daily Visit Details */}
+        {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 && (
+          <div style={{ marginTop: '10px', marginBottom: '20px', padding: '12px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#333', fontWeight: 'bold' }}>Detail Kunjungan per Hari:</h4>
+            <div style={{ fontSize: '14px', color: '#555', lineHeight: '1.8' }}>
+              {reportData.weeklyTrends.map((item: any, idx: number) => {
+                const date = new Date(item.date);
+                const formattedDate = date.toLocaleDateString('id-ID', { 
+                  day: 'numeric', 
+                  month: 'long', 
+                  year: 'numeric' 
+                });
+                return (
+                  <div key={idx} style={{ marginBottom: '5px', pageBreakInside: 'avoid' }}>
+                    <strong style={{ fontSize: '14px' }}>{formattedDate}:</strong> {item.visits} kunjungan
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
-      </div>
 
-      {/* Daily Visit Details */}
-      {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 && (
-        <div style={{ marginTop: '10px', marginBottom: '20px', padding: '12px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
-          <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#333', fontWeight: 'bold' }}>Detail Kunjungan per Hari:</h4>
-          <div style={{ fontSize: '14px', color: '#555', lineHeight: '1.8' }}>
-            {reportData.weeklyTrends.map((item: any, idx: number) => {
-              const date = new Date(item.date);
-              const formattedDate = date.toLocaleDateString('id-ID', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-              });
-              return (
-                <div key={idx} style={{ marginBottom: '5px', pageBreakInside: 'avoid' }}>
-                  <strong style={{ fontSize: '14px' }}>{formattedDate}:</strong> {item.visits} kunjungan
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Service Categories Pie Chart */}
-      {reportData.serviceCategories && reportData.serviceCategories.length > 0 && (
-        <div style={{ pageBreakInside: 'avoid' }}>
-          <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
-            Permintaan Layanan
-          </h3>
+      {/* Page 2: All Pie Charts */}
+      <div data-pdf-page="2" style={{ 
+        fontFamily: 'Arial, sans-serif', 
+        fontSize: '12px', 
+        color: '#333', 
+        padding: '30px', 
+        background: '#fff',
+        minWidth: '794px',
+        width: '794px',
+        minHeight: '1123px',
+        border: '1px solid #ddd',
+        boxSizing: 'border-box'
+      }}>
+        {/* Service Categories Pie Chart */}
+        {reportData.serviceCategories && reportData.serviceCategories.length > 0 && (
+          <div style={{ pageBreakInside: 'avoid' }}>
+            <h3 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px', color: '#333' }}>
+              Permintaan Layanan
+            </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
             {/* Pie Chart */}
             <div style={{ width: '250px', height: '250px', flexShrink: 0 }}>
@@ -502,23 +518,22 @@ const PdfReport = ({
         </div>
       )}
 
-      {/* Footer */}
-      <div style={{ pageBreakInside: 'avoid' }}>
-      <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ddd', backgroundColor: '#f9f9f9', fontSize: '10px' }}>
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '12px' }}>Informasi Sistem</h4>
-        <p style={{ margin: '5px 0' }}>Laporan ini dihasilkan dari Sistem Buku Tamu Digital</p>
-        <p style={{ margin: '5px 0' }}>Tanggal: {new Date().toLocaleDateString('id-ID')}</p>
-        <p style={{ margin: '5px 0' }}>
-          <strong>Filter Waktu: </strong> {periodLabel}
-        </p>
-        <p style={{ margin: '5px 0' }}>
-          <strong>Filter Bidang: </strong> 
-          {filteredByDepartment ? `Data khusus bidang ${departmentName}` : 'Semua data'}
-        </p>
-        <p style={{ margin: '5px 0' }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
+        {/* Footer for Page 2 */}
+        <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ddd', backgroundColor: '#f9f9f9', fontSize: '10px' }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '12px' }}>Informasi Sistem</h4>
+          <p style={{ margin: '5px 0' }}>Laporan ini dihasilkan dari Sistem Buku Tamu Digital</p>
+          <p style={{ margin: '5px 0' }}>Tanggal: {new Date().toLocaleDateString('id-ID')}</p>
+          <p style={{ margin: '5px 0' }}>
+            <strong>Filter Waktu: </strong> {periodLabel}
+          </p>
+          <p style={{ margin: '5px 0' }}>
+            <strong>Filter Bidang: </strong> 
+            {filteredByDepartment ? `Data khusus bidang ${departmentName}` : 'Semua data'}
+          </p>
+          <p style={{ margin: '5px 0' }}>Status: {reportData.recentActivities && reportData.recentActivities.length > 0 ? 'Data Lengkap' : 'Data Terbatas'}</p>
+        </div>
       </div>
-      </div>
-    </div>
+    </>
   );
 };
 
