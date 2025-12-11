@@ -6,20 +6,22 @@ import {
   getTujuanKunjunganOptions,
   getBidangTujuanOptions,
   getMemperolehInformasiOptions,
-  getMendapatkanSalinanOptions
+  getMendapatkanSalinanOptions,
+  getLayananDisnakerOptions
 } from '@/backend/config/db';
 
 export async function GET() {
   try {
     // Lookup data from database tables
     
-    const [educationLevels, professions, tujuanKunjungan, bidangTujuan, memperolehInformasi, mendapatkanSalinan] = await Promise.all([
+    const [educationLevels, professions, tujuanKunjungan, bidangTujuan, memperolehInformasi, mendapatkanSalinan, layananDisnaker] = await Promise.all([
       getEducationOptions(),
       getProfessionOptions(),
       getTujuanKunjunganOptions(),
       getBidangTujuanOptions(),
       getMemperolehInformasiOptions(),
-      getMendapatkanSalinanOptions()
+      getMendapatkanSalinanOptions(),
+      getLayananDisnakerOptions()
     ]);
 
     return NextResponse.json({ 
@@ -30,7 +32,8 @@ export async function GET() {
         tujuanKunjungan,
         bidangTujuan,
         memperolehInformasi,
-        mendapatkanSalinan
+        mendapatkanSalinan,
+        layananDisnaker
       },
       message: 'Lookup data retrieved successfully' 
     });

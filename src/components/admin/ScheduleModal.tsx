@@ -10,13 +10,15 @@ interface ScheduleModalProps {
   onSchedule: (
     scheduledDateTime: string, 
     bidangTujuanId?: number, 
-    asnDituju?: string, 
+    asnDituju?: string,
+    layananId?: number,
     caraSalinan?: number[]
   ) => Promise<void>;
   guestId: number;
   currentSchedule?: string; // Jadwal yang sudah ada sebelumnya
   currentBidangId?: number; // Bidang tujuan yang sudah ada sebelumnya
   currentAsnDituju?: string; // ASN yang dituju sebelumnya
+  currentLayananId?: number; // Layanan yang sudah ada sebelumnya
   currentCaraSalinan?: number[]; // Cara mendapatkan salinan yang sudah ada sebelumnya
   isEdit?: boolean; // Mode edit jadwal
 }
@@ -29,6 +31,7 @@ export default function ScheduleModal({
   currentSchedule, 
   currentBidangId,
   currentAsnDituju,
+  currentLayananId,
   currentCaraSalinan = [],
   isEdit = false 
 }: ScheduleModalProps) {
@@ -42,6 +45,7 @@ export default function ScheduleModal({
   const [minute, setMinute] = useState<string>(String(now.getMinutes()).padStart(2, '0'));
   const [bidangTujuanId, setBidangTujuanId] = useState<number | undefined>(currentBidangId);
   const [asnDituju, setAsnDituju] = useState<string>(currentAsnDituju || '');
+  const [layananId, setLayananId] = useState<number | undefined>(currentLayananId);
   const [caraSalinan, setCaraSalinan] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +53,7 @@ export default function ScheduleModal({
   // Fetch bidang tujuan and cara salinan options from API
   const { data: lookupData, loading } = useApiCall<{
     bidangTujuan: Array<{id: number, bidang: string}>;
+    layananDisnaker: Array<{id: number, nama_layanan: string, bidang_id: number}>;
     mendapatkanSalinan: Array<{id: number, nama_opsi: string}>;
   }>('/api/lookup', {
     immediate: true,
@@ -58,6 +63,11 @@ export default function ScheduleModal({
   // Calculate minimum allowed date and time
   const minDate = new Date().toISOString().split('T')[0];
   
+  // Check if selected bidang has any layanan options
+  const hasLayananOptions = bidangTujuanId && lookupData?.layananDisnaker
+    ? lookupData.layananDisnaker.filter(l => l.bidang_id === bidangTujuanId).length > 0
+    : false;
+  
   // Initialize form data based on props
   const initializeFormData = () => {
     /* console.log('Initializing form data:', {
@@ -65,6 +75,7 @@ export default function ScheduleModal({
       currentSchedule,
       currentBidangId,
       currentAsnDituju,
+      currentLayananId,
       currentCaraSalinan
     }); */
     
@@ -80,8 +91,9 @@ export default function ScheduleModal({
         resetToCurrentTime();
       }
       
-      // Set bidang tujuan and ASN data if available
+      // Set bidang tujuan, layanan, and ASN data if available
       setBidangTujuanId(currentBidangId);
+      setLayananId(currentLayananId);
       setAsnDituju(currentAsnDituju || '');
       
       // Ensure currentCaraSalinan is properly set
@@ -91,6 +103,7 @@ export default function ScheduleModal({
     } else {
       resetToCurrentTime();
       setBidangTujuanId(undefined);
+      setLayananId(undefined);
       setAsnDituju('');
       setCaraSalinan([]);
     }
@@ -122,6 +135,12 @@ export default function ScheduleModal({
   useEffect(() => {
     //console.log('CaraSalinan state changed:', caraSalinan);
   }, [caraSalinan]);
+
+  // Reset layanan and ASN when bidang changes
+  useEffect(() => {
+    setLayananId(undefined);
+    setAsnDituju('');
+  }, [bidangTujuanId]);
 
   // Helper function to reset time to current time
   const resetToCurrentTime = () => {
@@ -299,6 +318,12 @@ export default function ScheduleModal({
         return;
       }
       
+      // Only validate layanan if the selected bidang has layanan options
+      if (hasLayananOptions && !layananId) {
+        setError('Layanan diberikan harus dipilih');
+        return;
+      }
+      
       // Validate hour and minute format
       const hourNum = parseInt(hour, 10);
       const minuteNum = parseInt(minute, 10);
@@ -326,7 +351,9 @@ export default function ScheduleModal({
       const paddedMinute = String(minuteNum).padStart(2, '0');
       const scheduledDateTime = `${date}T${paddedHour}:${paddedMinute}:00`;
       
-      await onSchedule(scheduledDateTime, bidangTujuanId, asnDituju.trim(), caraSalinan);
+      // Only pass layananId if bidang has layanan options
+      const layananIdToPass = hasLayananOptions ? layananId : undefined;
+      await onSchedule(scheduledDateTime, bidangTujuanId, asnDituju.trim(), layananIdToPass, caraSalinan);
       onClose();
     } catch (error) {
       setError('Gagal menjadwalkan kunjungan. Silakan coba lagi.');
@@ -454,6 +481,39 @@ export default function ScheduleModal({
             </div>
           </div>
           
+          {/* Layanan Diberikan - Only show if bidang is selected and has layanan options */}
+          {bidangTujuanId && lookupData?.layananDisnaker && lookupData.layananDisnaker.filter(l => l.bidang_id === bidangTujuanId).length > 0 && (
+            <div>
+              <label htmlFor="layananDiberikan" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
+                Layanan Diberikan
+              </label>
+              <div>
+                <select
+                  id="layananDiberikan"
+                  value={layananId || ''}
+                  onChange={(e) => setLayananId(e.target.value ? Number(e.target.value) : undefined)}
+                  className={`block w-full rounded-md py-3 px-4 text-base text-gray-900 dark:text-dark-text-primary bg-white dark:bg-dark-surface border ${
+                    error && !layananId ? 'border-error-500 dark:border-error-400 ring-1 ring-error-500 dark:ring-error-400 focus:border-error-500 focus:ring-error-500' : 
+                    !layananId ? 'border-gray-400 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500' :
+                    'border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                  style={{ minHeight: '48px' }}
+                >
+                  <option value="">
+                    {loading ? 'Memuat data...' : 'Pilih layanan diberikan'}
+                  </option>
+                  {lookupData?.layananDisnaker
+                    ?.filter(layanan => layanan.bidang_id === bidangTujuanId)
+                    .map((layanan) => (
+                      <option key={layanan.id} value={layanan.id}>
+                        {layanan.nama_layanan}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+          )}
+          
           <div>
             <label htmlFor="asnDituju" className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
               Menemui
@@ -469,6 +529,7 @@ export default function ScheduleModal({
                   !asnDituju ? 'border-gray-400 dark:border-gray-600' : 'border-gray-300 dark:border-gray-700'
                 } focus:border-blue-500 focus:ring-blue-500`}
                 style={{ minHeight: '48px' }}
+                disabled={!bidangTujuanId}
               />
             </div>
           </div>

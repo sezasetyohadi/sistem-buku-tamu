@@ -6,6 +6,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -15,7 +16,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Metadata } from 'next';
 import { useState, useEffect, useRef } from 'react';
-import { Line } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { showToast } from '@/lib/toast';
@@ -28,6 +29,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -45,6 +47,8 @@ interface ReportsData {
   };
   weeklyTrends: Array<{ date: string; visits: number }>;
   serviceCategories: Array<{ category: string; count: number; percentage: number }>;
+  layananDiberikan: Array<{ layanan_name: string; count: number; percentage: number }>;
+  bidangTujuan: Array<{ bidang_name: string; count: number; percentage: number }>;
   topVisitors: Array<{ nama: string; asal_instansi: string; visit_count: number }>;
   recentActivities: Array<{
     id: number;
@@ -158,8 +162,10 @@ export default function AdminReportsAnalytics() {
         const response = await fetch(url);
         const result = await response.json();
         
-        //console.log('Reports: API response:', result);
-        //console.log('Reports: API response data:', JSON.stringify(result.data, null, 2));
+        console.log('Reports: API response:', result);
+        console.log('Reports: API response data:', JSON.stringify(result.data, null, 2));
+        console.log('Reports: layananDiberikan:', result.data?.layananDiberikan);
+        console.log('Reports: bidangTujuan:', result.data?.bidangTujuan);
         
         if (result.success) {
           //console.log('Reports: Setting data state:', result.data);
@@ -189,6 +195,14 @@ export default function AdminReportsAnalytics() {
     try {
       const element = pdfRef.current;
       
+      // Find page sections
+      const page1Section = element.querySelector('[data-pdf-page="1"]') as HTMLElement;
+      const page2Section = element.querySelector('[data-pdf-page="2"]') as HTMLElement;
+      
+      if (!page1Section || !page2Section) {
+        throw new Error('PDF sections not found');
+      }
+      
       // Temporarily make the element visible for canvas capture
       const originalStyle = {
         position: element.style.position,
@@ -210,41 +224,7 @@ export default function AdminReportsAnalytics() {
       // Wait a moment for content to finish rendering
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const rect = element.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) {
-        throw new Error(`Element has zero dimensions: ${rect.width}x${rect.height}`);
-      }
-      
-      // Create canvas with the element's actual dimensions
-      const canvas = await html2canvas(element, { 
-        scale: 1,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        foreignObjectRendering: false, // Faster rendering
-        imageTimeout: 15000,
-        removeContainer: true
-      });
-      
-      // Restore original styles immediately
-      element.style.position = originalStyle.position;
-      element.style.left = originalStyle.left;
-      element.style.visibility = originalStyle.visibility;
-      element.style.zIndex = originalStyle.zIndex;
-      
-      if (canvas.width === 0 || canvas.height === 0) {
-        throw new Error(`Canvas has zero dimensions: ${canvas.width}x${canvas.height}`);
-      }
-      
-      const imgData = canvas.toDataURL('image/jpeg', 0.85);
-      
-      if (!imgData || imgData === 'data:,' || imgData.length < 100) {
-        throw new Error('Failed to generate valid image data from canvas');
-      }
-      
+      // Create PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'pt',
@@ -253,24 +233,63 @@ export default function AdminReportsAnalytics() {
       
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 40;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // If image is too tall, scale it down to fit the page
-      let finalWidth = imgWidth;
-      let finalHeight = imgHeight;
+      // Capture Page 1 (Statistics, Line graph, Daily details)
+      const canvas1 = await html2canvas(page1Section, { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: page1Section.scrollWidth,
+        height: page1Section.scrollHeight,
+        foreignObjectRendering: false,
+        imageTimeout: 15000,
+        removeContainer: true
+      });
       
-      if (imgHeight > pageHeight - 40) {
-        finalHeight = pageHeight - 40;
-        finalWidth = (canvas.width * finalHeight) / canvas.height;
-      }
+      const imgData1 = canvas1.toDataURL('image/jpeg', 0.85);
+      const img1Width = pageWidth - 40;
+      const img1Height = (canvas1.height * img1Width) / canvas1.width;
       
-      pdf.addImage(imgData, 'JPEG', 20, 20, finalWidth, finalHeight);
+      // Add page 1
+      pdf.addImage(imgData1, 'JPEG', 20, 20, img1Width, Math.min(img1Height, pageHeight - 40));
+      
+      // Add new page for pie charts
+      pdf.addPage();
+      
+      // Capture Page 2 (Pie charts)
+      const canvas2 = await html2canvas(page2Section, { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: page2Section.scrollWidth,
+        height: page2Section.scrollHeight,
+        foreignObjectRendering: false,
+        imageTimeout: 15000,
+        removeContainer: true
+      });
+      
+      const imgData2 = canvas2.toDataURL('image/jpeg', 0.85);
+      const img2Width = pageWidth - 40;
+      const img2Height = (canvas2.height * img2Width) / canvas2.width;
+      
+      // Add page 2
+      pdf.addImage(imgData2, 'JPEG', 20, 20, img2Width, Math.min(img2Height, pageHeight - 40));
+      
+      // Restore original styles
+      element.style.position = originalStyle.position;
+      element.style.left = originalStyle.left;
+      element.style.visibility = originalStyle.visibility;
+      element.style.zIndex = originalStyle.zIndex;
       
       // Create filename with department and period info
       const periodText = selectedPeriod === '7' ? '7Hari' : 
                         selectedPeriod === '30' ? '30Hari' : 
-                        selectedPeriod === '90' ? '3Bulan' : '1Tahun';
+                        selectedPeriod === '90' ? '3Bulan' : 
+                        selectedPeriod === '180' ? '6Bulan' : '1Tahun';
       
       let departmentText = 'AllBidang';
       
@@ -378,9 +397,11 @@ export default function AdminReportsAnalytics() {
                   <span className="truncate flex-1 text-left" title={selectedPeriod === '7' ? '7 Hari Terakhir' : 
                                                                 selectedPeriod === '30' ? '30 Hari Terakhir' : 
                                                                 selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                                                                selectedPeriod === '180' ? '6 Bulan Terakhir' : 
                                                                 '1 Tahun Terakhir'}>{selectedPeriod === '7' ? '7 Hari Terakhir' : 
                         selectedPeriod === '30' ? '30 Hari Terakhir' : 
                         selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                        selectedPeriod === '180' ? '6 Bulan Terakhir' : 
                         '1 Tahun Terakhir'}</span>
                   <svg className="w-4 h-4 ml-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -419,6 +440,15 @@ export default function AdminReportsAnalytics() {
                       }}
                     >
                       3 Bulan Terakhir
+                    </button>
+                    <button 
+                      className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '180' ? 'bg-blue-500 text-white' : ''}`}
+                      onClick={() => {
+                        setSelectedPeriod('180');
+                        setIsTimeDropdownOpen(false);
+                      }}
+                    >
+                      6 Bulan Terakhir
                     </button>
                     <button 
                       className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${selectedPeriod === '365' ? 'bg-blue-500 text-white' : ''}`}
@@ -552,7 +582,7 @@ export default function AdminReportsAnalytics() {
           <div className="p-6 rounded-lg shadow border" style={{ backgroundColor: '#FEF3E2', borderColor: '#FED7AA' }}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-800">Rata-rata Harian</h3>
+                <h3 className="font-semibold text-gray-800">Rerata Tamu Harian</h3>
                 <p className="text-3xl font-bold text-gray-900">{data?.metrics.dailyAverage.value || '0'}</p>
                 <p className="text-sm text-gray-900 flex items-center">
                   <svg className={`w-4 h-4 mr-1 ${(data?.metrics.dailyAverage.growth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
@@ -614,7 +644,8 @@ export default function AdminReportsAnalytics() {
                 </svg>
                 Tren Kunjungan ({selectedPeriod === '7' ? '7 Hari Terakhir' : 
                                  selectedPeriod === '30' ? '30 Hari Terakhir' :
-                                 selectedPeriod === '90' ? '3 Bulan Terakhir' : '1 Tahun Terakhir'})
+                                 selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+                                 selectedPeriod === '180' ? '6 Bulan Terakhir' : '1 Tahun Terakhir'})
               </h3>
             </div>
             <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
@@ -711,160 +742,333 @@ export default function AdminReportsAnalytics() {
             </div>
           </div>
 
-          {/* Service Categories */}
+          {/* Service Categories - Permintaan Layanan */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center mb-4">
               <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
               </svg>
-              <h3 className="text-lg font-bold text-gray-800">Kategori Layanan Populer</h3>
+              <h3 className="text-lg font-bold text-gray-800">Permintaan Layanan</h3>
             </div>
-            <div className="space-y-4">
+            <div className="h-64 flex items-center justify-center">
               {data?.serviceCategories && data.serviceCategories.length > 0 ? (
-                data.serviceCategories.map((category, i) => {
-                  const colors = ['#3D5DC3', '#22C55E', '#F29442', '#8B5CF6', '#EF4444'];
-                  return (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: colors[i % colors.length] }}></div>
-                        <span className="ml-3 text-sm text-gray-900">{category.category || 'Tidak Kategori'}</span>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">{category.percentage}%</span>
-                    </div>
-                  );
-                })
+                <Pie
+                  data={{
+                    labels: data.serviceCategories.map((cat: any) => cat.category || 'Tidak Kategori'),
+                    datasets: [
+                      {
+                        label: 'Kategori Layanan',
+                        data: data.serviceCategories.map((cat: any) => cat.count),
+                        backgroundColor: [
+                          '#3D5DC3',
+                          '#22C55E',
+                          '#F29442',
+                          '#8B5CF6',
+                          '#EF4444',
+                        ],
+                        borderColor: [
+                          '#2563EB',
+                          '#16A34A',
+                          '#EA580C',
+                          '#7C3AED',
+                          '#DC2626',
+                        ],
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom' as const,
+                        labels: {
+                          padding: 15,
+                          font: {
+                            size: 12,
+                          },
+                          generateLabels: (chart) => {
+                            const datasets = chart.data.datasets;
+                            if (datasets.length === 0) return [];
+                            
+                            const data = datasets[0].data as number[];
+                            const labels = chart.data.labels as string[];
+                            const backgroundColor = datasets[0].backgroundColor as string[];
+                            
+                            const total = data.reduce((acc: number, val: number) => acc + val, 0);
+                            
+                            return labels.map((label, i) => {
+                              const value = data[i];
+                              const percentage = ((value / total) * 100).toFixed(1);
+                              return {
+                                text: `${label}: ${percentage}%`,
+                                fillStyle: backgroundColor[i],
+                                hidden: false,
+                                index: i,
+                              };
+                            });
+                          },
+                        },
+                        onClick: () => {
+                          return false;
+                        },
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function (context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = (context.dataset.data as number[]).reduce(
+                              (acc: number, val: number) => acc + val,
+                              0
+                            );
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
               ) : (
                 <div className="text-center py-8">
                   <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
                   </svg>
                   <p className="text-gray-500">Belum ada data kategori layanan</p>
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Recent Activity & Top Visitors */}
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Recent Activity */}
+          {/* Layanan Diberikan */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center mb-4">
-              <svg className="w-5 h-5 text-gray-700 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+              <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
               </svg>
-              <h3 className="text-lg font-bold text-gray-800">Aktivitas Terbaru</h3>
+              <h3 className="text-lg font-bold text-gray-800">Layanan Diberikan</h3>
             </div>
-            <div className="space-y-4">
-              {data?.recentActivities && data.recentActivities.length > 0 ? (
-                data.recentActivities.map((activity, i) => {
-                  const activityTime = new Date(activity.waktu_dibuat).toLocaleTimeString('id-ID', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  });
-                  const activityType = activity.tanggapan === 'Datang' ? 'in' : activity.tanggapan === 'Selesai' ? 'out' : 'request';
-                  const activityAction = activity.tanggapan === 'Datang' ? 'Check-in' : activity.tanggapan === 'Selesai' ? 'Check-out' : 'Permohonan Baru';
-
-                  return (
-                    <div key={i} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs text-white ${
-                        activityType === 'in' ? 'bg-green-500' :
-                        activityType === 'out' ? 'bg-red-500' :
-                        'bg-blue-500'
-                      }`}>
-                        {activityType === 'in' ? (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 111.414-1.414l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0z" clipRule="evenodd"/>
-                          </svg>
-                        ) : activityType === 'out' ? (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9.707 4.293a1 1 0 010 1.414L5.414 10H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 11-1.414 1.414l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 0z" clipRule="evenodd"/>
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                            <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h4a2 2 0 002-2V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{activityAction}</p>
-                        <p className="text-xs text-gray-800">{activity.nama} - {activity.asal_instansi}</p>
-                      </div>
-                      <span className="text-xs text-gray-700">{activityTime}</span>
-                    </div>
-                  );
-                })
+            <div className="h-64 flex items-center justify-center">
+              {data?.layananDiberikan && data.layananDiberikan.length > 0 ? (
+                <Pie
+                  data={{
+                    labels: data.layananDiberikan.map((layanan: any) => layanan.layanan_name || 'Belum terdata'),
+                    datasets: [
+                      {
+                        label: 'Layanan Diberikan',
+                        data: data.layananDiberikan.map((layanan: any) => layanan.count),
+                        backgroundColor: [
+                          '#10B981',
+                          '#3B82F6',
+                          '#F59E0B',
+                          '#EF4444',
+                          '#8B5CF6',
+                          '#EC4899',
+                          '#14B8A6',
+                          '#F97316',
+                        ],
+                        borderColor: [
+                          '#059669',
+                          '#2563EB',
+                          '#D97706',
+                          '#DC2626',
+                          '#7C3AED',
+                          '#DB2777',
+                          '#0D9488',
+                          '#EA580C',
+                        ],
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom' as const,
+                        labels: {
+                          padding: 15,
+                          font: {
+                            size: 12,
+                          },
+                          generateLabels: (chart) => {
+                            const datasets = chart.data.datasets;
+                            if (datasets.length === 0) return [];
+                            
+                            const data = datasets[0].data as number[];
+                            const labels = chart.data.labels as string[];
+                            const backgroundColor = datasets[0].backgroundColor as string[];
+                            
+                            const total = data.reduce((acc: number, val: number) => acc + val, 0);
+                            
+                            return labels.map((label, i) => {
+                              const value = data[i];
+                              const percentage = ((value / total) * 100).toFixed(1);
+                              return {
+                                text: `${label}: ${percentage}%`,
+                                fillStyle: backgroundColor[i],
+                                hidden: false,
+                                index: i,
+                              };
+                            });
+                          },
+                        },
+                        onClick: () => {
+                          return false;
+                        },
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function (context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = (context.dataset.data as number[]).reduce(
+                              (acc: number, val: number) => acc + val,
+                              0
+                            );
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
               ) : (
                 <div className="text-center py-8">
                   <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
-                  <p className="text-gray-500">Belum ada aktivitas terbaru</p>
+                  <p className="text-gray-500">Belum ada data layanan diberikan</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Top Visitors */}
+          {/* Sering Dikunjungi */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center mb-4">
-              <svg className="w-5 h-5 text-gray-700 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              <svg className="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
               </svg>
-              <h3 className="text-lg font-bold text-gray-800">Tamu Paling Aktif</h3>
+              <h3 className="text-lg font-bold text-gray-800">Sering Dikunjungi</h3>
             </div>
-            <div className="space-y-4">
-              {data?.topVisitors && data.topVisitors.length > 0 ? (
-                data.topVisitors.map((visitor, i) => (
-                  <div key={i} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
-                      i === 0 ? 'bg-yellow-500' :
-                      i === 1 ? 'bg-gray-400' :
-                      i === 2 ? 'bg-orange-500' :
-                      'bg-blue-500'
-                    }`}>
-                      {i + 1}
-                    </div>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ background: 'linear-gradient(135deg, #3D5DC3, #2563EB)' }}>
-                      {visitor.nama.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{visitor.nama}</p>
-                      <p className="text-xs text-gray-800">{visitor.asal_instansi}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-gray-900">{visitor.visit_count}</span>
-                      <p className="text-xs text-gray-700">kali</p>
-                    </div>
-                  </div>
-                ))
+            <div className="h-64 flex items-center justify-center">
+              {data?.bidangTujuan && data.bidangTujuan.length > 0 ? (
+                <Pie
+                  data={{
+                    labels: data.bidangTujuan.map((bidang: any) => bidang.bidang_name || 'Tidak Diketahui'),
+                    datasets: [
+                      {
+                        label: 'Bidang Tujuan',
+                        data: data.bidangTujuan.map((bidang: any) => bidang.count),
+                        backgroundColor: [
+                          '#8B5CF6',
+                          '#EC4899',
+                          '#06B6D4',
+                          '#F59E0B',
+                          '#EF4444',
+                          '#10B981',
+                          '#3B82F6',
+                          '#F97316',
+                        ],
+                        borderColor: [
+                          '#7C3AED',
+                          '#DB2777',
+                          '#0891B2',
+                          '#D97706',
+                          '#DC2626',
+                          '#059669',
+                          '#2563EB',
+                          '#EA580C',
+                        ],
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom' as const,
+                        labels: {
+                          padding: 15,
+                          font: {
+                            size: 12,
+                          },
+                          generateLabels: (chart) => {
+                            const datasets = chart.data.datasets;
+                            if (datasets.length === 0) return [];
+                            
+                            const data = datasets[0].data as number[];
+                            const labels = chart.data.labels as string[];
+                            const backgroundColor = datasets[0].backgroundColor as string[];
+                            
+                            const total = data.reduce((acc: number, val: number) => acc + val, 0);
+                            
+                            return labels.map((label, i) => {
+                              const value = data[i];
+                              const percentage = ((value / total) * 100).toFixed(1);
+                              return {
+                                text: `${label}: ${percentage}%`,
+                                fillStyle: backgroundColor[i],
+                                hidden: false,
+                                index: i,
+                              };
+                            });
+                          },
+                        },
+                        onClick: () => {
+                          return false;
+                        },
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function (context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = (context.dataset.data as number[]).reduce(
+                              (acc: number, val: number) => acc + val,
+                              0
+                            );
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
               ) : (
                 <div className="text-center py-8">
                   <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
                   </svg>
-                  <p className="text-gray-500">Belum ada data tamu berulang</p>
+                  <p className="text-gray-500">Belum ada data kunjungan bidang</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Konten PDF tersembunyi */}
+        {/* Konten PDF tersembunyi untuk export */}
         <div style={{
-          position: 'relative',
-          left: '0px',
+          position: 'fixed',
+          left: '-9999px',
           top: '0',
-          visibility: 'visible',
-          margin: '20px 0'
+          visibility: 'hidden'
         }}>
           <div ref={pdfRef} data-pdf-content style={{ 
-            width: '794px',  // A4 width in pixels at 96 DPI
-            minHeight: '1123px', // A4 height in pixels at 96 DPI
-            padding: '40px',
-            backgroundColor: 'white',
-            fontFamily: 'Arial, sans-serif'
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '20px',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            flexWrap: 'wrap'
           }}>
             <PdfReport 
               data={data && data.metrics ? data : dummyData}
@@ -878,9 +1082,10 @@ export default function AdminReportsAnalytics() {
               periodLabel={
                 selectedPeriod === '7' ? '7 Hari Terakhir' : 
                 selectedPeriod === '30' ? '30 Hari Terakhir' : 
-                selectedPeriod === '90' ? '3 Bulan Terakhir' : 
-                '1 Tahun Terakhir'
-              }
+              selectedPeriod === '90' ? '3 Bulan Terakhir' : 
+              selectedPeriod === '180' ? '6 Bulan Terakhir' : 
+              '1 Tahun Terakhir'
+            }
             />
           </div>
         </div>

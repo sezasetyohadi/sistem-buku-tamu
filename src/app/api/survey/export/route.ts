@@ -1,12 +1,26 @@
 import { format } from 'date-fns';
 import * as ExcelJS from 'exceljs';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { executeQuery } from '@/backend/config/db';
 import { SurveyExportService } from '@/backend/services/export/surveyExportService';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Get date range from query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    
+    // Build date filter for queries
+    let dateFilter = '';
+    let dateParams: string[] = [];
+    
+    if (startDate && endDate) {
+      dateFilter = ' AND DATE(js.created_at) BETWEEN ? AND ?';
+      dateParams = [startDate, endDate];
+    }
+    
     // Query untuk mendapatkan data survei dengan format yang sesuai dengan gambar
     const query = `
     SELECT 
@@ -27,25 +41,32 @@ export async function GET() {
         ON jr.id = orp.jenis_rating_id 
     LEFT JOIN jawaban_survei js 
         ON js.pertanyaan_id = ps.id 
-       AND js.jawaban = orp.id 
+       AND js.jawaban = orp.id${dateFilter}
     WHERE ps.is_aktif = 1
     GROUP BY ps.id, ps.baris, ps.pertanyaan, jr.id, jr.nama_rating, orp.urutan_rating, orp.skala_rating 
     ORDER BY ps.baris, pjr.urutan, orp.urutan_rating
     `;
     
-    const rows = await executeQuery<any[]>(query);
+    const rows = await executeQuery<any[]>(query, dateParams);
     
     // Query untuk mendapatkan saran/masukan dari user
-    const saranQuery = `
+    let saranQuery = `
       SELECT 
         jis.id,
         jis.saran
       FROM jawaban_identitas_survei jis
       WHERE jis.saran IS NOT NULL AND jis.saran != ''
-      ORDER BY jis.created_at DESC
     `;
     
-    const saranData = await executeQuery<any[]>(saranQuery);
+    let saranParams: string[] = [];
+    if (startDate && endDate) {
+      saranQuery += ' AND DATE(jis.created_at) BETWEEN ? AND ?';
+      saranParams = [startDate, endDate];
+    }
+    
+    saranQuery += ' ORDER BY jis.created_at DESC';
+    
+    const saranData = await executeQuery<any[]>(saranQuery, saranParams);
     
     // Ambil daftar semua rating yang ada di DB untuk kolom header
     const ratingSet = new Set<string>();
@@ -79,7 +100,14 @@ export async function GET() {
     
     // Judul dan subjudul
     const currentYear = new Date().getFullYear();
-    const today = format(new Date(), 'dd-MM-yyyy');
+    
+    // Format date range for display
+    let dateRangeText = format(new Date(), 'dd-MM-yyyy');
+    if (startDate && endDate) {
+      const formattedStartDate = format(new Date(startDate), 'dd-MM-yyyy');
+      const formattedEndDate = format(new Date(endDate), 'dd-MM-yyyy');
+      dateRangeText = `${formattedStartDate} s/d ${formattedEndDate}`;
+    }
     
     // Get column letters for merging cells based on actual data width
     const lastColLetter = String.fromCharCode(65 + totalDataColumns - 1); // Convert to column letter (A, B, C, etc.)
@@ -99,7 +127,7 @@ export async function GET() {
     subtitleCell.font = { bold: true, size: 12 };
     
     // Add date outside the table
-    const dateRow = sheet.addRow(['Tanggal Data:', today]);
+    const dateRow = sheet.addRow(['Tanggal Data:', dateRangeText]);
     dateRow.getCell(1).font = { bold: true };
     dateRow.getCell(2).alignment = { horizontal: 'left' };
     

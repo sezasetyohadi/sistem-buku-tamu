@@ -12,6 +12,7 @@ import SurveyResponseDetailModal from '@/components/admin/SurveyResponseDetailMo
 import SurveyResponsesList from '@/components/admin/SurveyResponsesList';
 import SurveyStatistics from '@/components/admin/SurveyStatistics';
 import SurveyTabs from '@/components/admin/SurveyTabs';
+import SurveyExportDialog from '@/components/admin/SurveyExportDialog';
 import { surveyLogger } from '@/lib/logger';
 import { showToast } from '@/lib/toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -117,6 +118,7 @@ export default function AdminSurvey() {
   const [kinerjaRatingFilter, setKinerjaRatingFilter] = useState('');
   const [kepentinganRatingFilter, setKepentinganRatingFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   useEffect(() => {
     fetchSurveyData();
@@ -524,11 +526,15 @@ export default function AdminSurvey() {
               <p className="text-gray-600 mt-1">Kelola pertanyaan untuk survei tamu</p>
             </div>
             <div className="flex space-x-3">
-              <ExportToExcelButton 
-                url="/api/survey/export" 
+              <button
+                onClick={() => setShowExportDialog(true)}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center"
-                buttonText="Ekspor Excel"
-              />
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Ekspor Excel
+              </button>
               <button
                 onClick={() => setShowAddQuestion(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
@@ -629,6 +635,11 @@ export default function AdminSurvey() {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         response={selectedResponse}
+      />
+
+      <SurveyExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
       />
     </div>
   );

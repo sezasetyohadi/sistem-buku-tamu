@@ -84,7 +84,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     }
   };
   
-  const handleSchedule = async (scheduledDateTime: string, bidangTujuanId?: number, asnDituju?: string, caraSalinan?: number[]) => {
+  const handleSchedule = async (scheduledDateTime: string, bidangTujuanId?: number, asnDituju?: string, layananId?: number, caraSalinan?: number[]) => {
     try {
       setIsSubmitting(true);
       
@@ -97,6 +97,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           scheduledDateTime,
           bidangTujuanId,
           asnDituju,
+          layananId,
           caraSalinan
         }),
       });
@@ -126,6 +127,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           status_kunjungan: result.data.status_kunjungan,
           bidang_tujuan_id: result.data.bidang_tujuan_id,
           bidang_tujuan: result.data.bidang_tujuan,
+          layanan_disnaker_id: result.data.layanan_disnaker_id,
+          layanan_disnaker: result.data.layanan_disnaker,
           asn_dituju: result.data.asn_dituju,
           cara_mendapatkan_salinan: result.data.cara_mendapatkan_salinan
         });
@@ -144,8 +147,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
   };
   
   const handleCheckin = async () => {
-    // Check if bidang tujuan and ASN info are missing
-    if (!guest?.bidang_tujuan_id || !guest?.asn_dituju) {
+    // Check if bidang tujuan, layanan, and ASN info are missing
+    if (!guest?.bidang_tujuan_id || !guest?.layanan_disnaker_id || !guest?.asn_dituju) {
       setIsCheckinInfoModalOpen(true);
       return;
     }
@@ -154,7 +157,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     await performCheckin();
   };
 
-  const performCheckin = async (bidangTujuanId?: number, asnDituju?: string, caraSalinan?: number[]) => {
+  const performCheckin = async (bidangTujuanId?: number, asnDituju?: string, layananId?: number, caraSalinan?: number[]) => {
     try {
       setIsSubmitting(true);
       
@@ -163,6 +166,9 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
       // Add additional info if provided
       if (bidangTujuanId) {
         requestBody.bidangTujuanId = bidangTujuanId;
+      }
+      if (layananId) {
+        requestBody.layananId = layananId;
       }
       if (asnDituju) {
         requestBody.asnDituju = asnDituju;
@@ -197,6 +203,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           status_kunjungan: result.data.status_kunjungan,
           bidang_tujuan_id: result.data.bidang_tujuan_id || guest.bidang_tujuan_id,
           bidang_tujuan: result.data.bidang_tujuan || guest.bidang_tujuan,
+          layanan_disnaker_id: result.data.layanan_disnaker_id || guest.layanan_disnaker_id,
+          layanan_disnaker: result.data.layanan_disnaker || guest.layanan_disnaker,
           asn_dituju: result.data.asn_dituju || guest.asn_dituju,
           cara_mendapatkan_salinan: result.data.cara_mendapatkan_salinan || guest.cara_mendapatkan_salinan,
           cara_mendapatkan_salinan_ids: result.data.cara_mendapatkan_salinan_ids || guest.cara_mendapatkan_salinan_ids
@@ -219,8 +227,8 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
     }
   };
 
-  const handleCheckinInfoConfirm = async (bidangTujuanId: number, asnDituju: string, caraSalinan?: number[]) => {
-    await performCheckin(bidangTujuanId, asnDituju, caraSalinan);
+  const handleCheckinInfoConfirm = async (bidangTujuanId: number, asnDituju: string, layananId?: number, caraSalinan?: number[]) => {
+    await performCheckin(bidangTujuanId, asnDituju, layananId, caraSalinan);
   };
   
   const handleCheckout = async () => {
@@ -588,6 +596,7 @@ export default function GuestDetailModal({ isOpen, onClose, guest: initialGuest,
           currentSchedule={guest.jadwal_checkin || undefined}
           currentBidangId={guest.bidang_tujuan_id}
           currentAsnDituju={guest.asn_dituju}
+          currentLayananId={guest.layanan_disnaker_id}
           currentCaraSalinan={(() => {
             const ids = guest.cara_mendapatkan_salinan_ids || [];
             //console.log('Passing cara salinan IDs to ScheduleModal:', ids);

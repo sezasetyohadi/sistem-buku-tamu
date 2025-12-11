@@ -24,8 +24,10 @@ export async function GET(request: NextRequest) {
       getRecentActivities(5, parseInt(period), departmentId)
     ]);
 
-    //console.log('Reports API: Statistics result:', JSON.stringify(reportsData, null, 2));
-    //console.log('Reports API: Recent activities count:', recentActivities?.length);
+    console.log('Reports API: Statistics result:', JSON.stringify(reportsData, null, 2));
+    console.log('Reports API: layananDiberikan:', reportsData.layananDiberikan);
+    console.log('Reports API: bidangTujuan:', reportsData.bidangTujuan);
+    console.log('Reports API: Recent activities count:', recentActivities?.length);
 
     return NextResponse.json({ 
       success: true, 

@@ -256,6 +256,21 @@ export async function getMendapatkanSalinanOptions(): Promise<Array<{ id: number
   }
 }
 
+// Get layanan disnaker options with caching
+export async function getLayananDisnakerOptions(): Promise<Array<{ id: number, nama_layanan: string, bidang_id: number }>> {
+  try {
+    const options = await executeQueryCached<Array<{ id: number, nama_layanan: string, bidang_id: number }>>(
+      'SELECT id, nama_layanan, bidang_id FROM layanan_disnaker ORDER BY bidang_id ASC, id ASC',
+      [],
+      600000 // 10 minutes cache for lookup data
+    );
+    return options;
+  } catch (error) {
+    console.error('Error getting layanan disnaker options:', error);
+    return [];
+  }
+}
+
 // Database performance monitoring functions
 export function getDatabaseStats() {
   return {

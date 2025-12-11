@@ -42,6 +42,9 @@ type GuestDetail = {
 	jadwal_dibuat?: string | null;
 	file_upload?: string | null;
 	catatan_tambahan?: string;
+	cara_memperoleh_informasi?: string[];
+	cara_mendapatkan_salinan?: string[];
+	cara_mendapatkan_salinan_ids?: number[];
 };
 
 // Mapping warna untuk status kunjungan
@@ -134,7 +137,10 @@ export default function StatusPengajuanPage() {
 					waktu_dibuat: details.waktu_dibuat,
 					jadwal_dibuat: details.jadwal_dibuat,
 					file_upload: details.file_upload,
-					catatan_tambahan: details.catatan_tambahan
+					catatan_tambahan: details.catatan_tambahan,
+					cara_memperoleh_informasi: details.cara_memperoleh_informasi || [],
+					cara_mendapatkan_salinan: details.cara_mendapatkan_salinan || [],
+					cara_mendapatkan_salinan_ids: details.cara_mendapatkan_salinan_ids || []
 				};
 				
 				setGuestDetail(guestData);
@@ -333,6 +339,19 @@ export default function StatusPengajuanPage() {
 									</div>
 								)}
 							</div>
+							
+							{guestDetail.cara_mendapatkan_salinan && guestDetail.cara_mendapatkan_salinan.length > 0 && (
+								<div className="mt-3 border-t border-blue-200 pt-3">
+									<h4 className="text-sm font-medium text-gray-500">Cara Mendapatkan Salinan</h4>
+									<div className="mt-1 flex flex-wrap gap-1">
+										{guestDetail.cara_mendapatkan_salinan.map((cara: string, index: number) => (
+											<span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+												{cara}
+											</span>
+										))}
+									</div>
+								</div>
+							)}
 						</div>
 					)}
 
@@ -397,6 +416,27 @@ export default function StatusPengajuanPage() {
 								</div>
 								<div className="mt-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
 									<p className="text-gray-900 whitespace-pre-wrap">{guestDetail.catatan_tambahan}</p>
+								</div>
+							</div>
+						)}
+						
+						{/* Information Access Methods */}
+						{guestDetail.cara_memperoleh_informasi && guestDetail.cara_memperoleh_informasi.length > 0 && (
+							<div className="mt-4">
+								<div className="flex items-center">
+									<h4 className="text-sm font-medium text-gray-500">Cara Memperoleh Informasi</h4>
+								</div>
+								<div className="mt-2 p-4 bg-green-50 rounded-lg border border-green-100">
+									<div className="space-y-1">
+										{guestDetail.cara_memperoleh_informasi.map((cara: string, index: number) => (
+											<p key={index} className="flex items-center text-gray-900">
+												<svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+												</svg>
+												{cara}
+											</p>
+										))}
+									</div>
 								</div>
 							</div>
 						)}

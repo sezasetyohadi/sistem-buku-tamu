@@ -48,6 +48,7 @@ export interface Guest {
   asal_instansi?: string;
   keperluan?: string;
   bidang_tujuan_id?: number;
+  layanan_disnaker_id?: number;
   asn_dituju?: string;
   catatan_tambahan?: string;
   status_kunjungan?: VisitStatus;
@@ -155,7 +156,7 @@ export const GUEST_QUERIES = {
   DELETE: 'DELETE FROM daftar_tamu WHERE id = ?',
   SET_STATUS: 'UPDATE daftar_tamu SET status_kunjungan = ? WHERE id = ?',
   SET_CHECKIN: 'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang" WHERE id = ?',
-  SET_CHECKIN_WITH_INFO: 'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang", bidang_tujuan_id = ?, asn_dituju = ? WHERE id = ?',
+  SET_CHECKIN_WITH_INFO: 'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang", bidang_tujuan_id = ?, layanan_disnaker_id = ?, asn_dituju = ? WHERE id = ?',
   SET_CHECKOUT: 'UPDATE daftar_tamu SET waktu_checkout = ?, status_kunjungan = "Selesai" WHERE id = ?',
   SET_SCHEDULE: 'UPDATE daftar_tamu SET jadwal_checkin = ?, jadwal_dibuat = NOW(), status_kunjungan = "Terjadwal" WHERE id = ?',
   GET_EDUCATION_OPTIONS: 'SELECT * FROM pendidikan_terakhir ORDER BY id',
@@ -255,7 +256,8 @@ export async function updateGuestCheckInWithInfo(
   guestId: number, 
   checkInTime: Date, 
   bidangTujuanId: number, 
-  asnDituju: string
+  asnDituju: string,
+  layananId: number
 ): Promise<ResultData> {
   try {
     // Check if guest exists
@@ -270,14 +272,14 @@ export async function updateGuestCheckInWithInfo(
 
     const guest = rows[0];
     
-    // Check if guest already has bidang_tujuan_id and asn_dituju
+    // Check if guest already has bidang_tujuan_id, layanan_disnaker_id and asn_dituju
     // If they already have the info, use the simple checkin to preserve existing data
-    if (guest.bidang_tujuan_id && guest.asn_dituju) {
+    if (guest.bidang_tujuan_id && guest.layanan_disnaker_id && guest.asn_dituju) {
       // Use the simple check-in to avoid overwriting existing data
       await executeQuery(GUEST_QUERIES.SET_CHECKIN, [checkInTime, guestId]);
     } else {
       // Update with new information
-      await executeQuery(GUEST_QUERIES.SET_CHECKIN_WITH_INFO, [checkInTime, bidangTujuanId, asnDituju, guestId]);
+      await executeQuery(GUEST_QUERIES.SET_CHECKIN_WITH_INFO, [checkInTime, bidangTujuanId, layananId, asnDituju, guestId]);
     }
     
     // Get the updated guest data

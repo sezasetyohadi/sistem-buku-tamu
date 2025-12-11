@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { updateGuestCheckIn, updateGuestCheckInWithInfo, Guest } from '@/backend/models/guestModel';
+import { saveMendapatkanSalinanAnswers } from '@/backend/services/guestService';
+import { executeQuery } from '@/backend/config/db';
 
 export async function PATCH(
   request: NextRequest,
@@ -20,18 +22,26 @@ export async function PATCH(
 
     // Parse request body for additional checkin information
     const body = await request.json().catch(() => ({}));
-    const { bidangTujuanId, asnDituju, caraSalinan } = body;
+    const { bidangTujuanId, asnDituju, layananId, caraSalinan } = body;
 
     // Perform check-in operation
     const now = new Date();
     let result;
 
     // Check if additional information is provided
-    if (bidangTujuanId && asnDituju) {
-      // Use checkin with additional information
-      result = await updateGuestCheckInWithInfo(guestId, now, bidangTujuanId, asnDituju);
+    if (bidangTujuanId && asnDituju && layananId) {
+      // Use checkin with additional information including layanan
+      result = await updateGuestCheckInWithInfo(guestId, now, bidangTujuanId, asnDituju, layananId);
+    } else if (bidangTujuanId && asnDituju) {
+      // Bidang provided but no layanan (bidang without services)
+      // Update bidang and asn only, without layanan
+      await executeQuery(
+        'UPDATE daftar_tamu SET waktu_checkin = ?, status_kunjungan = "Datang", bidang_tujuan_id = ?, asn_dituju = ? WHERE id = ?',
+        [now, bidangTujuanId, asnDituju, guestId]
+      );
+      result = await updateGuestCheckIn(guestId, now);
     } else {
-      // Use simple checkin (preserves existing bidang_tujuan_id and asn_dituju)
+      // Use simple checkin (preserves existing data)
       result = await updateGuestCheckIn(guestId, now);
     }
 
@@ -44,9 +54,38 @@ export async function PATCH(
 
     // Handle cara mendapatkan salinan if provided
     if (caraSalinan && Array.isArray(caraSalinan) && caraSalinan.length > 0) {
-      // TODO: Implement cara salinan handling if needed
-      // For now, we'll just log it
-      //console.log('Cara mendapatkan salinan selected:', caraSalinan);
+      try {
+        // Delete existing cara salinan entries for this guest first
+        await executeQuery(
+          'DELETE FROM jawaban_mendapatkan_salinan WHERE tamu_id = ?',
+          [guestId]
+        );
+
+        // Save new cara mendapatkan salinan answers
+        await saveMendapatkanSalinanAnswers(guestId, caraSalinan);
+        //console.log('Cara mendapatkan salinan saved successfully:', caraSalinan);
+      } catch (salinanError) {
+        console.error('Error saving cara mendapatkan salinan:', salinanError);
+        // Don't fail the checkin if salinan saving fails, just log the error
+      }
+    }
+
+    // Get updated cara mendapatkan salinan data for response
+    let cara_mendapatkan_salinan: string[] = [];
+    let cara_mendapatkan_salinan_ids: number[] = [];
+    
+    try {
+      const salinanQuery = `
+        SELECT m.id, m.nama_opsi 
+        FROM jawaban_mendapatkan_salinan j
+        JOIN mendapatkan_salinan m ON j.cara_salinan_id = m.id
+        WHERE j.tamu_id = ?
+      `;
+      const salinanResult = await executeQuery<Array<{ id: number; nama_opsi: string }>>(salinanQuery, [guestId]);
+      cara_mendapatkan_salinan = salinanResult.map(item => item.nama_opsi);
+      cara_mendapatkan_salinan_ids = salinanResult.map(item => item.id);
+    } catch (salinanError) {
+      console.error('Error fetching updated cara mendapatkan salinan:', salinanError);
     }
 
     // Return success response with updated guest data
@@ -58,7 +97,10 @@ export async function PATCH(
         waktu_checkin: updatedGuest.waktu_checkin,
         status_kunjungan: updatedGuest.status_kunjungan,
         bidang_tujuan_id: updatedGuest.bidang_tujuan_id,
-        asn_dituju: updatedGuest.asn_dituju
+        layanan_disnaker_id: updatedGuest.layanan_disnaker_id,
+        asn_dituju: updatedGuest.asn_dituju,
+        cara_mendapatkan_salinan,
+        cara_mendapatkan_salinan_ids
       }
     });
   } catch (error: any) {
