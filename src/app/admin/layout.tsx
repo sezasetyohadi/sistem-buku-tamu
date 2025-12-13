@@ -63,7 +63,8 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  // Set sidebar open by default on desktop, closed on mobile
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -78,6 +79,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Handle client-side mounting to prevent hydration mismatch
   React.useEffect(() => {
     setIsMounted(true);
+    // Set sidebar open on desktop by default
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setSidebarOpen(true);
+    }
   }, []);
 
   // Memoize role-based restrictions to avoid recalculation
@@ -491,13 +496,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <AuthGuard>
       <div className="h-screen flex bg-gray-50 overflow-hidden" suppressHydrationWarning={true}>
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out overflow-hidden
-        ${sidebarOpen ? 'w-56 sm:w-64' : 'w-0 md:w-12 xl:w-16'}
-        md:relative md:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transform transition-all duration-300 ease-in-out
+        md:relative md:z-auto
+        ${sidebarOpen 
+          ? 'translate-x-0 w-64' 
+          : '-translate-x-full w-64 md:translate-x-0 md:w-16'
+        }
       `}>
-        <div className="h-full flex flex-col overflow-hidden">
+        <div className="h-full flex flex-col">
           {/* Logo with Toggle Button */}
           <div className="flex items-center h-14 sm:h-16 px-3 sm:px-4 bg-white border-b border-gray-200 transition-all duration-300">
             <button
@@ -510,73 +517,59 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className={`ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-800 transition-all duration-300 whitespace-nowrap ${
-              sidebarOpen ? 'opacity-100 translate-x-0' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
-            }`}>Admin Panel</span>
+            {sidebarOpen && (
+              <span className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-800 whitespace-nowrap">
+                Admin Panel
+              </span>
+            )}
+            {!sidebarOpen && (
+              <span className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-800 whitespace-nowrap hidden md:block md:opacity-0 md:w-0 overflow-hidden">
+                Admin Panel
+              </span>
+            )}
           </div>
           
           {/* Navigation */}
-          <nav className={`flex-1 overflow-y-auto transition-all duration-300 ${
-            sidebarOpen ? 'mt-4 sm:mt-5 px-2' : 'mt-4 sm:mt-5 md:px-1 xl:px-2'
-          }`}>
-            <div className="transition-all duration-300 space-y-1 md:space-y-2">
+          <nav className="flex-1 overflow-y-auto mt-4 sm:mt-5 px-2">
+            <div className="space-y-1 md:space-y-2">
               {filteredMenuItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
                   prefetch={true} // Enable Next.js prefetching
                   onMouseEnter={() => enhancedPrefetch(item.path)} // Enhanced prefetch on hover
+                  onClick={() => {
+                    // Close sidebar on mobile after clicking menu item
+                    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                      setSidebarOpen(false);
+                    }
+                  }}
                   title={!sidebarOpen ? item.name : undefined} // Tooltip for collapsed state
                   className={`
-                    group flex items-center text-xs sm:text-sm font-medium transition-all duration-300 relative
-                    ${sidebarOpen 
-                      ? 'px-2 sm:px-3 py-2 mx-0 rounded-md' 
-                      : 'py-2 px-2 sm:px-3 mx-0 rounded-md md:mx-1 xl:mx-2 md:py-2 xl:py-3 md:px-0 xl:px-0 md:justify-center md:items-center md:flex md:rounded-lg'
-                    }
+                    group flex items-center text-xs sm:text-sm font-medium transition-all duration-200 relative
+                    px-2 sm:px-3 py-2 rounded-md
+                    ${!sidebarOpen ? 'md:justify-center md:px-0' : ''}
                     ${isActive(item.path)
                       ? sidebarOpen 
                         ? 'bg-red-50 text-red-700 border-r-2 border-red-600' 
-                        : 'md:bg-red-600 md:text-white bg-red-50 text-red-700 border-r-2 border-red-600'
+                        : 'bg-red-50 text-red-700 border-r-2 border-red-600 md:bg-red-600 md:text-white md:border-0 md:rounded-lg'
                       : 'text-gray-800 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
                 >
-                  {sidebarOpen ? (
-                    <>
-                      <span className={`flex-shrink-0 transition-all duration-300 w-4 h-4 sm:w-5 sm:h-5 ${
-                        isActive(item.path) ? 'text-red-500' : 'text-gray-700 group-hover:text-gray-800'
-                      }`}>
-                        {item.icon}
-                      </span>
-                      <span className={`ml-2 sm:ml-3 transition-all duration-300 truncate whitespace-nowrap ${
-                        sidebarOpen ? 'opacity-100 translate-x-0 w-auto' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
-                      }`}>
-                        {item.name}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      {/* Mobile view - same as expanded */}
-                      <span className={`flex-shrink-0 transition-all duration-300 w-4 h-4 sm:w-5 sm:h-5 md:hidden ${
-                        isActive(item.path) ? 'text-red-500' : 'text-gray-700 group-hover:text-gray-800'
-                      }`}>
-                        {item.icon}
-                      </span>
-                      <span className={`ml-2 sm:ml-3 transition-all duration-300 truncate whitespace-nowrap md:hidden ${
-                        sidebarOpen ? 'opacity-100 translate-x-0 w-auto' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
-                      }`}>
-                        {item.name}
-                      </span>
-                      
-                      {/* Desktop collapsed view - perfectly centered icon */}
-                      <div className="hidden md:flex md:w-full md:h-full md:items-center md:justify-center">
-                        <span className={`transition-all duration-300 w-4 h-4 sm:w-5 sm:h-5 ${
-                          isActive(item.path) ? 'text-white' : 'text-gray-700 group-hover:text-gray-800'
-                        }`}>
-                          {item.icon}
-                        </span>
-                      </div>
-                    </>
+                  <span className={`flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 ${
+                    isActive(item.path) 
+                      ? sidebarOpen 
+                        ? 'text-red-500' 
+                        : 'text-red-500 md:text-white'
+                      : 'text-gray-700 group-hover:text-gray-800'
+                  }`}>
+                    {item.icon}
+                  </span>
+                  {sidebarOpen && (
+                    <span className="ml-2 sm:ml-3 truncate whitespace-nowrap">
+                      {item.name}
+                    </span>
                   )}
                 </Link>
               ))}
@@ -584,41 +577,54 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </nav>
           
           {/* Logout */}
-          <div className={`p-3 sm:p-4 border-t border-gray-200 ${!sidebarOpen ? 'md:px-1 xl:px-2' : ''}`}>
+          <div className="p-3 sm:p-4 border-t border-gray-200">
             <button
               onClick={handleLogout}
               title={!sidebarOpen ? 'Logout' : undefined} // Tooltip for collapsed state
-              className={`flex items-center text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left ${
-                sidebarOpen ? 'px-2 sm:px-3 py-2' : 'px-2 sm:px-3 py-2 md:justify-center'
+              className={`flex items-center text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200 w-full text-left px-2 sm:px-3 py-2 ${
+                !sidebarOpen ? 'md:justify-center md:px-0' : ''
               }`}
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span className={`ml-2 sm:ml-3 transition-all duration-300 whitespace-nowrap ${
-                sidebarOpen ? 'opacity-100 translate-x-0 w-auto' : 'md:opacity-0 md:-translate-x-2 md:w-0 overflow-hidden'
-              }`}>Logout</span>
+              {sidebarOpen && (
+                <span className="ml-2 sm:ml-3 whitespace-nowrap">Logout</span>
+              )}
             </button>
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden" 
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <div 
+        className={`fixed inset-0 z-40 bg-gray-600 bg-opacity-75 transition-opacity duration-300 md:hidden ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
         {/* Top header */}
         <div className="flex-shrink-0 flex h-14 sm:h-16 bg-white shadow-sm border-b border-gray-200 z-10">
-          <div className="flex-1 px-3 sm:px-4 flex justify-end items-center min-w-0">
-            <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
-              
+          <div className="flex-1 px-3 sm:px-4 flex justify-between items-center min-w-0">
+            {/* Mobile Menu Button */}
+            <button
+              type="button"
+              className="md:hidden w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle sidebar"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
 
+            {/* Spacer for desktop to push profile to right */}
+            <div className="flex-1 hidden md:block"></div>
+
+            <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0 ml-auto md:ml-0">
               {/* User Profile */}
               <Link 
                 href="/admin/profile" 

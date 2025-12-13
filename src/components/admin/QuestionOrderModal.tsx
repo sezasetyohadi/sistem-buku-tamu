@@ -68,7 +68,11 @@ export default function QuestionOrderModal({
   }, [questions, isOpen]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -160,36 +164,44 @@ export default function QuestionOrderModal({
                     <SortableItem
                       key={`question-${question.id || question.urutan}`}
                       id={`question-${question.id || question.urutan}`}
-                    >
-                      <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3">
-                              <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
-                                {index + 1}
-                              </span>
-                              <div>
-                                <p className="font-medium text-gray-900 truncate max-w-md">
-                                  {question.pertanyaan}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {/* Removed rating indicator as requested */}
-                                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                    question.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {question.status ? 'Aktif' : 'Nonaktif'}
-                                  </span>
-                                </div>
+                      dragHandleRender={(listeners, attributes) => (
+                        <div className="p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+                          <div className="flex items-start sm:items-center gap-2 sm:gap-3">
+                            {/* Drag Handle - Only this area triggers drag */}
+                            <button
+                              {...listeners}
+                              {...attributes}
+                              className="flex-shrink-0 touch-none cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded transition-colors"
+                              style={{ touchAction: 'none' }}
+                            >
+                              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                              </svg>
+                            </button>
+                            
+                            {/* Question Number */}
+                            <span className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium">
+                              {index + 1}
+                            </span>
+                            
+                            {/* Question Content - Scrollable on mobile */}
+                            <div className="flex-1 min-w-0 overflow-x-auto">
+                              <p className="font-medium text-gray-900 text-sm sm:text-base break-words sm:truncate sm:max-w-md">
+                                {question.pertanyaan}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                                  question.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {question.status ? 'Aktif' : 'Nonaktif'}
+                                </span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-gray-400">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
-                            </svg>
-                          </div>
                         </div>
-                      </div>
+                      )}
+                    >
+                      {null}
                     </SortableItem>
                   ))}
                 </div>

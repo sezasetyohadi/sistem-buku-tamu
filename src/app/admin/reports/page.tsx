@@ -365,13 +365,13 @@ export default function AdminReportsAnalytics() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
               <div className="flex items-center mb-2">
                 <svg className="w-8 h-8 text-blue-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
-                <h1 className="text-3xl font-bold text-gray-800">Laporan & Analitik</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Laporan & Analitik</h1>
               </div>
               <p className="text-gray-800">
                 Dashboard analitik Dalista
@@ -387,11 +387,11 @@ export default function AdminReportsAnalytics() {
                 )}
               </div>
             </div>
-            <div className="flex space-x-3 items-center">
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
               {/* Period filter - Styled as a dropdown button */}
-              <div className="relative inline-block">
+              <div className="relative w-full sm:w-auto">
                 <button 
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center w-44"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center w-full sm:w-44"
                   onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
                 >
                   <span className="truncate flex-1 text-left" title={selectedPeriod === '7' ? '7 Hari Terakhir' : 
@@ -411,7 +411,7 @@ export default function AdminReportsAnalytics() {
                 {/* Dropdown menu for time period */}
                 {isTimeDropdownOpen && (
                   <div 
-                    className="absolute z-10 mt-1 w-44 bg-white border border-gray-300 rounded-lg shadow-lg"
+                    className="absolute z-10 mt-1 w-full sm:w-44 bg-white border border-gray-300 rounded-lg shadow-lg"
                     ref={timeDropdownRef}
                   >
                     <button 
@@ -465,9 +465,9 @@ export default function AdminReportsAnalytics() {
               
               {/* Department filter */}
               {canAccessAllDepartments ? (
-                <div className="relative inline-block">
+                <div className="relative w-full sm:w-auto">
                   <button 
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center w-48"
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center w-full sm:w-48"
                     onClick={() => setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)}
                   >
                     <svg className="w-5 h-5 mr-2 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -488,7 +488,7 @@ export default function AdminReportsAnalytics() {
                   
                   {isDepartmentDropdownOpen && (
                     <div 
-                      className="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                      className="absolute z-10 mt-1 w-full sm:w-64 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                       ref={departmentDropdownRef}
                     >
                       <button 
@@ -523,9 +523,9 @@ export default function AdminReportsAnalytics() {
                   )}
                 </div>
               ) : (
-                <div className="relative inline-block">
+                <div className="relative w-full sm:w-auto">
                   <button 
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg flex items-center w-48 cursor-default"
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg flex items-center w-full sm:w-48 cursor-default"
                     disabled
                   >
                     <svg className="w-5 h-5 mr-2 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -540,7 +540,7 @@ export default function AdminReportsAnalytics() {
               
               {/* Export PDF Button */}
               <button 
-                className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300 flex items-center"
+                className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-300 flex items-center justify-center w-full sm:w-auto"
                 style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)' }}
                 onClick={handleExportPDF}
               >
@@ -631,9 +631,9 @@ export default function AdminReportsAnalytics() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Visitor Trends Chart */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md overflow-hidden">
             <div className="flex items-center mb-4">
               <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586L14.586 7H12z" clipRule="evenodd" />
@@ -648,8 +648,9 @@ export default function AdminReportsAnalytics() {
                                  selectedPeriod === '180' ? '6 Bulan Terakhir' : '1 Tahun Terakhir'})
               </h3>
             </div>
-            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-              {data?.weeklyTrends && data.weeklyTrends.length > 0 ? (
+            <div className="overflow-x-auto">
+              <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center min-w-[400px]">
+                {data?.weeklyTrends && data.weeklyTrends.length > 0 ? (
                 <Line
                   data={{
                     labels: data.weeklyTrends.map(item => {
@@ -739,19 +740,21 @@ export default function AdminReportsAnalytics() {
                   <p className="text-gray-600">Tidak ada data trend</p>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
           {/* Service Categories - Permintaan Layanan */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md overflow-hidden">
             <div className="flex items-center mb-4">
               <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
               </svg>
               <h3 className="text-lg font-bold text-gray-800">Permintaan Layanan</h3>
             </div>
-            <div className="h-64 flex items-center justify-center">
-              {data?.serviceCategories && data.serviceCategories.length > 0 ? (
+            <div className="overflow-x-auto overflow-y-auto max-h-96">
+              <div className="h-auto min-h-[300px] flex items-center justify-center min-w-[300px] py-4">
+                {data?.serviceCategories && data.serviceCategories.length > 0 ? (
                 <Pie
                   data={{
                     labels: data.serviceCategories.map((cat: any) => cat.category || 'Tidak Kategori'),
@@ -839,19 +842,21 @@ export default function AdminReportsAnalytics() {
                   <p className="text-gray-500">Belum ada data kategori layanan</p>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
           {/* Layanan Diberikan */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md overflow-hidden">
             <div className="flex items-center mb-4">
               <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
               </svg>
               <h3 className="text-lg font-bold text-gray-800">Layanan Diberikan</h3>
             </div>
-            <div className="h-64 flex items-center justify-center">
-              {data?.layananDiberikan && data.layananDiberikan.length > 0 ? (
+            <div className="overflow-x-auto overflow-y-auto max-h-96">
+              <div className="h-auto min-h-[300px] flex items-center justify-center min-w-[300px] py-4">
+                {data?.layananDiberikan && data.layananDiberikan.length > 0 ? (
                 <Pie
                   data={{
                     labels: data.layananDiberikan.map((layanan: any) => layanan.layanan_name || 'Belum terdata'),
@@ -945,19 +950,21 @@ export default function AdminReportsAnalytics() {
                   <p className="text-gray-500">Belum ada data layanan diberikan</p>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
           {/* Sering Dikunjungi */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md overflow-hidden">
             <div className="flex items-center mb-4">
               <svg className="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
               </svg>
               <h3 className="text-lg font-bold text-gray-800">Sering Dikunjungi</h3>
             </div>
-            <div className="h-64 flex items-center justify-center">
-              {data?.bidangTujuan && data.bidangTujuan.length > 0 ? (
+            <div className="overflow-x-auto overflow-y-auto max-h-96">
+              <div className="h-auto min-h-[300px] flex items-center justify-center min-w-[300px] py-4">
+                {data?.bidangTujuan && data.bidangTujuan.length > 0 ? (
                 <Pie
                   data={{
                     labels: data.bidangTujuan.map((bidang: any) => bidang.bidang_name || 'Tidak Diketahui'),
@@ -1051,6 +1058,7 @@ export default function AdminReportsAnalytics() {
                   <p className="text-gray-500">Belum ada data kunjungan bidang</p>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
