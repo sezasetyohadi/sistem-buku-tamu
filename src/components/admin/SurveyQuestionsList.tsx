@@ -104,13 +104,12 @@ export default function SurveyQuestionsList({
         {Array.isArray(questions) && questions.length > 0 ? (
           questions.map((question) => (
             <div key={question.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0 pr-4">
-                  <div className="mb-2">
-                    <h3 className="text-base font-medium text-gray-900 leading-relaxed break-words">
-                      {question.pertanyaan}
-                    </h3>
-                  </div>
+              <div className="flex flex-col gap-3">
+                {/* Question Text */}
+                <div className="flex-1">
+                  <h3 className="text-base font-medium text-gray-900 leading-relaxed break-words mb-2">
+                    {question.pertanyaan}
+                  </h3>
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
                       question.status ? 'bg-green-400' : 'bg-red-400'
@@ -120,10 +119,12 @@ export default function SurveyQuestionsList({
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
                   <button
                     onClick={() => onToggleQuestionStatus(question)}
-                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       question.status 
                         ? 'bg-red-100 text-red-700 hover:bg-red-200' 
                         : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -133,13 +134,13 @@ export default function SurveyQuestionsList({
                   </button>
                   <button
                     onClick={() => onEditQuestion(question)}
-                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors whitespace-nowrap"
+                    className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-200 transition-colors"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => onOpenDeleteConfirmation(question)}
-                    className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-200 transition-colors whitespace-nowrap"
+                    className="bg-red-100 text-red-700 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
                   >
                     Hapus
                   </button>

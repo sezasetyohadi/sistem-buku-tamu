@@ -109,12 +109,12 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="p-4 sm:p-6 xl:p-8 w-full min-h-full">
+    <div className="p-3 sm:p-4 md:p-6 xl:p-8 w-full min-h-full">
       {/* Header Section */}
-      <div className="mb-6 sm:mb-8 xl:mb-10 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+      <div className="mb-4 sm:mb-6 md:mb-8 xl:mb-10 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl sm:text-3xl xl:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">Dashboard Admin</h1>
-          <p className="text-base sm:text-lg text-gray-600">Selamat datang di panel admin sistem buku tamu</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">Dashboard Admin</h1>
+          <p className="text-sm sm:text-base md:text-lg text-gray-600">Selamat datang di panel admin sistem buku tamu</p>
         </div>
         <button 
           onClick={() => fetchStats()}
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 xl:mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 xl:mb-10">
         <div className="bg-white p-4 sm:p-6 xl:p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center">
             <div className="w-10 h-10 sm:w-12 sm:h-12 xl:w-14 xl:h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -196,9 +196,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-6 sm:mb-8 xl:mb-10">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Menu Utama</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-8">
+      <div className="mb-4 sm:mb-6 md:mb-8 xl:mb-10">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 md:mb-6">Menu Utama</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 xl:gap-8">
           <Link href="/admin/guest-management" className="group">
             <div className="bg-white p-4 sm:p-6 xl:p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-200 transition-all duration-300 transform hover:scale-[1.02]">
               <div className="flex items-center justify-between">

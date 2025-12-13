@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px;">
-            <p>© 2025 Sistem Buku Tamu - Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah</p>
+            <p>© 2025 Dalista - Dinas Tenaga Kerja dan Transmigrasi Provinsi Jawa Tengah</p>
           </div>
         </div>
       `,

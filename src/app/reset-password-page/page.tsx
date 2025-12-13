@@ -163,16 +163,28 @@ function ResetPasswordContent() {
         <div className="relative z-10 flex flex-col justify-center items-center text-white p-12 w-full">
           <div className="text-center">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-6 mx-auto">
-                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
+              <div className="w-40 h-40 bg-white/35 rounded-full flex items-center justify-center backdrop-blur-sm mb-6 mx-auto">
+                <img 
+                  src="/logo-dalista.svg" 
+                  alt="Logo Dalista" 
+                  className="w-33 h-32 select-none pointer-events-none"
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none',
+                    WebkitTouchCallout: 'none'
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  draggable={false}
+                />
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Sistem Buku Tamu
+                Dalista - Admin
               </h1>
               <div className="w-24 h-1 bg-white/50 mx-auto mb-6"></div>
-              <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-md">
+              <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-md mx-auto text-center">
                 Reset password administrator dengan aman
               </p>
             </div>
@@ -202,7 +214,8 @@ function ResetPasswordContent() {
         </div>
       </div>
 
-      {/* Right Side - Reset Password Form */}
+
+{/* Right Side - Reset Password Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-12 bg-gray-50">
         <div className="max-w-md w-full mx-auto">
           {/* Mobile Header */}
@@ -212,7 +225,7 @@ function ResetPasswordContent() {
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Sistem Buku Tamu</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Dalista - Admin</h2>
             <p className="text-gray-600">Reset Password Administrator</p>
           </div>
 

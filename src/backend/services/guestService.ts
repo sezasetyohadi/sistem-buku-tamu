@@ -595,9 +595,9 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
     `;
     const bidangTujuanParams = [periodDays, periodDays];
 
-    console.log('Executing queries with bidang_tujuan_id:', bidangTujuanId);
+    /*console.log('Executing queries with bidang_tujuan_id:', bidangTujuanId);
     console.log('layananDiberikanParams:', layananDiberikanParams);
-    console.log('bidangTujuanParams:', bidangTujuanParams);
+    console.log('bidangTujuanParams:', bidangTujuanParams);*/
     
     const [
       totalVisitsData, 
@@ -621,11 +621,11 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       executeQuery<any[]>(bidangTujuanQuery, bidangTujuanParams)
     ]);
 
-    console.log('Query results:');
-    console.log('- layananDiberikanData:', layananDiberikanData);
-    console.log('- bidangTujuanData:', bidangTujuanData);
-    console.log('- serviceCategoriesData:', serviceCategoriesData);
-    console.log('- topVisitorsData:', topVisitorsData);
+    //console.log('Query results:');
+    //console.log('- layananDiberikanData:', layananDiberikanData);
+    //console.log('- bidangTujuanData:', bidangTujuanData);
+    //console.log('- serviceCategoriesData:', serviceCategoriesData);
+    //console.log('- topVisitorsData:', topVisitorsData);
 
     // Debug logging to understand data types
     /* console.log('Raw data from queries:', {
