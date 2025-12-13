@@ -162,10 +162,10 @@ export default function AdminReportsAnalytics() {
         const response = await fetch(url);
         const result = await response.json();
         
-        console.log('Reports: API response:', result);
+        /*console.log('Reports: API response:', result);
         console.log('Reports: API response data:', JSON.stringify(result.data, null, 2));
         console.log('Reports: layananDiberikan:', result.data?.layananDiberikan);
-        console.log('Reports: bidangTujuan:', result.data?.bidangTujuan);
+        console.log('Reports: bidangTujuan:', result.data?.bidangTujuan);*/
         
         if (result.success) {
           //console.log('Reports: Setting data state:', result.data);
