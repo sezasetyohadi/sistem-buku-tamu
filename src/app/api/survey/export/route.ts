@@ -283,8 +283,8 @@ export async function GET(request: NextRequest) {
     // Generate Excel buffer
     const buffer = await workbook.xlsx.writeBuffer();
     
-    // Get filename
-    const fileName = SurveyExportService.getExcelFileName();
+    // Get filename with date range
+    const fileName = SurveyExportService.getExcelFileName(startDate || undefined, endDate || undefined);
     
     // Return the Excel file with appropriate headers
     return new NextResponse(buffer, {
