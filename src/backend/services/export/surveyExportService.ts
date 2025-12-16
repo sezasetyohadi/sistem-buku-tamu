@@ -293,9 +293,12 @@ export class SurveyExportService {
   }
   
   /**
-   * Generates the Excel file name with date
+   * Generates the Excel file name with date range
    */
-  static getExcelFileName(): string {
+  static getExcelFileName(startDate?: string, endDate?: string): string {
+    if (startDate && endDate) {
+      return `Survey_Kepuasan_${startDate}_sampai_${endDate}.xlsx`;
+    }
     const currentDate = new Date();
     const formattedDate = format(currentDate, 'dd-MM-yyyy');
     return `Survey Kepuasan ${formattedDate}.xlsx`;

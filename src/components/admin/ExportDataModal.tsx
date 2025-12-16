@@ -23,30 +23,30 @@ export default function ExportDataModal({ isOpen, onClose, guests }: ExportDataM
       return { minDate: '', maxDate: '' };
     }
 
-    const dates = guests
+    const dateStrings = guests
       .map(guest => guest.waktu_dibuat || guest.waktu_checkin)
       .filter(date => date !== null && date !== undefined)
-      .map(date => new Date(date).getTime())
-      .filter(time => !isNaN(time));
+      .map(date => {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return null;
+        // Use local date without timezone conversion
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      })
+      .filter(date => date !== null) as string[];
 
-    if (dates.length === 0) {
+    if (dateStrings.length === 0) {
       return { minDate: '', maxDate: '' };
     }
 
-    const min = new Date(Math.min(...dates));
-    const max = new Date(Math.max(...dates));
-
-    // Format to YYYY-MM-DD for input date
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
+    // Sort the date strings to get min and max
+    const sortedDates = dateStrings.sort();
+    
     return {
-      minDate: formatDate(min),
-      maxDate: formatDate(max)
+      minDate: sortedDates[0],
+      maxDate: sortedDates[sortedDates.length - 1]
     };
   })();
 
@@ -224,10 +224,8 @@ export default function ExportDataModal({ isOpen, onClose, guests }: ExportDataM
       // Create a download link and trigger the download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const startDateStr = start.toISOString().split('T')[0];
-      const endDateStr = end.toISOString().split('T')[0];
       a.href = url;
-      a.download = `Data_Tamu_${startDateStr}_sampai_${endDateStr}.xlsx`;
+      a.download = `Data_Tamu_${startDate}_sampai_${endDate}.xlsx`;
       document.body.appendChild(a);
       a.click();
       
