@@ -88,15 +88,18 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       ? tujuanKunjungan
       : formData.keperluan || 'Kunjungan umum';
     
-    // Insert query - Updated to match the actual table schema and include catatan_tambahan
+    // Get current UTC timestamp
+    const waktuDibuat = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    
+    // Insert query - Updated to match the actual table schema and include catatan_tambahan and waktu_dibuat
     const query = `
       INSERT INTO daftar_tamu 
       (nama, email, nomor_telp, alamat, jenis_kelamin, pendidikan_terakhir_id, 
-       profesi_id, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload, file_name) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?, ?)
+       profesi_id, asal_instansi, keperluan, catatan_tambahan, status_kunjungan, file_upload, file_name, waktu_dibuat) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu', ?, ?, ?)
     `;
     
-    // Parameter with all needed fields including catatan_tambahan
+    // Parameter with all needed fields including catatan_tambahan and waktu_dibuat
     const params = [
       formData.nama,
       formData.email,
@@ -109,7 +112,8 @@ export async function createGuest(formData: GuestFormData): Promise<number> {
       keperluan,
       formData.catatan || null, // Save notes to catatan_tambahan column
       formData.file_upload || null,
-      formData.file_name || null // Add original filename
+      formData.file_name || null, // Add original filename
+      waktuDibuat // Add UTC timestamp
     ];
 
     const result = await executeQuery<any>(query, params);
