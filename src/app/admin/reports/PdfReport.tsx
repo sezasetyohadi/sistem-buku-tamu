@@ -47,38 +47,8 @@ const PdfReport = ({
       dailyAverage: { value: 0, growth: 0, label: 'No data available' },
       avgDuration: { value: '0h', growth: 0, label: 'No data available' }
     },
-    topVisitors: [],
     recentActivities: []
   };
-
-  // Handle the actual API data structure - use recentActivities if topVisitors is empty
-  let visitorsToShow = reportData.topVisitors || [];
-  if (!visitorsToShow || visitorsToShow.length === 0) {
-    // Convert recentActivities to visitor-like data
-    const activityMap = new Map();
-    if (reportData.recentActivities && reportData.recentActivities.length > 0) {
-      reportData.recentActivities.forEach((activity: any) => {
-        const key = `${activity.nama}-${activity.asal_instansi}`;
-        if (activityMap.has(key)) {
-          activityMap.get(key).visit_count++;
-        } else {
-          activityMap.set(key, {
-            nama: activity.nama,
-            asal_instansi: activity.asal_instansi,
-            visit_count: 1
-          });
-        }
-      });
-      visitorsToShow = Array.from(activityMap.values()).slice(0, 5);
-    }
-  }
-
-  // Ensure we have fallback data if everything is empty
-  if (visitorsToShow.length === 0) {
-    visitorsToShow = [
-      { nama: 'Belum ada data', asal_instansi: 'Belum ada data', visit_count: 0 }
-    ];
-  }
 
   let activitiesToShow = reportData.recentActivities || [];
   if (activitiesToShow.length === 0) {
@@ -261,7 +231,15 @@ const PdfReport = ({
         {reportData.weeklyTrends && reportData.weeklyTrends.length > 0 && (
           <div style={{ marginTop: '10px', marginBottom: '20px', padding: '12px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px' }}>
             <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#333', fontWeight: 'bold' }}>Detail Kunjungan per Hari:</h4>
-            <div style={{ fontSize: '14px', color: '#555', lineHeight: '1.8' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              columnGap: '16px',
+              rowGap: '5px',
+              fontSize: '12px',
+              color: '#555',
+              lineHeight: '1.5'
+            }}>
               {reportData.weeklyTrends.map((item: any, idx: number) => {
                 const date = new Date(item.date);
                 const formattedDate = date.toLocaleDateString('id-ID', { 
@@ -270,8 +248,8 @@ const PdfReport = ({
                   year: 'numeric' 
                 });
                 return (
-                  <div key={idx} style={{ marginBottom: '5px', pageBreakInside: 'avoid' }}>
-                    <strong style={{ fontSize: '14px' }}>{formattedDate}:</strong> {item.visits} kunjungan
+                  <div key={idx} style={{ pageBreakInside: 'avoid' }}>
+                    <strong>{formattedDate}:</strong> {item.visits} kunjungan
                   </div>
                 );
               })}
@@ -422,15 +400,17 @@ const PdfReport = ({
                   const percentage = ((layanan.count / total) * 100).toFixed(1);
                   
                   return (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '8px' }}>
                       <div style={{ 
                         width: '16px', 
                         height: '16px', 
+                        flexShrink: 0,
                         backgroundColor: colors[idx % colors.length],
                         marginRight: '10px',
+                        marginTop: '2px',
                         borderRadius: '2px'
                       }}></div>
-                      <span style={{ fontSize: '14px', color: '#333' }}>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: '14px', color: '#333', lineHeight: '1.4' }}>
                         <strong>{layanan.layanan_name || 'Belum terdata'}:</strong> {layanan.count} ({percentage}%)
                       </span>
                     </div>

@@ -49,7 +49,6 @@ interface ReportsData {
   serviceCategories: Array<{ category: string; count: number; percentage: number }>;
   layananDiberikan: Array<{ layanan_name: string; count: number; percentage: number }>;
   bidangTujuan: Array<{ bidang_name: string; count: number; percentage: number }>;
-  topVisitors: Array<{ nama: string; asal_instansi: string; visit_count: number }>;
   recentActivities: Array<{
     id: number;
     nama: string;
@@ -67,10 +66,6 @@ const dummyData = {
     dailyAverage: { value: 17 },
     avgDuration: { value: '00:12:30' },
   },
-  topVisitors: [
-    { nama: 'Budi', asal_instansi: 'PT. Maju', visit_count: 5 },
-    { nama: 'Siti', asal_instansi: 'CV. Jaya', visit_count: 4 },
-  ],
   recentActivities: [
     {
       nama: 'Budi',
