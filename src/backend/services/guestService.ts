@@ -553,35 +553,19 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
     `;
     const serviceCategoriesParams = bidangTujuanId ? [periodDays, bidangTujuanId, periodDays, bidangTujuanId] : [periodDays, periodDays];
 
-    // 7. Top frequent visitors within period (based on unique email with status "Datang" or "Selesai")
-    const topVisitorsQuery = `
-      SELECT 
-        dt.nama,
-        dt.asal_instansi,
-        COUNT(DISTINCT dt.email) as visit_count,
-        dt.email
-      FROM daftar_tamu dt
-      WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY)
-      AND dt.status_kunjungan IN ('Datang', 'Selesai')
-      AND dt.email IS NOT NULL
-      ${deptFilter}
-      GROUP BY dt.email, dt.nama, dt.asal_instansi
-      ORDER BY visit_count DESC, dt.waktu_dibuat DESC
-      LIMIT 5
-    `;
-    const topVisitorsParams = bidangTujuanId ? [Math.max(periodDays, 30), bidangTujuanId] : [Math.max(periodDays, 30)];
-
     // 8. Layanan Diberikan statistics (layanan_disnaker_id aggregation)
     const layananDiberikanQuery = `
       SELECT 
         COALESCE(ld.nama_layanan, 'Belum terdata') as layanan_name,
         COUNT(*) as count,
-        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY) ${deptFilter})), 1) as percentage
+        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY) ${deptFilter} AND (layanan_disnaker_id IS NOT NULL OR status_kunjungan <> 'Menunggu'))), 1) as percentage
       FROM daftar_tamu dt
       LEFT JOIN layanan_disnaker ld ON dt.layanan_disnaker_id = ld.id
       WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY) ${deptFilter}
+      AND (dt.layanan_disnaker_id IS NOT NULL OR dt.status_kunjungan <> 'Menunggu')
       GROUP BY dt.layanan_disnaker_id, ld.nama_layanan
-      ORDER BY count DESC
+      ORDER BY count DESC, layanan_name ASC
+      LIMIT 6
     `;
     const layananDiberikanParams = bidangTujuanId ? [periodDays, bidangTujuanId, periodDays, bidangTujuanId] : [periodDays, periodDays];
 
@@ -590,10 +574,11 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       SELECT 
         bt.bidang as bidang_name,
         COUNT(*) as count,
-        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY))), 1) as percentage
+        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM daftar_tamu WHERE DATE(waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY) AND status_kunjungan IS NOT NULL AND status_kunjungan <> 'Menunggu')), 1) as percentage
       FROM daftar_tamu dt
       LEFT JOIN bidang_tujuan bt ON dt.bidang_tujuan_id = bt.id
       WHERE DATE(dt.waktu_dibuat) >= DATE_SUB(NOW(), INTERVAL ? DAY)
+      AND dt.status_kunjungan IS NOT NULL AND dt.status_kunjungan <> 'Menunggu'
       GROUP BY dt.bidang_tujuan_id, bt.bidang
       ORDER BY count DESC
     `;
@@ -610,7 +595,6 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       satisfactionData, 
       trendsData, 
       serviceCategoriesData, 
-      topVisitorsData,
       layananDiberikanData,
       bidangTujuanData
     ] = await Promise.all([
@@ -620,7 +604,6 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       executeQuery<any[]>(satisfactionQuery, satisfactionParams),
       executeQuery<any[]>(trendsQuery, trendsParams),
       executeQuery<any[]>(serviceCategoriesQuery, serviceCategoriesParams),
-      executeQuery<any[]>(topVisitorsQuery, topVisitorsParams),
       executeQuery<any[]>(layananDiberikanQuery, layananDiberikanParams),
       executeQuery<any[]>(bidangTujuanQuery, bidangTujuanParams)
     ]);
@@ -629,7 +612,6 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
     //console.log('- layananDiberikanData:', layananDiberikanData);
     //console.log('- bidangTujuanData:', bidangTujuanData);
     //console.log('- serviceCategoriesData:', serviceCategoriesData);
-    //console.log('- topVisitorsData:', topVisitorsData);
 
     // Debug logging to understand data types
     /* console.log('Raw data from queries:', {
@@ -638,8 +620,7 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       avgDuration: avgDurationData[0],
       satisfaction: satisfactionData[0],
       trends: trendsData,
-      serviceCategories: serviceCategoriesData,
-      topVisitors: topVisitorsData
+      serviceCategories: serviceCategoriesData
     }); */
     
     /* console.log('Query parameters used:', {
@@ -648,8 +629,7 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       avgDurationParams,
       satisfactionParams,
       trendsParams,
-      serviceCategoriesParams,
-      topVisitorsParams
+      serviceCategoriesParams
     }); */
 
     // Calculate percentage changes - ensure proper number conversion
@@ -722,9 +702,6 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       // Bidang Tujuan statistics (most visited departments)
       bidangTujuan: bidangTujuanData || [],
       
-      // Top visitors
-      topVisitors: topVisitorsData || [],
-      
       // Filter information
       filterInfo: {
         filteredByDepartment: !!bidangTujuanId,
@@ -746,7 +723,6 @@ export async function getReportsStatistics(periodDays: number = 7, bidangTujuanI
       serviceCategories: [],
       layananDiberikan: [],
       bidangTujuan: [],
-      topVisitors: [],
       filterInfo: {
         filteredByDepartment: !!bidangTujuanId,
         departmentId: bidangTujuanId || null
