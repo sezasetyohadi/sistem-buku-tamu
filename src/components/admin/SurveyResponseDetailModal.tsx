@@ -43,7 +43,13 @@ interface QuestionDetail {
       urutan_rating: number;
     }>;
   }>;
-  responseValues?: number[];
+  responseValues?: Record<number, number>;
+}
+
+interface DetailedAnswer {
+  pertanyaan_id: number;
+  jenis_rating_id?: number | null;
+  jawaban: number | string;
 }
 
 interface SurveyResponseDetailModalProps {
@@ -98,8 +104,8 @@ export default function SurveyResponseDetailModal({
         if (!question) {return null;}
 
         // Find detailed answers for this question
-        const detailedAnswers = detailedAnswersData.data.filter(
-          (answer: any) => answer.pertanyaan_id === question.id
+        const detailedAnswers: DetailedAnswer[] = detailedAnswersData.data.filter(
+          (answer: DetailedAnswer) => answer.pertanyaan_id === question.id
         );
 
         // Get all rating types for this question
@@ -124,8 +130,28 @@ export default function SurveyResponseDetailModal({
           }
         }
         
-        // Get response values from detailed answers
-        const responseValues = detailedAnswers.map((answer: any) => Number(answer.jawaban));
+        // Associate each answer with its rating type using the selected option.
+        const responseValues = detailedAnswers.reduce<Record<number, number>>(
+          (values, answer) => {
+            const ratingTypeId = Number(answer.jenis_rating_id);
+            const optionId = Number(answer.jawaban);
+
+            if (Number.isInteger(ratingTypeId) && Number.isInteger(optionId)) {
+              values[ratingTypeId] = optionId;
+            }
+
+            return values;
+          },
+          {}
+        );
+
+        const ratingTypes = question.multiple_rating_types || [];
+        if (Object.keys(responseValues).length === 0 && ratingTypes.length === 1) {
+          const optionId = Number(response.responses[questionText]);
+          if (Number.isInteger(optionId)) {
+            responseValues[ratingTypes[0].jenis_rating_id] = optionId;
+          }
+        }
         
         return {
           id: question.id,
@@ -135,8 +161,7 @@ export default function SurveyResponseDetailModal({
           nama_rating: question.nama_rating,
           multiple_rating_types: question.multiple_rating_types,
           ratingOptions: allRatingOptions,
-          // Use the response values from jawaban_survei table
-          responseValues: responseValues.length > 0 ? responseValues : [Number(response.responses[questionText])]
+          responseValues
         };
       });
 
@@ -280,7 +305,7 @@ export default function SurveyResponseDetailModal({
                         <div className="bg-white border border-gray-200 rounded-lg p-4">
                           {questionDetail.ratingOptions.map((ratingType, ratingIndex) => {
                             // Get the response value for this rating type from jawaban_survei
-                            const responseValue = questionDetail.responseValues?.[ratingIndex];
+                            const responseValue = questionDetail.responseValues?.[ratingType.rating_type_id];
                             
                             // Find the selected option for this rating type
                             const selectedOption = ratingType.options?.find(option => {
