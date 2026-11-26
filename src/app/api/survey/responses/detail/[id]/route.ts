@@ -29,9 +29,12 @@ export async function GET(
         pjr.jenis_rating_id
       FROM jawaban_survei js
       JOIN pertanyaan_survei ps ON js.pertanyaan_id = ps.id
-      JOIN pertanyaan_s_jenis_rating pjr ON ps.id = pjr.pertanyaan_id
+      LEFT JOIN opsi_rating o ON js.jawaban = o.id
+      LEFT JOIN pertanyaan_s_jenis_rating pjr
+        ON ps.id = pjr.pertanyaan_id
+        AND o.jenis_rating_id = pjr.jenis_rating_id
       WHERE js.responden_id = ?
-      ORDER BY ps.baris, pjr.urutan
+      ORDER BY ps.baris, pjr.urutan, js.id
     `;
     
     const answers = await executeQuery<any[]>(query, [respondenId]);

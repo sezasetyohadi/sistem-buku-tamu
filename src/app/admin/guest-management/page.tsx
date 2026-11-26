@@ -17,6 +17,10 @@ import { useErrorHandler, useFetch } from '@/hooks/useErrorHandling';
 import { DaftarTamu } from '@/types/database-types';
 import { useAuth } from '@/contexts/AuthContext';
 
+function truncateTableText(value: string): string {
+  return value.length > 24 ? `${value.slice(0, 21)}...` : value;
+}
+
 // Debounce hook for search optimization
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -922,14 +926,18 @@ function AdminGuestsManagement() {
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="min-w-0 flex-1 overflow-hidden">
-                              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{guest.nama}</div>
+                              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate" title={guest.nama}>{truncateTableText(guest.nama)}</div>
                               <div className="text-xs text-gray-500 hidden sm:block">ID: {guest.id}</div>
-                              <div className="text-xs text-gray-500 sm:hidden block truncate">{guest.asal_instansi || guest.keperluan || '-'}</div>
+                              <div className="text-xs text-gray-500 sm:hidden block truncate" title={guest.asal_instansi || guest.keperluan || '-'}>
+                                {guest.asal_instansi ? truncateTableText(guest.asal_instansi) : guest.keperluan || '-'}
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden sm:table-cell">
-                          <div className="text-xs sm:text-sm text-gray-900 truncate">{guest.asal_instansi || '-'}</div>
+                          <div className="text-xs sm:text-sm text-gray-900 truncate" title={guest.asal_instansi || '-'}>
+                            {guest.asal_instansi ? truncateTableText(guest.asal_instansi) : '-'}
+                          </div>
                         </td>
                         <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap hidden lg:table-cell">
                           <div className="text-xs sm:text-sm text-gray-900">
