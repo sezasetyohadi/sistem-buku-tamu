@@ -121,8 +121,8 @@ export default function GuestLayout({ children }: GuestLayoutProps) {
     return () => clearTimeout(timeoutId);
   }, [pathname, enhancedPrefetch]);
 
-  // Skip layout for the main guest landing pages to make it full screen
-  if (pathname === '/guest' || pathname === '/guest/landing') {
+  // Skip layout for the guest home page to make it full screen
+  if (pathname === '/guest') {
     return (
       <>
         <Script 

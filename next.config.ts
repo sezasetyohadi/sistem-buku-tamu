@@ -112,11 +112,11 @@ const nextConfig: NextConfig = {
         }
       );
     } else {
-      // Full mode - redirect root to guest landing by default
+      // Full mode - redirect root to the guest home page by default
       //console.log('Setting up full mode redirects');
       redirects.push({
         source: '/',
-        destination: '/guest/landing',
+        destination: '/guest',
         permanent: false,
       });
     }

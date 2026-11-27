@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server';
 import { verifyToken } from './src/lib/jwt';
 import { envValidator } from './src/lib/environment-validator';
 
+const PUBLIC_GUEST_ROUTES = [
+  '/guest',
+  '/guest/register',
+  '/guest/status',
+  '/guest/survey',
+];
+
 export function middleware(request: NextRequest) {
   const appMode = process.env.APP_MODE || process.env.NEXT_PUBLIC_APP_MODE;
   const pathname = request.nextUrl.pathname;
@@ -38,6 +45,10 @@ export function middleware(request: NextRequest) {
   const finalMode = detectedMode || appMode;
   
   //console.log('Mode detection - ENV:', appMode, 'Subdomain:', detectedMode, 'Final:', finalMode);
+
+  if (pathname === '/guest/landing' && finalMode !== 'admin') {
+    return NextResponse.redirect(new URL('/guest', request.url));
+  }
 
   // Mode-specific routing logic
   if (finalMode === 'admin') {
@@ -81,9 +92,9 @@ export function middleware(request: NextRequest) {
     // Guest deployment mode
     //console.log('Guest mode detected');
     
-    // Redirect root to guest landing
+    // Redirect root to guest home
     if (pathname === '/') {
-      //console.log('Redirecting root to guest landing');
+      //console.log('Redirecting root to guest home');
       return NextResponse.redirect(new URL('/guest', request.url));
     }
     
@@ -94,15 +105,12 @@ export function middleware(request: NextRequest) {
     }
     
     // Guest authentication for protected routes
-    if (pathname.startsWith('/guest') && 
-        pathname !== '/guest/register' && 
-        pathname !== '/guest/landing' &&
-        pathname !== '/guest') {
+    if (isGuestPath(pathname) && !isPublicGuestRoute(pathname)) {
       const isAuthenticated = checkGuestAuthentication(request);
       //console.log('Guest auth check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        //console.log('Redirecting to guest landing');
-        return NextResponse.redirect(new URL('/guest/landing', request.url));
+        //console.log('Redirecting to guest home');
+        return NextResponse.redirect(new URL('/guest', request.url));
       }
     }
   }
@@ -113,8 +121,8 @@ export function middleware(request: NextRequest) {
     
     // Default routing for development
     if (pathname === '/') {
-      //console.log('Redirecting root to guest landing');
-      return NextResponse.redirect(new URL('/guest/landing', request.url));
+      //console.log('Redirecting root to guest home');
+      return NextResponse.redirect(new URL('/guest', request.url));
     }
     
     // Always allow login page - no authentication required
@@ -134,19 +142,29 @@ export function middleware(request: NextRequest) {
     }
     
     // Guest authentication for protected guest routes
-    if (pathname.startsWith('/guest') && 
-        pathname !== '/guest/register' && 
-        pathname !== '/guest/landing') {
+    if (isGuestPath(pathname) && !isPublicGuestRoute(pathname)) {
       const isAuthenticated = checkGuestAuthentication(request);
       //console.log('Guest page access check - Authenticated:', isAuthenticated);
       if (!isAuthenticated) {
-        //console.log('Redirecting to guest landing - not authenticated');
-        return NextResponse.redirect(new URL('/guest/landing', request.url));
+        //console.log('Redirecting to guest home - not authenticated');
+        return NextResponse.redirect(new URL('/guest', request.url));
       }
     }
   }
   
   return response;
+}
+
+function isGuestPath(pathname: string): boolean {
+  return pathname === '/guest' || pathname.startsWith('/guest/');
+}
+
+function isPublicGuestRoute(pathname: string): boolean {
+  return PUBLIC_GUEST_ROUTES.some(
+    (route) =>
+      pathname === route ||
+      (route !== '/guest' && pathname.startsWith(`${route}/`))
+  );
 }
 
 // Detect mode from subdomain
