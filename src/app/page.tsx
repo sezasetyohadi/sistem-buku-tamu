@@ -7,8 +7,8 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Immediate redirect to guest landing page
-    router.replace('/guest/landing');
+    // Redirect to the guest home page
+    router.replace('/guest');
   }, [router]);
 
   return null; // No UI needed, just redirect
