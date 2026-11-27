@@ -209,7 +209,10 @@ export default function StatusPengajuanPage() {
 				<img
 					src="/status-icon.svg"
 					alt="Status"
-					className="w-16 h-16 mb-2"
+					draggable={false}
+					onContextMenu={(event) => event.preventDefault()}
+					onDragStart={(event) => event.preventDefault()}
+					className="w-16 h-16 mb-2 select-none pointer-events-none"
 				/>
 				<h1 className="text-2xl font-bold text-gray-900 mb-1">
 					Status Pengajuan
