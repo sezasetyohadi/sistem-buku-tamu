@@ -207,7 +207,7 @@ export default function StatusPengajuanPage() {
 		<div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col items-center relative">
 			<div className="flex flex-col items-center mb-8">
 				<img
-					src="https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
+					src="/status-icon.svg"
 					alt="Status"
 					className="w-16 h-16 mb-2"
 				/>
