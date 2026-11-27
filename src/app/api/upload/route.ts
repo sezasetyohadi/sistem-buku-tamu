@@ -11,9 +11,3 @@ export async function POST(request: NextRequest) {
   return handleFileUpload(request);
 }
 
-// Rate limiting and size restrictions are handled by Next.js config and middleware
-export const config = {
-  api: {
-    bodyParser: false, // Disable default body parser for file uploads
-  },
-};

@@ -8,18 +8,25 @@ const nextConfig: NextConfig = {
   // SWC minification is enabled by default in Next.js 13+, no need to specify
   reactStrictMode: true,
   
-  // ESLint configuration - disable during build to prevent blocking
-  eslint: {
-    ignoreDuringBuilds: true, // This will bypass ESLint during build
-  },
-  
-  // TypeScript configuration - disable type checking during build if needed
   typescript: {
-    ignoreBuildErrors: false, // Keep false to catch real TypeScript errors
+    ignoreBuildErrors: false,
   },
   
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3001',
+        pathname: '/**',
+      },
+    ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ['image/webp'],
@@ -33,11 +40,6 @@ const nextConfig: NextConfig = {
     ADMIN_PORT: process.env.ADMIN_PORT || '3001',
     GUEST_PORT: process.env.GUEST_PORT || '3000',
     CUSTOM_KEY: 'value'
-  },
-  
-  // Public runtime config
-  publicRuntimeConfig: {
-    appMode: appMode,
   },
   
   // Headers for security and mode identification

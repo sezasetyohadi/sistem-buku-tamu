@@ -3,7 +3,7 @@
  * Provides secure file upload functionality with validation and protection
  */
 
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 import { writeFile, mkdir, access, constants } from 'fs/promises';
 import { join, extname, basename } from 'path';
 
@@ -25,6 +25,10 @@ const UPLOAD_CONFIG = {
 };
 
 export class SecureFileUpload {
+  private static sanitizeUserId(userId?: string): string | undefined {
+    return userId?.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || undefined;
+  }
+
   /**
    * Validate file before upload
    */
@@ -138,7 +142,8 @@ export class SecureFileUpload {
     const baseName = basename(originalName, ext).replace(/[^a-zA-Z0-9-_]/g, '');
     const timestamp = Date.now();
     const randomSuffix = randomBytes(8).toString('hex');
-    const userPrefix = userId ? `${userId}_` : '';
+    const safeUserId = this.sanitizeUserId(userId);
+    const userPrefix = safeUserId ? `${safeUserId}_` : '';
     
     return `${userPrefix}${baseName}_${timestamp}_${randomSuffix}${ext}`;
   }
@@ -221,7 +226,8 @@ export class SecureFileUpload {
       //console.log('✅ File validation passed');
 
       // Generate secure filename and R2 key
-      const secureFilename = this.generateSecureFilename(file.name, userId);
+      const safeUserId = this.sanitizeUserId(userId);
+      const secureFilename = this.generateSecureFilename(file.name, safeUserId);
       const fileExtension = extname(file.name).toLowerCase().substring(1); // Remove the dot
 
       /* console.log('📝 Generated filenames:', {
@@ -237,7 +243,7 @@ export class SecureFileUpload {
       if (hasR2Config) {
         //console.log('☁️ Using Cloudflare R2 storage...');
         try {
-          const r2Key = generateFileKey(category, userId || 'guest', fileExtension);
+          const r2Key = generateFileKey(category, safeUserId || 'guest', fileExtension);
           const uploadResult = await uploadToR2(file, r2Key, file.type);
           //console.log('✅ Upload to R2 successful:', uploadResult.url);
           
@@ -248,10 +254,16 @@ export class SecureFileUpload {
             path: uploadResult.url
           };
         } catch (r2Error) {
-          console.error('💥 Cloudflare R2 upload failed, falling back to local storage:', r2Error);
+          console.error('💥 Cloudflare R2 upload failed:', r2Error);
+          if (process.env.NODE_ENV === 'production') {
+            return { success: false, error: 'Cloudflare R2 upload failed' };
+          }
         }
       } else {
         //console.log('⚠️ Cloudflare R2 not configured, using local storage...');
+        if (process.env.NODE_ENV === 'production') {
+          return { success: false, error: 'Cloudflare R2 is not configured' };
+        }
       }
 
       // Fallback to local storage
@@ -259,8 +271,8 @@ export class SecureFileUpload {
       await this.ensureSecureDirectories();
 
       // Determine upload directory
-      const uploadDir = join(UPLOAD_CONFIG.uploadDir, category);
-      const filePath = join(uploadDir, secureFilename);
+      const uploadDir = join(/*turbopackIgnore: true*/ UPLOAD_CONFIG.uploadDir, category);
+      const filePath = join(/*turbopackIgnore: true*/ uploadDir, secureFilename);
 
       // Convert file to buffer
       const arrayBuffer = await file.arrayBuffer();
@@ -294,17 +306,17 @@ export class SecureFileUpload {
   static async cleanupTempFiles(maxAgeHours: number = 24): Promise<void> {
     try {
       const { readdir, stat, unlink } = await import('fs/promises');
-      const files = await readdir(UPLOAD_CONFIG.tempDir);
+      const files = await readdir(/*turbopackIgnore: true*/ UPLOAD_CONFIG.tempDir);
       const maxAge = Date.now() - (maxAgeHours * 60 * 60 * 1000);
 
       for (const file of files) {
         if (file === '.htaccess') {continue;} // Skip .htaccess file
         
-        const filePath = join(UPLOAD_CONFIG.tempDir, file);
-        const stats = await stat(filePath);
+        const filePath = join(/*turbopackIgnore: true*/ UPLOAD_CONFIG.tempDir, file);
+        const stats = await stat(/*turbopackIgnore: true*/ filePath);
         
         if (stats.mtime.getTime() < maxAge) {
-          await unlink(filePath);
+          await unlink(/*turbopackIgnore: true*/ filePath);
           //console.log(`Cleaned up old temp file: ${file}`);
         }
       }
