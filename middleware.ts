@@ -386,6 +386,7 @@ function checkGuestAuthentication(request: NextRequest): boolean {
 }
 
 export const config = {
+  runtime: 'nodejs',
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico|static).*)',
   ],
